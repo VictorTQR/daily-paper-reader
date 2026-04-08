@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-001.webp",
+      "caption": "Table 7: Role clarity score (%) on the SWE-Dev evaluation set for the ChatDev system with Qwen as the backbone, with role clarity regularization disabled. Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 10,
+      "index": 1,
+      "width": 698,
+      "height": 206
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-002.webp",
+      "caption": "Table 8: Role clarity score (%) on the SWE-Dev evaluation set for the ChatDev system with Llama as the backbone, with role clarity regularization disabled. Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 10,
+      "index": 2,
+      "width": 698,
+      "height": 205
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-003.webp",
+      "caption": "Table 6: Role overreach rate (%) on the SWE-Dev evaluation set for the ChatDev system with Llama as the backbone, with role clarity regularization disabled. Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 10,
+      "index": 3,
+      "width": 936,
+      "height": 206
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-004.webp",
+      "caption": "Figure 1: Overview of the LoRA-tuning framework with role clarity regularization. The framework comprises four stages: (I) collecting high-quality multi-turn interaction trajectories via rejection sampling, (II) extracting embeddings and computing role assignment matrix based on similarity, (III) role clarity-regularized fine tuning using LoRA, and (IV) evaluating role consistency and end-to-end task performance in multi-agent interactions.",
+      "page": 3,
+      "index": 4,
+      "width": 912,
+      "height": 454
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-005.webp",
+      "caption": "Table 1: Role overstepping rate (%) on the SWE-Dev evaluation set for the ChatDev system with Qwen as the backbone (with role clarity regularization). Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 8,
+      "index": 5,
+      "width": 936,
+      "height": 206
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-006.webp",
+      "caption": "Figure 2: Role overstepping rates for DeepSeek Chat, Qwen2.5 7B, and Llama3.1 8B on SWE-Dev under ChatDev. Lower temperature T yields more deterministic output, whereas higher temperature increases diversity.",
+      "page": 4,
+      "index": 6,
+      "width": 979,
+      "height": 443
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-007.webp",
+      "caption": "Table 4: Role clarity score on the SWE-Dev evaluation set for the ChatDev system with Llama as the backbone (with role clarity regularization). Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 9,
+      "index": 7,
+      "width": 698,
+      "height": 207
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-008.webp",
+      "caption": "Table 5: Role overreach rate (%) on the SWE-Dev evaluation set for the ChatDev system with Qwen as the backbone, with role clarity regularization disabled. Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 9,
+      "index": 8,
+      "width": 936,
+      "height": 206
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-009.webp",
+      "caption": "Table 3: Role clarity score on the SWE-Dev evaluation set for the ChatDev system with Qwen as the backbone (with role clarity regularization). Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 9,
+      "index": 9,
+      "width": 698,
+      "height": 205
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02770v1/fig-010.webp",
+      "caption": "Table 2: Role overstepping rate (%) on the SWE-Dev evaluation set for the ChatDev system with Llama as the backbone (with role clarity regularization). Results are reported for the easy and hard subsets (250 cases each) and for the full set (500 cases; total).",
+      "page": 9,
+      "index": 10,
+      "width": 936,
+      "height": 206
+    }
+  ]
+}

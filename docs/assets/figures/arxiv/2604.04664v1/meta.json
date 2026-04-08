@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04664v1/fig-001.webp",
+      "caption": "Fig. 3. Real-World Environment for Collaborative Tasks. In the physical environment, S1denotes the mobile manipulation region, S2represents the localized grasping region, and S3 corresponds to the mobile navigation region. Each embodied agent in the physical world is constrained to operate only within a subset of these regions.",
+      "page": 5,
+      "index": 1,
+      "width": 541,
+      "height": 256
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04664v1/fig-002.webp",
+      "caption": "Fig. 1. The ROSClaw framework adopts a three-layer semantic–physical architecture to bridge high-level cognitive reasoning and low-level physical control. The cognitive layer relies on LLM knowledge graphs and logical elements in the digital space to support macro-level task understanding. The coordination automation layer abstracts hardware heterogeneity through an Online Tool Pool and enables task environment activation. The ROSClaw physical world provides unified control over heterogeneous robotic agents while continuously accumulating multimodal observations, robot states, and reusable skills within a Local Resource Pool. The accumulated interaction experience is fed back to the cognitive layer, forming a closed-loop process that supports continual system evolution and cross-task knowledge reuse.",
+      "page": 4,
+      "index": 2,
+      "width": 806,
+      "height": 442
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04664v1/fig-003.webp",
+      "caption": "Fig. 2. e-URDF-based physical firewall. Heterogeneous system resources (SDKs, MCPs, and APIs) are aggregated into an Online Tool Pool to enable the transformation of abstract instructions into executable operations. A strict e-URDF-based physical safeguarding mechanism for heterogeneous agents is adopted, leveraging forward dynamics simulation and collision detection in Isaac Lab to ensure physical feasibility prior to scheduling.",
+      "page": 4,
+      "index": 3,
+      "width": 968,
+      "height": 392
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04664v1/fig-004.webp",
+      "caption": "Fig. 5. Validation of e-URDF-based physical safeguarding and the data collection and state accumulation mechanism. In (A), a mobile user interacts with ROSClaw to activate perception and manipulation by the arm agent in the physical world, while simultaneously triggering the data collection and state accumulation mechanism to record agent states and environmental perception data. In (B), ROSClaw generates music based on user instructions, initiates e-URDF-based physical safeguarding to orchestrate a dance routine, and drives the physical system to enable coordinated dancing of seven gimbal units.",
+      "page": 7,
+      "index": 4,
+      "width": 968,
+      "height": 669
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04664v1/fig-005.webp",
+      "caption": "Fig. 4. Heterogeneous Multi-Agent Collaboration. In (A), ROSClaw receives user requirements, initializes the sub-agents, assigns tasks to each agent, and simultaneously exchanges state information with them. In (B), the log outputs generated during task execution by each sub-agent are presented. In (C), the physical-world execution is illustrated: the mobile robotic arm approaches the doorway and opens the door; the humanoid robot enters and moves toward the harvesting area; the fixed robotic arm transfers the fruit; and the humanoid robot carries the fruit basket to the kitchen.",
+      "page": 6,
+      "index": 5,
+      "width": 914,
+      "height": 629
+    }
+  ]
+}

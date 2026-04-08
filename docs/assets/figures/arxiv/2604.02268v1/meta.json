@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-001.webp",
+      "caption": "Table 1: Performance on ALFWorld and Search-QA tasks. We report the success rate (%) and the average context token cost (k) per step. † denotes models validated with skill augmentation; ⋆ denotes methods that encodes visual context with reduced token overhead. We simply reproduce",
+      "page": 6,
+      "index": 1,
+      "width": 827,
+      "height": 439
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-002.webp",
+      "caption": "Figure 5: Training Dynamics Comparison. (a) Validation performance of SKILL0 (OCR) with and without skill augmentation, evaluated every 10 training steps. (b) Performance comparison between SKILL0 and AgentOCR, both evaluated without skill augmentation. (c) Performance comparison of SKILL0 (OCR) against GRPO (Text) and SkillRL (Text), all evaluated without skill augmentation.",
+      "page": 7,
+      "index": 2,
+      "width": 820,
+      "height": 206
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-003.webp",
+      "caption": "Figure 2: Overview of SKILL0. (a) Relevance-Driven Skill Grouping; (b) In-Context Reinforcement Learning with skill-enhanced agent loop; (c) Dynamic curriculum learning during training process.",
+      "page": 3,
+      "index": 3,
+      "width": 810,
+      "height": 458
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-004.webp",
+      "caption": "Table 6: Results on Search-based QA. † and ⋆ denote in-domain and out-of-domain respectively.",
+      "page": 18,
+      "index": 4,
+      "width": 830,
+      "height": 654
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-005.webp",
+      "caption": "Figure 6: Training Dynamics of Helpfulness, which are reported by ∆k for each sub-task k.",
+      "page": 8,
+      "index": 5,
+      "width": 820,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-006.webp",
+      "caption": "Figure 12: Prompt template used by SKILL0 for the Search-based QA task environment.",
+      "page": 19,
+      "index": 6,
+      "width": 829,
+      "height": 602
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-007.webp",
+      "caption": "Figure 11: Prompt template used by SKILL0 for the ALFWorld embodied task environment.",
+      "page": 19,
+      "index": 7,
+      "width": 829,
+      "height": 369
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-008.webp",
+      "caption": "Table 4: Detailed Results of Ablations.",
+      "page": 17,
+      "index": 8,
+      "width": 748,
+      "height": 433
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-009.webp",
+      "caption": "Table 5: Comparison on ALFWorld benchmark. ∗ denotes the results trained with GRPO.",
+      "page": 17,
+      "index": 9,
+      "width": 748,
+      "height": 568
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-010.webp",
+      "caption": "Table 7: Representative Skills in SkillBank.",
+      "page": 20,
+      "index": 10,
+      "width": 830,
+      "height": 1323
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-011.webp",
+      "caption": "Figure 9: Training dynamics of SKILL0 on Qwen2.5VL-3B, with ALFWorld accuracy reported.",
+      "page": 16,
+      "index": 11,
+      "width": 820,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02268v1/fig-012.webp",
+      "caption": "Figure 10: Training dynamics of SKILL0 on Qwen2.5VL-3B, with SearchQA sub-tasks (split by skill categories) accuracy reported.",
+      "page": 16,
+      "index": 12,
+      "width": 654,
+      "height": 452
+    }
+  ]
+}

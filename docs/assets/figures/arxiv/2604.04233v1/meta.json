@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04233v1/fig-001.webp",
+      "caption": "Fig. 11 JSON Similarity Box Plot of Four Methods",
+      "page": 6,
+      "index": 1,
+      "width": 354,
+      "height": 391
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04233v1/fig-002.webp",
+      "caption": "Fig. 1 META-LLAMA-3 Structure",
+      "page": 2,
+      "index": 2,
+      "width": 354,
+      "height": 427
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04233v1/fig-003.webp",
+      "caption": "Fig. 5 Hybrid Grammar-based LLM Flow Chart",
+      "page": 4,
+      "index": 3,
+      "width": 354,
+      "height": 579
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04233v1/fig-004.webp",
+      "caption": "Fig. 6 Template of Feedback Prompt",
+      "page": 4,
+      "index": 4,
+      "width": 354,
+      "height": 379
+    }
+  ]
+}

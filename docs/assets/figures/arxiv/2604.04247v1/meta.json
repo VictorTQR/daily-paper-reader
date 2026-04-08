@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04247v1/fig-001.webp",
+      "caption": "Figure 2: Context overload from naive scaling. As batch size increases, the aggregator LLM produces monotonically fewer and less useful context updates, directly degrading final accuracy across benchmarks.",
+      "page": 3,
+      "index": 1,
+      "width": 739,
+      "height": 210
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04247v1/fig-002.webp",
+      "caption": "Figure 4: Combee achieves superior quality-delay trade off on GEPA for finance benchmarks.",
+      "page": 8,
+      "index": 2,
+      "width": 822,
+      "height": 252
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04247v1/fig-003.webp",
+      "caption": "Figure 5: Combee achieves superior quality-delay trade off on ACE for finance benchmarks.",
+      "page": 8,
+      "index": 3,
+      "width": 797,
+      "height": 258
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04247v1/fig-004.webp",
+      "caption": "Figure 3: Overall design of Combee (top) vs. naive scaling (bottom). Combee follows a Map-Shuffle-Reduce paradigm: the Map phase dispatches n parallel agents to execute queries and reflect; the Shuffle phase applies augmented shuffling; and the Reduce phase hierarchically combines reflections via parallel scan aggregation. In contrast, naive scaling feeds all reflections directly into a single prompt update, causing context overload.",
+      "page": 5,
+      "index": 4,
+      "width": 732,
+      "height": 552
+    }
+  ]
+}

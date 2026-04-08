@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-001.webp",
+      "caption": "Table 7: Shared domain knowledge embedded in the system prompts of both execution modes. All entries are generic robot/physics specifications, not task-specific solutions.",
+      "page": 25,
+      "index": 1,
+      "width": 719,
+      "height": 365
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-002.webp",
+      "caption": "Fig. 1: Motivation of CoEnv. Physical-world execution offers high fidelity but risks costly collisions, while the digital world enables cost-effective and safe testing. CoEnv composes both worlds through pose and action alignment, forming a compositional environment (left) that supports real-to-sim reconstruction, simulation-conditioned action synthesis, and safe real-world deployment (right).",
+      "page": 2,
+      "index": 2,
+      "width": 721,
+      "height": 331
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-003.webp",
+      "caption": "Table 6: Comparison of Interactive and Iterative execution modes.",
+      "page": 23,
+      "index": 3,
+      "width": 725,
+      "height": 307
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-004.webp",
+      "caption": "Table 2: Ablation study on Interactive mode. We separately remove the adaptive camera control (w/o Camera) and checkpoint verification (w/o Ckpt.) mechanisms. SR: task success rate (x/10).",
+      "page": 13,
+      "index": 4,
+      "width": 746,
+      "height": 261
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-005.webp",
+      "caption": "Table 1: Real-world multi-agent task evaluation. Each task is evaluated over 10 trials under two execution modes: Interactive (closed-loop VLM feedback) and Iterative (code-based trajectory generation). Si: i-th subtask milestone completion (x/10). SR: overall task success (x/10). Overall: combined success rate (%) across both modes.",
+      "page": 12,
+      "index": 5,
+      "width": 742,
+      "height": 319
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-006.webp",
+      "caption": "Fig. 4: Sim-to-real qualitative results. Side-by-side comparison of simulation planning and real-world execution across four representative tasks. The high visual correspondence validates that CoEnv’s compositional environment faithfully bridges the sim-to-real gap for multi-agent collaboration.",
+      "page": 12,
+      "index": 6,
+      "width": 725,
+      "height": 232
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-007.webp",
+      "caption": "Table 4: Task descriptions. Each task involves 2–3 robotic agents collaboration.",
+      "page": 20,
+      "index": 7,
+      "width": 745,
+      "height": 269
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-008.webp",
+      "caption": "Table 5: Subtask milestones and success criteria. The last milestone of each task defines the overall success condition.",
+      "page": 20,
+      "index": 8,
+      "width": 714,
+      "height": 436
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05484v1/fig-009.webp",
+      "caption": "Fig. 2: Overview of the CoEnv framework. Top-left: Real-to-Sim Scene Reconstruction converts multi-view RGBD observations into a simulator-ready scene via 3D asset generation, object localization (Grounded SAM 2 + GPT-5 + FoundationPose), and iterative camera calibration. Top-right: Simulation-Conditioned Action Synthesis performs hierarchical task planning followed by grounded execution in either interactive mode (closed-loop VLM feedback) or iterative mode (code agent with iterative refinement). Bottom: Sim-to-Real Transfer deploys validated trajectories via trajectory interpolation with collision volume verification for safe multi-agent execution.",
+      "page": 5,
+      "index": 9,
+      "width": 725,
+      "height": 406
+    }
+  ]
+}

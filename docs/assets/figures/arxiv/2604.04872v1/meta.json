@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-001.webp",
+      "caption": "Figure 7 Test-time scaling results of Qwen3-30B-SFTSandMLE on MLE-Bench-Lite with ReAct framework.",
+      "page": 11,
+      "index": 1,
+      "width": 485,
+      "height": 297
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-002.webp",
+      "caption": "Table 2 Generalization results on the MLE-Bench-Lite dataset across alternative agent frameworks (AIDE, AIRA, ML-Master). Only 14B and 30B models are shown. Best results within each grouping are highlighted in bold.",
+      "page": 11,
+      "index": 2,
+      "width": 977,
+      "height": 434
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-003.webp",
+      "caption": "Table 6 continued from previous page",
+      "page": 25,
+      "index": 3,
+      "width": 960,
+      "height": 1207
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-004.webp",
+      "caption": "Table 7 Prompt template for the MLE Developer agent.",
+      "page": 26,
+      "index": 4,
+      "width": 960,
+      "height": 1146
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-005.webp",
+      "caption": "Table 5 System and User Prompt templates for the ReAct agent framework.",
+      "page": 21,
+      "index": 5,
+      "width": 960,
+      "height": 1201
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-006.webp",
+      "caption": "Figure 1 Standard on-policy RL for MLE tasks (left) is bottlenecked by execution latency: each rollout step requires running full ML pipeline on large associated datasets (>200s). SandMLE transforms seed tasks into diverse synthetic environments with micro-scale datasets (<15s), making trajectory-wise on-policy RL practically feasible.",
+      "page": 2,
+      "index": 6,
+      "width": 986,
+      "height": 283
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-007.webp",
+      "caption": "Table 1 Main results on the MLE-Bench-Lite dataset using the ReAct framework. Performance is reported as the percentage (%). Best results within each model scale are highlighted in bold. SandMLE refers to model finetuned through our proposed pipeline.",
+      "page": 10,
+      "index": 7,
+      "width": 977,
+      "height": 578
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-008.webp",
+      "caption": "Table 9 Prompt template for the Technical Writer agent.",
+      "page": 28,
+      "index": 8,
+      "width": 960,
+      "height": 773
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-009.webp",
+      "caption": "Table 4 Ablation study on reward design using the MLE-bench-lite dataset. Sparse Reward relies only on format and the highest performance tier (sgold), whereas our SandMLE uses the proposed dense, milestone-based reward.",
+      "page": 13,
+      "index": 9,
+      "width": 977,
+      "height": 213
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-010.webp",
+      "caption": "Figure 3 Distribution of the synthetic training data across three axes: application domain (left), data modality (center), and task formulation (right).",
+      "page": 8,
+      "index": 10,
+      "width": 642,
+      "height": 391
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-011.webp",
+      "caption": "Figure 8 Training dynamics for the Qwen3-8B (top row), Qwen3-14B (middle row), and Qwen3-30B (bottom row) models optimized via GRPO over 80 steps. The plots display the valid submission rates, training rewards, and validation rewards. All models demonstrate positive learning trends and strong overall convergence, with increased model scale directly correlating to a higher performance ceiling and greater stability, particularly evident in the 30B model’s valid submission rate.",
+      "page": 19,
+      "index": 11,
+      "width": 967,
+      "height": 815
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-012.webp",
+      "caption": "Table 3 Generalization results on the MLE-Dojo benchmark. The HumanRank Score measures relative leaderboard performance against human competitors.",
+      "page": 12,
+      "index": 12,
+      "width": 879,
+      "height": 425
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-013.webp",
+      "caption": "Table 8 Prompt template for the MLOps Engineer agent.",
+      "page": 27,
+      "index": 13,
+      "width": 960,
+      "height": 871
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04872v1/fig-014.webp",
+      "caption": "Figure 2 The Agentic MLE Environment Factory. Illustrated is the procedural multi-agent workflow that transforms a massive, slow-executing seed task into a coherent, high-speed, verifiable synthetic micro-task. The pipeline explicitly optimizes for data efficiency by strictly controlling the task-associated training data size (down from 196,157 to less than 200) to enable rapid iteration during policy optimization.",
+      "page": 5,
+      "index": 14,
+      "width": 986,
+      "height": 329
+    }
+  ]
+}

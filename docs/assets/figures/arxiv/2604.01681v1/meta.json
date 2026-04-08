@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.01681v1/fig-001.webp",
+      "caption": "Fig. 8: Case study of the path generation agent.",
+      "page": 6,
+      "index": 1,
+      "width": 437,
+      "height": 677
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01681v1/fig-002.webp",
+      "caption": "Fig. 2: System architecture of Agentic Fast–Slow Planning",
+      "page": 2,
+      "index": 2,
+      "width": 1023,
+      "height": 393
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01681v1/fig-003.webp",
+      "caption": "Fig. 9: Comparison of planning and control schemes in scenario 1.",
+      "page": 7,
+      "index": 3,
+      "width": 1052,
+      "height": 420
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01681v1/fig-004.webp",
+      "caption": "Fig. 11: Details in experiment3 scenario 2.",
+      "page": 8,
+      "index": 4,
+      "width": 462,
+      "height": 281
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01681v1/fig-005.webp",
+      "caption": "Fig. 4: Illustration of Semantic-Guided A*: (a) Pattern cost design and (b) observation of hyperparameter influence",
+      "page": 4,
+      "index": 5,
+      "width": 1027,
+      "height": 315
+    }
+  ]
+}

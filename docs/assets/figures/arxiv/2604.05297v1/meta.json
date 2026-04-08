@@ -1,0 +1,190 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-001.webp",
+      "caption": "Figure 1. Clipping payoffs in the multi-round process. In this example, the two suboptimal solutions have relatively high payoffs. Therefore, existing methods are likely to select one of them. In contrast, by clipping the payoff of the selected solution, MRVF avoids convergence to it in subsequent rounds. Eventually, only the optimal solution retains a high payoff, making it easily identifiable.",
+      "page": 1,
+      "index": 1,
+      "width": 494,
+      "height": 730
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-002.webp",
+      "caption": "Figure 15. Test win rate in 3s_vs_5z. WQMIX (Q̂jt) represents WQMIX replacing the network of Q̂jt with that of ours. WQMIX (centralized ϵ) represents WQMIX replacing the policy with the centralized one. WQMIX (both) represents WQMIX with both modifications.",
+      "page": 26,
+      "index": 2,
+      "width": 884,
+      "height": 468
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-003.webp",
+      "caption": "Figure 16. Test win rate in 6h_vs_8z in SMAC benchmarks.",
+      "page": 26,
+      "index": 3,
+      "width": 883,
+      "height": 466
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-004.webp",
+      "caption": "Figure 10. The network structure of Qjt.",
+      "page": 21,
+      "index": 4,
+      "width": 871,
+      "height": 380
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-005.webp",
+      "caption": "Figure 4. The architecture of multi-round value factorization framework.",
+      "page": 7,
+      "index": 5,
+      "width": 871,
+      "height": 376
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-006.webp",
+      "caption": "Figure 20. Test win rate in the SMAC benchmarks.",
+      "page": 29,
+      "index": 6,
+      "width": 998,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-007.webp",
+      "caption": "Figure 12. Test return in the predator-prey tasks with punishments 0 (left), -2 (middle), and -5 (right).",
+      "page": 23,
+      "index": 7,
+      "width": 997,
+      "height": 314
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-008.webp",
+      "caption": "Figure 11. Test normalized return in the risk-reward games.",
+      "page": 23,
+      "index": 8,
+      "width": 993,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-009.webp",
+      "caption": "Figure 19. Test return in the predator prey tasks with punishments 0 (left), -2 (middle), and -5 (right).",
+      "page": 28,
+      "index": 9,
+      "width": 997,
+      "height": 328
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-010.webp",
+      "caption": "Figure 18. Test return in the predator prey tasks with punishments -2 (left), and -5 (right). QMIX (50k ϵ-anneal) represents QMIX with 5 ∗ 104 anneal steps for ϵ. QMIX (1mil ϵ-anneal) represents QMIX with 106 anneal steps for ϵ. QMIX (ϵ = 1) represents QMIX with ϵ = 1 constantly.",
+      "page": 28,
+      "index": 10,
+      "width": 996,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-011.webp",
+      "caption": "Figure 8. An illustration of Definition B.2. We intercept curves corresponding to different u−i and check whether their monotonicity with respect to ui is consistent.",
+      "page": 13,
+      "index": 11,
+      "width": 671,
+      "height": 367
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-012.webp",
+      "caption": "Figure 5. Test normalized return in the risk-reward games. The positive returns are normalized to [0, 1] (0 corresponds to the smallest positive return, and 1 corresponds to the largest). The negative returns are normalized to [−1, 0). Five random cases for each setting.",
+      "page": 8,
+      "index": 12,
+      "width": 995,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-013.webp",
+      "caption": "Figure 6. Test return in the predator prey tasks with punishments 0 (left), -2 (middle), and -5 (right). The non-monotonicity of the payoff increases with the punishment.",
+      "page": 8,
+      "index": 13,
+      "width": 998,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-014.webp",
+      "caption": "Table 8. The example of QPLEX in which u∗ is not the only one stable points. The quantities of Q̌∗ tot and w̌i listed in the same column correspond to a particular stable point, where we highlight ǔ in bold.",
+      "page": 19,
+      "index": 14,
+      "width": 991,
+      "height": 512
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-015.webp",
+      "caption": "Table 9. The example in which QPLEX has two suboptimal stable points, while QMIX can easily obtain the optimum. The quantities of Q̌tot and w̌i listed in the same column correspond to a particular stable point, where we highlight ǔ in bold.",
+      "page": 19,
+      "index": 15,
+      "width": 991,
+      "height": 513
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-016.webp",
+      "caption": "Figure 17. Test return (first row) and win rate (second row) in SMACv2 benchmarks.",
+      "page": 27,
+      "index": 16,
+      "width": 990,
+      "height": 540
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-017.webp",
+      "caption": "Figure 14. Proportion of final actions generated in each round throughout test episodes.",
+      "page": 24,
+      "index": 17,
+      "width": 995,
+      "height": 540
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-018.webp",
+      "caption": "Figure 13. Test win rate in the SMAC benchmarks.",
+      "page": 24,
+      "index": 18,
+      "width": 999,
+      "height": 314
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-019.webp",
+      "caption": "Figure 7. Test win rate in the SMAC benchmarks.",
+      "page": 9,
+      "index": 19,
+      "width": 999,
+      "height": 540
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-020.webp",
+      "caption": "Table 10. The hyperparameters for experiments",
+      "page": 20,
+      "index": 20,
+      "width": 659,
+      "height": 273
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-021.webp",
+      "caption": "Figure 9. The network structure of Qtot.",
+      "page": 20,
+      "index": 21,
+      "width": 1000,
+      "height": 382
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-022.webp",
+      "caption": "Table 2. An example for WQMIX in which u∗ is not a stable point. (a): The matrix of Qjt with the maximum value of 4. (b): The weight w of WQMIX where ũ = u∗. (c): The Qtot with minimum Ltot under the condition that ū = u∗. (d): Another Qtot where ū ̸= u∗ achieves less Ltot than (c). Therefore, u∗ is not a stable point in this case.",
+      "page": 5,
+      "index": 22,
+      "width": 494,
+      "height": 391
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05297v1/fig-023.webp",
+      "caption": "Figure 3. Transition of greedy action in WQMIX with α = 0.1 under uniform visitation (π ≡ 1). This process begins with ũ = (1, 3) (top right) and stabilizes at ū = (1, 1) (top left). At each step we present Qtot optimized under the weight induced by current ũ, where cells are shaded if w(τ ,u) = α, and the value corresponding to ū = (row, column) is in bold.",
+      "page": 5,
+      "index": 23,
+      "width": 794,
+      "height": 254
+    }
+  ]
+}

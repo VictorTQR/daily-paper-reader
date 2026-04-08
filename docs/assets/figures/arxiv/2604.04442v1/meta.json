@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-001.webp",
+      "caption": "Fig. 7. Defensive response under Shadow-Jitter injection: C-MADF maintains high detection with low false positives, structured human review, and strong explainability, while the baseline AI fails catastrophically due to hallucinated threat confirmation and lack of verification.",
+      "page": 21,
+      "index": 1,
+      "width": 1076,
+      "height": 598
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-002.webp",
+      "caption": "Fig. 1. Illustration of a Shadow-Jitter telemetry manipulation scenario. Controlled perturbations in host and network logs distort apparent event correlations, leading an unconstrained correlation-based defense to misclassify benign activity as malicious. In contrast, C-MADF applies causal filtering and adversarial dual-policy validation within a constrained MDP-DAG structure, reducing spurious mitigation actions under ambiguous observations.",
+      "page": 7,
+      "index": 2,
+      "width": 1076,
+      "height": 600
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-003.webp",
+      "caption": "Fig. 3. The MDP-DAG Investigation Roadmap showing valid state transitions (orange arrows with reward values) and causally inconsistent blocked transitions (red X). The roadmap constrains the action space to ensure verifiable investigation flows, preventing logically inconsistent paths such as jumping directly from Initial Alert to Threat Mitigated without sufficient evidence collection.",
+      "page": 10,
+      "index": 3,
+      "width": 1076,
+      "height": 600
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-004.webp",
+      "caption": "Fig. 5. Illustrative decomposition of the ETS into its three primary components, Clarity, Completeness, and Confidence, and their respective sub-metrics. The figure visualizes the aggregation structure used to compute ETS(st) and demonstrates how the resulting score is compared against the escalation threshold τescalate. In this example, ETS(st) = 0.82 exceeds the calibrated threshold, and the system proceeds without mandatory human escalation. When ETS(st) falls below the threshold, structured explanation artifacts and human oversight are triggered.",
+      "page": 14,
+      "index": 4,
+      "width": 968,
+      "height": 502
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-005.webp",
+      "caption": "TABLE I ACRONYMS AND STANDARDIZED TERMINOLOGY USED IN THIS PAPER",
+      "page": 3,
+      "index": 5,
+      "width": 1076,
+      "height": 359
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-006.webp",
+      "caption": "TABLE II COMPARISON OF C-MADF WITH REPRESENTATIVE AUTONOMOUS CYBER DEFENSE APPROACHES",
+      "page": 3,
+      "index": 6,
+      "width": 1026,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-007.webp",
+      "caption": "TABLE VI MAPPING DESIGN OBJECTIVES TO C-MADF MECHANISMS",
+      "page": 8,
+      "index": 7,
+      "width": 529,
+      "height": 646
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-008.webp",
+      "caption": "Fig. 6. Illustration of the Shadow-Jitter attack scenario. Adversarial timing perturbations and log injections distort telemetry observations, inducing misleading correlations in conventional monolithic detection pipelines. In contrast, C-MADF leverages causal filtering and adversarial multi-agent validation to distinguish injected noise from genuine causal signals, thereby reducing false-positive mitigation actions under partial-compromise assumptions.",
+      "page": 17,
+      "index": 8,
+      "width": 529,
+      "height": 942
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-009.webp",
+      "caption": "Fig. 4. Council of Rivals adversarial deliberation architecture. At each investigation state st in the causally constrained MDP-DAG, the Blue-Team policy proposes a mitigation action based on its learned value estimates, while the Red-Team policy evaluates and challenges the proposal under a conservatively shaped objective. The interaction proceeds through iterative hypothesis evaluation, evidential justification, and action arbitration within the constrained action space. Inter-policy disagreement is quantified via the Policy Divergence Score D(st), which serves as an epistemic uncertainty signal and triggers human escalation when D(st) > τdiv. The policies are trained via self-play in a two-player stochastic game defined over the MDP-DAG, yielding stabilized adversarial decision policies.",
+      "page": 12,
+      "index": 9,
+      "width": 968,
+      "height": 542
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04442v1/fig-010.webp",
+      "caption": "Fig. 2. The architecture of the Causal Multi-Agent Decision Framework (C-MADF). The process begins with the Causal Discovery Module learning a causal model from data. This model informs the MDP-DAG Roadmap, which provides a verifiable structure for investigations. The Council of Rivals, consisting of a Blue-Team and a Red-Team agent, deliberates on the best course of action within this roadmap. Their debate and the resulting policy divergence are fed into the Explainable Human-in-the-Loop Interface, which computes the ETS and presents a clear recommendation to the supervisory adjudication.",
+      "page": 9,
+      "index": 10,
+      "width": 968,
+      "height": 542
+    }
+  ]
+}

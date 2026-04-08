@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00438v1/fig-001.webp",
+      "caption": "Figure 1: TR-ICRL combines both Test-Time Scaling (TTS) and In-Context Reinforcement Learning (ICRL).",
+      "page": 2,
+      "index": 1,
+      "width": 752,
+      "height": 419
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00438v1/fig-002.webp",
+      "caption": "Figure 6: Comparison of label accuracy and reward accuracy on AIME2024 and AIME2025. Even with low label accuracy, reward accuracy remains high due to “lucky reward”.",
+      "page": 7,
+      "index": 2,
+      "width": 451,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00438v1/fig-003.webp",
+      "caption": "Figure 2: We evaluate TR-ICRL across a range of 1 to 10 ICRL steps within both reasoning and knowledgeintensive tasks. Performance at step 0 serves as the experimental baseline.",
+      "page": 5,
+      "index": 3,
+      "width": 845,
+      "height": 243
+    }
+  ]
+}

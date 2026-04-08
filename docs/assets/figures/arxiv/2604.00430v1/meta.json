@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00430v1/fig-001.webp",
+      "caption": "TABLE I SUMMARY OF NOTATIONS",
+      "page": 2,
+      "index": 1,
+      "width": 504,
+      "height": 242
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00430v1/fig-002.webp",
+      "caption": "Fig. 6. Unlearning in the Gazebo platform",
+      "page": 10,
+      "index": 2,
+      "width": 495,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00430v1/fig-003.webp",
+      "caption": "TABLE XXXI EXAMPLES OF UNLEARNING REQUESTS AND THE CORRESPONDING UNLEARNING PROMPTS IN ALFWORLD",
+      "page": 14,
+      "index": 3,
+      "width": 498,
+      "height": 613
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00430v1/fig-004.webp",
+      "caption": "TABLE XXXIX UNLEARNING TWO CATEGORIES OF TASKS IN ALFWORLD.",
+      "page": 16,
+      "index": 4,
+      "width": 506,
+      "height": 842
+    }
+  ]
+}

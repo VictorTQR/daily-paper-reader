@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00137v1/fig-001.webp",
+      "caption": "Figure 4: Agent Playground UI: select an agent and base LLM, optionally filter tools via retrieval, and inspect execution logs, responses",
+      "page": 10,
+      "index": 1,
+      "width": 433,
+      "height": 433
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00137v1/fig-002.webp",
+      "caption": "Figure 2: Test-case contribution UI: submission instructions and supported formats for adding new tool tests.",
+      "page": 10,
+      "index": 2,
+      "width": 461,
+      "height": 306
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00137v1/fig-003.webp",
+      "caption": "Figure 3: Test-case authoring/execution UI: run tools on submitted cases and store outputs in a bulk-results table with selectable evaluation metrics.",
+      "page": 10,
+      "index": 3,
+      "width": 461,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00137v1/fig-004.webp",
+      "caption": "Table 2: Per-benchmark results for 15 benchmarks with GPT-4o-mini and GPT-5-mini as base models. We report mean ± std over 3 runs; each entry is formatted as GPT-4o-mini / GPT-5-mini. MultiAgent reports a single gpt-5-mini score. OpenTools-T improves the overall average across all frameworks, demonstrating that higher intrinsic tool quality can translate into better end-to-end reliability. Higher means better.",
+      "page": 11,
+      "index": 4,
+      "width": 950,
+      "height": 498
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00137v1/fig-005.webp",
+      "caption": "Table 1: Task-group performance for Prompting and three agent approaches using OctoTools-T vs. OpenTools-T. Scores are reported as gpt-4o-mini / gpt-5-mini for Prompting, ReAct, and OctoTools; MultiAgent reports a single gpt-5-mini score. OpenTools-T improves the overall average across all frameworks, demonstrating that higher intrinsic tool quality can translate into better end-to-end reliability. Higher means better.",
+      "page": 5,
+      "index": 5,
+      "width": 954,
+      "height": 209
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00137v1/fig-006.webp",
+      "caption": "Figure 1: OPENTOOLS supports two complementary workflows. Top (maintenance): OpenTools stores Tools and Tests; community modules collect new tools/tests/feedback, which are reviewed by verifier(s) (tool creators/maintainers) to accept, curate, and update the canonical toolboxes and evaluation suites; tool-evaluation modules then re-run standardized checks to refresh intrinsic reliability signals (accuracy, availability, regression). Bottom (agentic): a user inputs a query (optionally files) and selects tools from the OPENTOOLS-Box; agent modules decide actions and request tool calls; execution modules run tools to return observations and produce the final answer with structured tool/reasoning logs, while optional UI feedback feeds back into the community layer.",
+      "page": 3,
+      "index": 6,
+      "width": 948,
+      "height": 525
+    }
+  ]
+}

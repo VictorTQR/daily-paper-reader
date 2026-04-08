@@ -1,0 +1,1603 @@
+Title: Explainable Autonomous Cyber Defense using Adversarial Multi-Agent Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.04442v1
+
+Published Time: Tue, 07 Apr 2026 01:44:40 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+> 1
+
+# Explainable Autonomous Cyber Defense using Adversarial Multi-Agent Reinforcement Learning 
+
+Yiyao Zhang 1, Diksha Goel 2, Hussain Ahmad 11Adelaide University, Australia 
+
+> 2
+
+CSIRO’s Data61, Australia Email: yiyao.zhang@student.adelaide.edu.au; diksha.goel@csiro.au; hussain.ahmad@adelaide.edu.au Corresponding author: Hussain Ahmad 
+
+Abstract —Autonomous agents are increasingly deployed in both offensive and defensive cyber operations, creating high-speed, closed-loop interactions in critical infrastructure environ-ments. Advanced Persistent Threat (APT) actors exploit "Living off the Land" techniques and targeted telemetry perturbations to induce ambiguity in monitoring systems, causing automated defenses to overreact or misclassify benign behavior as malicious activity. Existing monolithic and multi-agent defense pipelines largely operate on correlation-based signals, lack structural constraints on response actions, and are vulnerable to reasoning drift under ambiguous or adversarial inputs. We present the Causal Multi-Agent Decision Framework (C-MADF), a structurally constrained architecture for autonomous cyber defense that integrates causal modeling with adversarial dual-policy control. C-MADF first learns a Structural Causal Model (SCM) from historical telemetry and compiles it into an investigation-level Directed Acyclic Graph (DAG) that defines admissible response transitions. This roadmap is formalized as a Markov Decision Process (MDP) whose action space is explicitly restricted to causally consistent transitions. Decision-making within this constrained space is performed by a dual-agent reinforcement learning system in which a threat-optimizing Blue-Team policy is counterbalanced by a conservatively shaped Red-Team policy. Inter-policy disagreement is quantified through a Policy Divergence Score and exposed via a human-in-the-loop interface equipped with an Explainability–Transparency Score (ETS) that serves as an escalation signal under uncertainty. On the real-world CICIoT2023 dataset, C-MADF reduces the false-positive rate from 11.2 percent, 9.7 percent, and 8.4 percent in three cutting-edge literature baselines to 1.8 percent, while achieving 0.997 precision, 0.961 recall, and 0.979 F1-score. The ETS signal exhibits strong monotonic alignment with evidentiary sufficiency and policy agreement, supporting calibrated escalation of autonomous actions under uncertainty. 
+
+Index Terms —Autonomous Cyber Defense, Explainable AI, Causal Modeling, Multi-Agent Reinforcement Learning, Decision-Making, Adversarial Robustness. 
+
+1 INTRODUCTION 
+
+# THE rapid digital transformation of critical infrastructure has fundamentally altered the security and dependability landscape of cyber-physical systems [1], [2]. Modern environ-ments increasingly incorporate microservice-based architec-tures [3]–[5] and advanced machine learning components [6]– [8], while domains such as power grids and industrial control systems are now deeply interconnected with enterprise IT, cloud platforms, and remote management interfaces [9], [10]. This integration improves efficiency but also introduces tightly coupled dependencies that amplify cyber risk and potential cascading failures under attack [9], [11]. Advanced Persistent Threat (APT) actors increasingly ex-ploit this complexity using stealth-oriented strategies such as Living-off-the-Land behavior [12], telemetry manipulation, and staged lateral movement [13], [14]. In parallel, organiza-tions are adopting autonomous and semi-autonomous defense pipelines, including reinforcement learning and LLM-assisted agents [15], [16], to triage alerts and respond at machine speed [17]–[20]. Recent surveys on LLM-based autonomous cyber agents and hallucination behavior further indicate that unconstrained agent reasoning can amplify operational risk under uncertainty [21], [22]. While this shift improves re-sponsiveness, it also introduces a key dependability problem: under ambiguous or adversarial observations, correlation-only automation can trigger unsafe mitigation actions, false posi-tives, and operational disruption [23]–[25]. Existing lines of work provide important but partial capa-bilities. Causal analytics improve post hoc reasoning but often remain detached from executable policy constraints [26]–[28]; explainable AI improves interpretability but does not enforce admissible action trajectories [23], [29], [30]; and multi-agent security systems improve decomposition yet frequently lack verifiable workflow restrictions [31], [32]. As a result, current approaches rarely provide an end-to-end mechanism that jointly delivers causal grounding, constrained decision ex-ecution, adversarial internal validation, and calibrated human escalation [33], [34]. To address this gap, we propose the Causal Multi-Agent Decision Framework (C-MADF), a structured architecture for dependable autonomous cyber defense. Operationally, C-MADF proceeds in four dependent stages: (i) telemetry is used to learn a Structural Causal Model (SCM), (ii) the learned SCM is compiled into a constrained Markov Decision Process (MDP)–Directed Acyclic Graph (DAG) investigation roadmap, (iii) Blue-Team and Red-Team policies deliberate over admissible actions, and (iv) a human-in-the-loop interface computes ETS to govern autonomous execution versus escalation. The main contributions of this paper are as follows:  
+
+> •
+
+Causally constrained investigation planning. We learn a SCM from security telemetry and compile it into an 
+
+> arXiv:2604.04442v1 [cs.CR] 6 Apr 2026 2
+
+investigation-level MDP-DAG that restricts autonomous actions to causally admissible transitions.  
+
+> •
+
+Adversarial dual-policy deliberation. We introduce a Council of Rivals design in which a threat-optimizing Blue-Team policy is counterbalanced by a conservative Red-Team policy, with disagreement quantified as a Pol-icy Divergence Score for uncertainty-aware arbitration.  
+
+> •
+
+Explainable escalation mechanism. We define an Explainability–Transparency Score (ETS) that aggregates explanation quality, evidentiary sufficiency, and policy consistency to support transparent human-in-the-loop in-tervention.  
+
+> •
+
+Verification-oriented evaluation. We provide formal and empirical analysis, including constrained-transition rea-soning, baseline comparisons, and calibration checks on the real-world CICIoT2023 dataset. The remainder of this paper is organized as follows. Sec-tion 2 reviews related work and clarifies the research gap. Section 3 introduces the formal preliminaries, and Section 4 defines the system and adversary models. Section 5 details the proposed framework. Section 6 presents security and verification-oriented analysis. Section 7 reports quantitative results on CICIoT2023. Section 8 discusses implications and limitations, and Section 9 concludes the paper. Besides, Table I shows the definitions used in the paper. 2 BACKGROUND AND RELATED WORK 
+
+Autonomous cyber defense has progressed significantly in response to increasingly adaptive adversaries and the opera-tional complexity of modern cyber-physical infrastructure. In this section, we review the principal research directions that inform C-MADF and identify structural limitations that moti-vate our framework. Specifically, we examine prior work in: (i) causal inference for security analytics, (ii) machine learning for intrusion detection, (iii) autonomous cyber-defense agents, (iv) explainable AI in cybersecurity, (v) multi-agent security architectures, and (vi) adversarial machine learning. The com-parison results can be found in Table II. Related strands on immersive cyber situational awareness, game-theoretic defense models, and sector-specific IoT security assessments further reinforce the need for structured and operator-aware cyber defense workflows [35]–[37]. These research directions highlight both the strengths and limitations of current approaches in handling complex and adversarial environments. Our analysis emphasizes a common limitation across these lines of work: although individually powerful, existing ap-proaches do not simultaneously provide causally grounded investigation logic, formally constrained decision trajectories, and adversarial multi-agent deliberation within a verifiable decision-theoretic framework. 
+
+2.1 Causal Inference in Security 
+
+Causal inference has been increasingly applied to cybersecu-rity tasks including root cause analysis, anomaly detection, and attack attribution [26], [27], [41]. By modeling cause–effect re-lationships rather than correlations, causal approaches improve robustness to spurious associations and distributional shifts. While causal models have been applied to enhance anomaly detection and improve data quality in security analytics [42], these applications primarily focus on improving the fidelity of training data and detection accuracy rather than constrain-ing autonomous decision processes. For instance, generative models combined with causal reasoning have been used to address data imbalance in insider threat detection, but the learned causal relationships are not compiled into enforceable workflow constraints for autonomous response systems. Nonetheless, most existing work applies causal models for offline analysis or enhanced detection, rather than for con-straining online decision processes. Causal security analytics typically stop at producing improved explanatory or predictive models; they do not govern which autonomous actions are admissible in real time. C-MADF extends this line of work by compiling a learned SCM into an MDP-DAG roadmap that explicitly restricts allowable state transitions. This integration enables causal con-sistency to function as a hard constraint on action sequences, rather than solely as an explanatory overlay. 
+
+2.2 Machine Learning for Intrusion Detection 
+
+Machine learning-based intrusion detection has evolved sig-nificantly [43], [44], with contemporary approaches achieving high accuracy through ensemble methods [45], deep neural ar-chitectures [38], [39], and bio-inspired optimization [40], [46]. Bidirectional LSTM networks have proven particularly effec-tive for sequential threat pattern recognition [39], while hybrid meta-heuristic techniques combined with gradient boosting classifiers have demonstrated robustness across diverse attack scenarios [45]. These advances are underpinned by foundational deep-learning principles for representation learning and optimiza-tion [47]. Recent systematic reviews highlight the expansion of ML-based intrusion detection to IoT environments [48], where resource constraints and heterogeneous device characteristics introduce additional challenges [49]. However, several fun-damental limitations persist. First, model reliability can be compromised by data preprocessing artifacts and pattern leak-age, particularly when training and deployment distributions diverge [50]. Second, optimization strategies for improving detection accuracy, such as chaotic optimization in deep learning architectures [40], do not address the interpretability requirements for autonomous response systems. Third, deci-sion tree-based ensemble methods, while offering improved classification performance [51], lack the causal grounding necessary to support verifiable investigation workflows. These approaches excel at threat detection but do not provide mechanisms for causally constrained autonomous re-sponse, adversarial validation of mitigation actions, or struc-tured human oversight under epistemic uncertainty. C-MADF complements detection-focused ML systems by providing a principled framework for translating detection outputs into verifiable, explainable autonomous actions. 3
+
+> TABLE I ACRONYMS AND STANDARDIZED TERMINOLOGY USED IN THIS PAPER
+
+Acronym/Term Definition used in this paper 
+
+C-MADF Causal Multi-Agent Decision Framework APT Advanced Persistent Threat SCM Structural Causal Model DAG Directed Acyclic Graph MDP Markov Decision Process MDP-DAG roadmap Causally constrained investigation roadmap compiled from SCM into executable MDP transitions ETS Explainability–Transparency Score AICA Autonomous Intelligent Cyber Defense Agent XAI Explainable Artificial Intelligence LLM Large Language Model MADRL Multi-Agent Deep Reinforcement Learning ICS Industrial Control System IT/OT Information Technology / Operational Technology IoT Internet of Things CICIoT2023 Canadian Institute for Cybersecurity IoT Dataset (2023)        
+
+> TABLE II COMPARISON OF C-MADF WITH REPRESENTATIVE AUTONOMOUS CYBER DEFENSE APPROACHES
+
+Approach Formally Structured Causal Multi-Agent Integrated Decision-Level Decision Model Grounding Deliberation XAI Robustness 
+
+Causal Security Analytics [26], [27] 
+
+△ (offline) ✓ × △ △
+
+ML for Intrusion Detection [38]– [40] 
+
+× × × × △ (data-level) AICA-style Agents [19] △ × × × △
+
+XAI for Cybersecurity [23], [29] × × × ✓ (post-hoc) ×
+
+MAS in Cybersecurity [31], [32] × × ✓ × △
+
+Adversarial ML Defenses [24] × × × × ✓ (model-level) 
+
+C-MADF (this work) ✓ (MDP-DAG) ✓ (online SCM) ✓ (Council) ✓ (ETS) ✓ (process-level)       
+
+> Legend: ✓= explicitly supported; △= partial or context-dependent support; ×= not explicitly addressed.
+
+2.3 Autonomous Intelligent Cyber-defense Agents (AICA) 
+
+Autonomous Intelligent Cyber-defense Agents (AICA) have been proposed as scalable mechanisms for continuous moni-toring and automated response in contested environments [19]. Despite their promise, existing AICA implementations exhibit three critical structural limitations. First , decision-making logic is predominantly correlation-based rather than causally grounded, remaining vulnerable to LotL techniques [13] and zero-day exploits [52]. Under adversarial telemetry manipu-lation, correlation-based systems cannot distinguish genuine causal dependencies from spurious co-occurrence [27]. Sec-ond , internal decision processes lack principled auditability; while recent proposals incorporate post-hoc explanation mod-ules [23], these operate as interpretive overlays rather than structural constraints on action admissibility. Third , AICA frameworks lack formally constrained investigation pathways, potentially leading to self-inflicted denial-of-service events under adversarial ambiguity [10]. High detection accuracy [38], [39], [45] and autonomous response reliability are orthogonal properties [50]. AICA-style agents do not embed policies within learned SCMs or constrain mitigations through decision-theoretic roadmaps amenable to formal analysis, precluding trajectory-level guarantees essen-tial for critical infrastructure certification [53]. C-MADF addresses these gaps by integrating (i) a learned SCM that filters spurious correlations, (ii) a causally con-strained MDP-DAG restricting policy exploration to valid investigation trajectories, and (iii) adversarial multi-agent de-liberation exposing epistemic uncertainty through calibrated disagreement. 
+
+2.4 Explainable AI (XAI) in Cybersecurity 
+
+As AI systems assume increasingly critical roles in secu-rity operations, explainability has become essential for trust, accountability, and safe deployment [23], [29]. Foundational work on explanation in AI provides an additional conceptual basis for this requirement [54]. Existing XAI techniques include feature attribution (e.g., Local Interpretable Model-agnostic Explanations (LIME), SHapley Additive exPlanations (SHAP)), rule extraction, and counterfactual explanations. However, most cybersecurity-focused XAI approaches are post-hoc and model-centric. They explain static predictions rather than constraining the evolution of autonomous decision policies over time. In interactive cyber defense environments, explanations must be generated in real time and influence whether actions are executed. While deep learning models have achieved state-of-the-art performance in network intrusion detection tasks [38]–[40], 4
+
+their black-box nature poses significant challenges for oper-ational deployment in security-critical environments. Recent work has explored various explainability techniques tailored to cybersecurity applications, yet these approaches typically provide post-hoc rationalizations without influencing the ad-missibility of autonomous actions [49]. The integration of explainability as a structural constraint on decision processes, rather than as an interpretive overlay, remains an open chal-lenge. Recent surveys on counterfactual explanations and algorith-mic recourse further highlight the need for explanations that support actionable intervention pathways [55]. C-MADF integrates explainability as a structural property of the decision process rather than as a wrapper around a trained model. The ETS is embedded within the multi-agent reinforcement learning objective and is directly tied to the constrained MDP-DAG structure. Thus, interpretability signals influence policy learning and execution gating, rather than merely post-hoc justification. This design choice is also aligned with broader human-in-the-loop machine learning principles for safety, accountability, and calibrated oversight in high-stakes domains [56]. 
+
+2.5 Multi-Agent Systems in Cybersecurity 
+
+Multi-agent systems have been introduced to decompose complex cybersecurity tasks across specialized agents [31], [32]. Collaborative monitoring, distributed reasoning, and co-ordinated response mechanisms have demonstrated improved coverage and adaptability compared to monolithic architec-tures. Foundational multi-agent formulations and modern MADRL critiques both emphasize coordination–stability trade-offs that become critical under adversarial uncertainty [57], [58]. However, existing MAS approaches typically operate within unconstrained state spaces. Under ambiguous or adversarial evidence, agents may converge toward mutually reinforcing but incorrect threat narratives, a phenomenon akin to rea-soning drift. Because decision trajectories are not structurally constrained by formal workflow models, these systems lack guarantees that disruptive actions are preceded by appropriate evidence-gathering states. Moreover, representative MAS architectures do not ground their action spaces in explicitly learned causal models, nor do they embed agent deliberation within a decision process suitable for formal verification. Consequently, prior MAS work does not provide enforceable properties such as "no mitigation action without traversing required investigative states," which is a central objective of C-MADF. Recent work has explored adversarial robustness in dis-tributed security systems, demonstrating that deep learning-enabled multi-agent architectures remain vulnerable to care-fully crafted adversarial examples that can evade detection or provoke unintended defensive responses [25]. While these studies highlight the importance of adversarial training and input sanitization at the classifier level, they do not address the structural constraints necessary to prevent unsafe multi-step mitigation sequences or provide formal guarantees over in-vestigation trajectories, gaps that C-MADF directly addresses through its causally constrained MDP-DAG architecture. 
+
+2.6 Adversarial Machine Learning 
+
+Adversarial machine learning has systematically demon-strated that deep learning models deployed in cybersecurity applications are vulnerable to carefully crafted input pertur-bations that induce confident yet incorrect predictions [24]. In security settings, adversarial examples can enable evasion attacks, trigger false positives in intrusion detection systems, or provoke unintended defensive actions across domains such as network intrusion detection, malware classification, and insider threat analysis. Consistent with Table 1, the adversarial-ML studies consid-ered here focus on defenses such as adversarial training, input sanitization, and augmentation-based robustness mechanisms at the classifier or perception level; however, these methods do not reason over long-horizon investigation workflows, impose structural constraints on mitigation sequences, or provide trajectory-level guarantees that disruptive actions are preceded by required evidence-gathering states. [24] C-MADF complements model-level robustness techniques by introducing structured counterfactual scrutiny at the decision-process level. A conservative Red-Team policy chal-lenges proposed Blue-Team interventions within a causally constrained state space, thereby reducing unsafe mitigation trajectories under epistemic uncertainty. 
+
+2.7 Summary and Research Gap 
+
+However, several core ingredients of C-MADF are now established in isolation, and this manuscript must be more explicitly positioned against the latest state-of-the-art work in closely related areas. The prior literature provides essential components for au-tonomous cyber defense but does not unify them within a single verifiable framework:  
+
+> •
+
+Causal analytics [26], [27] improve root cause analysis but do not constrain online decision processes.  
+
+> •
+
+ML-based intrusion detection systems [38]–[40], [45], [46] achieve high detection accuracy but focus on classifi-cation rather than autonomous investigation and response, and remain vulnerable to data quality issues and distri-butional shift [50].  
+
+> •
+
+AICA systems [19] emphasize autonomy but lack causal grounding and formally constrained investigation paths.  
+
+> •
+
+XAI approaches [23], [29] enhance interpretability but do not govern real-time policy admissibility.  
+
+> •
+
+Security-oriented MAS [31], [32] improve task decompo-sition yet operate in unconstrained state spaces without enforceable trajectory-level guarantees.  
+
+> •
+
+Adversarial ML defenses [24] improve model robustness but do not constrain long-horizon decision sequences. C-MADF addresses this gap by integrating (i) learned SCM, (ii) an MDP-DAG decision process that enforces admissible action sequences, and (iii) adversarial multi-agent deliberation 5
+
+coupled with quantitative explainability signals. This combi-nation yields a causally grounded, verifiable, and explainable multi-agent controller for autonomous cyber defense. This gap is not merely terminological; it is operational. In practice, systems that optimize only detector-level accuracy can still produce unsafe intervention trajectories when evi-dence is sparse, contradictory, or strategically manipulated. By explicitly separating evidence acquisition states from high-impact mitigation states and enforcing admissibility through the roadmap, C-MADF targets this deployment-critical failure mode directly rather than indirectly via threshold tuning. Accordingly, our contribution is positioned as a systems-level integration advance: we do not claim novelty for each individual building block in isolation, but for the end-to-end coupling of causal structure learning, constrained sequential control, adversarial policy cross-examination, and escalation-aware explainability under one coherent decision pipeline. 3 PRELIMINARIES 
+
+This section formalizes the mathematical foundations un-derlying C-MADF. We introduce the MDP formulation used to model constrained investigation workflows and the SCM framework used to encode causal dependencies among security-relevant variables. Notation introduced here is used consistently throughout the paper. The reference table can be found in Table III. 
+
+3.1 MDP 
+
+We model the autonomous investigation and mitigation workflow as a finite-horizon discounted MDP, 
+
+M = ⟨S , A, P, R, γ ⟩.
+
+Our notation follows canonical treatments in MDP and rein-forcement learning literature [59], [60]. Table I presents the symbol-level definitions used in the paper. 
+
+Constrained Action Space. In C-MADF, the action space A
+
+is not unconstrained. Instead, admissible actions at state s are restricted to a subset AC (s) ⊆ A determined by a learned causal investigation graph (defined below). This structural restriction differentiates our formulation from conventional unconstrained MDP-based cyber-defense models. 
+
+3.2 SCM 
+
+To encode causal dependencies among investigation-relevant variables, we adopt the SCM framework [27]. An SCM is defined as a tuple 
+
+MC = ⟨U, V, F ⟩,
+
+where:  
+
+> •
+
+U is a set of exogenous (unobserved) variables.  
+
+> •
+
+V = {V1, . . . , V n} is a set of endogenous variables.  
+
+> •
+
+F = {f1, . . . , f n} is a collection of structural equations such that 
+
+Vi = fi(Pa i, U i),
+
+where Pa i ⊆ V \ { Vi} denotes the set of parents (direct causes) of Vi in the model. The SCM induces a DAG G = ( V, E ),                                         
+
+> TABLE III SUMMARY OF CORE NOTATION
+> Symbol Description
+> S,AState space and action space of the MDP.
+> P(s′|s, a ), R (s, a ), γ Transition kernel, reward function, and discount factor.
+> π, V π, Q πPolicy, state-value function, and action-value func-tion under policy π.
+> G= ( V, E )DAG induced by the learned SCM.
+> MC=⟨U, V, F ⟩SCM with exogenous variables U, endogenous variables V, and structural equations F.
+> πB, π RBlue-Team and Red-Team policies in the dual-agent architecture.
+> θB, θ RParameters of the Blue-Team and Red-Team policy networks.
+> D(st)Policy Divergence Score measuring disagreement between πBand πRat state st.
+> AC(s)Causally admissible action subset at state sin-duced by G.ETS Explainability–Transparency Score used for exe-cution gating and escalation.
+
+3.3 Assumptions 
+
+Throughout the paper, we make the following assumptions:  
+
+> •
+
+The learned SCM is acyclic and provides a probabilistic structural approximation of the true (unknown) causal dependencies among investigation-relevant variables. We do not assume perfect recovery of the ground-truth causal graph. Instead, we assume bounded structural mis-specification, characterized by an edge-level error rate ε
+
+relative to the true causal graph.  
+
+> •
+
+The transition dynamics of the investigation process satisfy the Markov property at the level of the abstract roadmap states, i.e., transition probabilities are condition-ally independent of prior history given the current state and action.  
+
+> •
+
+Structural errors in the learned SCM are bounded such that their induced effect on admissible roadmap transi-tions is limited to a controlled fraction of state–action pairs. All probabilistic safety and bounded-violation re-sults presented later are conditional on this bounded structural error assumption. These assumptions reflect common modeling practices in causal discovery and reinforcement learning. However, we emphasize that our safety and robustness guarantees are con-ditional on bounded causal mis-specification rather than on exact structural recovery. 4 PROBLEM FORMULATION 
+
+We formalize the problem of causally grounded, verifiable, and explainable autonomous cyber defense under adversarial telemetry manipulation. We specify (i) the system model, (ii) the adversary model, and (iii) the design objectives that C-MADF must satisfy. 
+
+4.1 System Model 
+
+We consider a cyber-physical network consisting of a set of nodes 
+
+N = {n1, . . . , n m},6                      
+
+> TABLE IV ADVERSARY CAPABILITIES UNDER THE PARTIAL -C OMPROMISE MODEL
+> Capability Formal Description
+> Initial Compromise Obtains unauthorized access to asubset
+> Nc⊂ N via credential theft, phishing, or exploitation of vulnerabilities. Lateral Movement Moves within Nusing legitimate admin-istrative tools and credentials (e.g., LotL techniques) to minimize detection signals. Selective Telemetry Manipu-lation Drops, delays, replays, injects, or perturbs subsets of host-, network-, or control-layer telemetry streams to induce ambiguity in state estimation. Partial Historical Poisoning Introduces bounded perturbations into a frac-tion of historical logs used for causal discov-ery, without full rewriting of all historical data. Evasion Strategies Mimics benign operational patterns and ex-ploits monitoring blind spots to delay detec-tion or trigger false mitigation decisions.
+
+representing servers, workstations, industrial controllers, and networking devices. The global system state evolves over discrete time steps and is partially observed through telemetry streams 
+
+Tt = {logs , flows , system events , performance metrics }.
+
+A Security Operations Center (SOC) monitors Tt and de-ploys an autonomous defense stack composed of interacting agents. These agents may execute actions from a predefined action set 
+
+A = {collect evidence , isolate host , block flow , . . . },
+
+subject to policy constraints defined in Section 3. Agents share a learned SCM and operate within a causally constrained MDP. Action execution may be automated or escalated to a supervisory adjudication. The supervisory adju-dication serves as the final authority for high-impact interven-tions and has access to structured explanations and uncertainty signals. 
+
+4.2 Adversary Model 
+
+We consider a strong but bounded adversary consistent with Advanced Persistent Threat (APT) capabilities. The ad-versary may exploit several vectors to disrupt the system, which are systematically summarized and formally described in Table IV. Capability-level definitions are presented in the Table IV. 
+
+4.2.1 Constraints.: Scenario constraints under the partial-compromise assumption are summarized in a dedicated table: Table V. 
+
+4.2.2 Formal Definition of Shadow-Jitter Telemetry Manipulation: We now formalize the Shadow-Jitter adversary introduced informally in Section 1. Shadow-Jitter models a bounded, partially controlled telemetry perturbation process designed to distort apparent causal relationships while preserving superficial plausibility. The conceptual mechanics of this adversary are illustrated in Figure 1. The figure demonstrates how the injection of                      
+
+> TABLE V SCENARIO CONSTRAINTS UNDER THE PARTIAL -C OMPROMISE MODEL
+> Constraint Scenario Restriction
+> Node-Level Compromise Bound Adversary control is limited to a strict subset Nc⊂N;complete network takeover is excluded. Telemetry Survivability The adversary cannot suppress all sens-ing channels simultaneously; at least one trustworthy telemetry path remains ob-servable. Defender Runtime Integrity The C-MADF execution environment, source code, and runtime parameters are not directly compromiseable by the ad-versary. Secure-Channel and Crypto In-tegrity The adversary cannot subvert secure communication channels or break under-lying cryptographic primitives. Out-of-Scope Full-Compromise Attacks Full compromise of the defense stack, ar-bitrary code execution inside C-MADF, and complete rewriting of all historical data are out of scope.
+
+controlled noise into host and network logs distorts apparent event correlations. This visualization is critical for under-standing how conventional unconstrained defenses are misled into perceiving a standard data exfiltration attack, whereas C-MADF uses this as a basis for causal filtering and adversarial validation. 
+
+Telemetry Representation. Let the observed telemetry stream at discrete time t be represented as a feature vector 
+
+Tt ∈ Rd, (1) where d denotes the number of aggregated host-, network-, and control-level features extracted from raw logs and event streams (Section 4). Let 
+
+T0: T = {T0, T 1, . . . , T T } (2) denote a telemetry trajectory over horizon T .
+
+Bounded Perturbation Model. A Shadow-Jitter adversary ap-plies a perturbation operator ASJ to the telemetry stream such that 
+
+˜Tt = ASJ (Tt) = Tt + δt, (3) where δt ∈ Rd is an adversarial perturbation vector and ˜Tt
+
+denotes manipulated telemetry. We impose a bounded perturbation constraint: 
+
+∥δt∥p ≤ ϵ, ∀t, (4) for some p ∈ { 1, 2, ∞} , where:  
+
+> •
+
+ϵ > 0 is the attack strength parameter,  
+
+> •
+
+∥ · ∥ p denotes the ℓp-norm. The parameter ϵ controls the magnitude of instantaneous telemetry distortion. 
+
+Partial Channel Control. Consistent with the partial-compromise assumption (Section 4.2.1), the adversary controls only a subset of telemetry channels C ⊂ { 1, . . . , d } such that 7 
+
+> Fig. 1. Illustration of a Shadow-Jitter telemetry manipulation scenario. Controlled perturbations in host and network logs distort apparent event correlations, leading an unconstrained correlation-based defense to misclassify benign activity as malicious. In contrast, C-MADF applies causal filtering and adversarial dual-policy validation within a constrained MDP-DAG structure, reducing spurious mitigation actions under ambiguous observations.
+
+δit = 0 ∀i / ∈ C , (5) and 
+
+|C| 
+
+d ≤ κ, (6) where κ ∈ (0 , 1) denotes the compromised-channel fraction. This models selective log suppression, injection, replay, or distortion at compromised nodes only. 
+
+Temporal Distortion (Replay/Delay). To model timing-based perturbations, the adversary may introduce bounded temporal shifts: 
+
+˜T it = T it−∆i(t), (7) subject to 
+
+0 ≤ ∆i(t) ≤ ∆max , (8) where ∆max denotes the maximum allowable delay and distortion is restricted to channels i ∈ C .
+
+Partial Historical Poisoning. Let D denote the historical dataset used to learn the SCM. The adversary may construct 
+
+˜D = D ∪ Dpoison , (9) subject to 
+
+|Dpoison ||D| ≤ ρ, (10) where ρ ∈ (0 , 1) denotes the poisoning rate. The poisoning process must preserve marginal plausibility constraints to avoid trivial detection. 
+
+Shadow-Jitter Adversary. We define the Shadow-Jitter adver-sary as the bounded parameter tuple 
+
+ASJ = ( ϵ, κ, ∆max , ρ ), (11) such that telemetry manipulation satisfies: 
+
+∥δt∥p ≤ ϵ, |C| 
+
+d ≤ κ, ∆i(t) ≤ ∆max , |Dpoison ||D| ≤ ρ. 
+
+(12) This adversary model captures:  
+
+> •
+
+bounded amplitude perturbation,  
+
+> •
+
+partial channel compromise,  
+
+> •
+
+bounded temporal distortion,  
+
+> •
+
+limited historical poisoning. All robustness and security guarantees in Section 6 are defined with respect to this bounded adversarial model. 
+
+4.3 Design Objectives 
+
+Table VI presents the objective definitions and correspond-ing C-MADF mechanisms. 5 THE C-MADF F RAMEWORK 
+
+The Causal Multi-Agent Decision Framework (C-MADF) is a structured architecture for verifiable and explainable 8
+
+TABLE VI MAPPING DESIGN OBJECTIVES TO C-MADF M ECHANISMS 
+
+ID Objective Definition Mechanisms in C-MADF 
+
+G1 Maintain high detection recall while limiting false-positive mitigation actions under bounded telemetry manipulation and partial historical poisoning. Causally constrained action space derived from learned DAG G;dual-policy adversarial deliberation; divergence-based escalation under high policy disagreement D(st).G2 Ensure every executable mitigation action corresponds to an admissible transition in a formally defined investigation structure. MDP-DAG structure restricting admissible state transitions; complete logging of state–action trajectories; compatibility with temporal-logic and model-checking analysis. G3 Provide structured evidence traces and uncertainty signals for each proposed or executed action to support human oversight. Human-in-the-loop interface exposing evidence traces and alternative hypotheses; ETS aggregating clarity, coverage, and policy uncertainty; explicit visualization of policy divergence D(st).G4 Scale to large networks and high-volume telemetry streams without exponential growth in online decision complexity. Modular architecture separating offline causal discovery from online decision-making; compact dual-policy networks πB , π R; reduced branching via constrained action subsets AC (s).G5 Update policies and causal estimates over time while preserving structural constraints on admissible action sequences. Periodic or drift-triggered SCM re-estimation; continual reinforcement learning updates; recalibration of escalation thresholds under distributional shift. 
+
+autonomous cyber defense. The framework integrates causal modeling, constrained decision processes, dual-objective multi-agent reinforcement learning with asymmetric reward shaping, and human-in-the-loop oversight into a unified pipeline. Its design objective is to ensure that every autonomous intervention is (i) causally grounded, (ii) restricted to formally admissible investigation trajectories, and (iii) accompanied by machine-generated explanations suitable for operational auditing. Section 5 presents C-MADF in a coherent execution sequence rather than as isolated modules. It begins with Causal Discovery (Subsection 5.1), followed by the Causally-Constrained MDP-DAG Roadmap (Subsection 5.2), then the Council of Rivals deliberation (Subsection 5.3), and finally the Explainable HITL interface (Subsection 5.4). Subsection 5.5 unifies these components into a complete end-to-end incident-response loop. Table VII presents the module inputs, outputs, and guar-antees, while Figure 2 illustrates how these modules are connected in the pipeline. The surrounding text focuses on how outputs from each module become inputs to the next stage. 
+
+5.1 Causal Discovery Module 
+
+C-MADF is grounded in an explicit SCM of the monitored environment. Unlike correlation-based analytics pipelines, which may confound co-occurrence with causation, this mod-
+
+TABLE VII C-MADF A RCHITECTURAL MODULES AND FORMAL GUARANTEES 
+
+Module Inputs / Outputs Formal Guarantee 
+
+Causal Discovery Engine 
+
+In: historical telemetry and event logs D; Out: 
+
+weighted causal DAG 
+
+G = (V, E ) with edge confidence scores. 
+
+Causal identifiability: 
+
+filters spurious statistical dependencies and enables intervention- and counterfactual-consistent reasoning under structural constraints. Causally-Constrained MDP (MDP-DAG) 
+
+In: G and investigation on-tology; Out: constrained MDP M = ( S, A, P, R )
+
+over admissible roadmap states and actions. 
+
+Semantic soundness: re-stricts policy exploration to transitions consistent with causal structure and operational semantics, en-suring verifiable action ad-missibility. Council of Ri-vals Deliberation 
+
+In: current state st and roadmap constraints; Out: 
+
+adversarially validated ac-tion ˆat and policy diver-gence score D(st).
+
+Robust decision validation: dual-policy asymmetric self-play with objective divergence reduces reasoning drift, mitigates overconfidence, and exposes epistemic uncertainty via calibrated disagreement. Explainable Human-in-the-Loop (HITL) Interface 
+
+In: deliberation artifacts (evidence traces, counterarguments, 
+
+D(st)); Out: structured explanations, Explanation Transparency Score (ETS (st)), and escalation triggers. 
+
+Operational transparency: 
+
+produces operator-aligned rationales with quantifi-able reliability calibration and principled escalation under high uncertainty. 
+
+ule seeks to recover directed causal dependencies among security-relevant variables. Let V denote the set of observed variables extracted from host- and network-level telemetry, including process metadata, system calls, authentication events, and flow-level features. The Causal Discovery Module applies constraint-based causal structure learning algorithms (e.g., PC or FCI) to estimate a DAG G = ( V, E ) over V. Edge existence and orientation are inferred via conditional independence testing under standard causal sufficiency or partial observability assumptions. The learned DAG is interpreted as the graphical representation of an SCM M = ⟨U, V, f ⟩, where U
+
+denotes exogenous variables and f specifies structural equations governing endogenous variables V . The SCM enables intervention reasoning through do (·) operators and supports counterfactual queries over alternative action sequences. To accommodate evolving infrastructure and adversarial tac-tics, the causal model is periodically re-estimated or incremen-tally updated under drift detection triggers. This ensures that structural dependencies reflect current operational conditions rather than stale historical patterns. The SCM contributes three tightly coupled capabilities: causal filtering to suppress spurious correlations from co-incidental co-occurrence or adversarial noise, intervention reasoning to evaluate the downstream effects of containment or blocking actions, and counterfactual analysis to compare alternative response strategies during post-incident auditing. 9 
+
+> Fig. 2. The architecture of the Causal Multi-Agent Decision Framework (C-MADF). The process begins with the Causal Discovery Module learning a causal model from data. This model informs the MDP-DAG Roadmap, which provides a verifiable structure for investigations. The Council of Rivals, consisting of a Blue-Team and a Red-Team agent, deliberates on the best course of action within this roadmap. Their debate and the resulting policy divergence are fed into the Explainable Human-in-the-Loop Interface, which computes the ETS and presents a clear recommendation to the supervisory adjudication.
+
+Algorithm 1 abstracts a family of constraint-based methods (such as PC/FCI). In practice, conditional independence tests are instantiated using suitable tests for mixed data types (e.g., partial correlation, kernel-based tests), and the algorithm is periodically re-run or incrementally updated to track concept drift in the security environment. The specific implementation choices for this module are detailed in Table VIII. By specifying the discovery paradigm (PC/FCI family) and significance thresholds, the table provides the technical rationale for how the system balances structural accuracy with computational complexity. This configuration is vital for ensuring the learned DAG represents a stable approximation of the underlying security environment. 
+
+5.2 Causally-Constrained MDP-DAG Roadmap 
+
+The SCM learned in Section 5.1 is compiled into an investigation-level roadmap that governs admissible response trajectories. The roadmap is distinct from the variable-level causal DAG: the SCM encodes dependencies among telemetry variables, whereas the roadmap DAG encodes permissible transitions among abstract investigation states. The graphical representation can be found in Figure 3. The formal constrained MDP tuple and symbol definitions are introduced in Section 3 (Preliminaries) and are not repeated here. In this subsection, we focus on how the learned SCM instantiates that formulation through a roadmap-level action-admissibility structure. Subsection 5.1 provides the learned causal graph consumed by this stage. The output of this stage is a state-conditioned admissible action set used directly by policy optimization and online execution gating. Let Groad = ( S, E road ) denote the investigation roadmap DAG. Each edge (s → s′) ∈ Eroad is associated with a confidence score c(s, s ′) ∈ [0 , 1] derived from the underlying causal discovery procedure. The admissible action set at state s is defined as: 
+
+A(s) = {a ∈ A | (s → s′) ∈ Eroad }.
+
+In practice, we distinguish between high-confidence and low-confidence transitions. Transitions whose confidence ex-ceeds a threshold τc are treated as hard structural constraints ,whereas lower-confidence transitions are treated as soft con-straints . Soft-constrained transitions are not permanently elim-inated; instead, they trigger elevated epistemic monitoring and potential human escalation rather than structural prohibition. Edges in Groad are derived by projecting intervention-consistent transitions from the learned SCM. This construc-tion prioritizes transitions that respect prerequisite evidence-gathering stages implied by the causal structure, while allow-ing calibrated fallback escalation when structural uncertainty is high. The reward function R(s, a ) encodes operational objec-tives through a weighted aggregation of mitigation success, disruption cost, resource expenditure, and evidential utility. Weight calibration is deployment-specific and performed via validation on historical incident traces. 
+
+5.3 Adversarial Multi-Agent Deliberation 
+
+Given the admissible action set produced by the roadmap stage, decision-making is performed by a two-agent multi-10 
+
+> Fig. 3. The MDP-DAG Investigation Roadmap showing valid state transitions (orange arrows with reward values) and causally inconsistent blocked transitions (red X). The roadmap constrains the action space to ensure verifiable investigation flows, preventing logically inconsistent paths such as jumping directly from Initial Alert to Threat Mitigated without sufficient evidence collection.
+
+agent reinforcement learning (MARL) architecture that in-troduces structured counterfactual scrutiny into autonomous response selection 1.Let πB (a | s; θB ) denote the Blue-Team policy and 
+
+πR(a | s; θR) the Red-Team policy. Both policies operate over the admissible action set A(s) defined by the roadmap DAG (Section 5.2). The interaction between the two policies is modeled as a stochastic game defined over the same state space S and constrained transition structure. 
+
+Blue-Team Policy. The Blue-Team policy is optimized to maximize cumulative mitigation utility under the reward func-tion RB , which prioritizes successful threat neutralization, evidentiary progression, and investigation efficiency subject to the admissibility constraints. The policy may be instantiated using deep Q-learning, actor–critic methods, or other function-approximation schemes compatible with constrained action spaces. 
+
+Red-Team Policy. The Red-Team policy is optimized under a conservatively shaped reward RR that penalizes unjustified or high-impact interventions lacking sufficient evidentiary support. Its objective is to minimize false positives and operational disruption. Unlike classical adversarial learning 
+
+> 1We note that the Blue-Team and Red-Team policies do not constitute a classical zero-sum adversarial game. Rather, they represent asymmetric objective functions defined over a shared constrained MDP. The Red-Team does not model the external attacker; instead, it serves as a conservative counterfactual policy regularizer that penalizes premature mitigation under evidentiary ambiguity.
+
+that perturbs inputs, the Red-Team operates at the decision-process level by proposing alternative admissible actions within A(s).
+
+Game-Theoretic Interaction. At each state st, both agents evaluate the admissible action set: 
+
+aB ∼ πB (· | st), aR ∼ πR(· | st).
+
+The resulting joint evaluation constitutes a stage of atwo-player stochastic game with aligned state dynamics but partially opposing objectives. Training may be conducted via self-play or alternating optimization until convergence to a stable policy pair. The interaction between these two agents is visualized in Figure 4. The figure shows the iterative process of hypothesis evaluation and action arbitration. By forcing the Blue-Team to justify its proposals against a skeptical Red-Team, the framework creates a robust decision-validation loop that exposes epistemic uncertainty as a measurable divergence score. 
+
+Policy Divergence as Epistemic Signal. To quantify disagree-ment between agents, we define a Policy Divergence Score: 
+
+D(st) = D πB (· | st), π R(· | st), (13) where D(·, ·) denotes a distributional divergence metric (e.g., KL divergence or total variation distance). For value-based 11 
+
+Algorithm 1 Constraint-Based Causal Discovery from Telemetry (PC Skeleton + Meek Orientation) 
+
+Require: Historical telemetry dataset D over variables V ;conditional independence test CI (·); significance level α;maximum conditioning size Lmax ; (optional) background knowledge K.
+
+Ensure: Estimated causal DAG bG = ( V, bE). 
+
+> 1:
+
+Preprocess D (time alignment, missing-value handling, normalization/aggregation); construct variable set V . 
+
+> 2:
+
+Initialize an undirected complete graph G ← (V, E ) where 
+
+E = {{ X, Y } | X̸ = Y, X, Y ∈ V }. 
+
+> 3:
+
+Initialize separating sets Sep (X, Y ) ← ∅ for all unordered pairs (X, Y ). 
+
+> 4:
+
+l ← 0 {conditioning-set size}  
+
+> 5:
+
+while l ≤ Lmax do  
+
+> 6:
+
+Echanged ← false  
+
+> 7:
+
+for all adjacent pairs (X, Y ) in G do  
+
+> 8:
+
+Adj (X) ← { W ∈ V | { X, W } ∈ E} 
+
+> 9:
+
+if |Adj (X) \ { Y }| < l then  
+
+> 10:
+
+continue  
+
+> 11:
+
+end if  
+
+> 12:
+
+for all Z ⊆ Adj (X) \ { Y } with |Z| = l do  
+
+> 13:
+
+if CI (X, Y | Z; D, α ) = independent then  
+
+> 14:
+
+Remove edge {X, Y } from G. 
+
+> 15:
+
+Sep (X, Y ) ← Z; Sep (Y, X ) ← Z. 
+
+> 16:
+
+Echanged ← true  
+
+> 17:
+
+break {no need to test larger Z once separated}  
+
+> 18:
+
+end if  
+
+> 19:
+
+end for  
+
+> 20:
+
+end for  
+
+> 21:
+
+if Echanged = false then  
+
+> 22:
+
+break  
+
+> 23:
+
+end if  
+
+> 24:
+
+l ← l + 1  
+
+> 25:
+
+end while  
+
+> 26:
+
+Initialize orientations: replace each undirected edge 
+
+{X, Y } with X−Y . 
+
+> 27:
+
+Collider identification (v-structures):  
+
+> 28:
+
+for all triples (X, Z, Y ) such that X−Z and Y −Z and 
+
+X and Y are non-adjacent in G do  
+
+> 29:
+
+if Z / ∈ Sep (X, Y ) then  
+
+> 30:
+
+Orient X → Z ← Y . 
+
+> 31:
+
+end if  
+
+> 32:
+
+end for  
+
+> 33:
+
+Apply orientation propagation rules (Meek’s rules) to orient remaining edges while enforcing acyclicity and consistency with K. 
+
+> 34:
+
+return bG
+
+implementations, divergence may alternatively be defined as 
+
+D(st) = ∥QB (st, ·) − QR(st, ·)∥2 . (14) Large divergence indicates disagreement in expected utility estimates under competing objectives and is interpreted as elevated epistemic uncertainty. When D(st) exceeds a predefined threshold, autonomous execution is suspended and                                                      
+
+> TABLE VIII CAUSAL DISCOVERY CONFIGURATION AND DESIGN CHOICES
+> Component Specification and Rationale
+> Discovery paradigm Constraint-based causal structure learn-ing (PC/FCI family), selected for its ability to produce an explicit, inter-pretable DAG consistent with observed conditional-independence relations in telemetry data. FCI is employed when latent confounding cannot be excluded. Conditional independence testing Hybrid CI testing pipeline: partial cor-relation tests for approximately Gaus-sian continuous variables; kernel-based or mutual-information–based tests for mixed or non-Gaussian variables. Tests are selected based on feature-type meta-data and validated via hold-out consis-tency checks. Significance threshold Statistical significance level α∈
+> [0 .01 ,0.05] , selected through validation to balance false edge removal (Type I error) and spurious dependency retention (Type II error). Sensitivity analysis is performed across this range. Maximum conditioning set size Conditioning set size bounded (e.g.,
+> |Z|≤2–4) to control computational complexity and reduce instability in high-dimensional telemetry. This bounds worst-case complexity of independence testing and mitigates overfitting. Edge orientation constraints Standard v-structure orientation and acyclicity enforcement, optionally aug-mented with domain priors (e.g., host process creation precedes outbound net-work flow). Prior constraints are en-coded as forbidden or required edges. Concept drift handling Periodic offline re-estimation or incre-mental updates triggered when distribu-tional shift exceeds a predefined diver-gence threshold (e.g., population stabil-ity index or KL divergence). Drift detec-tion prevents structural staleness. Outputs Learned causal DAG G= ( V, E )with associated edge confidence scores. Edge confidence values are propagated to (i) constrain admissible transitions in the MDP-DAG roadmap and (ii) modulate epistemic uncertainty in ETS computa-tion.
+
+the decision is escalated to the human-in-the-loop interface. 
+
+Structural Role. Because both agents operate within the same causally constrained action space, structured counterfactual scrutiny cannot introduce logically inconsistent transitions. Instead, disagreement is confined to admissible investigation paths, ensuring that robustness is achieved at the policy-selection level without violating structural constraints. This adversarial deliberation mechanism mitigates unilateral commitment to high-impact actions and reduces susceptibility to telemetry manipulation by requiring cross-policy consistency prior to execution. Algorithm 3 summarizes the self-play training procedure. The reward structure may be zero-sum, general-sum, or shaped to encourage calibrated skepticism and robust consensus, depending on deployment requirements. 12       
+
+> Fig. 4. Council of Rivals adversarial deliberation architecture. At each investigation state stin the causally constrained MDP-DAG, the Blue-Team policy proposes a mitigation action based on its learned value estimates, while the Red-Team policy evaluates and challenges the proposal under a conservatively shaped objective. The interaction proceeds through iterative hypothesis evaluation, evidential justification, and action arbitration within the constrained action space. Inter-policy disagreement is quantified via the Policy Divergence Score D(st), which serves as an epistemic uncertainty signal and triggers human escalation when D(st)> τ div . The policies are trained via self-play in a two-player stochastic game defined over the MDP-DAG, yielding stabilized adversarial decision policies.
+
+5.3.1 Policy Architecture and Training Configuration: The Blue-Team and Red-Team policies share a common function-approximation backbone and optimization framework. Their behavioral divergence arises exclusively from reward shaping and objective weighting (Table IX), ensuring that observed differences in action selection are attributable to decision criteria rather than architectural asymmetry. 
+
+State Representation. Each investigation state st ∈ S is mapped to a fixed-dimensional embedding xt ∈ Rd. The feature vector aggregates three components:  
+
+> •
+
+Host-level statistics aggregated over a sliding window of length Kh, including process-level activity counts, re-source utilization metrics, and security event frequencies;  
+
+> •
+
+Network-level statistics aggregated over window Kn,including flow volumes, endpoint diversity, protocol dis-tribution, and connection dynamics;  
+
+> •
+
+Investigation context features , including current roadmap node, evidence flags, mitigation history, and escalation indicators encoded as binary or multi-hot vectors. The resulting representation is 
+
+xt = [ ht ∥ nt ∥ ct],
+
+with per-feature standardization performed using parameters estimated from a held-out calibration dataset. This abstraction assumes that the investigation state is fully observable at the roadmap level, with partial observability in raw telemetry absorbed into feature aggregation. 
+
+Action Space and Masking. The discrete action space A
+
+comprises 18 high-level investigation and mitigation actions aligned with the roadmap DAG. At state st, admissible actions are restricted to A(st) via action masking consistent with the structural constraints defined in Section 5.2. Invalid transitions are assigned zero probability prior to policy evaluation, ensuring that learning occurs exclusively within the causally admissible state–action subspace. 
+
+Function Approximation. Both agents employ a three-layer multilayer perceptron (MLP) with ReLU activations and layer normalization: 
+
+ϕ(st) = LayerNorm ( σ (W3σ (W2σ (W1xt + b1) + b2) + b3)) ,
+
+where σ(·) denotes the ReLU activation function. For value-based training, the action-value function is defined as 
+
+Q(st, a ; θ) = fQ(ϕ(st), a ),
+
+where fQ denotes a linear or bilinear projection from the shared representation to action scores. In actor–critic config-urations, the shared backbone ϕ(·) feeds separate heads for policy logits and state-value estimation. Parameter sharing across agents is limited to architectural structure; weights θB and θR are trained independently. 13 
+
+Algorithm 2 MDP-DAG Construction from a Learned SCM 
+
+1: Input: Learned SCM M = ⟨U, V, f ⟩ with causal DAG 
+
+G = ( V, E ); investigation ontology O
+
+2: Output: Constrained MDP M = ( S, A, P, R, γ )
+
+3: Step 1: State Space Construction 
+
+4: Define investigation states S as abstract stages derived from ontology O (e.g., Alert , Evidence Gathering , Con-tainment , Resolution ). 
+
+5: Each state s ∈ S is associated with a subset of observed variables Vs ⊆ V required to justify that stage. 
+
+6: Step 2: Admissible Transition Identification 
+
+7: Initialize empty roadmap DAG Groad = ( S, E road ).
+
+8: for each ordered pair (si, s j ) ∈ S × S do 
+
+9: if sj represents a valid semantic progression from si
+
+under ontology O then 
+
+10: if all required causal parents of Vsj are satisfied along 
+
+G then 
+
+11: Add edge (si, s j ) to Eroad .
+
+12: Define action aij corresponding to transition (si →
+
+sj ).
+
+13: end if 
+
+14: end if 
+
+15: end for 
+
+16: Step 3: Transition and Reward Specification 
+
+17: Define A as the set of all admissible transition actions aij .
+
+18: Estimate transition probabilities P(s′ | s, a ) from histori-cal incident traces or benchmark telemetry. 
+
+19: Define reward function R(s, a ) as weighted aggregation of mitigation success, disruption cost, resource usage, and evidential gain. 
+
+20: Select discount factor γ ∈ (0 , 1) to balance mitigation urgency and investigation thoroughness. 
+
+21: return M = ( S, A, P, R, γ )
+
+Training Procedure and Stability Mechanisms. Training is conducted using off-policy deep Q-learning with target net-works and prioritized experience replay. Each agent maintains its own replay buffer to preserve objective asymmetry. To enhance stability, we employ:  
+
+> •
+
+target-network updates via Polyak averaging with coeffi-cient τ = 0 .005 ; 
+
+> •
+
+Double DQN updates to mitigate overestimation bias;  
+
+> •
+
+ℓ2 gradient clipping with threshold 5.0;  
+
+> •
+
+ε-greedy exploration annealed from 1.0 to 0.05 over 3 ×
+
+10 5 environment steps. Training convergence is monitored using (i) exponentially smoothed episodic return and (ii) validation-set false-positive rate under adversarial perturbation. Early stopping is triggered when both metrics stabilize over 20 consecutive evaluation intervals. All hyperparameters are fixed across experimental condi-tions unless otherwise specified in Section 7. 
+
+TABLE IX REWARD SHAPING DESIGN FOR THE COUNCIL OF RIVALS 
+
+Reward Com-ponent Blue-Team Policy ( πB ) Red-Team Policy ( πR)
+
+Verified mitiga-tion Large positive reward for reaching causally justified terminal states (e.g., “Threat Mitigated”) after traversing required evidence states. Small positive reward only if mitigation is supported by sufficient evidence; no reward for premature con-tainment. False-positive intervention Penalty proportional to op-erational disruption cost (e.g., unnecessary isola-tion, service interruption). Large positive reward for preventing or opposing un-justified disruptive actions; penalty if false positives are not challenged. Evidence acqui-sition Positive reward for actions that increase information gain or reduce causal un-certainty along the learned DAG. Positive reward for de-manding additional evi-dence under high epistemic uncertainty; penalty for ac-cepting unsupported miti-gation claims. Investigation ef-ficiency Small step penalty to dis-courage unnecessary ac-tions and encourage timely resolution. Smaller penalty weight rel-ative to Blue-Team, pri-oritizing verification over speed in ambiguous states. Roadmap com-pliance Penalty for proposing actions inconsistent with MDP-DAG constraints. Equivalent penalty for vi-olating causal or roadmap admissibility constraints. Human escala-tion Neutral or small penalty when escalation is trig-gered under high diver-gence D(st).Positive reward when esca-lation is correctly triggered under high epistemic un-certainty. TABLE X COUNCIL OF RIVALS TRAINING CONFIGURATION 
+
+Parameter Value Specification 
+
+State dimension d 256 Resulting dimensionality after concatenation and linear pro-jection of host, network, and investigation-context features. Hidden layer sizes [256, 256, 128] Shared multilayer perceptron backbone with ReLU activations and Layer Normalization. Optimizer Adam β1 = 0 .9, β2 = 0 .999 , default 
+
+ϵ = 10 −8.Learning rate 3 × 10 −4 Selected via validation-based hy-perparameter search. Batch size 128 Mini-batches sampled from pri-oritized replay buffer. Replay buffer capac-ity 
+
+5 × 10 5 transi-tions Per-agent buffer with propor-tional prioritized sampling. Discount factor γ 0.99 Supports long-horizon investiga-tion planning. Target update coeffi-cient τ
+
+0.005 Polyak averaging for stabilizing target networks. Exploration schedule ε-greedy: 
+
+1.0 → 0.05 
+
+Linear decay over 3 × 10 5 envi-ronment steps. Total training steps 1.5 × 10 6 Per agent across all training sce-narios. Random seeds {1,2,3} Results reported as mean across three independent runs. 
+
+5.4 Explainable Human-in-the-Loop Interface 
+
+C-MADF exposes its internal deliberation process through a structured human-in-the-loop (HITL) interface designed for supervisory control and post hoc auditability. Rather than pre-senting raw network outputs, this interface consolidates four decision artifacts in one view: competing admissible actions 14 
+
+Fig. 5. Illustrative decomposition of the ETS into its three primary components, Clarity, Completeness, and Confidence, and their respective sub-metrics. The figure visualizes the aggregation structure used to compute ETS (st) and demonstrates how the resulting score is compared against the escalation threshold 
+
+τescalate . In this example, ETS (st) = 0 .82 exceeds the calibrated threshold, and the system proceeds without mandatory human escalation. When ETS (st)
+
+falls below the threshold, structured explanation artifacts and human oversight are triggered. TABLE XI DECOMPOSITION OF THE ETS 
+
+Component Operational Definition 
+
+Clarity Concentration and stability of explanatory signals, quantified via (i) entropy of feature-level attention distributions, (ii) local linear fidelity of the Blue-Team value function QB ,and (iii) stability of action rankings under bounded state perturbations. Completeness Evidential sufficiency and coverage, measured by (i) replay-buffer state density in a neighborhood of st, (ii) entropy of empirically observed action distributions in similar historical states, and (iii) diversity of feature-attribution contributions. Confidence Epistemic certainty of the recommended action a⋆, esti-mated through (i) inverse effective policy temperature τπB ,(ii) bootstrap variance of QB (st, a ⋆), and (iii) a monotonic transformation of the inter-agent Policy Divergence Score 
+
+D(st).Aggregation Weighted combination ETS (st) = w1 · Clarity + w2 ·
+
+Completeness + w3 · Confidence, followed by bounded normalization to [0 , 1] for use in escalation gating. 
+
+from πB and πR, supporting/contradicting evidential features, inter-policy divergence D(st), and projected operational cost and mitigation impact for candidate actions. The hierarchical structure of the ETS is decomposed into its constituent metrics in Table XI, while Figure 5 illustrates the aggregation logic. These visualizations explain how raw feature attributions and policy variances are transformed into a single, trust-calibrated indicator. This aggregation is essential for providing operators with a clear "go/no-go" signal during high-pressure incident response. These artifacts are computed from policy distributions, value-function attributions, and structural constraints imposed by the MDP-DAG. The HITL layer does not modify policy learning; instead, it governs execution and escalation under uncertainty. 
+
+Explainability-Transparency Score (ETS). To provide abounded escalation signal, we define the ETS, a scalar meta-indicator aggregating explanation structure and epistemic cer-tainty at state st.ETS (st) = w1 Clarity (st)+ w2 Completeness (st)+ w3 Confidence (st),
+
+(15) where wi ≥ 0 and P 
+
+> i
+
+wi = 1 . All sub-scores are normalized to [0 , 1] , ensuring ETS (st) ∈ [0 , 1] .ETS functions as a calibrated decision-gating signal reflecting system-internal decision reliability rather than subjective human trust. Its parameters are selected to reflect operational interpretability and are empirically tuned using validation scenarios (Section 7). 
+
+Clarity. Clarity quantifies concentration and stability of ex-planatory signals associated with the recommended action a⋆.Let αt denote the normalized feature-attribution distribution for state st. Clarity incorporates:  
+
+> •
+
+entropy of feature attributions H(αt), 
+
+> •
+
+local linear fidelity of QB under first-order approxima-tion,  
+
+> •
+
+ranking stability of top actions under small perturbations of xt.A representative formulation is: 15 
+
+Algorithm 3 Council of Rivals Self-Play Training  
+
+> 1:
+
+Input: Constrained MDP-DAG M = ( S, A, P, R, γ ) 
+
+> 2:
+
+Initialize: Blue policy πB (·; θB ), Red policy πR(·; θR),target networks ˆθB , ˆθR 
+
+> 3:
+
+Initialize replay buffers BB , BR 
+
+> 4:
+
+for each training episode do  
+
+> 5:
+
+Sample initial investigation state s0 ∼ ρ0 
+
+> 6:
+
+for t = 0 to T − 1 do  
+
+> 7:
+
+Apply action mask Avalid (st) from MDP-DAG con-straints  
+
+> 8:
+
+Blue proposes aB ∼ πB (· | st; θB ) 
+
+> 9:
+
+Red proposes critique/alternative aR ∼ πR(· | st; θR) 
+
+> 10:
+
+Resolve executed action: 
+
+at ← Arbitrate( aB , a R, s t) 
+
+> 11:
+
+Execute at, observe st+1 and rewards (rBt , r Rt ) 
+
+> 12:
+
+Store (st, a B , a R, a t, r Bt , r Rt , s t+1 ) in buffers  
+
+> 13:
+
+Sample mini-batch from BB and update θB via Double DQN: 
+
+y = rBt + γQ ˆθB (st+1 , arg max  
+
+> a
+
+QθB (st+1 , a ))  
+
+> 14:
+
+Update θR analogously using rRt 
+
+> 15:
+
+Update target networks via Polyak averaging: 
+
+ˆθ ← τ θ + (1 − τ )ˆθ 
+
+> 16:
+
+end for  
+
+> 17:
+
+end for  
+
+> 18:
+
+return π⋆B , π ⋆R
+
+Clarity (st) = α1
+
+ 1 − H(αt)log d
+
+ + α2 LocalFidelity (st)+ α3 RankingStability (st), (16) with αi ≥ 0 and P 
+
+> i
+
+αi = 1 .
+
+Completeness. Completeness measures evidential coverage and behavioral diversity in the vicinity of st.Let B denote the replay buffer and Nϵ(st) a local per-turbation neighborhood defined via bounded feature noise 
+
+∥x − xt∥2 ≤ ϵ.Completeness (st) = β1 StateDensity B(st) + β2
+
+> H
+
+ πB (·|N ϵ(st)) 
+
+ 
+
+> log |A|
+
++ β3 AttributionDiversity (st),
+
+(17) with βi ≥ 0 and P 
+
+> i
+
+βi = 1 .
+
+Confidence. Confidence captures epistemic certainty in the recommended action a⋆.Confidence (st) = γ1 SoftmaxMargin (st)+γ2 exp  −Var (QB (st, a ⋆))  + γ3 exp  −D (st), (18) with γi ≥ 0 and P 
+
+> i
+
+γi = 1 .
+
+Calibration. ETS parameters are calibrated using scenario-level correctness labels and evidentiary sufficiency heuristics derived from benchmark ground-truth annotations. Each calibration scenario sj is associated with an oracle reliability target Rj ∈ [0 , 1] , constructed from objective criteria including (i) correctness of the recommended action with re-spect to ground-truth attack state, (ii) causal trace consistency within the SCM, and (iii) stability of policy outputs under bounded perturbations. Calibration solves the constrained optimization problem: 
+
+min 
+
+> w
+
+X
+
+> j
+
+ ETS (sj ; w)−Rj
+
+2 subject to wi ≥ 0, X
+
+> i
+
+wi = 1 .
+
+Calibration quality is evaluated using prediction error and monotonicity with respect to evidentiary sufficiency and policy agreement on held-out benchmark splits (Section 7). This procedure treats ETS as a proxy for system-internal decision reliability rather than subjective human confidence. 
+
+5.5 Overall C-MADF Decision Procedure 
+
+We now summarize the complete online decision loop of C-MADF, integrating causal discovery, MDP-DAG planning, adversarial deliberation, and human oversight. Figure 6 pro-vides a high-level overview of the end-to-end decision process as formalized in Algorithm 5. It serves to synthesize the interaction between telemetry ingestion, causal roadmapping, and human-in-the-loop escalation, demonstrating how the framework maintains "Clarity of Command" across different operational phases. Algorithm 5 provides a general, end-to-end specification of the C-MADF framework suitable for rigorous analysis and implementation. It ensures that all autonomous actions are grounded in causal structure, optimized via reinforcement learning, stress-tested by adversarial deliberation, and ulti-mately governed by human-understandable explanations and trust-calibrated intervention thresholds. 
+
+C-MADF Design Summary 
+
+The C-MADF architecture integrates causal modeling, constrained decision optimization, adversarial multi-agent deliberation, and calibrated human oversight into a unified framework. Specifically, it: (i) learns a SCM to capture cause–effect relationships in telemetry data; (ii) compiles these constraints into a causally admissible MDP-DAG roadmap that restricts policy search to structurally valid investigation trajectories; (iii) employs an dual-objective multi-agent reinforcement learning with asymmetric re-ward shaping mechanism in which a Red-Team policy systematically challenges Blue-Team mitigation proposals to reduce false positives and overconfident actions; and (iv) exposes decision-relevant artifacts through a human-in-the-loop interface, where a bounded ETS governs escalation under epistemic uncertainty. 16 
+
+Algorithm 4 ETS Computation  
+
+> 1:
+
+Input: State st, Blue/Red policies (πB , π R), value estimator QB , replay buffer B, calibrated weights (w1, w 2, w 3). 
+
+> 2:
+
+Output: ETS( st) ∈ [0 , 1]  
+
+> 3:
+
+// Step 1: Compute Clarity component  
+
+> 4:
+
+Extract feature-attribution or attention distribution αt. 
+
+> 5:
+
+Compute attention entropy H(αt). 
+
+> 6:
+
+Estimate local linear approximation fidelity of QB around st. 
+
+> 7:
+
+Evaluate action-ranking stability under small perturbations of st. 
+
+> 8:
+
+Aggregate into 
+
+Clarity( st) = α1(1 − H(αt)) + α2Linearity( QB ) + α3Consistency( πB ). 
+
+> 9:
+
+// Step 2: Compute Completeness component  
+
+> 10:
+
+Estimate state-density in replay buffer neighborhood: 
+
+StateCoverage( st) = |{ s ∈ B : ∥s − st∥ ≤ ϵ}| |B| . 
+
+> 11:
+
+Compute empirical action entropy in local neighborhood.  
+
+> 12:
+
+Measure feature-attribution diversity across top-k salient features.  
+
+> 13:
+
+Aggregate into 
+
+Completeness( st) = β1StateCoverage + β2H(Actions | s ≈ st) + β3FeatureDiversity . 
+
+> 14:
+
+// Step 3: Compute Confidence component  
+
+> 15:
+
+Let a⋆ = arg max a πB (a | st). 
+
+> 16:
+
+Estimate epistemic uncertainty via:  
+
+> •
+
+inverse policy temperature 1/τ πB , 
+
+> •
+
+inverse bootstrap variance  1 + Var( QB (st, a ⋆)) −1, 
+
+> •
+
+inverse policy divergence (1 + D(st)) −1. 
+
+> 17:
+
+Aggregate into 
+
+Confidence( st) = γ1
+
+1
+
+τπB
+
++ γ2
+
+11 + Var( QB ) + γ3
+
+11 + D(st) . 
+
+> 18:
+
+// Step 4: Weighted aggregation and normalization  
+
+> 19:
+
+Compute raw score: 
+
+ETS raw (st) = w1Clarity( st) + w2Completeness( st) + w3Confidence( st). 
+
+> 20:
+
+Apply bounded normalization (e.g., min–max or logistic scaling): 
+
+ETS( st) = σ
+
+ ETS raw (st) − μσcal 
+
+
+
+. 
+
+> 21:
+
+return ETS( st)
+
+6 SECURITY ANALYSIS 
+
+In this section, we provide a formal analysis of the secu-rity properties of the C-MADF framework. We analyze its resilience against the threats outlined in our threat model and provide arguments for the security guarantees it offers. We emphasize that the results here are verification-aligned rather than full formal verification in the classical model-checking sense: our theorems give probabilistic bounds on violation frequencies under assumptions about causal mis-specification and adversarial capabilities, but we do not exhaustively explore the state space or prove CTL/LTL properties over the induced MDP-DAG. This distinction follows the model-checking liter-ature, where exhaustive state-space verification is treated as a separate guarantee class [61]. 
+
+6.1 Resilience to Adversarial Data Manipulation 
+
+A primary threat is adversarial manipulation of telemetry data, such as “Shadow-Jittering.” C-MADF’s resilience to this threat stems from two components: 1) Causal Filtering: The Causal Discovery Module mod-els expected cause–effect relationships. Manipulations that violate learned causal constraints (e.g., high traffic with no corresponding process activity) are flagged as 17 
+
+Algorithm 5 C-MADF Online Incident Response  
+
+> 1:
+
+Offline / Periodic Phase:  
+
+> 2:
+
+Collect and update historical telemetry D from the security environment.  
+
+> 3:
+
+Run Causal Discovery (Algorithm 1) to obtain updated causal DAG G. 
+
+> 4:
+
+Construct or refine MDP-DAG roadmap M using Algo-rithm 2.  
+
+> 5:
+
+Train or fine-tune Council of Rivals policies πB , πR via self-play (Algorithm 3).  
+
+> 6:
+
+Online Incident Handling Phase:  
+
+> 7:
+
+for each incoming alert or detected anomaly do  
+
+> 8:
+
+Encode current context and telemetry into MDP state 
+
+s0. 
+
+> 9:
+
+for t = 0 , 1, . . . , T max do  
+
+> 10:
+
+Blue-Team proposes action aB ∼ πB (· | st). 
+
+> 11:
+
+Red-Team critiques and proposes aR ∼ πR(· | st). 
+
+> 12:
+
+Compute policy divergence D(st). 
+
+> 13:
+
+Resolve executed action at based on (aB , a R, D(st)) 
+
+and safety rules.  
+
+> 14:
+
+Simulate or execute at on the environment (subject to safeguards), observe st+1 and reward rt. 
+
+> 15:
+
+Compute ETS (st) using Algorithm 4.  
+
+> 16:
+
+if ETS (st) < τ escalate or D(st) > τ div then  
+
+> 17:
+
+Generate detailed explanation: hypotheses, evi-dence, counterfactuals, and risk assessment.  
+
+> 18:
+
+Present recommendation and rationale to supervi-sory adjudication for final decision.  
+
+> 19:
+
+Log execution outcomes and system-internal re-liability signals for offline analysis and threshold recalibration.  
+
+> 20:
+
+break (end automated loop for this incident).  
+
+> 21:
+
+else if st+1 is a terminal state (e.g., “Threat Miti-gated” or “Investigation Aborted”) then  
+
+> 22:
+
+Log trajectory, decisions, and outcomes for audit-ing and future training.  
+
+> 23:
+
+break  
+
+> 24:
+
+else  
+
+> 25:
+
+Set st ← st+1 and continue deliberation.  
+
+> 26:
+
+end if  
+
+> 27:
+
+end for  
+
+> 28:
+
+end for 
+
+causally inconsistent, filtering unsophisticated perturba-tions. 2) Adversarial Deliberation: For causally plausible at-tacks, the “Council of Rivals” provides a second layer of defence. A Red-Team agent challenges the Blue-Team hypothesis by seeking benign explanations for anomalies. The Policy Divergence Score D(st) quan-tifies ambiguity, discouraging disruptive action under substantial disagreement. 
+
+6.2 Formal Security Properties 
+
+We formalize two key properties of C-MADF: (i) Causal Consistency of policy execution and (ii) Adversarial                
+
+> Fig. 6. Illustration of the Shadow-Jitter attack scenario. Adversarial timing perturbations and log injections distort telemetry observations, inducing misleading correlations in conventional monolithic detection pipelines. In contrast, C-MADF leverages causal filtering and adversarial multi-agent validation to distinguish injected noise from genuine causal signals, thereby reducing false-positive mitigation actions under partial-compromise assump-tions.
+
+Robustness in terms of false-positive reduction under telemetry manipulation and benign distribution shift. 
+
+Causal Consistency of Policy Execution Definition 1 (True Causal DAG). Let G⋆ = ( V, E ⋆) denote the true (unknown) causal DAG governing the security environment, where V is the finite set of investigation states and E⋆ ⊆ V × V is the set of valid causal transitions. An edge (vi, v j ) ∈ E⋆ indicates that vj is causally admissible only after vi in the ground-truth system. 18 
+
+Definition 2 (Learned Causal DAG and Roadmap Con-struction). Let G = (V, E ) denote the learned causal DAG produced by C-MADF. The corresponding MDP-DAG roadmap is M = ( S, A, P ) with S ⊆ V , where A is a finite action set and P (s′ | s, a ) is a transition kernel satisfying 
+
+P (s′ | s, a ) > 0 ⇒ (s, s ′) ∈ E. 
+
+Thus, all realizable transitions in M are restricted to edges in the learned DAG G.
+
+Definition 3 (Spurious-Transition Mass). Fix a horizon T
+
+and consider trajectories generated by M under a policy π.For each s ∈ S, define the admissible action set 
+
+A(s) := {a ∈ A : ∃s′ such that P (s′ | s, a ) > 0}.
+
+Assume π is admissible, i.e., π(a | s) = 0 for all a / ∈ A(s).Define the per-step spurious-transition probability 
+
+ρt := Pr  
+
+> π
+
+[( st, s t+1 ) ∈ E \ E⋆] ,
+
+where Pr π (·) is over the randomness of s0, the policy, and the transition kernel P . We say C-MADF has bounded spurious-transition mass ρ if ρt ≤ ρ for all t ∈ { 0, . . . , T − 1}.
+
+Theorem 1 (Robust Causal Consistency ). Let G⋆ = ( V, E ⋆)
+
+be the true causal DAG and G = ( V, E ) the learned DAG. Let 
+
+M = ( S, A, P ) satisfy P (s′ | s, a ) > 0 ⇒ (s, s ′) ∈ E. Let 
+
+τ = ( s0, . . . , s T ) be the random trajectory generated under any admissible policy π. If Pr π [( st, s t+1 ) ∈ E \ E⋆] ≤ ρ for all t, then 
+
+Eπ
+
+"T −1X
+
+> t=0
+
+1(st, s t+1 ) /∈ E⋆#
+
+≤ ρT. 
+
+In particular, if ρ = 0 , then (st, s t+1 ) ∈ E⋆ holds almost surely for all t.
+
+Proof. By the roadmap property, (st, s t+1 ) ∈ E holds with probability 1 for all t. Hence, almost surely, 
+
+1(st, s t+1 ) /∈ E⋆ = 1(st, s t+1 ) ∈ E \ E⋆.
+
+Therefore, by linearity of expectation, 
+
+Eπ
+
+"T −1X
+
+> t=0
+
+1(st, s t+1 ) /∈ E⋆#
+
+= 
+
+> T−1
+
+X
+
+> t=0
+
+Pr  
+
+> π
+
+[( st, s t+1 ) ∈ E \ E⋆]
+
+≤ 
+
+> T−1
+
+X
+
+> t=0
+
+ρ = ρT. 
+
+This result is a bounded-violation guarantee conditioned on the quality of the learned SCM; it does not constitute a global safety proof over all trajectories, nor does it replace exhaustive model checking. 
+
+Adversarial Robustness of False-Positive Behaviour Definition 4 (Adversarial Perturbation and Induced Measures). Let (X , F) be the telemetry measurable space and Y ∈ { 0, 1} the ground-truth label. Let P0 denote the benign conditional probability measure on (X , F) (the law of X | (Y = 0) ), and fix a metric d on X . An adversary is a measurable mapping Aδ : X → X producing ˜X = Aδ (X)
+
+such that d( ˜X, X ) ≤ δ holds P0-almost surely. Let Q0 denote the induced perturbed benign probability measure on (X , F),i.e., the law of ˜X when X ∼ P0.
+
+Definition 5 (False-Positive Probability under Perturbed Benign Telemetry). Let (A, G) be the action measurable space and let U ∈ G denote disruptive actions. For any measurable decision rule f : X → A , define 
+
+P Q0
+
+> FP
+
+(f ) := Pr 
+
+> ˜X∼Q0
+
+h
+
+f ( ˜X) ∈ U 
+
+i
+
+.
+
+Proposition 1 (Monotonic Reduction of False-Positive Mit-igations under Gating ). Let fB : X → A be a measurable baseline decision rule and let fC : X → A be the gated rule defined by 
+
+fC (x) ∈ U ⇐⇒  fB (x) ∈ U  ∧ G(x),
+
+where G : X → { 0, 1} is a measurable gating predicate and 
+
+U ⊆ A denotes the set of disruptive mitigation actions. Then, under the nominal distribution Q0,
+
+P Q0
+
+> FP
+
+(fC ) ≤ P Q0
+
+> FP
+
+(fB ).
+
+Moreover, if there exists ϵ > 0 such that 
+
+Pr 
+
+> ˜X∼Q0
+
+h
+
+fB ( ˜X) ∈ U ∧ G( ˜X) = 0 
+
+i
+
+≥ ϵ, 
+
+then 
+
+P Q0
+
+> FP
+
+(fC ) ≤ P Q0
+
+> FP
+
+(fB ) − ϵ. 
+
+Proof. By definition, 
+
+{fC ( ˜X) ∈ U} = {fB ( ˜X) ∈ U} ∩ { G( ˜X) = 1 }.
+
+Therefore, 
+
+P Q0
+
+> FP
+
+(fC ) = Pr 
+
+> ˜X∼Q0
+
+h
+
+fB ( ˜X) ∈ U ∧ G( ˜X) = 1 
+
+i
+
+≤ Pr 
+
+> ˜X∼Q0
+
+h
+
+fB ( ˜X) ∈ U 
+
+i
+
+= P Q0
+
+> FP
+
+(fB ).
+
+For the strict decrease, partition the event {fB ( ˜X) ∈ U} into 
+
+G( ˜X) ∈ { 0, 1} to obtain 
+
+P Q0
+
+> FP
+
+(fB ) = Pr[ fB ( ˜X) ∈ U , G ( ˜X) = 1] + Pr[ fB ( ˜X) ∈ U , G ( ˜X) = 0] ,
+
+and use the assumption that the second term is at least ϵ.Proposition 1 provides a sanity guarantee: gating cannot increase the rate of disruptive false-positive mitigations under the nominal distribution. However, this result is monotonicity-based and does not constitute a worst-case robustness guaran-tee under arbitrary telemetry manipulation, poisoning, or SCM mis-learning. 19 
+
+Definition 6 (Total Variation Distance).: The total varia-tion distance between P0 and Q0 is 
+
+dTV (P0, Q0) := sup 
+
+> B∈F
+
+|P0(B) − Q0(B)|.
+
+Theorem 2 (TV Robustness of False-Positive Rate ). Let 
+
+f : X → A be measurable and let U ∈ G . Then 
+
+Pr 
+
+> ˜X∼Q0
+
+[f ( ˜X) ∈ U ] − Pr 
+
+> X∼P0
+
+[f (X) ∈ U ] ≤ dTV (P0, Q0).
+
+Corollary 1 (TV-Adjusted FP Bound for C-MADF ). Under the assumptions above, if Pr ˜X∼Q0 [fB ( ˜X) ∈ U ∧ G( ˜X) = 0] ≥
+
+ϵ, then 
+
+P Q0
+
+> FP
+
+(fC ) ≤ P P0
+
+> FP
+
+(fB ) + dTV (P0, Q0) − ϵ, 
+
+where P P0
+
+> FP
+
+(fB ) := Pr X∼P0 [fB (X) ∈ U ].Definition 7 (Rejected False-Positive Indicator).: Let 
+
+˜X ∼ Q0. Define 
+
+Z := 1
+
+h
+
+fB ( ˜X) ∈ U ∧ G( ˜X) = 0 
+
+i
+
+, ϵ := E ˜X∼Q0 [Z].
+
+Theorem 3 (PAC-Style Lower Bound for Rejected-FP Mass ). Let ˜X1, . . . , ˜Xn be i.i.d. samples from Q0 and define 
+
+Zi := 1
+
+h
+
+fB ( ˜Xi) ∈ U ∧ G( ˜Xi) = 0 
+
+i
+
+, ˆϵn := 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+Zi.
+
+Then for any δ ∈ (0 , 1) , with probability at least 1 − δ,
+
+ϵ ≥ ˆϵn −
+
+r ln(2 /δ )2n .
+
+Proof. Each Zi ∈ [0 , 1] and E[Zi] = ϵ. By Hoeffding’s inequality, 
+
+Pr( |ˆϵn − ϵ| ≥ t) ≤ 2 exp( −2nt 2).
+
+Setting t = pln(2 /δ )/(2 n) yields the stated bound. 
+
+6.3 Verification and Validation 
+
+The structural formulation of C-MADF as a causally constrained MDP-DAG enables formal verification and systematic validation of safety-critical behaviors. Because the decision process is restricted to admissible transitions induced by the learned causal graph, the reachable state space is explicitly characterized, making temporal safety properties amenable to algorithmic analysis. 
+
+Temporal Safety Specifications.: Let M = (S, A, P )
+
+denote the constrained MDP-DAG and let D(s) denote the Policy Divergence Score. Define the high-uncertainty region 
+
+Sunc := {s ∈ S : D(s) > τ },
+
+and let Sesc ⊆ S denote states corresponding to human escalation. A representative liveness-safety specification can be ex-pressed in Linear Temporal Logic (LTL) as 
+
+G s ∈ Sunc → F(s ∈ Sesc ),
+
+which states that globally, whenever the system enters ahigh-uncertainty state, it eventually transitions to a human escalation state. 
+
+Model Checking Perspective.: Given a finite abstraction of M (e.g., via discretization of uncertainty levels and bounded horizon), classical model-checking techniques can be applied to verify whether the above LTL property holds over all admissible trajectories. In particular, because transitions are constrained by the learned causal DAG, the state-transition graph is acyclic within investigation phases, which reduces verification complexity relative to unconstrained MDPs. 
+
+Probabilistic Verification.: When stochastic transitions are retained, probabilistic temporal logics such as PCTL can be used to establish bounds of the form 
+
+Pr[ F≤T (s ∈ Sesc ) | s0 ∈ Sunc ] ≥ 1 − η, 
+
+ensuring that escalation occurs with high probability within a bounded horizon T . Such bounds connect directly to the divergence threshold τ and the gating mechanism defined in Section 5. 
+
+Scope and Limitations.: We emphasize that these ver-ification procedures rely on the correctness of the learned causal abstraction and finite-state representation. They provide guarantees over the induced MDP-DAG, but do not constitute exhaustive verification of the underlying cyber-physical envi-ronment. 7 EXPERIMENTAL EVALUATION 
+
+We conduct a comprehensive empirical evaluation on the public CICIoT2023 dataset [62] to assess detection robustness, false-positive control, and supervisory-facing explainability of C-MADF. We compare C-MADF against three recent liter-ature baselines: DUGAT-LSTM, BiLSTM IDS, and Hybrid Weighted-XGBoost, using a shared preprocessing and model-selection protocol. [39], [40], [45] 
+
+7.1 Experimental Setup 
+
+Dataset. CICIoT2023 is a state-of-the-art, large-scale intrusion-detection benchmark containing extensive benign IoT traffic and multiple modern attack categories (DDoS, DoS, Recon, Web-based, etc.) [62]. We evaluate on this public CICIoT2023 benchmark using its rich network and host telemetry feature set. Records are preprocessed into the same structured state schema (alert summary, host indicators, and flow statistics), and labels are mapped to a binary attack/benign decision space for C-MADF and all baselines. To reduce evaluation leakage and preserve temporal realism, we use fixed train/validation/test splits at the scenario level, so correlated records from the same scenario family are not distributed across multiple splits. All normalization and feature-scaling statistics are learned on the training split only and then applied unchanged to validation and test data. This prevents optimistic bias from test-informed preprocessing and ensures that all compared methods face identical information constraints. 20 
+
+Because C-MADF is evaluated as a decision-support archi-tecture rather than only a classifier, we map telemetry windows into a structured state representation that preserves temporal context and host–network cross-signals. This representation is shared across all methods through a common interface, so any observed performance difference reflects model be-havior rather than differences in feature availability or pre-aggregation privileges. 
+
+Baselines. To avoid relying on customized internal com-parators, we benchmark C-MADF against recent, established literature baselines that are widely used in intrusion detection research. Specifically, we implement and tune DUGAT-LSTM, BiLSTM IDS, and Hybrid Weighted-XGBoost under the same train/validation/test splits and telemetry channels. [39], [40], [45] For fairness, we apply a shared optimization protocol across all baselines: model-specific hyperparameters are tuned only on the validation split, early-stopping decisions use identical patience rules, and final test metrics are reported only once per seed after model selection. We avoid architecture-specific hand-tuning on the test split and do not apply post-hoc thresh-old adjustments that are unavailable to competing methods.  
+
+> •
+
+DUGAT-LSTM (Deep IDS Baseline) [40]. A deep sequence model baseline designed for high-accuracy in-trusion detection under complex traffic dynamics. For autonomous-response evaluation, its detection outputs are mapped to the same binary attack/benign decision space and action admissibility interface used by C-MADF.  
+
+> •
+
+BiLSTM IDS [39]. A strong recurrent baseline for se-quential threat-pattern modeling in network telemetry. We train and tune this model under identical data partitions and convert prediction outputs to the same intervention decision interface used in our framework.  
+
+> •
+
+Hybrid Weighted-XGBoost [45]. A competitive ensem-ble baseline combining meta-heuristic feature weighting with gradient-boosted classification. This model is eval-uated under the same feature channels and protocol to provide a non-neural cutting-edge reference. 
+
+Evaluation Metrics. Detection performance is evaluated using standard classification metrics:  
+
+> •
+
+Precision : proportion of flagged incidents that correspond to genuine attacks.  
+
+> •
+
+Recall : proportion of genuine attacks correctly detected.  
+
+> •
+
+F1-score : harmonic mean of precision and recall.  
+
+> •
+
+False Positive Rate (FPR) : proportion of benign scenar-ios incorrectly classified as attacks. In addition to detection metrics, we evaluate supervisory-facing interpretability and oversight quality. Specifically, we report the ETS and examine its association with evidentiary sufficiency and policy agreement under controlled scenario analysis. Concretely, ETS is analyzed as an operational gating signal rather than a descriptive score alone: we examine whether lower ETS regions coincide with higher inter-policy disagree-ment and weaker causal support, and whether higher ETS regions correspond to stable admissible-action consensus. This allows us to assess whether ETS can support practical triage and escalation decisions under uncertain telemetry conditions. Unless otherwise stated, all reported metrics (precision, recall, F1-score, FPR, ETS) are averaged over three independent random seeds using fixed CICIoT2023 train/validation/test splits. Table XII reports mean values across seeds. The observed standard deviation across seeds is below 0.02 for all reported metrics. 
+
+Implementation and Reproducibility. All agents are implemented in Python using the PyTorch framework. For each method and random seed, we fix pseudorandom seeds across data shuffling, neural network initialization, and replay-buffer sampling to ensure experimental consistency. We further log training curves, selected hyperparameters, and per-seed metric summaries for all methods under a unified experiment script. This audit trail enables direct traceability from raw runs to reported tables, and it was used to verify consistency between the main comparison table and the abla-tion table for the full C-MADF configuration. 
+
+7.2 Performance Comparison on CICIoT2023 
+
+Table XII summarizes performance on CICIoT2023. C-MADF achieves a precision of 0.997, recall of 0.961, and F1-score of 0.979, outperforming all three baselines (DUGAT-LSTM: 0.979/0.905/0.941; BiLSTM IDS: 0.982/0.915/0.947; Hybrid Weighted-XGBoost: 0.985/0.941/0.962 for Preci-sion/Recall/F1). Most notably, C-MADF attains a false-positive rate (FPR) of 1.8%, compared to 11.2% for DUGAT-LSTM, 9.7% for BiL-STM IDS, and 8.4% for Hybrid Weighted-XGBoost. This cor-responds to relative FPR reductions of approximately 83.9%, 81.4%, and 78.6%, respectively. Given that false positives in this operational setting may trigger disruptive containment actions affecting grid availability, reducing FPR is particularly important for safety-critical deployment contexts. In practical terms, the gap between 1.8% FPR (C-MADF) and 8.4%–11.2% FPR (baselines) indicates substantially fewer unnecessary interventions under the same evaluation protocol. Importantly, this reduction is achieved without collapsing recall: C-MADF maintains 0.961 recall, while the strongest baseline recall is 0.941. This pattern argues against a trivial “always-benign” explanation and instead supports the intended mechanism of C-MADF—causal admissibility constraints and adversarial policy scrutiny suppress unnecessary actions while preserving sensitivity to genuine attacks. From an operations perspective, the observed precision– FPR profile is especially relevant for semi-autonomous settings where each false positive may trigger host isolation, traffic blocking, or analyst interruption. Under such conditions, re-ducing false positives is not only a statistical improvement but also a workflow-stability improvement that can directly reduce defensive self-disruption. To improve interpretability of these newly added quantitative results, we provide both tabular and visual summaries: Table XII gives exact values, while Figure 7 provides a side-by-side visual comparison across baselines and C-MADF. 21                                 
+
+> Fig. 7. Defensive response under Shadow-Jitter injection: C-MADF maintains high detection with low false positives, structured human review, and strong explainability, while the baseline AI fails catastrophically due to hallucinated threat confirmation and lack of verification. TABLE XII PERFORMANCE COMPARISON OF C-MADF AND BASELINE MODELS
+> (MEAN OVER 3RANDOM SEEDS ;STANDARD DEVIATIONS <0.02 FOR ALL METRICS )
+> Framework Precision Recall F1-Score FPR
+> DUGAT-LSTM [40] 0.979 0.905 0.941 11.2% BiLSTM IDS [39] 0.982 0.915 0.947 9.7% Hybrid Weighted-XGBoost [45] 0.985 0.941 0.962 8.4%
+> C-MADF 0.997 0.961 0.979 1.8%
+
+As shown in Figure 7, C-MADF’s gain is not limited to one metric: it improves precision and F1, preserves competitive recall, and substantially reduces false-positive burden under the shared evaluation protocol. This multi-metric behavior is central to the framework’s practical value in high-impact operational settings. 
+
+7.3 Sanity Checks and Baseline Calibration 
+
+To ensure that the observed performance differences are not attributable to artefacts such as distributional bias or inadequate baseline tuning, we conduct a series of validation controls.  
+
+> •
+
+Shared Data Splits and Features. All methods (C-MADF, DUGAT-LSTM, BiLSTM IDS, Hybrid Weighted-XGBoost) are trained and evaluated using identical CICIoT2023 splits and the same telemetry feature channels. No method is provided privileged features or additional telemetry channels.  
+
+> •
+
+Hyperparameter Calibration. For each baseline, we perform grid search over learning rate, batch size, network width, and exploration parameters using a held-out validation set. The best-performing configuration per method is selected based on validation F1-score to ensure competitive and properly tuned baselines.  
+
+> •
+
+Baseline Scope and Competitiveness Claims. DUGAT-LSTM, BiLSTM IDS, and Hybrid Weighted-XGBoost are literature-established cutting-edge baselines selected to test competitiveness against recent external methods under matched data and tuning conditions. Accordingly, the reported superiority claims are grounded in direct comparisons with these contemporary baselines rather than customized internal-only comparators.  
+
+> •
+
+Robustness Across Random Seeds. All experiments are repeated across three independent random seeds. Reported metrics correspond to the mean across seeds. Performance differences persist consistently across seeds, with standard deviations below 0.02 for all reported metrics.  
+
+> •
+
+Cross-Table Consistency Control. The full-model C-MADF result is required to be numerically identical wherever reused (main comparison and ablation tables), because both derive from the same three-seed evaluation artifact. This consistency rule was explicitly checked to avoid transcription drift and to make table-to-table interpretation auditable. 22 
+
+7.4 Ablation Study 
+
+To quantify the contribution of individual architectural components, we conduct a structured ablation study in which specific mechanisms of C-MADF are removed while keeping all other training conditions fixed. These ablations serve as internal baselines to demonstrate the necessity of each com-ponent.  
+
+> •
+
+w/o Causal SCM. This variant removes the learned Struc-tural Causal Model and relies purely on correlation-based agreement between the Blue and Red teams.  
+
+> •
+
+w/o Red Team. This variant removes the conservative Red Team, leaving the threat-maximizing Blue Team to operate alone under causal constraints.  
+
+> •
+
+w/o Blue Team. This variant removes the Blue Team, relying solely on the Red Team and causal filtering. Results are summarized in Table XIII. To ensure consis-tency, both tables use the same three-seed averaging protocol, and the full C-MADF row is identical across both tables (Precision 0.997, Recall 0.961, F1 0.979, FPR 1.8%). Each ablated configuration exhibits measurable degradation relative to the full C-MADF model. Removing Causal SCM yields Precision/Recall/F1/FPR of 0.903/0.959/0.930/59.4%, indicat-ing the importance of filtering causally inconsistent telemetry patterns. Disabling Red Team adversarial deliberation yields 0.963/0.963/0.963/21.2%, suggesting that structured hypothe-sis testing mitigates reasoning drift under ambiguous evidence. Eliminating the Blue Team yields 0.957/0.972/0.964/25.1%, highlighting the role of the threat-maximization policy in maintaining detection sensitivity. The full C-MADF model attains the best overall perfor-mance, reflecting improved explanatory coherence under inte-grated causal reasoning, deliberation, and structured decision constraints.                             
+
+> TABLE XIII ABLATION STUDY : I MPACT OF INDIVIDUAL COMPONENTS ON
+> CICI OT2023 ( MEAN OVER 3RANDOM SEEDS ;STANDARD DEVIATIONS
+> <0.02 FOR ALL ENTRIES )
+> Configuration Precision Recall F1-Score FPR C-MADF (Full Framework) 0.997 0.961 0.979 1.8%
+> w/o Causal SCM 0.903 0.959 0.930 59.4% w/o Red Team 0.963 0.963 0.963 21.2% w/o Blue Team 0.957 0.972 0.964 25.1%
+
+7.5 ETS Behavior on CICIoT2023 
+
+Beyond classification accuracy, ETS remains consistent with evidentiary sufficiency and policy agreement on CICIoT2023. High ETS values concentrate on samples with strong causal support and low policy divergence, while lower ETS values are associated with weaker evidence and increased disagreement, supporting calibrated escalation under uncertainty. This behavior is important because ETS is used at decision time, not merely after-the-fact. In our pipeline, ETS defines a practical confidence envelope: high-ETS decisions are eligi-ble for autonomous execution under policy constraints, mid-ETS decisions are queued for additional evidence collection, and low-ETS decisions are escalated for human adjudication. Framing ETS this way turns explainability from a passive reporting artifact into an active governance mechanism for risk-aware response. Although this benchmark-grounded analysis cannot substi-tute for full field validation, the monotonic alignment between ETS and internal reliability indicators provides preliminary evidence that the score is suitable for triage and escalation orchestration in high-tempo SOC workflows. 
+
+Empirical Takeaways 
+
+On CICIoT2023, C-MADF records 0.997 precision, 0.961 recall, 0.979 F1-score, and 1.8% false-positive rate, out-performing all three recent baselines in Table XII. This low-FPR result materially reduces unnecessary mitigations and supports safer autonomous response decisions under real-world telemetry conditions. 8 DISCUSSION 
+
+The empirical results demonstrate that integrating struc-tural causal constraints, adversarial deliberation, and human-aligned explanation mechanisms can substantially reduce false-positive behavior while preserving detection performance on CICIoT2023. At the same time, evidence from a sin-gle benchmark is not sufficient to claim full dependable or verifiable autonomous response under real-world operating conditions. Rather than interpreting these findings as evidence of deployment readiness, we view them as validation of a design principle: constraining decision policies with causal structure and structured disagreement can mitigate correlation-driven reasoning failures in safety-critical environments. This section discusses implications, scalability considera-tions, and limitations of the proposed framework. 
+
+8.1 Implications for Critical Infrastructure Protection 
+
+In safety-critical domains such as power grids, water treat-ment facilities, and financial clearing systems, false positives can induce operational disruption comparable to the attacks they aim to prevent. Our results indicate that structurally constraining policy execution through a learned SCM and MDP-DAG can reduce such self-inflicted disruptions without materially degrading recall. Importantly, the observed reduction in false-positive rate is not attributable to conservative thresholding alone, as C-MADF remains consistently stronger than all three tuned literature baselines under the same data splits and telemetry channels. This suggests that structured causal reasoning and hypothesis testing contribute mechanistically to robustness. The “Clarity of Command” principle, maintaining trans-parent reasoning pathways and calibrated escalation, provides a potential pathway toward certifiable oversight in semi-autonomous defense systems. To reduce operator alert fatigue during multi-stage APT campaigns, escalation events can be batched by shared causal root node and attack phase, then prioritized by a composite risk score (policy divergence mag-nitude, asset criticality, and persistence across time windows) 23 
+
+so analysts review a small ranked queue rather than every raw disagreement. In addition, repeated disagreements linked to the same root-cause hypothesis can be collapsed into a single incident thread with accumulated evidence snapshots, preventing duplicate prompts from overwhelming operators during prolonged campaigns. A configurable “fatigue budget” (maximum escalations per analyst per time window) can be enforced by deferring lower-risk disagreements to batched review cycles while immediately surfacing only high-risk, high-persistence events. This policy preserves human atten-tion for decisions with the largest potential operational im-pact. However, certification in real infrastructure environments would require validation under live traffic, adversarial red-team testing, and integration with legacy operational workflows. Because even modern benchmarks like CICIoT2023 are collected in laboratory environments rather than operational deployment logs, external validity remains an open empirical question. 
+
+8.2 Scalability and Generalization 
+
+C-MADF is modular by design: causal discovery, roadmap construction, deliberation, and explanation are separable com-ponents. This modularity supports adaptation to heterogeneous network environments and alternative telemetry schemas. However, scaling to enterprise environments with large state spaces introduces challenges. Constraint-based causal discovery may become computationally intensive as variable cardinality increases, necessitating distributed or approximate inference techniques. In practical IT/OT deployments, the offline SCM can be re-estimated on a weekly cadence for relatively stable OT segments and on a daily or event-triggered cadence for rapidly changing enterprise IT segments, with un-scheduled refreshes initiated when drift monitors flag sustained conditional-independence violations. Operationally, we recom-mend a two-stage refresh workflow: (i) shadow re-estimation on recent telemetry snapshots, where the candidate SCM is evaluated against current causal-consistency diagnostics, and (ii) controlled promotion to production constraints only if admissibility stability and false-intervention risk metrics remain within predefined tolerance bounds. This reduces the risk of abrupt policy shifts caused by noisy short-term drift. For very large deployments, the causal layer can be partitioned by subnet or function (e.g., OT control loop, enterprise identity plane, edge IoT segment), with periodic cross-partition recon-ciliation for shared variables. This hierarchical strategy keeps discovery tractable while preserving enough global structure to prevent contradictory cross-domain interventions. Simi-larly, multi-agent deliberation overhead scales with the action hypothesis space, requiring efficient pruning or hierarchical structuring. Beyond cyber defense, the architectural principle of com-bining structural causal constraints with adversarial internal review may extend to other high-stakes domains (e.g., med-ical triage, autonomous systems). Nonetheless, such transfer would require domain-specific causal abstractions and careful calibration of escalation thresholds. 
+
+8.3 Limitations and Future Work 
+
+Several limitations merit consideration. First, the effectiveness of the Causal Discovery Module depends on the fidelity and representativeness of historical telemetry. Systematic data poisoning or persistent distribution shift may degrade structural accuracy, affecting downstream policy constraints. While our bounded-violation analysis char-acterizes this dependence formally, empirical robustness un-der sustained poisoning requires further study. A practical mitigation path is to combine periodic SCM retraining with drift-triggered challenge sets containing known benign and attack archetypes; significant drops in causal-consistency or intervention-quality metrics would block model promotion and trigger conservative fallback policies. Second, adversarial deliberation introduces additional infer-ence overhead and assumes sufficiently diverse policy repre-sentations between Blue-Team and Red-Team agents. If both agents share correlated blind spots, arbitration may fail to surface alternative hypotheses. Future work should therefore include diversity-promoting training objectives and heteroge-neous model families for the two agents, so disagreement reflects substantive epistemic differences rather than noise around a shared bias. Third, the MDP-DAG roadmap currently relies on a prede-fined investigation ontology. Although this enables verifiable transition constraints, it limits adaptability to unforeseen attack workflows. Future work will investigate structure learning for dynamic roadmap construction. One promising direction is incremental ontology expansion driven by analyst-validated novel incidents, where newly observed investigation motifs are proposed, reviewed, and then compiled into admissible transition templates. Fourth, ETS was evaluated using benchmark-grounded re-liability criteria, evidentiary consistency, and policy stability metrics. While ETS exhibits coherent behavior under these conditions, deployment environments may introduce additional operational constraints and uncertainty sources not captured in benchmark data. Accordingly, future ETS validation should in-clude human-factors outcomes (decision latency, override fre-quency, perceived cognitive load) and downstream operational outcomes (avoided false interventions, time-to-containment) to determine whether score calibration transfers from benchmark settings to live SOC practice. To address external validity concerns directly, future eval-uation should extend beyond CICIoT2023 to newer public corpora, production telemetry logs, repeated-seed robustness checks, and operational-impact reporting via avoided false interventions. Field validation using production logs and structured red-team exercises is necessary to assess real-world generalization and operational integration. 9 CONCLUSION 
+
+Autonomous cyber defense systems increasingly operate in environments where correlational reasoning alone is in-sufficient to ensure safe and reliable decision-making. This paper introduced the Causal Multi-Agent Decision Framework 24 
+
+(C-MADF), an architecture that integrates SCM, adversar-ial multi-agent deliberation, and verification-oriented decision constraints to improve robustness and transparency in high-stakes security settings. Across CICIoT2023 experiments, C-MADF achieved 0.997 precision, 0.961 recall, 0.979 F1-score, and 1.8% FPR, com-pared with DUGAT-LSTM (0.979/0.905/0.941, 11.2% FPR), BiLSTM IDS (0.982/0.915/0.947, 9.7% FPR), and Hybrid Weighted-XGBoost (0.985/0.941/0.962, 8.4% FPR). The ab-lation study further confirms component necessity: removing Causal SCM, Red Team, or Blue Team degrades perfor-mance to 0.903/0.959/0.930/59.4%, 0.963/0.963/0.963/21.2%, and 0.957/0.972/0.964/25.1%, respectively (Precision/Recal-l/F1/FPR). In addition, ETS demonstrated alignment with system-internal reliability indicators and evidentiary sufficiency on benchmark telemetry; this should be viewed as preliminary validation of the signal’s utility rather than definitive confir-mation of real-world trustworthiness. These findings provide empirical support that structurally constrained and deliberative architectures can mitigate correlation-driven reasoning failures in cyber defense. Future work will focus on large-scale deployment valida-tion, robustness under sustained distribution shift and causal data poisoning, and automated construction of investigation roadmaps. Extending evaluation to real-world incident logs and operational red-team exercises will be essential to assess external validity. More broadly, the results suggest that in-tegrating causal structure, adversarial reasoning, and human-aligned transparency may offer a promising direction toward dependable semi-autonomous cyber defense systems, contin-gent on stronger external and human-in-the-loop validation. REFERENCES [1] D. Goel, “Enhancing network resilience through machine learning-powered graph combinatorial optimization: Applications in cyber de-fense and information diffusion,” arXiv preprint arXiv:2310.10667 ,2023. [2] D. Goel and A. K. Jain, “Overview of smartphone security: Attack and defense techniques,” in Computer and Cyber Security . Boca Raton, FL, USA: Auerbach Publications, 2018, pp. 249–279. [3] H. Ahmad, C. Treude, M. Wagner, and C. Szabo, “Smart hpa: A resource-efficient horizontal pod auto-scaler for microservice archi-tectures,” in 2024 IEEE 21st International Conference on Software Architecture (ICSA) . IEEE, 2024, pp. 46–57. [4] ——, “Towards resource-efficient reactive and proactive auto-scaling for microservice architectures,” Journal of Systems and Software , vol. 225, p. 112390, 2025. [5] ——, “Resilient auto-scaling of microservice architectures with efficient resource management,” arXiv preprint arXiv:2506.05693 , 2025. [6] Y. Zhang, D. Goel, H. Ahmad, and C. Szabo, “Regimefolio: A regime aware ml system for sectoral portfolio optimization in dynamic markets,” 
+
+IEEE Access , 2025. [7] K. Chen, H. Ahmad, D. Goel, and C. Szabo, “3s-trader: A multi-llm framework for adaptive stock scoring, strategy, and selection in portfolio optimization,” arXiv preprint arXiv:2510.17393 , 2025. [8] T. Jois, H. Ahmad, F. Noor, and F. Ullah, “Australian bushfire intelligence with ai-driven environmental analytics,” arXiv preprint arXiv:2601.06105 , 2026. [9] A. Wali and F. Alshehry, “A survey of security challenges in cloud-based SCADA systems,” Computers , vol. 13, no. 4, p. 97, 2024. [10] P. Jokar, N. Arianpoo, and V. C. M. Leung, “A survey on security issues in smart grids,” Security and Communication Networks , vol. 9, no. 3, pp. 262–273, 2016. [11] H. Ahmad, I. Dharmadasa, F. Ullah, and M. A. Babar, “A review on c3i systems’ security: Vulnerabilities, attacks, and countermeasures,” ACM Computing Surveys , vol. 55, no. 9, pp. 1–38, 2023. [12] R. K. Jayalath, H. Ahmad, D. Goel, M. S. Syed, and F. Ullah, “Microservice vulnerability analysis: A literature review with empirical insights,” IEEE Access , vol. 12, pp. 155 168–155 204, 2024. [13] C. Wueest and H. Anand, “Living off the land and fileless attack techniques,” Symantec, Mountain View, CA, USA, Tech. Rep., 2017. [14] A. Alshamrani, S. Myneni, A. Chowdhary, and D. Huang, “A survey on advanced persistent threats: Techniques, solutions, challenges, and research opportunities,” IEEE Communications Surveys & Tutorials ,vol. 21, no. 2, pp. 1851–1877, 2019. [15] S. Chopra, H. Ahmad, D. Goel, and C. Szabo, “Chatnvd: Advancing cybersecurity vulnerability assessment with large language models,” 
+
+IEEE Access , 2026. [16] M. Abdulsatar, H. Ahmad, D. Goel, and F. Ullah, “Towards deep learning enabled cybersecurity risk assessment for microservice archi-tectures,” Cluster Computing , vol. 28, no. 6, p. 350, 2025. [17] T. T. Nguyen and V. J. Reddi, “Deep reinforcement learning for cyber security,” IEEE Transactions on Neural Networks and Learning Systems ,vol. 32, no. 10, pp. 4535–4549, 2021. [18] S. Jamshidi, A. Amirnia, A. Nikanjam, and F. Khomh, “Enhancing security and energy efficiency of cyber-physical systems using deep reinforcement learning,” Procedia Computer Science , vol. 238, pp. 1074–1079, 2024. [19] A. Kott, Ed., Autonomous Intelligent Cyber Defense Agent (AICA) , ser. Advances in Information Security. Springer, 2023. [20] D. Goel, K. Moore, M. Guo, D. Wang, M. Kim, and S. Camtepe, “Optimizing cyber defense in dynamic active directories through re-inforcement learning,” in Proceedings of the European Symposium on Research in Computer Security (ESORICS) . Cham, Switzerland: Springer, 2024, pp. 332–352. [21] M. Xu, J. Fan, X. Huang, C. Zhou, J. Kang, D. Niyato, S. Mao, Z. Han, and K.-Y. Lam, “Forewarned is forearmed: A survey on large language model-based agents in autonomous cyberattacks,” arXiv preprint arXiv:2505.12786 , 2025. [22] L. Huang, W. Yu, W. Ma, W. Zhong, Z. Feng, H. Wang, Q. Chen, W. Peng, X. Feng, B. Qin et al. , “A survey on hallucination in large language models: Principles, taxonomy, challenges, and open questions,” 
+
+ACM Transactions on Information Systems , vol. 43, no. 2, pp. 1–55, 2025. [23] A. Adadi and M. Berrada, “Peeking inside the black-box: A survey on explainable artificial intelligence (xai),” IEEE Access , vol. 6, pp. 52 138– 52 160, 2018. [24] N. Papernot, P. McDaniel, I. Goodfellow, S. Jha, Z. B. Celik, and A. Swami, “Practical black-box attacks against machine learning,” in 
+
+Proceedings of the 2017 ACM on Asia Conference on Computer and Communications Security , 2017, pp. 506–519. [25] M. Macas, C. Wu, and W. Fuertes, “Adversarial examples: A survey of attacks and defenses in deep learning-enabled cybersecurity systems,” 
+
+Expert Systems with Applications , vol. 238, p. 122223, 2023. [26] F. Luo, C. Luo, J. Wang, Z. Li, Z. Liao, and Q. Liu, “Anomaly de-tection in vehicular networks using causality-aware graph convolutional networks (CA-GCN),” International Journal of Automotive Technology ,pp. 1–16, 2025. [27] J. Pearl, Causality: Models, Reasoning, and Inference , 2nd ed. Cam-bridge University Press, 2009. [28] F. Abbas and H. Ahmad, “Robust partial least squares using low rank and sparse decomposition,” arXiv preprint arXiv:2407.06936 , 2024. [29] A. Sharma, S. Rani, and M. Shabaz, “A comprehensive review of explainable AI in cybersecurity: Decoding the black box,” ICT Express ,2025. [30] F. Abbas, H. Ahmad, and C. Szabo, “Scalar: Self-calibrating adaptive latent attention representation learning,” in 2025 IEEE 37th International Conference on Tools with Artificial Intelligence (ICTAI) . IEEE, 2025, pp. 762–769. [31] Q. Wu, G. Bansal, J. Zhang, Y. Wu, S. Zhang, E. Zhu, B. Li, L. Jiang, X. Zhang, and C. Wang, “AutoGen: Enabling next-gen LLM applications via multi-agent conversation,” in Proceedings of the First Conference on Language Modeling , 2024. [32] L. Rafferty, F. Iqbal, S. Aleem, Z. Lu, S.-C. Huang, and P. C. K. Hung, “Intelligent multi-agent collaboration model for smart home IoT security,” in 2018 IEEE International Congress on Internet of Things (ICIOT) , 2018, pp. 65–71. [33] D. Goel, H. Ahmad, K. Moore, and M. Guo, “Co-evolutionary defence of active directory attack graphs via gnn-approximated dynamic pro-gramming,” arXiv preprint arXiv:2505.11710 , 2025. 25 
+
+[34] D. Goel, K. Moore, J. Wang, M. Kim, and T. T. Nguyen, “Unveiling the black box: A multi-layer framework for explaining reinforcement learning-based cyber agents,” arXiv preprint arXiv:2505.11708 , 2025. [35] H. Ahmad, F. Ullah, and R. Jafri, “A survey on immersive cyber situational awareness systems,” Journal of Cybersecurity and Privacy ,vol. 5, no. 2, p. 33, 2025. [36] T. Alpcan and T. Ba¸ sar, Network Security: A Decision and Game-Theoretic Approach . Cambridge University Press, 2010. [37] M. A. Ferrag, L. Shu, X. Yang, L. Derhab, and L. Maglaras, “Security and privacy for green IoT-based agriculture: Review, blockchain solu-tions, and challenges,” IEEE Access , vol. 8, pp. 32 031–32 053, 2020. [38] D. Suja Mary, L. Suganthi, and A. Srisaila, “Network intrusion detection: An optimized deep learning approach using big data analytics,” Expert Systems with Applications , vol. 251, p. 123919, 2024. [39] Y. Imrana, Y. Xiang, L. Ali, and Z. Abdul-Rauf, “A bidirectional LSTM deep learning approach for intrusion detection,” Expert Systems with Applications , vol. 185, p. 115524, 2021. [40] R. Devendiran and A. V. Turukmane, “Dugat-LSTM: Deep learning based network intrusion detection system using chaotic optimization strategy,” Expert Systems with Applications , vol. 245, p. 123027, 2024. [41] P. Spirtes, C. N. Glymour, and R. Scheines, Causation, Prediction, and Search , 2nd ed. MIT Press, 2000. [42] R. G. Gayathri, A. Sajjanhar, and Y. Xiang, “Hybrid deep learning model using SPCAGAN augmentation for insider threat analysis,” Expert Systems with Applications , vol. 249, p. 123533, 2024. [43] H. Ahmad and D. Goel, “The future of ai: Exploring the potential of large concept models,” arXiv preprint arXiv:2501.05487 , 2025. [44] F. Ullah, X. Ye, U. Fatima, Y. Wu, Z. Akhtar, and H. Ahmad, “What skills do cybersecurity professionals need?” Information & Computer Security , pp. 1–19, 2026. [45] G. Mohiuddin, A. Alenizi, N. Saeed, and S. Alkahtani, “Intrusion detection using hybridized meta-heuristic techniques with weighted XGBoost classifier,” Expert Systems with Applications , vol. 232, p. 120596, 2023. [46] M. Alazab, R. M. Khan, S. Goel, K. P. Sahoo, and S. Kumar, “A new intrusion detection system based on moth-flame optimizer algorithm,” 
+
+Expert Systems with Applications , vol. 210, p. 118439, 2022. [47] I. Goodfellow, Y. Bengio, and A. Courville, Deep Learning . MIT Press, 2016. [48] D. Goel, H. Ahmad, A. K. Jain, and N. K. Goel, “Machine learning driven smishing detection framework for mobile security,” arXiv preprint arXiv:2412.09641 , 2024. [49] M. Saied, S. Guirguis, and M. Madbouly, “Review of artificial intel-ligence for enhancing intrusion detection in the internet of things,” 
+
+Engineering Applications of Artificial Intelligence , vol. 127, p. 107231, 2024. [50] M. A. Bouke and A. Abdullah, “An empirical study of pattern leakage impact during data preprocessing on machine learning-based intrusion detection models reliability,” Expert Systems with Applications , vol. 230, p. 120715, 2023. [51] Z. Sun, G. Wang, P. Li, H. Wang, M. Zhang, and X. Liang, “An improved random forest based on the classification accuracy and correlation measurement of decision trees,” Expert Systems with Applications , vol. 237, p. 121549, 2024. [52] F. A. Aboaoja, A. Zainal, F. A. Ghaleb, B. A. S. Al-Rimy, T. A. E. Eisa, and A. A. H. Elnour, “Malware detection issues, challenges, and future directions: A survey,” Applied Sciences , vol. 12, no. 17, p. 8482, 2022. [53] K. Bhargavan, B. Blanchet, and N. Kobeissi, “Verified models and reference implementations for the TLS 1.3 standard candidate,” in 2017 IEEE Symposium on Security and Privacy (SP) , 2017, pp. 483–502. [54] A. Miller, “Explanation in artificial intelligence: Insights from the social sciences,” Artificial Intelligence , vol. 267, pp. 1–38, 2019. [55] S. Verma, V. Boonsanong, M. Hoang, K. Hines, J. Dickerson, and C. Shah, “Counterfactual explanations and algorithmic recourses for machine learning: A review,” ACM Computing Surveys , vol. 56, no. 12, pp. 1–42, 2024. [56] E. Mosqueira-Rey, E. Hernandez-Pereira, D. Alonso-Rios, J. Bobes-Bascaran, and A. Fernandez-Leal, “Human-in-the-loop machine learn-ing: A state of the art,” Artificial Intelligence Review , vol. 56, no. 4, pp. 3005–3054, 2023. [57] Y. Shoham and K. Leyton-Brown, Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations . Cambridge University Press, 2008. [58] P. Hernandez-Leal, B. Kartal, and M. E. Taylor, “A survey and critique of multiagent deep reinforcement learning,” Autonomous Agents and Multi-Agent Systems , vol. 33, no. 6, pp. 750–797, 2019. [59] M. L. Puterman, Markov Decision Processes: Discrete Stochastic Dy-namic Programming . John Wiley & Sons, 2014. [60] R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction ,2nd ed. MIT Press, 2018. [61] E. M. Clarke, O. Grumberg, and D. A. Peled, Model Checking , 2nd ed. MIT Press, 1999. [62] E. C. P. Neto, S. Dadkhah, R. Ferreira, A. Zohourian, R. Lu, and A. A. Ghorbani, “CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment,” Sensors , vol. 23, no. 13, p. 5941, 2023.

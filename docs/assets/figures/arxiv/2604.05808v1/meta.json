@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-001.webp",
+      "caption": "Table 1: Main Results. Performance comparison across three backbone models on ScienceWorld and AlfWorld benchmarks. u indicates prompt-based methods without model parameter update, while v represents fine-tuning approaches using LoRA. ↑ denotes the performance improvement of STEP-HRL compared to the best results among the baselines.",
+      "page": 6,
+      "index": 1,
+      "width": 954,
+      "height": 647
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-002.webp",
+      "caption": "Table 4: STEP-HRL hyperparameters.",
+      "page": 15,
+      "index": 2,
+      "width": 483,
+      "height": 1094
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-003.webp",
+      "caption": "Figure 2: Ablation study of STEP-HRL on unseen ScienceWorld tasks with different backbone models. w/o LP denotes removing the local progress policy, w/o Hier denotes removing the hierarchical structure, and w/o RL denotes removing the offline RL stage, reducing the training procedure to behavior cloning only.",
+      "page": 7,
+      "index": 3,
+      "width": 443,
+      "height": 301
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-004.webp",
+      "caption": "Figure 3: Simulated per-step token usage on ALFWorld pick_two_obj_and_place task under identical observation and action sequence across three RL paradigms.",
+      "page": 7,
+      "index": 4,
+      "width": 446,
+      "height": 331
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-005.webp",
+      "caption": "Figure 5: Full prompt specification for local progress annotation on the ALFWorld expert dataset (DEEPSEEK).",
+      "page": 14,
+      "index": 5,
+      "width": 950,
+      "height": 952
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-006.webp",
+      "caption": "Figure 6: The prompt used in training and inference stages.",
+      "page": 14,
+      "index": 6,
+      "width": 950,
+      "height": 396
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-007.webp",
+      "caption": "Figure 1: (a): The pipeline of STEP-HRL. Local progress policy is responsible for producing a compact summary of local interaction history within each subtask. Specifically, the local progress policy πp θ depends on previous progress pkt−1, current subtask gk, executed action akt−1 and the resulting observation okt to the generate updated local progress pkt . The low-level policy πl θ combines pkt with observation okt and subtask gk to generate primitive actions. When current subtask gk terminates, its final local progress p̂k is forwarded to the high-level policy πh θ . Conditioned on the task instruction ci, completed subtasks Gk, final local progress p̂k and the initial observation ok+1",
+      "page": 3,
+      "index": 7,
+      "width": 940,
+      "height": 406
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-008.webp",
+      "caption": "Figure 4: Offline RL sensitivity analysis with respect to advantage temperature β, expectile parameter τ , data sources, and data amounts across training.",
+      "page": 8,
+      "index": 8,
+      "width": 447,
+      "height": 337
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-009.webp",
+      "caption": "Figure 8: The trajectory of STEP-HRL on ScienceWorld boil task.",
+      "page": 19,
+      "index": 9,
+      "width": 949,
+      "height": 667
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-010.webp",
+      "caption": "Figure 7: Case study comparing a standard ReAct-style agent and STEP-HRL on a ScienceWorld task. Normal paradigms make decisions based on the accumulated interaction trajectory, which tends to collapse in long-horizon complex tasks. In contrast, STEP-HRL makes decisions based solely on the current observation, augmented with high-level subtask and step-wise local progress, enabling step-level decision making.",
+      "page": 17,
+      "index": 10,
+      "width": 949,
+      "height": 1304
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-011.webp",
+      "caption": "Table 5: Evaluation details on ALFWorld unseen task.",
+      "page": 16,
+      "index": 11,
+      "width": 829,
+      "height": 231
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05808v1/fig-012.webp",
+      "caption": "Table 6: Evaluation details on ScienceWorld unseen task.",
+      "page": 16,
+      "index": 12,
+      "width": 1023,
+      "height": 645
+    }
+  ]
+}

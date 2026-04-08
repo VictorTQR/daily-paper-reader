@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.03174v1/fig-001.webp",
+      "caption": "Table 4: Claim audit for key statements in this survey (authors’ evidence grading with explicit source attribution).",
+      "page": 4,
+      "index": 1,
+      "width": 950,
+      "height": 478
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03174v1/fig-002.webp",
+      "caption": "Table 2: Quantitative evidence matrix with explicit metric definitions and scope constraints. All values are reported in the cited source studies.",
+      "page": 4,
+      "index": 2,
+      "width": 950,
+      "height": 364
+    }
+  ]
+}

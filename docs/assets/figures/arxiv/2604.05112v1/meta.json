@@ -1,0 +1,430 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-001.webp",
+      "caption": "Figure 2: Online inference on training tasks Although the model starts with no context, it infers relevant task-specific information for self-correction. All runs are conducted with four different random seeds, and the IQM of normalized scores is reported.",
+      "page": 6,
+      "index": 1,
+      "width": 827,
+      "height": 394
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-002.webp",
+      "caption": "Table 18: Offline Evaluation Results for HumEnv",
+      "page": 43,
+      "index": 2,
+      "width": 668,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-003.webp",
+      "caption": "Table 17: Offline Evaluation Results for Industrial-Benchmark",
+      "page": 43,
+      "index": 3,
+      "width": 690,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-004.webp",
+      "caption": "Figure 8: Action beliefs over context sizes for other tasks in MetaDrive",
+      "page": 25,
+      "index": 4,
+      "width": 734,
+      "height": 598
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-005.webp",
+      "caption": "Figure 9: Action beliefs over context sizes for other tasks in CityLearn",
+      "page": 25,
+      "index": 5,
+      "width": 732,
+      "height": 427
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-006.webp",
+      "caption": "Table 11: Online Evaluation Results for CityLearn",
+      "page": 38,
+      "index": 6,
+      "width": 640,
+      "height": 619
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-007.webp",
+      "caption": "Table 10: Online Evaluation Results for MetaDrive",
+      "page": 38,
+      "index": 7,
+      "width": 548,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-008.webp",
+      "caption": "Figure 10: Mean normalized noise-distilled trajectories for Meta-World domain",
+      "page": 26,
+      "index": 8,
+      "width": 735,
+      "height": 1212
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-009.webp",
+      "caption": "Table 33: Single-domain and multi-domain models comparison",
+      "page": 53,
+      "index": 9,
+      "width": 917,
+      "height": 197
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-010.webp",
+      "caption": "Table 34: Gaussian and Flow Matching Heads single-domain models comparison",
+      "page": 53,
+      "index": 10,
+      "width": 917,
+      "height": 242
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-011.webp",
+      "caption": "Table 24: Dataset Metadata for Bi-DexHands",
+      "page": 47,
+      "index": 11,
+      "width": 932,
+      "height": 527
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-012.webp",
+      "caption": "Figure 16: Mean normalized noise-distilled trajectories for MuJoCo domain",
+      "page": 30,
+      "index": 12,
+      "width": 827,
+      "height": 411
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-013.webp",
+      "caption": "Figure 17: Mean normalized noise-distilled trajectories for SinerGym domain",
+      "page": 30,
+      "index": 13,
+      "width": 735,
+      "height": 859
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-014.webp",
+      "caption": "Figure 3: Domain-level normalized scores (Left) Evaluation results for 46 tasks unseen during training. (Right) Evaluation results for 209 training tasks. Offline runs of our model were conducted with a prompt size of 2500 transitions, compared to 5000 transitions for Vintix, and 25 and 100 episodes for REGENT on testing and training tasks, respectively. Domain-level aggregation is performed using IQM.",
+      "page": 7,
+      "index": 14,
+      "width": 822,
+      "height": 379
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-015.webp",
+      "caption": "Figure 15: Mean normalized noise-distilled trajectories for ControlGym domain",
+      "page": 29,
+      "index": 15,
+      "width": 735,
+      "height": 404
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-016.webp",
+      "caption": "Figure 14: Mean normalized noise-distilled trajectories for Industrial-Benchmark domain",
+      "page": 29,
+      "index": 16,
+      "width": 826,
+      "height": 685
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-017.webp",
+      "caption": "Table 12: Online Evaluation Results for ControlGym",
+      "page": 39,
+      "index": 17,
+      "width": 764,
+      "height": 344
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-018.webp",
+      "caption": "Table 2: Hyperparameter configuration",
+      "page": 22,
+      "index": 18,
+      "width": 394,
+      "height": 437
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-019.webp",
+      "caption": "Table 4: Online Evaluation Results for Kinetix",
+      "page": 34,
+      "index": 19,
+      "width": 690,
+      "height": 1167
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-020.webp",
+      "caption": "Table 35: Comparison between Vintix and Vintix II in online and offline settings across domains on test set",
+      "page": 54,
+      "index": 20,
+      "width": 806,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-021.webp",
+      "caption": "Table 16: Offline Evaluation Results for Bi-DexHands",
+      "page": 42,
+      "index": 21,
+      "width": 722,
+      "height": 505
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-022.webp",
+      "caption": "Table 15: Offline Evaluation Results for MuJoCo",
+      "page": 42,
+      "index": 22,
+      "width": 822,
+      "height": 573
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-023.webp",
+      "caption": "Figure 1: Approach Overview. Stage 1: A dataset collected using the noise-distillation technique (Zisman et al., 2024), which covers suboptimal regions of the state space, is relabeled with the demonstrator’s optimal actions. Stage 2: During training, the flow-matching (OT) head is conditioned on hidden representations from the Decision Pretrained Transformer (Lee et al., 2023). Stage 3: At inference, actions are decoded using Heun’s method.",
+      "page": 3,
+      "index": 23,
+      "width": 806,
+      "height": 269
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-024.webp",
+      "caption": "Table 3: Online Evaluation Results for Meta-World",
+      "page": 33,
+      "index": 24,
+      "width": 722,
+      "height": 1213
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-025.webp",
+      "caption": "Table 5: Online Evaluation Results for MuJoCo",
+      "page": 35,
+      "index": 25,
+      "width": 822,
+      "height": 573
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-026.webp",
+      "caption": "Table 6: Online Evaluation Results for Bi-DexHands",
+      "page": 35,
+      "index": 26,
+      "width": 722,
+      "height": 505
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-027.webp",
+      "caption": "Table 23: Dataset Metadata for MuJoCo",
+      "page": 46,
+      "index": 27,
+      "width": 902,
+      "height": 323
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-028.webp",
+      "caption": "Table 22: Offline Evaluation Results for ControlGym",
+      "page": 46,
+      "index": 28,
+      "width": 764,
+      "height": 344
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-029.webp",
+      "caption": "Figure 6: Action beliefs over context sizes for other tasks in Meta-World",
+      "page": 23,
+      "index": 29,
+      "width": 734,
+      "height": 768
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-030.webp",
+      "caption": "Table 20: Offline Evaluation Results for MetaDrive",
+      "page": 45,
+      "index": 30,
+      "width": 548,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-031.webp",
+      "caption": "Figure 12: Mean normalized noise-distilled trajectories for Bi-DexHands domain",
+      "page": 28,
+      "index": 31,
+      "width": 827,
+      "height": 592
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-032.webp",
+      "caption": "Figure 13: Mean normalized noise-distilled trajectories for MetaDrive domain",
+      "page": 28,
+      "index": 32,
+      "width": 735,
+      "height": 592
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-033.webp",
+      "caption": "Table 28: Dataset Metadata for Kinetix",
+      "page": 50,
+      "index": 33,
+      "width": 927,
+      "height": 1167
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-034.webp",
+      "caption": "Figure 4: Action beliefs over context sizes Action distributions are shown for different prompt sizes during offline evaluation, ranging from no context to 10, 100, and 500 transitions of task-specific demonstrator data. Projections into 2D space are obtained using Truncated SVD. The gradual decrease in distributions’ entropy indicates that our model exhibits a behavior consistent with posterior sampling.",
+      "page": 8,
+      "index": 34,
+      "width": 813,
+      "height": 282
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-035.webp",
+      "caption": "Table 13: Offline Evaluation Results for Meta-World",
+      "page": 40,
+      "index": 35,
+      "width": 722,
+      "height": 1213
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-036.webp",
+      "caption": "Table 1: Training Dataset Summary. Training dataset covers 209 distinct tasks across 10 domains ranging from robotic manipulation to HVAC control and autonomous driving",
+      "page": 4,
+      "index": 36,
+      "width": 662,
+      "height": 264
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-037.webp",
+      "caption": "Table 7: Online Evaluation Results for Industrial-Benchmark",
+      "page": 36,
+      "index": 37,
+      "width": 690,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-038.webp",
+      "caption": "Table 8: Online Evaluation Results for HumEnv",
+      "page": 36,
+      "index": 38,
+      "width": 668,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-039.webp",
+      "caption": "Table 27: Dataset Metadata for CityLearn",
+      "page": 49,
+      "index": 39,
+      "width": 842,
+      "height": 619
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-040.webp",
+      "caption": "Table 26: Dataset Metadata for MetaDrive",
+      "page": 49,
+      "index": 40,
+      "width": 764,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-041.webp",
+      "caption": "Table 29: Dataset Metadata for Industrial-Benchmark",
+      "page": 51,
+      "index": 41,
+      "width": 902,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-042.webp",
+      "caption": "Table 30: Dataset Metadata for HumEnv",
+      "page": 51,
+      "index": 42,
+      "width": 880,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-043.webp",
+      "caption": "Table 19: Offline Evaluation Results for SinerGym",
+      "page": 44,
+      "index": 43,
+      "width": 698,
+      "height": 825
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-044.webp",
+      "caption": "Table 14: Offline Evaluation Results for Kinetix",
+      "page": 41,
+      "index": 44,
+      "width": 690,
+      "height": 1167
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-045.webp",
+      "caption": "Figure 11: Mean normalized noise-distilled trajectories for Kinetix domain",
+      "page": 27,
+      "index": 45,
+      "width": 827,
+      "height": 1213
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-046.webp",
+      "caption": "Figure 7: Action beliefs over context sizes for other tasks in SinerGym",
+      "page": 24,
+      "index": 46,
+      "width": 734,
+      "height": 768
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-047.webp",
+      "caption": "Figure 5: Normalized returns vs. number of demonstrations Offline evaluation is conducted on 46 held-out tasks with task-specific prompts of varying size. Results for Vintix and REGENT are reported on the corresponding domains. IQM aggregation is applied across 4 random seeds.",
+      "page": 9,
+      "index": 47,
+      "width": 827,
+      "height": 459
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-048.webp",
+      "caption": "Table 9: Online Evaluation Results for SinerGym",
+      "page": 37,
+      "index": 48,
+      "width": 698,
+      "height": 825
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-049.webp",
+      "caption": "Figure 19: Mean normalized noise-distilled trajectories for HumEnv domain",
+      "page": 31,
+      "index": 49,
+      "width": 735,
+      "height": 409
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-050.webp",
+      "caption": "Figure 18: Mean normalized noise-distilled trajectories for CityLearn domain",
+      "page": 31,
+      "index": 50,
+      "width": 826,
+      "height": 685
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-051.webp",
+      "caption": "Table 32: Dataset Metadata for SinerGym",
+      "page": 52,
+      "index": 51,
+      "width": 909,
+      "height": 825
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-052.webp",
+      "caption": "Table 31: Dataset Metadata for ControlGym",
+      "page": 52,
+      "index": 52,
+      "width": 945,
+      "height": 344
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05112v1/fig-053.webp",
+      "caption": "Table 25: Dataset Metadata for Meta-World",
+      "page": 48,
+      "index": 53,
+      "width": 909,
+      "height": 1213
+    }
+  ]
+}

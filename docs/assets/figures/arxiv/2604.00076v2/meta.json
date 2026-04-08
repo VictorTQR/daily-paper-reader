@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-001.webp",
+      "caption": "Figure 4: Win rate progression for DQN and Tabular agents trained with the LLM-guided curriculum. The curriculum provides a stable learning trajectory for the DQN agent, preventing the performance volatility seen in baseline training and allowing it to converge to a high and consistent win rate.",
+      "page": 6,
+      "index": 1,
+      "width": 844,
+      "height": 223
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-002.webp",
+      "caption": "Figure 5: Deeper analysis of agent performance, showing a positive correlation between the number of curriculum stages completed and the best achieved win rate for the DQN agent (left). However, the agent’s final performance is often lower than its peak (middle), reinforcing the finding, quantified in the summary (right), that the optimal policy is achieved at an intermediate stage.",
+      "page": 6,
+      "index": 2,
+      "width": 1056,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-003.webp",
+      "caption": "Figure 6: A strategy heatmap for an agent trained without a curriculum. Rows are the player’s sum, columns are the dealer’s up card. Cell colors represent the chosen action. The strategy appears less structured than the curriculum-trained agent.",
+      "page": 6,
+      "index": 3,
+      "width": 506,
+      "height": 408
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-004.webp",
+      "caption": "Figure 9: Comparative analysis in a 1-deck environment.",
+      "page": 11,
+      "index": 4,
+      "width": 922,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-005.webp",
+      "caption": "Figure 10: Comparative analysis in a 4-deck environment.",
+      "page": 11,
+      "index": 5,
+      "width": 922,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-006.webp",
+      "caption": "Figure 7: A strategy heatmap for an agent trained with a curriculum. Rows are the player’s sum, columns are the dealer’s up card. Cell colors represent the chosen action. The strategy appears more structured than the no curriculum-trained agent.",
+      "page": 7,
+      "index": 6,
+      "width": 506,
+      "height": 409
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-007.webp",
+      "caption": "Figure 8: Performance progression of the DQN agent through a 5-stage curriculum in an 8-deck game.",
+      "page": 10,
+      "index": 7,
+      "width": 948,
+      "height": 756
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-008.webp",
+      "caption": "Figure 13: Heatmap visualization of the DQN agent’s learned policy at Stage 3 (\"Introducing Splits\").",
+      "page": 13,
+      "index": 8,
+      "width": 732,
+      "height": 590
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-009.webp",
+      "caption": "Figure 1: The adaptive, LLM-guided curriculum learning framework. (1) Generation & Adaptation: An LLM generates an initial curriculum stage. After a training phase, the agent’s performance summary is fed back to the LLM, which adapts the curriculum by deciding whether to advance the agent to the next stage. (2) Training Loop: The agent’s training is constrained by the current curriculum stage, which masks unavailable actions in the environment to focus exploration.",
+      "page": 4,
+      "index": 9,
+      "width": 1056,
+      "height": 236
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-010.webp",
+      "caption": "Figure 12: Comparative analysis in an infinite-deck environment.",
+      "page": 12,
+      "index": 10,
+      "width": 922,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-011.webp",
+      "caption": "Figure 11: Comparative analysis in an 8-deck environment.",
+      "page": 12,
+      "index": 11,
+      "width": 922,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-012.webp",
+      "caption": "Figure 2: A statistical summary of agent performance over 10 independent runs in the 8-deck curriculum environment. The results highlight the DQN agent’s significantly higher peak performance distribution (left) and confirm that this peak is most frequently achieved at Stage 4 (right). The high stage completion rate for both agents (middle) indicates the curriculum was well-paced and successfully navigated in most runs.",
+      "page": 5,
+      "index": 12,
+      "width": 1056,
+      "height": 352
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00076v2/fig-013.webp",
+      "caption": "Figure 3:Win rate progression for baseline DQN and Tabular agents trained without a curriculum. The DQN agent’s performance is highly volatile, illustrating the instability and exploration challenges that arise when the full action space is introduced at once.",
+      "page": 5,
+      "index": 13,
+      "width": 844,
+      "height": 356
+    }
+  ]
+}

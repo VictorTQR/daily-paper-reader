@@ -1,0 +1,1115 @@
+Title: RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.00790v1
+
+Published Time: Thu, 02 Apr 2026 00:56:10 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Shaopeng Fu * 1 Xingxing Zhang 2 Li Dong 2 Di Wang 1 Furu Wei 2
+
+## Abstract 
+
+While large language models (LLMs) have demonstrated strong performance on complex rea-soning tasks such as competitive programming (CP), existing methods predominantly focus on single-attempt settings, overlooking their capac-ity for iterative refinement. In this paper, we present RefineRL , a novel approach designed to unleash the self-refinement capabilities of LLMs for CP problem solving. RefineRL introduces two key innovations: (1) Skeptical-Agent , an iterative self-refinement agent equipped with local execu-tion tools to validate generated solutions against public test cases of CP problems. This agent al-ways maintains a skeptical attitude towards its own outputs and thereby enforces rigorous self-refinement even when validation suggests correct-ness. (2) A reinforcement learning (RL) solu-tion to incentivize LLMs to self-refine with only standard RLVR data ( i.e. , problems paired with their verifiable answers). Extensive experiments on Qwen3-4B and Qwen3-4B-2507 demonstrate that our method yields substantial gains: after our RL training, these compact 4B models inte-grated with the Skeptical-Agent not only outper-form much larger 32B models but also approach the single-attempt performance of 235B models. These findings suggest that self-refinement holds considerable promise for scaling LLM reasoning, with significant potential for further advancement. 
+
+## 1. Introduction 
+
+Recent large language models (LLMs) have demonstrated strong mathematical reasoning capabilities in math com-petitions and competitive programming (CP). Proprietary systems like OpenAI o1 (El-Kishky et al., 2025), Alpha-Geometry (Trinh et al., 2024; Chervonyi et al., 2025), and Gemini (Comanici et al., 2025) have proven that reasoning  
+
+> *Work done during an internship at Microsoft Research
+> 1KAUST 2Microsoft Research.
+> Preprint. April 2, 2026.
+
+LLMs can become medal winners in the most challeng-ing mind competitions. Concurrently, open-source models like DeepSeek-R1 (Guo et al., 2025) and Qwen3 (Yang et al., 2025) have achieved remarkable performance on rig-orous benchmarks such as AIME, LiveCodeBench, and Codeforces. While the success of these models is largely attributed to long Chain-of-thought (CoT; Wei et al. 2022) that can consume tens of thousands of tokens during gen-erations, the potential of LLMs for iterative improvement 
+
+remains under-explored. Indeed, prevailing evaluations are performed in single-attempt settings, where models are ex-pected to derive correct solutions in a single inference pass. More recent studies have adopted the self-correction tech-nique to realize iterative improvement for competitive math proving (Lin et al., 2025; Zhou et al., 2025). In each turn, the model utilizes the Lean-4 prover to analyze whether the generated proof is incorrect, and if so, incorporates the feedback to correct the proof. In the field of competitive programming, Shi et al. (2024) and Li et al. (2025) represent the primary open-source efforts leveraging self-correction. They employ Reflexion (Shinn et al., 2023) to iteratively correct solutions until they pass all public test cases. How-ever, as public test cases serve only as a sparse proxy for the comprehensive private test distribution, solely relying on them to trigger iterative improvement introduces a risk of false positives , where solutions pass visible checks but still fail on unseen data. Furthermore, as a purely test-time method, Reflexion depends entirely on the base model’s intrinsic iterative improvement capabilities, lacking explicit training to optimize the improvement process itself. To address these challenges, we introduce RefineRL , a sys-tematic approach designed to unleash the latent reasoning capabilities of LLMs for iterative improvement in compet-itive programming. Our framework is built upon two core components: the Skeptical-Agent and Self-Refinement Re-inforcement Learning . Specifically, the Skeptical-Agent employs a fine-grained agentic workflow tailored to differ-ent judging statuses on public test cases of CP problems to perform the refinement. Unlike previous approaches that blindly trust public validation, our agent maintains a consis-tently skeptical attitude, enforcing rigorous self-refinement even when passing all public test cases. However, this 1
+
+> arXiv:2604.00790v1 [cs.AI] 1 Apr 2026 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning
+
+self-refinement or self-skeptical capability either does not arise naturally in LLMs or remains too weak to be effective. Therefore, we propose Self-Refinement RL to explicitly incentivize this capability with only standard RLVR data (i.e. , problems paired with their verifiable answers). By constructing a dataset solely from the model’s own skeptical refinement trajectories and utilizing a new squared-incentive reward function, we explicitly train LLMs to navigate the complex self refinement process. Self-Refinement RL en-ables our approach to go beyond static prompt engineering. We evaluate RefineRL on two 4B reasoning LLMs, Qwen3-4B and Qwen3-4B-2507. Results demonstrate that our method yields substantial gains with high data efficiency: using only 4.5K problems from the HardTest dataset (He et al., 2025) to construct training samples, we significantly elevate the problem-solving capabilities of compact 4B mod-els. Notably, after Self-Refinement RL, RefineRL-4B and RefineRL-4B-2507 equipped with the Skeptical-Agent not only outperform the single-attempt performance of larger 32B models but also rival that of significantly larger 235B models. These findings suggest that self-refinement remains a largely under-explored avenue for scaling LLM reasoning in competitive programming, holding significant potential for further enhancement beyond model parameter scaling. 
+
+## 2. Related Work 
+
+Code generation of LLMs. Reasoning LLMs are found to be good at generating program code with the help of long chain-of-thought (CoT) (Liu et al., 2024; Yang et al., 2025; Comanici et al., 2025). For competitive programming, which is a specific code generation task, Ahmad et al. (2025) show that training LLMs on long CoT data distilled from frontier models can improve their capability to solve CP problems. He et al. (2025), Wang et al. (2025), and Fu et al. (2025) find that synthesized high-quality test cases of CP problems boost RL training with verifiable rewards of LLMs. Hu et al. (2025) further suggest using fully synthesized CP problems to train LLMs. Despite model training, several test-time scaling strategies such as example test cases re-jection, longest response selection, and clustering are also designed for the task of solving CP problems (El-Kishky et al., 2025; Yu et al., 2025; Samadi et al., 2025). Our work aims to incentivize a new Skeptical-Agent capability for competitive programming via RL training. 
+
+Self-correction of LLMs. Self-correction is a powerful test-time scaling strategy that empowers LLMs to iteratively critique and improve their responses based on internal or ex-ternal feedback (Shinn et al., 2023; Li et al., 2025; Madaan et al., 2023; Novikov et al., 2025). Previous works have demonstrated its effectiveness for coding and mathematical reasoning tasks (Shi et al., 2024; Chen et al., 2025a; Song et al., 2025), and recent studies indicate that LLMs can fur-ther internalize this capability through post-training (Chen et al., 2024; Jain et al., 2025a; Kumar et al., 2025). How-ever, traditional approaches often rely on the complete his-tory of multi-turn interactions, leading to excessive con-text length that limits practicality. More recent studies in competitive-level math proving (Zhou et al., 2025; Lin et al., 2025; Shang et al., 2025; Chen et al., 2025b) suggest de-composing the correction process into multiple single-turn feedback-response pairs, allowing the model to focus on immediate corrections without retaining the full trajectory. This paradigm significantly reduces computational overhead during both training and inference. Our paper focuses on designing a self-refinement strategy more robust than self-correction for solving CP problems and on effectively using RL (post-)training to enhance such a capability. 
+
+## 3. Preliminaries 
+
+Competitive Programming (CP). A CP problem can be formalized as a triple (x, T pub , T pri ), where x is the problem statement, T pub = {(ipub  
+
+> k
+
+, o pub  
+
+> k
+
+)}|T pub | 
+
+> k=1
+
+is the set of public test cases, (ipub  
+
+> k
+
+, o pub  
+
+> k
+
+) is the input-output pair of the k-th public test case, T pri = {(ipri  
+
+> k
+
+, o pri  
+
+> k
+
+)}|T pri | 
+
+> k=1
+
+is the set of private test cases, and (ipri  
+
+> k
+
+, o pri  
+
+> k
+
+) is the input-output pair of the k-th private test case. In a CP contest, the problem statement x
+
+and the public test cases T pub are visible to CP contestants, while the private test cases T pri are not. The goal of a CP contestant is to leverage all available information from x
+
+and T pub to write a code rcode that solves the CP problem. To determine whether the proposed solution code rcode suc-cessfully solves the given problem (x, T pub , T pri ), the con-test coordinator will leverage two oracle functions, i.e. , an execution function f (·, ·) and a judgment function g(·, ·), to evaluate rcode on the private test cases set T pri . Concretely, for the k-th private test case (ipri  
+
+> k
+
+, o pri  
+
+> k
+
+) ∈ T pri , one will first use the execution function f (·, ·) to run the code rcode on the private test input ipri  
+
+> k
+
+as follows, 
+
+ˆopri  
+
+> k
+
+= f (rcode , i pri  
+
+> k
+
+), (1) where ˆopri  
+
+> k
+
+is the execution output. Then, ˆopri  
+
+> k
+
+will be com-pared with the private test output opri  
+
+> k
+
+using the judgment function g(·, ·) as follows, 
+
+jpri  
+
+> k
+
+= g(ˆ opri  
+
+> k
+
+, o pri  
+
+> k
+
+), (2) where jpri  
+
+> k
+
+is the judging status, indicating whether the code rcode passes the test case (ipri  
+
+> k
+
+, o pri  
+
+> k
+
+) and, if it fails, the failure reason. In this paper, we adopt six judg-ing statuses commonly found in real-world CP contests, which are: “ Accepted (AC)”, “ Wrong Answer (WA)”, “Time Limit Exceeded (TLE)”, “ Memory Limit Exceeded 
+
+(MLE)”, “ Compile Error (CE)”, and “ Runtime Error 
+
+2RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning Generated Solution  
+
+> Generated Solution
+> Failed Public Test Case
+> Error-driven Feedback
+> Generated Solution
+> Skepticism-driven Feedback
+> Pass All Public Test Cases
+> Fail on a Public Test Case
+> Self-Refinement
+> LLM CP Problem
+
+(a) Skeptical-Agent for solving CP Problems. Skeptical-Agent  
+
+> LLM
+> Self-Refinement Trajectories
+> CP Problems
+> Reinforcement Learning
+> Squared-Incentive Reward
+> Real Data
+> LLM
+> Synthetic Data
+
+(b) Self-Refinement RL. 
+
+Figure 1. Overview of our RefineRL approach. (a) Skeptical-Agent employs local tools to evaluate generated solutions against visible public test cases and enforces rigorous self-refinement even when evaluation results suggest correctness. (b) Self-Refinement RL utilizes self-generated refinement trajectory data from the Skeptical-Agent on real-world CP problems data, along with a novel Squared-incentive reward function, to advance the self-refinement capabilities of LLMs. 
+
+(RE)”. Among them, “AC” indicates that the code passes the given test case, while “WA”, “TLE”, “MLE”, “CE”, and “RE” explain why the code fails on the given test case. Finally, the proposed solution code xcode is determined to successfully solve the given problem (x, T pub , T pri ) if it passes all private test cases of the problem. In other words, 
+
+xcode is considered to be correct if and only if the following indicator function outputs one, 
+
+1
+
+h |T pri |
+
+X
+
+> k=1
+
+1[ jpri  
+
+> k
+
+= AC ]
+
+
+
+= |T pri |
+
+i
+
+,
+
+where jpri  
+
+> k
+
+= g(f (rcode , i pri  
+
+> k
+
+), o pri  
+
+> k
+
+) for every 1 ≤ k ≤ | T pri |.
+
+Solving CP problems with LLMs. Let πθ be a reasoning LLM parameterized by θ. Then, for a given CP problem 
+
+(x, T pub , T pri ), one can directly prompt the LLM πθ to solve the problem as follows, 
+
+(rcot , r sol , r code ) ∼ πθ (x), (3) where rsol is the generated CoT, rsol is the generated text solution, and rcode is the solution code ( e.g. , Python code) corresponding to the text solution. In this paper, we focus on generating Python solutions, and the prompt template that we use for Eq. (3) is presented in Figure 4 in Appendix C. 
+
+## 4. RefineRL 
+
+This section presents our RefineRL approach for competi-tive programming. We will first motivate the necessity of integrating skepticism into iterative improvement-based CP problem solving, and then introduce our proposed Skeptical-Agent and Self-Refinement RL in detail. 
+
+4.1. Motivation 
+
+In the domain of competitive programming, Shi et al. (2024) and Li et al. (2025) are primary open-source efforts lever-aging self-correction for iterative improvement. In their ap-proach, the model analyzes the improvement history and it-eratively corrects its generated code until the solution passes all visible public test cases or reaches the maximum steps. However, public test cases are usually sparse and weak, failing to cover the comprehensive distribution of private test cases, particularly edge cases. This limitation creates a significant risk of false positives : a solution passing all visible public test cases can still fail on unseen private ones. To tackle false positives, we argue that a necessary and promising approach is to integrate skepticism into the iter-ative improvement process for competitive programming. The LLM should not blindly trust evaluations on public test cases but rather maintain a skeptical attitude, continuing re-finement even when public evaluations suggest correctness. Built upon this principle, our Skeptical-Agent utilizes spe-cialized prompts to enforce persistent self-refinement , while Self-Refinement RL internalizes this self-refinement capa-bility through post-training, enabling the LLM to discover and resolve defects beyond public test cases. 
+
+4.2. Skeptical-Agent 
+
+Given a CP problem (x, T pub , T pri ), the Skeptical-Agent will try to propose and iteratively improve solutions for up to N iterations solely based on the problem statement x and the public test case set T pub . In each iteration, following a design similar to that in Kumar et al. (2025), Jain et al. (2025a), and Lin et al. (2025), our Skeptical-Agent will use at most the information from the last solution attempt to construct feedback to improve this time’s generation. 3RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Self-refinement in Skeptical-Agent. Concretely, suppose 
+
+(r(n) 
+
+> cot
+
+, r (n) 
+
+> sol
+
+, r (n)
+
+> code
+
+) is the solution tuple generated in the n-th refinement iteration. To construct a feedback r(n) 
+
+> fed
+
+from it for the (n + 1) -th generation, we sequentially evaluate the gen-erated code r(n) 
+
+> code
+
+on each public test case from the set T pub .For the k-th public test case (ipub  
+
+> k
+
+, o pub  
+
+> k
+
+), we first obtaining an execution output ˆo(n) 
+
+> k
+
+:= f (r(n)
+
+> code
+
+, i pub  
+
+> k
+
+) (see Eq. (1)) and then calculating a judging status j(n) 
+
+> k
+
+:= g(ˆ o(n) 
+
+> k
+
+, o pub  
+
+> k
+
+), using the oracle execution and judgment functions f and g respec-tively. Finally, the (n + 1) -th solution generation process of Skeptical-Agent is formalized as follows, 
+
+(r(n+1)  
+
+> cot
+
+, r (n+1)  
+
+> sol
+
+, r (n+1)  
+
+> code
+
+) ∼ πθ (x, r (n) 
+
+> fed
+
+), (4) where πθ is the reasoning LLM and r(n) 
+
+> fed
+
+is the n-th feedback constructed from the evaluation of the n-th generated solu-tion on the public test cases set T pub . The prompt template used by Eq. (4) is presented in Figure 4 in Appendix C. Then, to maintain skepticism, the Skeptical-Agent will use one of the Failure-driven feedback and skepticism-driven 
+
+feedback during refinement, detailed as follows. 
+
+Failure-driven feedback. During the sequential evaluation, if the solution code fails to pass the k-th public test case, i.e., if j(n) 
+
+> k
+
+∈ { WA , TLE , MLE , CE , RE }, then the evaluation will be terminated and the feedback r(n) 
+
+> fed
+
+obtained from the 
+
+n-th generation is constructed as follows: 
+
+r(n) 
+
+> fed
+
+= PFail (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+, i pub  
+
+> k
+
+, o pub  
+
+> k
+
+, ˆo(n) 
+
+> k
+
+, j (n) 
+
+> k
+
+), (5) where PFail is the failure-feedback function that constructs feedback prompts for different failed judging statuses j(n)
+
+> k
+
+with different failure reason explanations. The prompt tem-plate for PFail and the failure reason explanation template are in Figure 5 and Figure 6 in Appendix C. This design aims to provide as many failure details as possible, including a failed test case, the execution result, and a detailed failure explanation, to assist the LLM to generate better solutions. 
+
+Skepticism-driven feedback. If the solution code r(n)
+
+> code
+
+successfully passes all public test cases, i.e. , if j(n) 
+
+> k
+
+= AC for every (ipub  
+
+> k
+
+, o pub  
+
+> k
+
+) ∈ T pub , there might still be bugs or wrong ideas in the solution that can cause the code to fail in edge or extreme private test cases from T pri . However, in this setting, there is no test case that can be used for the feedback and assisting the next-time solution generation in FaSC. To tackle such a challenge, we propose to instead construct the feedback solely using the generated solution text r(n) 
+
+> sol
+
+and code r(n) 
+
+> code
+
+as follows, 
+
+r(n) 
+
+> fed
+
+= PSkep (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+), (6) where PSkep is the Skepticism-feedback function that con-structs prompts to ask the LLM itself to re-check the gener-ated solution (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+). The prompt template for PSkep is 
+
+Algorithm 1 Skeptical-Agent for CP Problem Solving 
+
+Input: Reasoning LLM πθ , problem statement x, public test cases set T pub , hyperparameters (N, M 1, M 2), ora-cle execution and judging functions f and g.
+
+Output: Optimal solution text r(∗) 
+
+> sol
+
+and code r(∗)
+
+> code
+
+.
+
+1: c1 ← 0, c2 ← 0 ▷ Initialize temporary counters 
+
+2: r(∗) 
+
+> sol
+
+, r (∗)
+
+> code
+
+, r (0)  
+
+> fed
+
+← Null ▷ Initialize as empty value 
+
+3: for n in 1, · · · , N do 
+
+4: r(n) 
+
+> cot
+
+, r (n) 
+
+> sol
+
+, r (n) 
+
+> code
+
+∼ πθ (x, r (n−1)  
+
+> fed
+
+) ▷ Eq. (4) 
+
+5: (r(∗) 
+
+> sol
+
+, r (∗)
+
+> code
+
+) ← (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+) ▷ Update final solution 
+
+6: i∗, o ∗, ˆo∗, j ∗ ← Null ▷ Store judging result 
+
+7: for (ipub  
+
+> k
+
+, o pub  
+
+> k
+
+) in T pub do 
+
+8: ˆo(n) 
+
+> k
+
+← f (r(n)
+
+> code
+
+, i pub  
+
+> k
+
+), j(n) 
+
+> k
+
+← g(ˆ o(n) 
+
+> k
+
+, o pub  
+
+> k
+
+)
+
+9: if j(n)
+
+> k
+
+̸ = AC then 
+
+10: (i∗, o ∗, ˆo∗, j ∗) ← (ipub  
+
+> k
+
+, o pub  
+
+> k
+
+, ˆo(n) 
+
+> k
+
+, j (n) 
+
+> k
+
+)
+
+11: break 
+
+12: end if 
+
+13: end for 
+
+14: if j∗̸ = Null then 
+
+15: c1 ← (( c1 + 1) mod M1), c2 ← 0
+
+16: else 
+
+17: c1 ← 0, c2 ← (c2 + 1) 
+
+18: end if 
+
+19: if c2 = M2 then 
+
+20: break 
+
+21: end if 
+
+22: if c1 > 0 then 
+
+23: r(n) 
+
+> fed
+
+← P Fail (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+, i ∗, o ∗, ˆo∗, j ∗) ▷ Eq. (5) 
+
+24: else if c2 > 0 then 
+
+25: r(n) 
+
+> fed
+
+← P Pass (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+) ▷ Eq. (6) 
+
+26: else 
+
+27: r(n) 
+
+> fed
+
+← Null 
+
+28: end if 
+
+29: end for 
+
+30: return (r(∗) 
+
+> sol
+
+, r (∗)
+
+> code
+
+)
+
+presented in Figure 7 in Appendix C, focusing on checking: (1) whether r(n) 
+
+> code
+
+encodes public test cases as short-cuts, (2) whether (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+) is correct, and (3) whether the time and space complexities of (r(n) 
+
+> sol
+
+, r (n)
+
+> code
+
+) are optimal. 
+
+Overall agent-loop workflow. As aforementioned, in the agent-loop workflow, the Skeptical Agent performs up to N
+
+self-refinement iterations. We further adopt the following two additional rules , with two additional hyperparameters 
+
+M1 and M2, to control the workflow: • Restart Rule. If the agent fails to generate a solution that passes all test cases in T pub for M1 consecutive attempts, then in the (M1 + 1) -th trial, it will discard the feedback from the previous attempt and generate a 4RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+solution solely based on the problem statement x.• Termination Rule. If the agent generates solutions that pass all test cases in T pub for M2 consecutive attempts, it will terminate the refinement process and select the last attempt as the final solution. The Restart Rule is designed to prevent the self-refinement process from getting trapped in local optima. Conversely, the Termination Rule compels the LLM to re-examine and rectify potential latent bugs in the proposed solution, even when it already satisfies all public test cases. Putting all these components together, the overall algorithm of the Skeptical Agent is presented as Algorithm 1. 
+
+4.3. Self-Refinement Reinforcement Learning 
+
+We now detail our Self-Refinement RL for improving the self-refinement capability of the Skeptical-Agent. We use the GRPO (Guo et al., 2025) algorithm, excluding KL-regularization, to perform RL training. The objective func-tion for training an LLM πθ is formalized as follows, 
+
+JGRPO (θ) = E 
+
+> q∼D, {oi}Gi=1 ∼πθold (·| q)
+
+1
+
+G
+
+> G
+
+X
+
+> i=1
+
+min 
+
+
+
+si ˆAi, clip (si, 1 − ϵ, 1 + ϵ) ˆAi
+
+
+
+,
+
+where q is the input sample drawn from the training set 
+
+D, {oi}Gi=1 is the group of responses, si := πθ (oi|q)  
+
+> πθold (oi|q)
+
+is the importance sampling ratio, ˆAi := Ri−mean (R) 
+
+> std (R)
+
+is the advantage for the i-th response, and {Ri}Gi=1 is the group of rewards for each response. To help internalize the skeptical self-refinement capability, our Skeptical RL also adopts two unique designs: (1) a novel RL training data synthesis paradigm, and (2) a new reward function for better RL training on CP problems. 
+
+RL training data synthesis. From the solution genera-tion process formalized in Eq. (4) in Section 4.2, the key to advancing the Skeptical-Agent is to train LLMs to better per-form self-refinement with the feedback r(n) 
+
+> fed
+
+that can be ei-ther error-driven feedback (see Eq. (5)) or skepticism-driven feedback (see Eq. (6)). To this end, in our Self-Refinement RL, for a reasoning LLM πθ , we propose to construct, from a normal CP problem dataset, a training dataset that con-tains prompts combined with failure/skepticism-feedback synthesized solely based on the LLM πθ itself. Concretely, suppose DCP := {(xq , T q )}|D| 
+
+> q=1
+
+is a CP problem dataset where xq is the statement of the q-th problem and Tq
+
+is the corresponding test cases set mixing of both public and private test cases. We use the LLM πθ to construct two new self-refinement datasets, DErr := {(xq , r Err fed ,q , T q )}|DErr | 
+
+> q=1
+
+and 
+
+DSkep := {(xq , r Skep fed ,q , T q )}|DSkep | 
+
+> q=1
+
+, where rErr fed ,q is the error-driven feedback from Eq. (5) and rSkep fed ,q is the skepticism-driven feedback from Eq. (6). The eventual Self-Refinement RL training dataset DRL is formalized as the union of the original and self-refinement data, i.e. , DRL := DCP ∪ DErr ∪
+
+DSkep . During training, for each tuple (x, r fed , T ) from the set DRL , we use the prompt template in Figure 4 to construct the actual prompt for performing the rollout process of RL. The construction of the two self-refinement datasets, DErr 
+
+and DSkep , is detailed as follows: • Failure-feedback set DErr . For each tuple (xq , T q ) ∈
+
+DCP from the original CP problem set, we first use the LLM πθ to generate solution text xsol ,q and code 
+
+xcode ,q following Eq. (3), and evaluate the code xcode ,q 
+
+on the test case set Tq using the execution and judging functions f and g in Eq. (1) and Eq. (2). If xcode ,q 
+
+successfully passes all test cases from Tq , then we will exclude this CP problem from the failure-feedback set construction. Otherwise, if xcode ,q fails on the test case (iq,k , o q,k ) ∈ Tq , we will record its corre-sponding execution output ˆoq,k := f (rcode ,q , i q,k ) and judging status jq,k := g(ˆ oq,k , o q,k ). The error-driven feedback for problem (xq , T q ) is then constructed as 
+
+rErr fed ,q := PFail (rsol ,q , r code ,q , i q,k , o q,k , ˆoq,k , j q,k ) fol-lowing Eq. (5). The constructed tuple (xq , r Err fed ,q , T q )
+
+will be added to the failure-feedback set DErr .• Skepticism-feedback set DSkep . For each tuple 
+
+(xq , T q ) ∈ DCP from the original CP problem set, we similarly use the LLM πθ to generate solution text xsol ,q and code xcode ,q . Then, without knowing whether the generated code rcode ,q can pass the test case set Tq , we directly construct a skepticism-feedback for this problem as rSkep fed ,q := PSkep (rsol ,q , r code ,q ) fol-lowing Eq. (6). Finally, for the constructed triple 
+
+(xq , r Skep fed ,q , T q ), if rcode ,q successfully passes all test cases from the set Tq , then the tuple will be added to the new skepticism-feedback set DSkep with a probabil-ity of 20% . Otherwise, i.e. , if rcode ,q fails any test case from Tq , then the probability of adding (xq , r Skep fed ,q , T q )
+
+to DSkep will be 40% .
+
+Squared-incentive reward. Existing studies of RL training on CP problems usually use a pass-or-fail reward function where a generated solution code xcode receives a non-trivial reward from a CP problem (x, T ) if and only if it passes all test cases from the set T (He et al., 2025; Wang et al., 2025). While such a pass-or-fail reward is close to set-tings of real-world CP contests such as CodeForces or ICPC where contestants need to pass all test cases to get scores from a single problem, we note that it may hinder RL train-ing. Specifically, for a given CP problem (x, T ), if it is so 5RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Table 1. Performance on LiveCodeBench v5 and v6. We compare our RefineRL models (4B and 4B-2507 versions) against baselines ranging from 4B to 235B parameters. By applying our Skeptical-Agent ( i.e. , Skeptical@16) to RefineRL-4B-2507, our approach outperforms 32B baselines and achieves performance comparable to the single-attempt performance of significantly larger 235B model.                                                                                                                                         
+
+> Model LiveCodeBench v5 LiveCodeBench v6 All Easy Medium Hard All Easy Medium Hard Qwen3-235B-A22B (Yang et al., 2025) 67.25 97.56 79.93 41.55 59.93 99.13 70.67 31.88 Qwen3-235B-A22B-2507 (Yang et al., 2025) 79.08 96.49 89.30 62.25 72.50 99.71 81.73 51.88 Qwen3-8B (Yang et al., 2025) 55.39 96.04 61.42 28.63 49.32 95.49 57.09 19.45 DeepSeek-R1-0528-Qwen3-8B (Guo et al., 2025) 59.84 94.36 72.12 32.09 51.84 97.63 56.13 24.31 X-Coder-RL-Qwen3-8B (Wu et al., 2026) 55.80 83.08 68.27 31.93 48.39 85.61 56.85 22.89 Qwen3-30B-A3B (Yang et al., 2025) 60.37 97.10 70.19 33.11 56.00 98.40 67.79 25.55 Qwen3-30B-A3B-2507 (Yang et al., 2025) 70.55 96.95 82.09 47.80 64.61 99.85 75.48 38.59 Qwen3-32B (Yang et al., 2025) 62.69 97.41 74.28 35.30 59.25 98.98 70.07 30.86 OCR-Nemotron-1.1-32B (Ahmad et al., 2025) 70.47 96.04 81.49 48.56 62.25 98.84 71.15 36.80 OR-Nemotron-32B (Ahmad et al., 2025) 67.03 94.05 74.76 46.62 66.07 99.71 73.68 43.05 Qwen3-4B (Yang et al., 2025) 52.51 95.88 57.57 24.92 48.29 95.35 55.05 18.59 Qwen3-4B-2507 (Yang et al., 2025) 62.65 96.19 73.20 36.66 55.21 98.84 63.70 26.25 RefineRL-4B (Ours) 56.40 94.97 64.06 29.65 48.79 97.24 55.17 18.59 RefineRL-4B + Skeptical@16 (Ours) 64.07 96.19 71.27 41.22 56.54 97.97 67.19 27.34 RefineRL-4B-2507 (Ours) 70.40 96.80 81.85 47.72 61.57 98.98 72.72 34.22 RefineRL-4B-2507 + Skeptical@16 (Ours) 75.97 96.80 86.90 56.76 67.82 100.00 78.85 43.36
+
+difficult that the LLM being trained cannot generate any correct solution to pass the test case set T , then the LLM cannot obtain any non-trivial reward and thus cannot learn anything from (x, T ).To address this technical challenge, our Skeptical RL train-ing adopt a new Squared-incentive Reward function that is specifically designed for RL training on CP data. Given a CP problem (x, T ) and a generated solution code rcode , the squared-incentive reward for rcode is calculated as follows, 
+
+R(rcode , T ) := ( k∗/|T |)2,
+
+where k∗ is equal to either |T | or the index minus one of the first test case from the set T that rcode fails to pass. The advantage of our new squared-incentive reward is two-fold: • It enables the LLM to extract meaningful learning sig-nals from difficult CP problems even though the LLM itself cannot roll out a correct solution during RL. • It incentivizes the LLM to completely solve CP prob-lems as the squared nature of the reward significantly amplifies the total reward for passing later test cases. 
+
+## 5. Experiments 
+
+This section presents experiments on our RefineRL. We will empirically evaluate our Skeptical-Agent and how our Self-Refinement RL can advance its performance. 
+
+5.1. Experimental Setup Test-time scaling and baselines. For our proposed Skep-tical Agent in Algorithm 1, we denote it as Skeptical@16 
+
+and set its query budget N to 16 and the remaining two hyperparameters M1 and M2 to 4 and 8 respectively. Besides, we adopt the following five baseline test-time scal-ing strategies: (1) Pass@1 : Directly querying the LLM once using Eq. (3) and extracting solutions from its re-sponse. (2) Random@16 : Generating 16 responses in parallel and random choose one that passes all public test cases. (3) LongCoT@16 : Generating 16 responses in paral-lel and random choose one that passes all public test cases and has the longest CoT length. (4) RejSamp@16 : Repeat-edly querying the LLM up to 16 times until a solution code that can pass all public test cases is generated. (5) Reflex-ion@16 (Shi et al., 2024): Repeatedly querying the LLM up to 16 times with the full historical generation results until a solution code that can pass the problem is generated. Note that Random@16 and LongCoT@16 are parallel sampling-based baselines, while RejSamp@16 and Reflexion@16 are sequential sampling-based baselines. 
+
+Training data of RL. We select 4.5K CP problems from the HardTest dataset (He et al., 2025) that are suitable for learn-ing self-refinement to form the base problem set DCP . We then follow the pipeline described in Section 4.3 to construct the final Self-Refinement RL training data. Specifically, we set the maximum generation length to 32,768 for Qwen3-4B and 65,536 for Qwen3-4B-2507, resulting in approximately 4.2K self-refinement trajectories for each model. Please see Appendix A.1 for full details. 
+
+RL training. We perform RL training via GRPO (Guo et al., 2025) on two 4B LLMs, Qwen3-4B and Qwen3-4B-2507 (Yang et al., 2025). The maximum rollout generation token length during RL is set to 32,768 for Qwen3-4B and 65,536 for Qwen3-4B-2507. The two RL trained mod-els from Qwen3-4B and Qwen3-4B-2507 are denoted as 
+
+RefineRL-4B and RefineRL-4B-2507 , respectively. Please refer to Appendix A.2 for full details about RL hyperparam-eters and the implementation of efficient reward calculation. 6RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Table 2. Performance of inference-time strategies. We compare our Skeptical-Agent (Skeptical@16) strategy with different inference-time baselines on 4B models, both before and after self-refinement RL. Notably, our Skeptical-Agent ( i.e. , Skeptical@16) consistently outperforms the compared baselines, achieving the best inference-time performance across all settings.                                                                                                                                                                                                         
+
+> Model & Strategy LiveCodeBench v5 LiveCodeBench v6 All Easy Medium Hard All Easy Medium Hard Qwen3-4B (Yang et al., 2025) 52.51 95.88 57.57 24.92 48.29 95.35 55.05 18.59 + Random@16 61.15 96.65 65.50 38.43 53.25 96.95 62.02 24.06 + LongCoT@16 59.43 95.58 62.02 37.58 51.36 96.66 57.81 22.81 + RejSamp@16 60.97 96.19 65.62 38.18 52.82 96.22 62.38 23.28 + Reflexion@16 59.92 95.58 65.38 36.32 52.07 95.93 61.42 22.42 + Skeptical@16 (Ours) 62.13 95.73 68.03 39.36 56.18 98.26 64.90 27.89
+> RefineRL-4B (Ours) 56.40 94.97 64.06 29.65 48.79 97.24 55.17 18.59 + Random@16 62.95 95.58 68.39 41.05 52.68 97.67 61.06 23.05 + LongCoT@16 60.14 95.27 63.46 38.34 50.32 96.51 53.73 23.28 + RejSamp@16 61.49 95.43 66.11 39.44 51.75 96.95 60.10 22.03 + Reflexion@16 62.39 95.88 66.71 40.79 51.86 96.80 60.46 22.11 + Skeptical@16 (Ours) 64.07 96.19 71.27 41.22 56.54 97.97 67.19 27.34
+> Qwen3-4B-2507 (Yang et al., 2025) 62.65 96.19 73.20 36.66 55.21 98.84 63.70 26.25 + Random@16 70.28 96.95 78.61 49.66 61.39 99.42 72.72 33.59 + LongCoT@16 66.58 96.95 73.32 45.02 58.07 99.13 68.39 29.30 + RejSamp@16 69.61 96.65 78.13 48.65 61.07 99.27 72.48 33.13 + Reflexion@16 69.50 96.95 78.49 47.97 60.43 99.13 71.88 32.19 + Skeptical@16 (Ours) 71.29 97.26 80.89 50.17 62.07 99.13 72.96 35.08
+> RefineRL-4B-2507 (Ours) 70.40 96.80 81.85 47.72 61.57 98.98 72.72 34.22 + Random@16 74.06 97.26 83.29 54.73 64.14 98.84 76.20 37.66 + LongCoT@16 69.65 96.95 78.13 48.56 58.82 97.53 67.91 32.11 + RejSamp@16 74.25 97.56 84.62 54.05 64.71 99.13 76.80 38.36 + Reflexion@16 74.36 97.26 84.01 54.90 64.29 99.27 75.48 38.20 + Skeptical@16 (Ours) 75.97 96.80 86.90 56.76 67.82 100.00 78.85 43.36
+
+Evaluations. We use two versions of LiveCodeBench (Jain et al., 2025b), v5 (2024.10-2025.01; 167 problems) and 
+
+v6 (2025.01-2025.03; 175 problems), to evaluate the capa-bility of LLMs in solving CP problems. In every LLM for evaluation, we set the the sampling temperature and top-p
+
+to 0.6 and 0.95, respectively. For the max generation token length, we set 32,768 for Qwen3-4B and RefineRL-4B and 65,536 for all other models. To ensure a fair comparison, all models are evaluated using our self-implemented evaluation toolkit. Plese refer to Appendix A.3 for details. 
+
+5.2. Results Analysis 
+
+We present the RL training logs in Appendix B. Here, we focus on analyzing the CP problem-solving performance gains by the Skeptical-Agent and Self-Refinement RL. 
+
+Comparison with baseline models. We first compare the performance of our RefineRL-4B and RefineRL-4B-2507 models against other strong baselines in Table 1. From the table, we observe two key findings: Firstly ,while Self-Refinement RL is primarily designed to en-hance the self-refinement capability of LLMs, it also significantly boosts standard Pass@1 performance. For instance, it enables the RefineRL-4B to achieve per-formance comparable to 8B models ( e.g. , Qwen3-8B), while the RefineRL-4B-2507 rivals 32B models ( e.g. ,OCR-Nemotron-1.1-32B). Secondly , when equipped with our inference-time strategy, Skeptical-Agent ( i.e. , Skepti-cal@16), our RefineCoder-4B-2507 outperforms 32B base-lines and closely approaches the much larger Qwen3-235B-A22B-2507, narrowing the performance gap to less than 5% on both LiveCodeBench v5 and v6. All these results demonstrate that our approach effectively unleash the self-refinement capabilities of LLMs, allowing compact 4B mod-els to achieve state-of-the-art performance through efficient training and inference strategies. 
+
+Comparison with inference-time baselines. We then eval-uate our Skeptical-Agent ( i.e. , Skeptical@16) against vari-ous test-time scaling baselines on both base and post-trained models, as detailed in Table 2. Firstly, we compare against parallel sampling baselines ( i.e. , Random@16 and Long-CoT@16). Our Skeptical-Agent consistently outperforms both ( e.g. , improving RefineRL-4B-2507 from 64.14% to 67.82% on LiveCodeBench v6), demonstrating that sim-ply scaling up test-time compute via parallel generation— even when heuristically selecting for deeper reasoning—is less effective than our targeted, iterative refinement strat-egy. Secondly, we evaluate against sequential baselines ( i.e. ,RejSamp@16 and Reflexion@16) to rigorously isolate the source of our gains. Crucially, our method outperforms Re-jSamp@16, which effectively refutes the concern that our improvements stem merely from stochastic re-sampling, as RejSamp also maximizes the sampling budget to pass pub-lic tests. Furthermore, by surpassing Reflexion@16, which tends to prematurely accept false positives, we validate that the performance boost stems directly from our skepticism-driven feedback, which enables the agent to uncover and rectify latent bugs that pass public test cases. 7RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Table 3. Impact of Self-Refinement RL on reasoning depth. We compare the average number of self-refinement rounds and the response length per round for models before and after RL training.           
+
+> Model & Strategy Avg. Refine Rounds Avg. Response Length Qwen3-4B 10.38 10,297.97 RefineRL-4B (Ours) 9.78 11,371.62 Qwen3-4B-2507 9.26 10,330.52 RefineRL-4B-2507 (Ours) 8.66 17,558.65
+
+Table 4. Performance of models trained with and without self-refinement trajectory data.                           
+
+> Model & Strategy LCB-v5 LCB-v6 Qwen3-4B 52.51 48.29 + Standard RL 53.48 48.75 + Self-Refinement RL (Ours) 56.40 48.79
+> Qwen3-4B + Skeptical@16 62.13 56.18 + Standard RL 62.87 56.21 + Self-Refinement RL (Ours) 64.07 56.54
+> Qwen3-4B-2507 62.65 55.21 + Standard RL 66.95 57.96 + Self-Refinement RL (Ours) 70.40 61.57
+> Qwen3-4B-2507 + Skeptical@16 71.29 62.07 + Standard RL 72.90 63.79 + Self-Refinement RL (Ours) 75.97 67.82
+
+Effect of RL training on model responses. Finally, we ana-lyze the behavioral changes induced by our Self-Refinement RL, as shown in Table 3. We observe that while the average number of self-refinement rounds slightly decreases after RL training, the average response length significantly increases. This suggests that our Self-Refinement RL objective does not merely incentivize the model to “try more times” (which would increase the round count), but rather to “think deeper” within each attempt. By generating longer and more detailed CoT, the model effectively trades the quantity of attempts for the quality of reasoning. Crucially, this substantial increase in reasoning length for RefineRL-4B-2507 correlates with the superior performance gains reported in our main results, reinforcing the hypothesis that extended, comprehensive CoT is instrumental in solving complex CP problems. 
+
+5.3. Ablation Studies Effect of self-refinement trajectory data. We now in-vestigate whether the performance gains observed in our self-refinement RL are primarily driven by the use of self-generated refinement trajectory data. We train additional baseline models (denoted as “Standard RL”) solely on the original base set of 4.5K CP problems from HardTest. To ensure a fair comparison, these baselines employ the same squared-incentive reward function as our Self-Refinement RL. The results, summarized in Table 4, demonstrate that models trained with self-refinement trajectories consistently outperform the Standard RL baselines. Furthermore, this performance gain is observed not only in the Skeptical-Agent setting but also in the single-attempt generation set-
+
+Table 5. Performance of models trained via Skeptical-RL with the original squared-incentive reward or pass-or-fail reward.                           
+
+> Model & Strategy LCB-v5 LCB-v6 Qwen3-4B 52.51 48.29 + Self-Refinement RL + Pass-or-fail Reward 51.35 47.04 + Self-Refinement RL + Squared-incentive Reward 56.40 48.79
+> Qwen3-4B + Skeptical@16 62.13 56.18 + Self-Refinement RL + Pass-or-fail Reward 62.05 55.50 + Self-Refinement RL + Squared-incentive Reward 64.07 56.54
+> Qwen3-4B-2507 62.65 55.21 + Self-Refinement RL + Pass-or-fail Reward 64.22 55.36 + Self-Refinement RL + Squared-incentive Reward 70.40 61.57
+> Qwen3-4B-2507 + Skeptical@16 71.29 62.07 + Self-Refinement RL + Pass-or-fail Reward 70.55 61.43 + Self-Refinement RL + Squared-incentive Reward 75.97 67.82
+
+ting ( i.e. , Pass@1). This suggests that exposing the model to the full refinement process enables it to internalize the de-bugging capability, yielding superior reasoning performance compared to learning from problem statements alone. 
+
+Effect of squared-incentive reward. We next investigate the efficacy of our squared-incentive reward by comparing it with the traditional binary pass-or-fail reward ( i.e. , assigning a reward of 1 if all tests pass, and 0 otherwise) commonly used in code RL. To ensure a controlled comparison, we train baselines using the binary reward while keeping the self-refinement trajectory data fixed. The results in Table 5 reveal a stark contrast: while binary rewards fail to yield consistent improvements and even degrade performance, our squared-incentive reward delivers robust gains across all settings. This indicates that the dense, fine-grained feedback provided by our design is essential for complex CP tasks, whereas sparse binary signals often fail to provide sufficient guidance for stable policy improvement. 
+
+## 6. Conclusion 
+
+In this paper, we propose RefineRL, an approach designed to incentivize the self-refinement capabilities of LLMs for competitive programming. To address the unreliability of public test cases, we first introduce the Skeptical-Agent ,which maintains a persistent attitude of skepticism toward its generated solutions. By enforcing rigorous self-refinement even when local evaluations suggest correctness, this agent effectively mitigates the risk of blindly trusting sparse pub-lic test cases. Complementing this, we further propose 
+
+Self-Refinement RL , a training pipeline that internalizes this “doubt and debug” capability via self-generated refinement trajectories and a novel squared-incentive reward. Empiri-cally, we demonstrate that RefineRL enables compact 4B models to outperform the single-attempt performance of 32B baselines and rival that of much larger 235B models. These results suggest that explicit training for intrinsic self-refinement is a far more data- and parameter-efficient path toward achieving advanced reasoning intelligence. 8RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+## References 
+
+Ahmad, W. U., Narenthiran, S., Majumdar, S., Ficek, A., Jain, S., Huang, J., Noroozi, V., and Ginsburg, B. Open-CodeReasoning: Advancing data distillation for competi-tive coding. In Second Conference on Language Model-ing , 2025. Chen, J., Ren, J., Chen, X., Yang, C., Sun, R., Yoon, J., and Arik, S. O. SETS: Leveraging self-verification and self-correction for improved test-time scaling. Transactions on Machine Learning Research , 2025a. ISSN 2835-8856. Chen, L., Gu, J., Huang, L., Huang, W., Jiang, Z., Jie, A., Jin, X., Jin, X., Li, C., Ma, K., et al. Seed-Prover: Deep and broad reasoning for automated theorem proving. arXiv preprint arXiv:2507.23726 , 2025b. Chen, X., Lin, M., Sch ¨arli, N., and Zhou, D. Teaching large language models to self-debug. In The Twelfth International Conference on Learning Representations ,2024. Chervonyi, Y., Trinh, T. H., Ol ˇs ´ak, M., Yang, X., Nguyen, H. H., Menegali, M., Jung, J., Kim, J., Verma, V., Le, Q. V., and Luong, T. Gold-medalist performance in solv-ing olympiad geometry with AlphaGeometry2. Journal of Machine Learning Research , 26(241):1–39, 2025. Comanici, G., Bieber, E., Schaekermann, M., Pasupat, I., Sachdeva, N., Dhillon, I., Blistein, M., Ram, O., Zhang, D., Rosen, E., et al. Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities. arXiv preprint arXiv:2507.06261 , 2025. El-Kishky, A., Wei, A., Saraiva, A., Minaiev, B., Selsam, D., Dohan, D., Song, F., Lightman, H., Clavera, I., Pachocki, J., et al. Competitive programming with large reasoning models. arXiv preprint arXiv:2502.06807 , 2025. Fu, J., Yang, X., Zhang, H., Liu, Y., Zhang, J., Wang, Q., Zhang, F., and Zhou, G. Klear-CodeTest: Scalable test case generation for code reinforcement learning. arXiv preprint arXiv:2508.05710 , 2025. Guo, D., Yang, D., Zhang, H., Song, J., Zhang, R., Xu, R., Zhu, Q., Ma, S., Wang, P., Bi, X., et al. DeepSeek-R1: Incentivizing reasoning capability in LLMs via reinforce-ment learning. arXiv preprint arXiv:2501.12948 , 2025. He, Z., Choi, Y. M., Zhang, K., Ji, J., Zhou, J., Xu, D., Bercovich, I., Zhang, A., and Li, L. Hardtests: Synthesiz-ing high-quality test cases for llm coding. arXiv preprint arXiv:2505.24098 , 2025. Hu, H., Zhang, X., Vamvas, J., Sennrich, R., and Wei, F. QueST: Incentivizing llms to generate difficult problems. 
+
+arXiv preprint arXiv:2510.17715 , 2025. Jain, A. K., Gonzalez-Pumariega, G., Chen, W., Rush, A. M., Zhao, W., and Choudhury, S. Multi-turn code generation through single-step rewards. In Forty-second International Conference on Machine Learning , 2025a. Jain, N., Han, K., Gu, A., Li, W.-D., Yan, F., Zhang, T., Wang, S., Solar-Lezama, A., Sen, K., and Stoica, I. Live-CodeBench: Holistic and contamination free evaluation of large language models for code. In The Thirteenth International Conference on Learning Representations ,2025b. Kumar, A., Zhuang, V., Agarwal, R., Su, Y., Co-Reyes, J. D., Singh, A., Baumli, K., Iqbal, S., Bishop, C., Roelofs, R., Zhang, L. M., McKinney, K., Shrivastava, D., Paduraru, C., Tucker, G., Precup, D., Behbahani, F., and Faust, A. Training language models to self-correct via reinforce-ment learning. In The Thirteenth International Confer-ence on Learning Representations , 2025. Li, D., Cao, S., Cao, C., Li, X., Tan, S., Keutzer, K., Xing, J., Gonzalez, J. E., and Stoica, I. S*: Test time scaling for code generation. In Findings of the Association for Computational Linguistics: EMNLP 2025 , pp. 15964– 15978, Suzhou, China, November 2025. Association for Computational Linguistics. ISBN 979-8-89176-335-7. Lin, Y., Tang, S., Lyu, B., Yang, Z., Chung, J.-H., Zhao, H., Jiang, L., Geng, Y., Ge, J., Sun, J., et al. Goedel-Prover-v2: Scaling formal theorem proving with scaf-folded data synthesis and self-correction. arXiv preprint arXiv:2508.03613 , 2025. Liu, A., Feng, B., Xue, B., Wang, B., Wu, B., Lu, C., Zhao, C., Deng, C., Zhang, C., Ruan, C., et al. DeepSeek-V3 technical report. arXiv preprint arXiv:2412.19437 , 2024. Madaan, A., Tandon, N., Gupta, P., Hallinan, S., Gao, L., Wiegreffe, S., Alon, U., Dziri, N., Prabhumoye, S., Yang, Y., Gupta, S., Majumder, B. P., Hermann, K., Welleck, S., Yazdanbakhsh, A., and Clark, P. Self-refine: Iter-ative refinement with self-feedback. In Thirty-seventh Conference on Neural Information Processing Systems ,2023. Novikov, A., V ˜u, N., Eisenberger, M., Dupont, E., Huang, P.-S., Wagner, A. Z., Shirobokov, S., Kozlovskii, B., Ruiz, F. J., Mehrabian, A., et al. AlphaEvolve: A coding agent for scientific and algorithmic discovery. arXiv preprint arXiv:2506.13131 , 2025. Samadi, M., Ficek, A., Narenthiran, S., Jain, S., Ahmad, W. U., Majumdar, S., Noroozi, V., and Ginsburg, B. Scal-ing test-time compute to achieve IOI gold medal with open-weight models. arXiv preprint arXiv:2510.14232 ,2025. 9RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Shang, S., Wan, R., Peng, Y., Wu, Y., Chen, X.-h., Yan, J., and Zhang, X. StepFun-Prover preview: Let’s think and verify step by step. arXiv preprint arXiv:2507.20199 ,2025. Sheng, G., Zhang, C., Ye, Z., Wu, X., Zhang, W., Zhang, R., Peng, Y., Lin, H., and Wu, C. HybridFlow: A flexible and efficient RLHF framework. arXiv preprint arXiv: 2409.19256 , 2024. Shi, B., Tang, M., Narasimhan, K. R., and Yao, S. Can language models solve olympiad programming? In First Conference on Language Modeling , 2024. Shinn, N., Cassano, F., Gopinath, A., Narasimhan, K. R., and Yao, S. Reflexion: Language agents with verbal reinforcement learning. In Thirty-seventh Conference on Neural Information Processing Systems , 2023. Song, X., Wu, Y., Wang, W., Liu, J., Su, W., and Zheng, B. ProgCo: Program helps self-correction of large language models. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers) , pp. 944–959, Vienna, Austria, 2025. Association for Computational Linguistics. ISBN 979-8-89176-252-7. Trinh, T. H., Wu, Y., Le, Q. V., He, H., and Luong, T. Solv-ing olympiad geometry without human demonstrations. 
+
+Nature , 625(7995):476–482, 2024. Wang, Z., Liu, S., Sun, Y., Li, H., and Shen, K. CodeCon-tests+: High-quality test case generation for competitive programming. arXiv preprint arXiv:2506.05817 , 2025. Wei, J., Wang, X., Schuurmans, D., Bosma, M., Xia, F., Chi, E., Le, Q. V., and Zhou, D. Chain-of-thought prompting elicits reasoning in large language models. Advances in neural information processing systems , 35:24824–24837, 2022. Wu, J., Li, H., Zhang, X., Guo, J., Luo, J., Liu, S., Huang, Y., Chu, R., Li, S., and Yang, Y. X-Coder: Advancing com-petitive programming with fully synthetic tasks, solutions, and tests. arXiv preprint arXiv:2601.06953 , 2026. Yang, A., Li, A., Yang, B., Zhang, B., Hui, B., Zheng, B., Yu, B., Gao, C., Huang, C., Lv, C., et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. Yu, Z., Wu, Y., Zhao, Y., Cohan, A., and Zhang, X.-P. Z1: Efficient test-time scaling with code. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: Industry Track , pp. 2688–2712. Association for Computational Linguistics, 2025. ISBN 979-8-89176-333-3. Zhou, Y., Zhao, J., Zhang, Y., Wang, B., Wang, S., Chen, L., Wang, J., Chen, H., Jie, A., Zhang, X., et al. Solving formal math problems by decomposition and iterative reflection. arXiv preprint arXiv:2507.15225 , 2025. 10 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+## A. Additional Implementation Details 
+
+A.1. Training Data for Self-Refinement RL 
+
+We construct the training dataset for Skeptical RL based on a subset of the HardTest dataset (He et al., 2025), consisting of CP problems that are suitable for learning self-refinement . Formally, a problem is considered to be suitable if it contains at least 8 test cases with both input and output lengths not exceeding 512 tokens. The idea behind this is that short input-output pairs are essential for both humans and AI models to effectively diagnose errors and facilitate debugging. To form the base CP problem dataset DCP , we select suitable problems from the first 1/8 of HardTest. For each selected problem, we retain all test cases shorter than 512 tokens and randomly sample up to 8 additional test cases from the remainder. This process results in a base set DCP consisting of approximately 4.5K CP problems. Finally, we employ the pipeline described in Section 4.3 to synthesize the final Self-Refinement RL training data. We focus on generating Python code, and set the maximum generation length to 32,768 for Qwen3-4B and 65,536 for Qwen3-4B-2507. For each model, this process generates approximately 4.2K self-refinement trajectories. Combining these with the base problems yields a total of roughly 8.7K training samples per model. Detailed statistics of the final training datasets are presented in Table 6.                                               
+
+> Table 6. Statistics of the training dataset for Self-Refinement RL. This table details the sample counts for each interaction category. “WA/RE/TLE/CE/MLE” represent trajectories triggered by error-driven feedback. “AC →WA/RE/TLE/CE/MLE” denote trajectories involving skepticism-driven feedback, where the solution passed public test cases but failed on private ones due to the indicated errors.
+> Data Type Qwen3-4B Qwen3-4B-2507
+> Initial CP Problems from DCP 4,500 4,500
+> Error-driven Trajectory 2,811 2,721 [True Negative] Wrong Answer (WA) 2,127 2,077 [True Negative] Runtime Error (RE) 377 364 [True Negative] Time Limit Exceeded (TLE) 307 280 [True Negative] Compile Error (CE) 00[True Negative] Memory Limit Exceeded (MLE) 00
+> Skepticism-driven Trajectory 1,449 1,471 [True Positive] Accepted (AC) 309 370 [False Positive] AC →WA 863 856 [False Positive] AC →RE 148 139 [False Positive] AC →TLE 129 106 [False Positive] AC →CE 00[False Positive] AC →MLE 00
+> Total Number 8,760 8,692
+
+A.2. RL Training Details 
+
+We use the VeRL framework 1 (Sheng et al., 2024) to perform RL training via the GRPO (Guo et al., 2025) algorithm, where the KL-regularization term is excluded. both the batch size and mini-batch size are set to 32 and For the rollout hyperparameters of GRPO, we set the rollout number to 8, the maximum response length to 32,768 for Qwen3-4B and 65,536 for Qwen3-4B-2507, the temperature to 1.0, and the top-p to 1.0. AdamW is adopted as the optimizer, where the learning rate is fixed to 10 −6 throughout the RL training. The two RL trained models from Qwen3-4B and Qwen3-4B-2507 are denoted as RefineRL-4B and RefineRL-4B-2507 , respectively. Calculating rewards for CP data requires executing LLM-generated code against multiple private test cases, which is a CPU-intensive process. To enable efficient and scalable reward computation during RL training, we integrate our evaluation logic with the VeRL framework, which is built upon the distributed computing engine Ray 2. We leverage Ray to schedule distributed code evaluations, assigning isolated CPU cores for individual execution tasks. To strictly manage resource 
+
+> 1https://github.com/volcengine/verl
+> 2https://github.com/ray-project/ray
+
+11 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+consumption during training, we employ timeout 3 and prlimit 4 to enforce time and memory constraints, set to 8 seconds and 512MB, respectively. Finally, to ensure reasoning integrity, we enforce complete CoT generation: only responses containing the CoT closing delimiter ( i.e. , the </think> tag) are submitted for reward calculation; otherwise, a reward of 0 is assigned. 
+
+A.3. Evaluation Details 
+
+Existing evaluations on the LiveCodeBench benchmark typically rely on the official LCB evaluation toolkit 5 or the Hugging Face LightEval package 6. However, we argue that these packages are inefficient for large-scale CP solution judging, as they lack native support for high-throughput parallel inference and fail to fully leverage multi-core CPUs for computationally intensive solution code execution. To address these limitations, we implemented a custom, scalable toolkit for efficient CP performance evaluation. Our implementation decouples the evaluation pipeline into two distinct stages to ensure robustness and efficiency: • Step 1: LLM solution generation. We utilize the SGLang inference engine 7 to perform high-throughput parallel LLM generation. We adopt the standard LiveCodeBench solution generation prompts from the LightEval package for LLMs to generate Python solutions, with the exception of our Skeptical-Agent, which incorporates the additional feedback prompts detailed in Appendix C to perform self-refinement. • Step 2: Concurrent code evaluation. Consistent with the training setup described in Appendix A.2, we employ the Unix CLI tools timeout and prlimit to enforce strict time and memory constraints. To maximize resource utilization, we leverage native multiprocessing for the Python’s asyncio 8 package to evaluate multiple solutions concurrently. Regarding evaluation settings, for every CP problem, we set a time limit of 6s and a memory limit of 512MB. All code executions are performed on a 2.5GHz multi-core CPU. To ensure a fair comparison, all models in our experiments are evaluated using our custom toolkit, with results averaged over 16 runs to ensure stability. The LLM sampling parameters are set to a temperature of 0.6 and a top-p of 0.95. The maximum generation length is set to 32,768 tokens for Qwen3-4B and our RefineRL-4B, and 65,536 tokens for all other models. Furthermore, given that the evaluated models are reasoning-oriented, we strictly enforce complete Chain-of-Thought (CoT) integrity; specifically, only responses containing a detected CoT completion tag are submitted for evaluation; otherwise, they are assigned a score of zero. 
+
+## B. Additional Experimental Results 
+
+In this section, we provide a detailed visualization of the training dynamics for our Skeptical RL models and other RL baselines. Table 7 summarizes the configurations for each strategy, detailing the dataset size and reward functions used for the Qwen3-4B and Qwen3-4B-2507 base models.              
+
+> Table 7. Comparison of RL Training Strategies. We contrast three RL setups: Vanilla RL (direct generation), Self-Refinement RL with pass-or-fail rewards, and our Self-Refinement RL (with squared-incentive rewards). Vanilla RL uses only the initial generation subset (∼4.5k), while refinement methods use the full trajectory dataset ( ∼8.7k). Our method employs a squared reward to incentivize robust self-verification.
+> Method Data Size Trajectory Type Reward Function
+> Vanilla RL ∼4.5K None Squared-incentive
+> Refinement (Binary) ∼8.7K (4.5K Real Data + 4.2K Syn. Data) Refinement Pass-or-fail
+> RefineRL (Ours) ∼8.7K (4.5K Real Data + 4.2K Syn. Data) Refinement Squared-incentive
+> 3https://man.archlinux.org/man/timeout.1
+> 4https://man.archlinux.org/man/prlimit.1
+> 5https://github.com/LiveCodeBench/LiveCodeBench
+> 6https://github.com/huggingface/lighteval
+> 7https://github.com/sgl-project/sglang
+> 8https://docs.python.org/3/library/asyncio.html
+
+12 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 0 50 100 150 200 250 
+
+> Steps
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Training Rewards
+> Comparison of Training Rewards (Qwen3-4B)
+> Qwen3-4B + Standard RL
+> Qwen3-4B + Self-Refinement RL + Pass-or-fail Reward
+> RefineRL-4B (Ours)
+
+(a) Average reward per step. 0 50 100 150 200 250  
+
+> Steps
+> 12000
+> 14000
+> 16000
+> 18000
+> 20000
+> Training Rollout Lengths
+> Comparison of Rollout Lengths (Qwen3-4B)
+> Qwen3-4B + Standard RL
+> Qwen3-4B + Self-Refinement RL + Pass-or-fail Reward
+> RefineRL-4B (Ours)
+
+(b) Average rollout length (tokens) per step. 
+
+Figure 2. Training dynamics of Qwen3-4B. The left plot shows the steady increase in reward, while the right plot shows the corresponding growth in response length, reflecting the model’s internalization of the skeptical reasoning process. 0 50 100 150 200 250 
+
+> Steps
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> Training Rewards
+> Comparison of Training Rewards (Qwen3-4B-2507)
+> Qwen3-4B-2507 + Standard RL
+> Qwen3-4B-2507 + Self-Refinement RL + Pass-or-fail Reward
+> RefineRL-4B-2507 (Ours)
+
+(a) Average reward per step. 0 50 100 150 200 250  
+
+> Steps
+> 12500
+> 15000
+> 17500
+> 20000
+> 22500
+> 25000
+> 27500
+> 30000
+> 32500
+> Training Rollout Lengths
+> Comparison of Rollout Lengths (Qwen3-4B-2507)
+> Qwen3-4B-2507 + Standard RL
+> Qwen3-4B-2507 + Self-Refinement RL + Pass-or-fail Reward
+> RefineRL-4B-2507 (Ours)
+
+(b) Average rollout length (tokens) per step. 
+
+Figure 3. Training dynamics of Qwen3-4B-2507. Similar to the base model, the 2507 variant demonstrates consistent learning progress in terms of reward maximization and increased reasoning length during the RL process. 
+
+Figures 2 and 3 illustrate the evolution of the average reward and the average rollout token length during the training process for Qwen3-4B and Qwen3-4B-2507 , respectively. Across both models, we observe a consistent upward trend in the reward curves of our Self-Refinement RL ( i.e. , RefineRL-4B and RefineRL-4B-2507), indicating that the models are effectively learning to solve increasingly complex competitive programming problems and adapting to the squared-incentive reward signal. Simultaneously, the rollout token lengths of our Self-Refinement RL generally exhibit an increasing trend. This suggests that as the models improve, they learn to generate more comprehensive solution analyses and engage in more extensive self-refinement loops to debug and verify their code before submission, rather than attempting to guess short, likely incorrect solutions. 
+
+## C. Prompts 
+
+In this section, we provide the detailed prompt templates used in our Skeptical-Agent. Figure 4 presents the base system prompt used for initializing the problem-solving process and generating the initial solution. When the agent enters the refinement loop, the feedback it receives depends on the outcome of the local testing. If the solution fails the local test cases, the agent receives a detailed error report constructed using the template in Figure 5, which incorporates specific failure reasons ( e.g. , Wrong Answer, Runtime Error) as detailed in Figure 6. Conversely, if the solution passes the local tests, our Skeptical-Agent does not immediately accept it. Instead, it triggers a “skeptical” review using the template in 13 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Figure 7, forcing the model to self-verify against potential edge cases, hard-coded cheats, or complexity issues before final submission. Prompt Template for Direct Generation (Python) You are a competitive programmer. You will be given a question (problem statement) and will generate a correct python program that matches the specification and passes all tests. Please first give a solution analysis and then provide the python solution code. Ensure that when your solution program runs, it reads the input from stdin and writes the output (answer) to stdout. Enclose your code within delimiters as follows: 
+
+‘‘‘ python # YOUR CODE HERE 
+
+‘‘‘ 
+
+Question: {problem statement }
+
+# Additional Messages 
+
+{prompt for feedback } 
+
+> Figure 4. The standard system prompt used for initial solution generation and subsequent refinement steps.
+
+Prompt Template for Error-driven Feedback Function PErr 
+
+In the previous round, a solution has been proposed but failed to pass the local testing process. Below provides detailed **Solution Analysis**, **Solution Code**, and **Failure Reason** for this failed solution. Please consider leveraging all these messages to debug the old solution and further design a better solution. ## Solution Analysis 
+
+‘‘‘ text 
+
+{analysis }
+
+‘‘‘ 
+
+## Solution Code 
+
+‘‘‘ python code 
+
+‘‘‘ 
+
+## Failure Reason 
+
+{error reason } 
+
+> Figure 5. Prompt for error-driven feedback construction.
+
+14 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Error Reasons for Different Evaluation Results 
+
+Compile Error (CE) 
+
+The proposed solution code received **Compile Error** during local testing. 
+
+Wrong Answer (WA) 
+
+The proposed solution code received **Wrong Answer Error** during local testing. The error occurred when the proposed code was running on the following test input: 
+
+‘‘‘ text 
+
+{test input }
+
+‘‘‘ 
+
+The expected correct test output is: 
+
+‘‘‘ text 
+
+{test output }
+
+‘‘‘ 
+
+However, the output of the proposed solution for this test case is: 
+
+‘‘‘ text 
+
+{sol test output }
+
+‘‘‘ 
+
+which is different from the correct output. **Please DO NOT hard-code this test input/output to your solution code. This is cheating and would not help you pass the final stress testing evaluation.** 
+
+Runtime Error (RE) 
+
+The proposed solution code received **Runtime Error** during local testing. The error occurred when the proposed code was running on the following test input: 
+
+‘‘‘ text 
+
+{test input }
+
+‘‘‘ 
+
+Please pay attention to the details of your code. 
+
+Time Limited Exceed (TLE) 
+
+The proposed solution code received **Time Limited Exceed Error** during local testing. The error occurred when the proposed code was running on the following test input: 
+
+‘‘‘ text 
+
+{test input }
+
+‘‘‘ 
+
+Please be aware of the time limit of the problem when solving it. 
+
+Memory Limited Exceed (MLE) 
+
+The proposed solution code received **Memory Limited Exceed Error** during local testing. The error occurred when the proposed code was running on the following test input: 
+
+‘‘‘ text 
+
+{test input }
+
+‘‘‘ 
+
+Please be aware of the memory limit of the problem when solving it. 
+
+Figure 6. Detailed templates for constructing the “Error Reason” field based on specific execution errors (WA, TLE, RE, etc.). 
+
+15 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Prompt Template for Skepticism-driven Feedback Function PSkep 
+
+In the previous round, a solution has been proposed and successfully passed all local test cases. Below provides detailed **Solution Analysis** and **Solution Code** for this solution and an additional **Check List**. Please analyze the proposed solution **step-by-step** following the provided **Check List**. If the previously proposed solution can pass all conditions in the **Check List**, please explain why and output the solution code. If NOT, please also explain why and leverage all these messages to debug the old solution and further design a better solution to pass the **Check List**. ## Solution Analysis 
+
+‘‘‘ text 
+
+{analysis }
+
+‘‘‘ 
+
+## Solution Code 
+
+‘‘‘ python 
+
+{code }
+
+‘‘‘ 
+
+##Check List - Ensure the solution code does NOT hard-code answers for some specific testcases and directly output them to cheat the judging system. - Ensure the **CORRECTNESS** of the proposed solution by carefully thinking if there are any edge-testcases that can cause the proposed solution code encounter **Wrong Answer Error**. - Ensure the time and space complexities of the proposed solution are **OPTIMAL** by carefully thinking if there are any edge-testcases that can cause the proposed solution code encounter **Time Limit Exceed Error** or **Memory Limit Exceed Error**.  
+
+> Figure 7. The skeptical-driven feedback prompt ( PSkep ) triggered when a solution passes local tests (on all public test cases), instructing the agent to self-critique against a checklist.
+
+## D. Self-Refinement Example 
+
+In this section, we show how our RefineRL-4B-2507 leverages the Skeptical-Agent to perform self-refinement. We take the 166th problem from LiveCodeBench v6 as an example. In the 7th round of self-refinement, the model generated a solution that passed the public test cases but received a Wrong Answer on the private test cases. However, in the 8th round, the Skeptical-Agent successfully prompted the model to refine its previous output, resulting in a new solution that passed all private test cases. Problem Statement (166th Problem From LiveCodeBench v6)                                                                     
+
+> You are given astring sand apattern string p, where pcontains exactly two ’*’ characters. The ’*’ in pmatches any sequence of zero or more characters. Return the length of the shortest substring in sthat matches p. If there is no such substring, return -1. Note: The empty substring is considered valid. Example 1: Input: s="abaacbaecebce", p="ba*c*ce" Output: 8Explanation: The shortest matching substring of pin sis "baecebce".
+
+16 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+Example 2: Input: s = "baccbaadbc", p = "cc*baa*adb" Output: -1 Explanation: There is no matching substring in s. Example 3: Input: s = "a", p = "**" Output: 0Explanation: The empty substring is the shortest matching substring. Example 4: Input: s = "madlogic", p = "*adlogi*" Output: 6Explanation: The shortest matching substring of p in s is "adlogi". Constraints: 1 <= s.length <= 10ˆ5 2 <= p.length <= 10ˆ5 s contains only lowercase English letters. p contains only lowercase English letters and exactly two ’*’. 
+
+Solution Before Key Self-Refinement (7th Round; Judging Status on Private Test Cases: WA) 
+
+To solve this problem, we need to find the shortest substring in string ‘s‘ that matches a pattern string ‘p‘ which contains exactly two asterisks (‘*‘). Each asterisk matches any sequence of zero or more characters. If no such substring exists, we return -1. The empty substring is considered valid. ### Approach 1. **Initial Check**: If the pattern ‘p‘ has exactly two asterisks and no other characters (i.e., ‘p = "**"‘), the shortest valid substring is the empty string, so we return 0. 2. **Pattern Splitting**: Split the pattern ‘p‘ into three parts: - ‘A‘: The substring before the first asterisk. - ‘B‘: The substring between the two asterisks. - ‘C‘: The substring after the second asterisk. 3. **Case Handling**: - **Case 1 (M=0 and N=0)**: Here, ‘B‘ and ‘C‘ are empty. The solution is simply the length of ‘A‘ if it exists in ‘s‘; otherwise, return -1. - **Case 2 (M=0)**: ‘B‘ is empty. We look for occurrences of ‘A‘ in ‘s‘ and then find the earliest occurrence of ‘C‘ after each ‘A‘ to form the shortest valid substring. - **Case 3 (N=0)**: ‘C‘ is empty. We look for occurrences of ‘B‘ in ‘s‘ and then find the latest occurrence of ‘A‘ before each ‘B‘ to form the shortest valid substring. - **Case 4 (M>0 and N>0)**: Both ‘B‘ and ‘C‘ are non-empty. For each occurrence of ‘B‘, we find the latest occurrence of ‘A‘ before it and the earliest occurrence of ‘C‘ after it to form the shortest valid substring. 4. **Efficient Pattern Matching**: Use the Knuth-Morris-Pratt (KMP) algorithm for efficient pattern matching in linear time. Precompute next occurrences of ‘C‘ to avoid repeated scans. ### Solution Code ‘‘‘python 
+
+17 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+import bisect class Solution: def shortestMatchingSubstring(self, s: str, p: str) -> int: n_s = len(s) if len(p) == 2: return 0i1 = p.find(’*’) i2 = p.find(’*’, i1 + 1) A = p[:i1] B = p[i1 + 1:i2] C = p[i2 + 1:] L = len(A) M = len(B) N = len(C) if M == 0 and N == 0: occA = self.kmp(s, A) if occA: return Lelse: return -1 elif M == 0: if L == 0: occC = self.kmp(s, C) if occC: return Nelse: return -1 else: occA = self.kmp(s, A) next_occ = self.compute_next_occ(s, C, N) ans = float(’inf’) for i in occA: if i + L > n_s: continue j0 = next_occ[i + L] if j0 == float(’inf’): continue length = j0 + N - iif length < ans: ans = length return ans if ans != float(’inf’) else -1 elif N == 0: occB = self.kmp(s, B) if L == 0: ans = float(’inf’) for k in occB: if M < ans: ans = Mreturn ans if ans != float(’inf’) else -1 else: occA = self.kmp(s, A) occA.sort() ans = float(’inf’) for k in occB: idx = bisect.bisect_right(occA, k) - 1if idx < 0: continue i0 = occA[idx] 
+
+18 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+length = k + M - i0 if length < ans: ans = length return ans if ans != float(’inf’) else -1 else: occB = self.kmp(s, B) next_occ = self.compute_next_occ(s, C, N) if L == 0: ans = float(’inf’) for k in occB: if k + M > n_s: continue j0 = next_occ[k + M] if j0 == float(’inf’): continue length = j0 + N - kif length < ans: ans = length return ans if ans != float(’inf’) else -1 else: occA = self.kmp(s, A) occA.sort() ans = float(’inf’) for k in occB: if k + M > n_s: continue j0 = next_occ[k + M] if j0 == float(’inf’): continue idx = bisect.bisect_right(occA, k) - 1if idx < 0: continue i0 = occA[idx] length = j0 + N - i0 if length < ans: ans = length return ans if ans != float(’inf’) else -1 def kmp(self, s: str, pat: str) -> list: n = len(s) m = len(pat) if m == 0: return list(range(n + 1)) pi = [0] * m k = 0for q in range(1, m): while k > 0 and pat[k] != pat[q]: k = pi[k - 1] if pat[k] == pat[q]: k += 1else: k = 0pi[q] = kq = 0occ = [] for i in range(n): while q > 0 and pat[q] != s[i]: q = pi[q - 1] if pat[q] == s[i]: q += 1
+
+19 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+else: q = 0if q == m: occ.append(i - m + 1) q = pi[q - 1] return occ def compute_next_occ(self, s: str, C: str, N: int) -> list: n = len(s) occC = self.kmp(s, C) next_occ = [float(’inf’)] * (n + 2) ptr = 0for i in range(n + 1): while ptr < len(occC) and occC[ptr] < i: ptr += 1if ptr < len(occC): next_occ[i] = occC[ptr] else: next_occ[i] = float(’inf’) return next_occ ‘‘‘ ### Explanation 1. **Initial Check**: The solution first checks if the pattern ‘p‘ is exactly two asterisks (‘**‘). If so, it returns 0 because the empty substring is valid. 2. **Pattern Splitting**: The pattern ‘p‘ is split into three segments ‘A‘, ‘B‘, and ‘C‘ around the two asterisks. 3. **Case Handling**: - **Case 1 (M=0 and N=0)**: The solution checks if ‘A‘ exists in ‘s‘. If it does, the length of ‘A‘ is returned; otherwise, -1 is returned. - **Case 2 (M=0)**: Here, ‘B‘ is empty. The solution finds occurrences of ‘A‘ in ‘s‘ and then the earliest occurrence of ‘C‘ after each ‘A‘ to compute the shortest valid substring. - **Case 3 (N=0)**: Here, ‘C‘ is empty. The solution finds occurrences of ‘B‘ in ‘s‘ and then the latest occurrence of ‘A‘ before each ‘B‘ to compute the shortest valid substring. - **Case 4 (M>0 and N>0)**: Both ‘B‘ and ‘C‘ are non-empty. For each occurrence of ‘B‘, the solution finds the latest occurrence of ‘A‘ before it and the earliest occurrence of ‘C‘ after it to compute the shortest valid substring. 4. **Efficient Matching**: The KMP algorithm is used for efficient pattern matching, and the ‘compute_next_occ‘ function precomputes the next occurrences of ‘C‘ to optimize the search for valid substrings. This approach efficiently handles all edge cases and ensures optimal performance with a time complexity of O(n + m), where n and m are the lengths of ‘s‘ and ‘p‘ respectively. The space complexity is O(n) due to the storage required for occurrence lists and next occurrence arrays. 
+
+Solution After Key Self-Refinement (8th Round; Judging Status on Private Test Cases: AC) 
+
+To solve this problem, we need to find the shortest substring in string ‘s‘ that matches a pattern string ‘p‘ which contains exactly two asterisks (‘*‘). Each asterisk matches any sequence of zero or more characters. The solution involves efficiently checking all possible substrings of ‘s‘ that could match the pattern ‘p‘ by leveraging the Knuth-Morris-Pratt (KMP) algorithm for pattern matching and binary search for optimal substring selection. ### Approach 1. **Initial Check**: If the pattern ‘p‘ consists of exactly two asterisks (‘**‘), return 0 because the empty substring is valid. 2. **Pattern Splitting**: Split the pattern ‘p‘ into three parts: - ‘A‘: The substring before the first asterisk. 
+
+20 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+- ‘B‘: The substring between the two asterisks. - ‘C‘: The substring after the second asterisk. 3. **Case Handling**: - **Case 1 (M=0 and N=0)**: Here, ‘B‘ and ‘C‘ are empty. The solution is the length of ‘A‘ if it exists in ‘s‘; otherwise, return -1. - **Case 2 (M=0)**: ‘B‘ is empty. We look for occurrences of ‘A‘ in ‘s‘ and then find the earliest occurrence of ‘C‘ after each ‘A‘ to form the shortest valid substring. - **Case 3 (N=0)**: ‘C‘ is empty. We look for occurrences of ‘B‘ in ‘s‘ and then find the latest occurrence of ‘A‘ before each ‘B‘ to form the shortest valid substring. - **Case 4 (M>0 and N>0)**: Both ‘B‘ and ‘C‘ are non-empty. For each occurrence of ‘B‘, we find the latest occurrence of ‘A‘ before it and the earliest occurrence of ‘C‘ after it to form the shortest valid substring. 4. **Efficient Pattern Matching**: Use KMP for efficient pattern matching in linear time. Precompute next occurrences of ‘C‘ to optimize the search for valid substrings. ### Solution Code ‘‘‘python import bisect class Solution: def shortestMatchingSubstring(self, s: str, p: str) -> int: n_s = len(s) if len(p) == 2: return 0i1 = p.find(’*’) i2 = p.find(’*’, i1 + 1) A = p[:i1] B = p[i1 + 1:i2] C = p[i2 + 1:] L = len(A) M = len(B) N = len(C) if M == 0 and N == 0: occA = self.kmp(s, A) if occA: return Lelse: return -1 elif M == 0: if L == 0: occC = self.kmp(s, C) if occC: return Nelse: return -1 else: occA = self.kmp(s, A) next_occ = self.compute_next_occ(s, C, N) ans = float(’inf’) for i in occA: if i + L > n_s: continue j0 = next_occ[i + L] if j0 == float(’inf’): continue length = j0 + N - iif length < ans: ans = length return ans if ans != float(’inf’) else -1 
+
+21 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+elif N == 0: occB = self.kmp(s, B) if L == 0: ans = float(’inf’) for k in occB: if M < ans: ans = Mreturn ans if ans != float(’inf’) else -1 else: occA = self.kmp(s, A) occA.sort() ans = float(’inf’) for k in occB: target = k - Lidx = bisect.bisect_right(occA, target) - 1if idx < 0: continue i0 = occA[idx] length = k + M - i0 if length < ans: ans = length return ans if ans != float(’inf’) else -1 else: occB = self.kmp(s, B) next_occ = self.compute_next_occ(s, C, N) if L == 0: ans = float(’inf’) for k in occB: if k + M > n_s: continue j0 = next_occ[k + M] if j0 == float(’inf’): continue length = j0 + N - kif length < ans: ans = length return ans if ans != float(’inf’) else -1 else: occA = self.kmp(s, A) occA.sort() ans = float(’inf’) for k in occB: if k + M > n_s: continue j0 = next_occ[k + M] if j0 == float(’inf’): continue target = k - Lidx = bisect.bisect_right(occA, target) - 1if idx < 0: continue i0 = occA[idx] length = j0 + N - i0 if length < ans: ans = length return ans if ans != float(’inf’) else -1 def kmp(self, s: str, pat: str) -> list: n = len(s) m = len(pat) if m == 0: 
+
+22 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+return list(range(n + 1)) pi = [0] * m k = 0for q in range(1, m): while k > 0 and pat[k] != pat[q]: k = pi[k - 1] if pat[k] == pat[q]: k += 1else: k = 0pi[q] = kq = 0occ = [] for i in range(n): while q > 0 and pat[q] != s[i]: q = pi[q - 1] if pat[q] == s[i]: q += 1else: q = 0if q == m: occ.append(i - m + 1) q = pi[q - 1] return occ def compute_next_occ(self, s: str, C: str, N: int) -> list: n = len(s) occC = self.kmp(s, C) next_occ = [float(’inf’)] * (n + 2) ptr = 0for i in range(n + 1): while ptr < len(occC) and occC[ptr] < i: ptr += 1if ptr < len(occC): next_occ[i] = occC[ptr] else: next_occ[i] = float(’inf’) return next_occ ‘‘‘ ### Explanation 1. **Initial Check**: The solution first checks if the pattern ‘p‘ is exactly two asterisks (‘**‘). If so, it returns 0 because the empty substring is valid. 2. **Pattern Splitting**: The pattern ‘p‘ is split into three parts: ‘A‘ (before the first ‘*‘), ‘B‘ (between the two ‘*‘), and ‘C‘ (after the second ‘*‘). 3. **Case Handling**: - **Case 1 (M=0 and N=0)**: The solution checks if ‘A‘ exists in ‘s‘ and returns its length if found; otherwise, returns -1. - **Case 2 (M=0)**: The solution finds occurrences of ‘A‘ in ‘s‘ and then the earliest occurrence of ‘C‘ after each ‘A‘ to compute the shortest valid substring. - **Case 3 (N=0)**: The solution finds occurrences of ‘B‘ in ‘s‘ and then the latest occurrence of ‘A‘ before each ‘B‘ to compute the shortest valid substring. The key fix here is to ensure the latest ‘A‘ ends before ‘B‘ starts by using ‘k - L‘ as the target. - **Case 4 (M>0 and N>0)**: The solution finds occurrences of ‘B‘ in ‘s‘, then for each ‘B‘, finds the latest ‘A‘ before it and the earliest ‘C‘ after it. The key fix here is also to use ‘k - L‘ to ensure ‘A‘ ends before ‘B‘ starts. 4. **Efficient Pattern Matching**: The KMP algorithm is used for efficient pattern matching, and the ‘compute_next_occ‘ function precomputes the next occurrences of ‘C‘ to optimize the search for valid substrings. This ensures the solution runs in linear time relative to the input sizes. 
+
+23 RefineRL: Advancing Competitive Programming with Self-Refinement Reinforcement Learning 
+
+The solution efficiently handles all edge cases and ensures optimal performance with a time complexity of O(n + m), where n and m are the lengths of ‘s‘ and ‘p‘ respectively. The space complexity is O(n) due to the storage required for occurrence lists and next occurrence arrays. 
+
+24

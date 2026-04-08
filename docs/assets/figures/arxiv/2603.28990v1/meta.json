@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.28990v1/fig-001.webp",
+      "caption": "Fig. 4. Role assignment heatmap (Sequential protocol, N = 16, Claude Sonnet 4.6, 10 L3 tasks). Each cell color represents a unique role chosen by the agent for that task; × marks voluntary abstention. The mosaic pattern (115 unique roles in 10 tasks) demonstrates RSI → 0: agents reinvent their specialization for each task rather than settling into fixed positions.",
+      "page": 6,
+      "index": 1,
+      "width": 529,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28990v1/fig-002.webp",
+      "caption": "Fig. 5. Self-abstention as an emergent property. Left: agent participation rate vs. quality across tasks (Sequential = circles, Coordinator = squares). Right: mechanism of non-participation—38% voluntary (Sequential, endogenous) vs. 100% coordinator-directed (Coordinator, exogenous). Voluntary abstention correlates with higher quality (Q = 0.875 vs. 0.767).",
+      "page": 6,
+      "index": 2,
+      "width": 529,
+      "height": 296
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28990v1/fig-003.webp",
+      "caption": "Fig. 3. Quality degradation across task complexity levels L1–L4. Hierarchy depth increases with task complexity, indicating emergent structural adaptation.",
+      "page": 6,
+      "index": 3,
+      "width": 529,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28990v1/fig-004.webp",
+      "caption": "Fig. 6. Spectral characteristics of self-organization at growing N . Left: Role Stability Index (RSI) increases from 0.750 to 0.906 (+21%), indicating stronger specialization in larger groups. Right: the spectral gap λ2 ≈ 1.93 remains stable, indicating constant graph connectivity.",
+      "page": 7,
+      "index": 4,
+      "width": 529,
+      "height": 252
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28990v1/fig-005.webp",
+      "caption": "TABLE I POSITIONING RELATIVE TO EXISTING MULTI-AGENT LLM SYSTEMS. ∗DGM-HYPERAGENTS FOCUSES ON SINGLE-AGENT SELF-IMPROVEMENT (VERTICAL), NOT MULTI-AGENT COORDINATION (HORIZONTAL); INCLUDED FOR COMPLETENESS.",
+      "page": 3,
+      "index": 5,
+      "width": 836,
+      "height": 196
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28990v1/fig-006.webp",
+      "caption": "Fig. 2. Scaling behavior in Series 2 (fixed roles, GPT-4.1-mini, N = 8 → 64). Quality remains stable (Q ∈ [0.949, 0.955]) while cost grows only 11.8% (coefficient of variation CV = 4.4%) despite an 8× increase in agents.",
+      "page": 4,
+      "index": 6,
+      "width": 529,
+      "height": 252
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28990v1/fig-007.webp",
+      "caption": "Fig. 1. Quality comparison across coordination protocols. Solid bars: pilot (N = 8, GPT-4.1-mini, L3+L4 average). Hatched bars: final (N = 16, Claude Sonnet 4.6, L3). The hybrid Sequential protocol achieves the highest quality in both settings.",
+      "page": 4,
+      "index": 7,
+      "width": 529,
+      "height": 308
+    }
+  ]
+}

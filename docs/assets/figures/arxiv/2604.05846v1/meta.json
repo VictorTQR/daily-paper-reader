@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-001.webp",
+      "caption": "Figure 11: Link prediction (LP) prompt template (core). Placeholders in the prompt use {{...}}.",
+      "page": 21,
+      "index": 1,
+      "width": 950,
+      "height": 1085
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-002.webp",
+      "caption": "Table 1: Performance Comparison on Node Classification and Link Prediction benchmarks under In-Domain and Zero-shot Transfer settings. The best results are highlighted in bold. The metric used for two tasks is ACC (%). Red values (↑) indicate the absolute gain over baselines. These denote the average improvement of the two RL variants; for GNN comparisons, they represent the average gain across 3B and 7B backbones.",
+      "page": 7,
+      "index": 2,
+      "width": 939,
+      "height": 492
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-003.webp",
+      "caption": "Figure 12: Dataset-specific relation descriptions used in LP prompts.",
+      "page": 22,
+      "index": 3,
+      "width": 950,
+      "height": 405
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-004.webp",
+      "caption": "Figure 13: Per-pool search limits description used in LP prompts.",
+      "page": 22,
+      "index": 4,
+      "width": 950,
+      "height": 238
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-005.webp",
+      "caption": "Figure 6: NC prompt template (core). Placeholders in the prompt use {{...}}.",
+      "page": 18,
+      "index": 5,
+      "width": 950,
+      "height": 852
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-006.webp",
+      "caption": "Table 5: Dataset statistics used in this paper across three domains. #Classes correspond to the node classification label space; link prediction is treated as binary.",
+      "page": 13,
+      "index": 6,
+      "width": 950,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-007.webp",
+      "caption": "Figure 2: Ablation study of AgentGL(7B)-GRPO on NC: Analysis of valid GNS counts and training rewards.",
+      "page": 8,
+      "index": 7,
+      "width": 445,
+      "height": 388
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-008.webp",
+      "caption": "Figure 1: Method Overview. Equipped with graph-native search tools (Top-Left) for structural evidence mining, AgentGL employs a two-stage training strategy building on GCCL (Top-Right). The training progresses from Stage 1: Policy Bootstrapping (Bottom-Left), which uses shaped rewards to instill tool proficiency, to Stage 2: Mitigating Search Overuse (Bottom-Right), which optimizes the trade- ff between search efficiency and reasoning accuracy.",
+      "page": 4,
+      "index": 8,
+      "width": 944,
+      "height": 333
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-009.webp",
+      "caption": "Figure 8: Dataset-specific inserts for PubMed (NC).",
+      "page": 19,
+      "index": 9,
+      "width": 950,
+      "height": 584
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-010.webp",
+      "caption": "Figure 7: Dataset-specific inserts for Arxiv (NC).",
+      "page": 19,
+      "index": 10,
+      "width": 950,
+      "height": 549
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-011.webp",
+      "caption": "Figure 5: A link prediction (LP) case from Reddit. The model verifies a strong co-post motif by retrieving dense common 1-hop neighbors.",
+      "page": 17,
+      "index": 11,
+      "width": 950,
+      "height": 886
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-012.webp",
+      "caption": "Figure 9: Dataset-specific inserts for Amazon (NC).",
+      "page": 20,
+      "index": 12,
+      "width": 950,
+      "height": 583
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-013.webp",
+      "caption": "Figure 10: Dataset-specific inserts for Reddit (NC).",
+      "page": 20,
+      "index": 13,
+      "width": 950,
+      "height": 598
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05846v1/fig-014.webp",
+      "caption": "Figure 4: A node classification (NC) case illustrating graph-native tool use. We highlight key reasoning sentences that drive the final decision.",
+      "page": 16,
+      "index": 14,
+      "width": 950,
+      "height": 1406
+    }
+  ]
+}

@@ -1,0 +1,629 @@
+Title: Learning to Hint for Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.00698v1
+
+Published Time: Thu, 02 Apr 2026 00:50:20 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# Learning to Hint for Reinforcement Learning 
+
+Yu Xia 1 Canwen Xu 2∗ Zhewei Yao 2 Julian McAuley 1 Yuxiong He 21University of California, San Diego 2Snowflake AI Research 
+
+> 1
+
+{yux078,jmcauley}@ucsd.edu 
+
+> 2
+
+{canwen.xu,zhewei.yao,yuxiong.he}@snowflake.com 
+
+## Abstract 
+
+Group Relative Policy Optimization (GRPO) is widely used for reinforcement learning with verifiable rewards, but it often suffers from advantage collapse: when all rollouts in a group receive the same reward, the group yields zero relative advantage and thus no learning signal. For example, if a question is too hard for the reasoner, all sampled rollouts can be incorrect and receive zero reward. Recent work addresses this issue by adding hints or auxiliary scaffolds to such hard questions so that the reasoner produces mixed outcomes and recovers a non-zero update. However, existing hints are usually fixed rather than adapted to the current reasoner, and a hint that creates learning signal under the hinted input does not necessarily improve the no-hint policy used at test time. To this end, we propose Hi nt Learning for Reinforcement Learning (HiLL), a framework that jointly trains a hinter policy and a reasoner policy during RL. For each hard question, the hinter generates hints online conditioned on the current reasoner’s incorrect rollout, allowing hint generation to adapt to the reasoner’s evolving errors. We further introduce hint reliance , which measures how strongly correct hinted trajectories depend on the hint. We derive a transferability result showing that lower hint reliance implies stronger transfer from hinted success to no-hint success, and we use this result to define a transfer-weighted reward for training the hinter. Therefore, HiLL favors hints that not only recover informative GRPO groups, but also produce signals that are more likely to improve the original no-hint policy. Experiments across multiple benchmarks show that HiLL consistently outperforms GRPO and prior hint-based baselines, demonstrating the value of adaptive and transfer-aware hint learning for RL. The code is available at https://github.com/Andree-9/HiLL .
+
+## 1 Introduction 
+
+Reinforcement learning with verifiable rewards (RLVR) has become a standard approach to improve large language model (LLM) reasoning, especially in domains such as mathematics where final-answer correctness can be checked reliably [ 3 , 27 ]. Among recent methods, Group Relative Policy Optimization (GRPO) [ 23 ] is widely used, which removes the value critic and estimates advantages directly from a group of sampled rollouts. However, under binary outcome rewards, this design introduces a basic failure mode: if all rollouts in a group receive the same reward, then their relative advantages are all zero and the question produces no policy gradient [ 8 , 12 , 17 , 28 ]. This issue appears at both ends of the difficulty spectrum. Easy questions often yield all-correct groups, while hard questions often yield all-incorrect groups. In both cases, no learning signal is obtained and no update is made. Moreover, for hard questions that the current reasoner policy cannot solve at all, standard online RL has no effective way to improve as no correct trajectory is observed and no reward signal is available [ 1 , 21 ]. Therefore, the questions that matter most for expanding the model’s reasoning ability are often exactly the ones that provide no learning signal.  
+
+> ∗To whom correspondence should be addressed. Work done during Yu Xia’s internship at Snowflake. Preprint.
+> arXiv:2604.00698v1 [cs.LG] 1 Apr 2026
+
+A growing body of work tries to address this issue. One line of work allocates more rollouts to hard questions in order to recover rare successes and reduce variance under a fixed compute budget [28 , 33 ]. Another line filters, skips, downsamples, or reshapes uninformative groups to reduce wasted computation [ 8, 29 , 34 , 39 ]. A third line changes the input itself by adding hints, privileged prefixes, or reasoning scaffolds to hard questions so as to induce mixed rollout outcomes and recover non-zero GRPO signals [ 1 , 12 , 35 , 37 ]. These methods are effective in different settings, but they address different aspects of the problem. More sampling may recover signal at high cost, while fixed prompt interventions may create signal without being matched to the current reasoner. In this paper, we focus on the hint-based direction and argue that two questions are central. First, can hints adapt to the reasoner’s current failure modes, rather than being fixed in advance? Second, even if a hint creates mixed outcomes and restores a GRPO signal, does that learning signal actually help the no-hint policy used at test time? Existing hint-based methods typically rely on partial solutions, handcrafted scaffolds, or offline generated hints [ 1, 37 ], which are fixed rather than tailored to the current reasoner. In addition, they mainly value a hint for turning an all-incorrect question into a mixed-outcome group. However, not every such hint is useful. A hint may produce correct hinted rollouts simply by making the problem much easier, without teaching the reasoner behavior that remains useful when the hint is removed. In other words, creating signal is not enough: the signal should also transfer back to the original question. We address both issues with our proposed Hi nt Learning for Reinforcement Learning (HiLL) framework, which treats hint generation itself as a learnable objective. HiLL jointly trains a hinter policy together with the reasoner during RL. For each hard question, the hinter generates hints online by conditioning on the question, an incorrect rollout from the current reasoner, and the reference solution. This enables the hinter to adapt to the reasoner’s evolving errors over training, rather than relying on static offline hints that may stop being useful as the reasoner changes. Moreover, HiLL provides a transfer-aware view of hint quality. A good hint should do more than create a non-zero GRPO update: it should guide the reasoner toward correct trajectories that are still plausible under the original no-hint question. If a correct hinted trajectory remains likely even after the hint is removed, then training on that trajectory is more likely to improve the no-hint policy. By contrast, if success depends strongly on the hint, then the hint acts more like a shortcut than a useful teaching signal. To capture this distinction, we introduce hint reliance , which measures how much correct hinted trajectories depend on the hint relative to the original question. We then derive a transferability result showing that lower hint reliance implies stronger transfer from hinted success to no-hint success. Based on this result, we define a transfer-weighted reward for the hinter training, encouraging hints that both create informative GRPO groups and produce learning signals that are more likely to transfer and help the reasoner improve in the no-hint scenario. Therefore, HiLL turns hinting for RL into an online co-training problem between a hinter policy and a reasoner policy. As training progresses, previously hard questions may become solvable, while newly difficult questions define the reasoner’s current capability boundary. The hinter is thus trained on an evolving distribution of reasoner failures and learns to adapt its generated hints to the reasoner’s changing weaknesses. This makes hinting a dynamic part of the RL process rather than a fixed preprocessing step. In summary, we make the following contributions: • We propose HiLL, a co-training framework that jointly optimizes a hinter policy and a reasoner policy, enabling online hint generation conditioned on the current reasoner’s failures. • We introduce hint reliance as a measure of whether hinted success is likely to transfer back to the original no-hint setting, derive a transferability result based on this quantity, and use it to construct a transfer-weighted reward for training the hinter policy. • We show on comprehensive benchmarks that HiLL consistently outperforms standard GRPO and hint-based baselines, demonstrating the value of adaptive and transfer-aware hint learning for RL. 
+
+## 2 Related Work 
+
+Sampling and filtering strategies for RLVR. When GRPO rollout groups are uniformly correct or incorrect, within-group advantages collapse and the question yields no gradient [ 8, 12 , 17 , 28 ]. Adaptive sampling methods address this by reallocating rollout budgets toward questions near the model’s capability boundary, e.g., via variance-minimizing allocation [ 33 ], adaptive importance-2Signal Creation (Sec. 4.2)   
+
+> Signal Transfer (Sec. 4.3)
+> …
+> …
+> …
+> Question
+> Reasoner
+> Initial Degenerate All-Incorrect Group
+> Hinter
+> Hinter Input Candidate Hints
+> Hinted Inputs
+> Reasoner
+> Hinted Rollouts Hint Rewards
+> Incorrect Rollout
+> Correct Rollout
+> Reference Solution
+> Repeated Module
+> …
+> Reasoner GRPO Update
+> Select Best Hinted Group
+> Collect Candidate Hints and Rewards
+> Hinter GRPO Update
+
+Figure 1: Overview of our HiLL framework. Given a question q with an all-incorrect group, the hinter Hϕ takes the question, a failed rollout τk, and the reference solution z⋆ as input, and generates 
+
+M candidate hints. The reasoner πθ re-samples G rollouts under each hinted input q+hj . Each hint is then scored by signal creation (Sec. 4.2) and signal transfer (Sec. 4.3). The best hinted group is selected reasoner GRPO update, while all candidate hints form the group for the hinter GRPO update. based scheduling [ 28 ], or knapsack-style budget optimization [ 11 ]. Filtering and reshaping methods take a complementary approach, skipping or clipping degenerate groups [ 34 , 39 ], downsampling uninformative rollouts [ 29 ], or extracting signal from zero-variance groups via entropy-guided advantage shaping [ 8 ] and virtual reward calibration [ 18 ]. Curriculum-based scheduling further improves sample efficiency by ordering questions from easy to hard or partitioning by difficulty [ 19 ,36 ]. These strategies are complementary to hinting: they improve how existing signal is used but cannot create signal when the model’s success probability on a question is effectively zero. 
+
+Privileged hinting and scaffolded RL. A growing line of work modifies the input during LLM training by injecting privileged information to induce correct rollouts hard questions, including oracle solution prefixes [ 21 ], self-generated hints [ 12 ], external teacher hints [ 37 ], multi-level pro-gressive hints [ 35 ], curriculum-based scaffolds [ 1], or initial steps extracted from rare within-batch successes [ 20 ]. A key design principle shared across these methods is that the model should be trained on-policy with respect to the augmented input, i.e., both rollout sampling and the policy-gradient loss should condition on the privileged context, not the original question alone [ 12 , 21 ]. Recent work also utilizes such privileged information for on-policy self-distillation, where a model generates on-policy trajectories under a student context and receives dense supervision from its own privileged context conditioned on ground-truth solutions, verified reasoning traces, or rich textual feedback [ 6, 24 , 38 ]. Our HiLL framework shares this on-policy structure, where privileged information reshapes on-policy trajectories during training and is removed at test time, but differs in two key respects: (i) it actively learns to generate better hints through RL during the privileged training rather than relying on fixed or pre-collected contexts, and (ii) it explicitly optimizes for transferability by penalizing hints whose induced correct trajectories are unlikely to improve the model under no-hint scenarios. 
+
+## 3 Preliminaries 
+
+Consider reasoning with verifiable rewards. Given a question q, a reasoner policy πθ samples a trajec-tory τ ∼ πθ (· | q), and a verifier returns a binary reward r(τ ) ∈ { 0, 1} indicating whether the final answer is correct. We denote the per-question success probability by pθ (q) = Pr τ ∼πθ (·| q)[r(τ ) = 1] .
+
+GRPO and advantage collapse. Group Relative Policy Optimization [ 23 ] samples a group of G
+
+trajectories for the same question and computes within-group normalized advantages: 
+
+Ai = ri − ¯r
+
+std( r1: G) + ϵ , ¯r = 1
+
+G
+
+> G
+
+X
+
+> i=1
+
+ri. (1) 3Under binary rewards, if all G rollouts receive the same reward, every advantage vanishes and the question produces no gradient. For a question with per-rollout success probability p, the probability that a group of size G contains both correct and incorrect outcomes is 
+
+s(p; G) = 1 − pG − (1 − p)G. (2) This non-degenerate probability is maximized at p = 12 and satisfies s(p; G) ≈ Gp when p ≈ 0.Hard questions with small success probability are therefore most likely to yield degenerate groups and produce no learning signal. 
+
+## 4 HiLL: Hint Learning for Reinforcement Learning 
+
+HiLL jointly trains a hinter policy alongside the reasoner to recover learning signal from hard questions. It intervenes only on all-incorrect GRPO groups, which produce no gradient under binary rewards. As illustrated in Figure 1 and summarized in Algorithm 1, the hinter generates candidate hints online, the reasoner re-samples under each hinted input, and hints are scored by both signal creation and signal transfer before the best hinted group replaces the original degenerate group. 
+
+4.1 Failure-Conditioned Hint Generation 
+
+Given a training batch B, the reasoner first samples G rollouts per question and identifies the all-incorrect subset I = {q ∈ B : PGi=1 ri(q) = 0 }. For each q ∈ I , the hinter policy Hϕ generates 
+
+M candidate hints conditioned on the question q, a randomly selected incorrect rollout τk from the current reasoner’s all-incorrect group, and a reference solution z⋆ available only during training: 
+
+{hj }Mj=1 ∼ H ϕ(· | q, τ k, z ⋆). (3) The incorrect rollout exposes the reasoner’s current error mode, while the reference solution provides supervision for producing a targeted hint. We instruct the hinter to analyze the reasoner’s failure and output a concise pedagogical hint where the prompt is provided in Appendix B. A candidate hint is invalid if it (i) violates the required output format, (ii) leaks the final answer or key intermediate computations, or (iii) causes the concatenated input q+h to exceed the maximum context length. Invalid hints receive a fixed failure penalty Rfail < 0 as defined in Section 4.4. 
+
+4.2 Hinted Rollouts and Signal Creation 
+
+For each valid candidate hint hj , the reasoner re-samples G rollouts from πθ (· | q+hj ) and computes rewards. Let ˆph = 1
+
+> G
+
+PGi=1 r(hj ) 
+
+> i
+
+denote the estimated success rate under the hinted input. Ahint creates useful signal when the resulting group is non-degenerate, i.e., contains both correct and incorrect rollouts. We quantify this with the non-degenerate probability s(ˆ ph; G) = 1 −ˆpGh −(1 −ˆph)G
+
+from Eq. (2), which vanishes when ˆph ∈ { 0, 1} and peaks at ˆph = 12 .However, signal creation alone is not sufficient: a hint may produce mixed outcomes simply by making the problem much easier, without producing trajectories that remain useful once the hint is removed. We therefore introduce a second criterion that measures whether the created signal transfers to the original no-hint question. 
+
+4.3 Hint Reliance and Signal Transfer 
+
+If correct hinted trajectories depend strongly on the hint, training on them may teach the reasoner to exploit the hint rather than improve its no-hint reasoning capability. For example, if the reasoner fails to simplify a key expression, a hint like “try factoring the left-hand side” suggests a strategy the model could have found on its own, whereas “note that x2−5x+6 = ( x−2)( x−3) ” performs the critical step directly for the reasoner. Correct trajectories from the latter depend largely on the hint and are unlikely to transfer. 
+
+Hint reliance. To formalize this, we define the hint reliance of a trajectory τ sampled under q+h as 
+
+ρ(τ ; q, h ) = log πθ (τ | q+h) − log πθ (τ | q). (4) 4Algorithm 1 HiLL: Hint Learning for Reinforcement Learning 
+
+Require: Batch B, reasoner πθ , hinter Hϕ, group size G, hint candidates M , temperature T , failure reward Rfail  
+
+> 1:
+
+For each q ∈ B , sample G rollouts from πθ (· | q) and compute rewards  
+
+> 2:
+
+Identify all-incorrect questions I = {q ∈ B : PGi=1 ri(q) = 0 } 
+
+> 3:
+
+for each q ∈ I do  
+
+> 4:
+
+Form hinter input c = ( q, τ k, z ⋆) using an incorrect rollout and reference solution  
+
+> 5:
+
+Sample M candidate hints {hj }Mj=1 ∼ H ϕ(· | c) 
+
+> 6:
+
+for each candidate hint hj do  
+
+> 7:
+
+if hj is invalid then  
+
+> 8:
+
+Set R(q, h j ) ← Rfail  
+
+> 9:
+
+else  
+
+> 10:
+
+Sample G rollouts from πθ (· | q+hj ) and compute rewards  
+
+> 11:
+
+Estimate ˆph = 1
+
+> G
+
+PGi=1 r(hj ) 
+
+> i
+> 12:
+
+if 0 < ˆph < 1 then  
+
+> 13:
+
+Estimate ˆρc(q, h j ) from correct hinted trajectories via Eq. (6)  
+
+> 14:
+
+end if  
+
+> 15:
+
+Compute R(q, h j ) using Eq. (7)  
+
+> 16:
+
+end if  
+
+> 17:
+
+end for  
+
+> 18:
+
+Select h⋆ = arg max hj R(q, h j ) 
+
+> 19:
+
+if R(q, h ⋆) > 0 then  
+
+> 20:
+
+(q, {τi}Gi=1 ) ← (q+h⋆, {τ h⋆ 
+
+> i
+
+}Gi=1 ) 
+
+> 21:
+
+end if  
+
+> 22:
+
+end for  
+
+> 23:
+
+Update reasoner πθ using Eq. (8) on the final selected groups  
+
+> 24:
+
+Update hinter Hϕ using Eq. (9), where M hints per q ∈ I form the group A value near zero means τ is roughly equally likely with or without the hint, indicating low depen-dence. A large positive value means τ is much more likely under the hinted input, indicating strong reliance. We average over correct hinted trajectories, which carry the informative GRPO signal: 
+
+ρc(q, h ) = 1
+
+|C| 
+
+X 
+
+> τ∈C
+
+ρ(τ ; q, h ), C = τ ∼ πθ (· | q+h) : r(τ ) = 1 . (5) The following result shows that this average hint reliance directly controls how well hinted success transfers to the no-hint setting. 
+
+Proposition 1 (Transfer bound) . For a question-hint pair (q, h ), let Ph(τ ) = πθ (τ | q+h) and 
+
+P (τ ) = πθ (τ | q) denote the rollout distributions under the hinted and original inputs, with success probabilities ph = Ph
+
+ r(τ )=1  and p = P  r(τ )=1 . If ph > 0, then 
+
+ρc(q, h ) = log ph
+
+p + DKL 
+
+ Ph(· | r=1) P (· | r=1) ,
+
+and therefore 
+
+p ≥ ph · exp  −ρc(q, h ).
+
+The proof is provided in Appendix A. The identity decomposes hint reliance into two terms: the log-ratio of success probabilities and a KL divergence measuring how the distribution over correct trajectories shifts when the hint is added. Since the KL term is non-negative, the bound follows directly: the no-hint success probability p is at least the hinted success probability ph discounted by 
+
+exp( −ρc). Therefore, lower hint reliance yields a tighter bound and a stronger transfer guarantee. 
+
+Practical estimator. In practice, we normalize ρ(τ ; q, h ) by the trajectory length |τ | to reduce length bias across trajectories of varying lengths: 
+
+ˆρc(q, h ) = 1
+
+|C| 
+
+X 
+
+> τ∈C
+
+ρ(τ ; q, h )
+
+|τ | . (6) Computing ˆρc requires scoring each correct hinted trajectory under both q+h and q, amounting to two teacher-forced forward passes of πθ .54.4 Transfer-Weighted Hinter Reward 
+
+Building on the previous signal creation and transfer measure, we now define the reward for each candidate hint for hinter training: 
+
+R(q, h ) = 
+
+
+
+Rfail , if h is invalid ,s(ˆ ph; G)
+
+| {z }
+
+> signal creation
+
+· exp 
+
+
+
+− max  ˆρc(q, h ), 0
+
+T
+
+| {z }
+
+> signal transfer
+
+, otherwise , (7) where T > 0 is a temperature parameter. The first term s(ˆ ph; G) from Eq. (2) rewards hints that produce mixed-outcome groups and vanishes when all rollouts are correct or all incorrect. The second term based on Eq. (6) serves as a transfer weight: it equals 1 when hint reliance is zero or negative; it decays as reliance increases. Negative reliance means the correct trajectory is already at least as likely under the original question, so we treat it as fully transferable and do not further boost the reward. Their product encourages hints that both recover non-zero GRPO signal and produce trajectories that transfer to the no-hint setting. When ˆph ∈ { 0, 1}, signal creation is zero, so no hint reliance computation is needed. 
+
+4.5 Joint Reasoner-Hinter Optimization 
+
+After scoring all candidates, the best hint h⋆ = arg max j R(q, h j ) is selected for each q ∈ I . If 
+
+R(q, h ⋆) > 0, the batch entry is updated via replacement (q, {τi}Gi=1 ) ← (q+h⋆, {τ h⋆ 
+
+> i
+
+}Gi=1 ), where 
+
+τ h⋆ 
+
+> i
+
+∼ πθ (· | q+h⋆). Otherwise, the original entry is kept. 
+
+Reasoner update. After replacement, each question q ∈ B is paired with an input xq (either q or 
+
+q+h⋆). Note that when a hint is used, both the rollout sampling and the log-probability computation condition on the same hinted input xq = q+h⋆, keeping the reasoner update on-policy with respect to the augmented context. The reasoner is then updated with the standard GRPO objective: 
+
+LR(θ) = −Eq∼B 
+
+" GX
+
+> i=1
+
+Ai
+
+> |τi|
+
+X
+
+> t=1
+
+log πθ
+
+ yi,t | xq , y i,<t 
+
+#
+
+, (8) where τi ∼ πθ (· | xq ) and Ai are within-group normalized advantages as in Eq. (1). 
+
+Hinter update. For each q ∈ I , the M candidate hints form a GRPO group with rewards 
+
+{R(q, h j )}Mj=1 , and the hinter is updated via: 
+
+LH(ϕ) = −Eq∼I 
+
+" MX
+
+> j=1
+
+Aj 
+
+> |hj|
+
+X
+
+> t=1
+
+log Hϕ(hj,t | cq , h j,<t )
+
+#
+
+, (9) where Aj are group-normalized advantages from the hint rewards, and cq = ( q, τ k, z ⋆). Invalid candidates participate through Rfail , allowing the hinter to learn to avoid producing them. 
+
+Co-training dynamics. Because both policies are updated jointly, the hinter adapts as the reasoner improves. Questions that become solvable leave I, while the remaining failures reflect the reasoner’s current capability frontier. The hinter is thus trained on an evolving distribution of reasoner failures and learns to adjust its hints to the reasoner’s changing weaknesses, rather than relying on a fixed hinting strategy throughout training. 
+
+## 5 Experiments 
+
+5.1 Experimental Setup Models. We evaluate our HiLL framework on two models as the reasoner policy: Llama-3.2-3B-Instruct [ 15 ] and Qwen2.5-7B-Instruct [ 32 ]. The hinter policy is initialized from Qwen3-4B-Instruct [ 31 ] for all experiments. Both policies are trained jointly via GRPO as described in Section 4. 
+
+Training data. We use the same 15k-prompt subset of OpenR1-Math-220k [ 2] curated by Liao et al. [12] , drawn from NuminaMath 1.5 [ 10 ] together with ground-truth answers and reference solutions. No pass-rate filtering is applied, so questions span a wide difficulty range. 6Table 1: Main results on in-distribution and out-of-distribution benchmarks. Best results are in bold and second-best are underlined. HiLL consistenctly outperforms GRPO and hint-based baselines.                                                                                                                                              
+
+> Method In-distribution Out-of-distribution AIME24 / 25 AMC23 MATH-500 Minerva Olympiad Avg. GPQA MMLU-Pro Avg.
+> Llama-3.2-3B-Instruct
+> Base 6.5 / 0.6 22.8 44.7 17.8 14.2 17.8 17.9 27.0 22.5 GRPO 6.7 / 0.8 29.5 52.1 20.5 21.8 21.9 26.3 39.8 33.1 LUFFY 4.4 / 0.4 18.6 38.9 14.3 11.9 14.7 16.0 26.7 21.4 Scaf-GRPO 7.7 / 2.3 28.8 51.7 19.4 19.5 21.5 24.1 38.0 31.0 SAGE 9.2 / 0.8 34.7 56.3 20.1 22.0 23.9 27.3 40.7 34.0 HiLL w/o TW 6.9 / 2.3 32.5 56.7 21.6 22.4 23.7 28.0 41.0 34.5 HiLL 8.5 / 1.7 34.8 57.7 21.7 23.2 24.6 27.8 42.7 35.3
+> Qwen2.5-7B-Instruct
+> Base 13.8 / 6.7 53.4 75.7 38.1 39.2 37.8 37.1 56.4 46.7 GRPO 15.0 / 13.5 55.5 79.2 39.1 44.5 41.1 37.2 57.6 47.4 LUFFY 17.1 / 13.5 55.2 81.3 39.0 44.2 41.7 38.1 59.1 48.6 Scaf-GRPO 14.6 / 12.7 58.8 78.0 39.8 42.0 41.0 36.6 58.4 47.5 SAGE 16.0 / 12.5 60.3 80.0 39.3 45.9 42.3 38.0 59.3 48.6 HiLL w/o TW 15.2 / 14.4 60.5 80.5 39.8 45.7 42.7 38.6 59.9 49.2 HiLL 16.9 / 15.3 63.0 81.8 40.1 48.1 44.2 40.4 61.6 51.0
+
+Evaluation. We report Average@16 accuracy on six math reasoning benchmarks: AIME24 [ 13 ], AIME25 [ 14 ], AMC23 [ 10 ], MATH-500 [ 5 ], Minerva Math [ 9], OlympiadBench [ 4 ], and two non-math benchmarks: GPQA-diamond [ 22 ], MMLU-Pro [ 26 ] for generalization assessment. All reasoner models are evaluated with temperature 0.6, top-p 0.95 , and maximum response length 8,192 .The hinter is never used at evaluation. 
+
+Baselines. We compare against the following baselines trained on the same 15k prompts: (1) Base, the initial reasoner; (2) GRPO [ 23 ], standard RL without hints; (3) LUFFY [ 30 ], which replaces one on-policy rollout with an off-policy trajectory from DeepSeek-R1; (4) Scaf-GRPO [ 37 ], which augments all-incorrect groups with hints from an external teacher model; and (5) SAGE [ 12 ], on-policy hinting with self-generated hints conditioned on reference solutions. The implementation builds on the official codebase of Liao et al. [12] , and we report baseline results from their paper. We additionally report HiLL w/o TW , an ablated variant of HiLL that removes the transfer weight from the hinter reward (Eq. (7)), using only the non-degenerate probability as the reward for hinter training. 
+
+Implementation details. We use verl [ 25 ] for RL training and vLLM [ 7] for rollout generation and all experiments run on 8×B200 GPUs. For reasoner policy training in all methods, we follow DAPO [ 34 ] to disable the KL penalty and apply Clip-Higher with ϵlow =0 .2, ϵhigh =0 .28 . We train the reasoner for 500 steps with a batch size of 128, G=8 rollouts per prompt, and learning rate 10 −6. The maximum prompt and response lengths are set to 2,048 and 8,192 tokens. We evaluate every 50 steps and select the reasoner checkpoint with the best Average@16 accuracy to report the results. For hinter policy training in HiLL, the hinter generates M =4 candidate hints per all-incorrect question with a maximum prompt and response length being 10,240 and 1,024 tokens, transfer temperature T =0 .3,failure penalty Rfail =−0.2, and the same learning rate and clipping as the reasoner. We use Ray [ 16 ]to co-locate reasoner and hinter models on the same GPU nodes. Since the co-training pipeline executes each phase sequentially as in Algorithm 1, Ray idles one policy while the other is active, letting both FSDP-sharded models share the same devices without extra memory overhead compared to baseline training methods. Prompts used for reasoner and hinter are provided in Appendix B. 
+
+5.2 Results and Analysis HiLL consistently boosts reasoner performance compared to baselines. Table 1 summarizes the main results. HiLL achieves the highest average accuracy on in-distribution math reasoning tasks on both Llama-3.2-3B-Instruct and Qwen2.5-7B-Instruct. The gains extend to out-of-distribution GPQA and MMLU-Pro despite training exclusively on math data, suggesting that the recovered learning signal in our HiLL framework also generalizes to broader reasoning capabilities. Among hint-based baselines, both Scaf-GRPO and SAGE improve over standard GRPO, confirming that hinting can recover useful signal from hard questions. HiLL outperforms both, indicating that learning to generate adaptive, transfer-aware hints is more effective than relying on fixed external hints or self-generated 7100 200 300 400 500              
+
+> Training Step
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> All-Incorrect Ratio
+> Llama-3.2-3B-Instruct
+> GRPO
+> HiLL w/o TW
+> HiLL 100 200 300 400 500
+> Training Step
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> 0.35 Qwen2.5-7B-Instruct
+> GRPO
+> HiLL w/o TW
+> HiLL 100 200 300 400 500
+> Training Step
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> 0.35
+> Hint Reliance
+> Llama-3.2-3B-Instruct
+> HiLL w/o TW
+> HiLL 100 200 300 400 500
+> Training Step
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> Qwen2.5-7B-Instruct
+> HiLL w/o TW
+> HiLL
+
+Figure 2: All-incorrect ratio (left two) and hint reliance (right two) over training steps. Both HiLL variants substantially reduce the fraction of degenerate all-incorrect groups compared to GRPO. Transfer weighting (HiLL vs. HiLL w/o TW ) keeps hint reliance consistently lower throughout training. 0.2 0.3 0.4         
+
+> Transfer Temp. T
+> 0.25
+> 0.30
+> Signal Creation
+> w/o TW
+> 0.25
+> 0.29 0.29
+> 0.2 0.3 0.4
+> Transfer Temp. T
+> 0.8
+> 0.9
+> Signal Transfer
+> w/o TW
+> 0.95
+> 0.91
+> 0.89
+> 0.2 0.3 0.4
+> Transfer Temp. T
+> 23.5
+> 24.0
+> 24.5
+> In-Dist. Accuracy
+> w/o TW
+> 24.2
+> 24.6
+> 24.4
+
+Figure 3: Effect of transfer temperature T on average signal creation, signal transfer, and in-distribution accuracy for HiLL with Llama-3.2-3B-Instruct. Dashed lines show HiLL w/o TW .hints without transfer optimization. LUFFY underperforms on Llama-3.2-3B-Instruct, likely because injecting off-policy DeepSeek-R1 trajectories into a smaller model introduces a distribution mismatch that outweighs the benefit of additional correct rollouts. 
+
+Transfer weighting keeps hint reliance low while recovering GRPO signals. Figure 2 tracks the all-incorrect ratio, i.e., the fraction of degenerate all-incorrect groups in the reasoner batch, and its hint reliance over training. Both HiLL variants substantially reduce this ratio compared to standard GRPO, confirming that learned hinting effectively recovers signal from hard questions. The key difference between the two variants appears in the hint reliance curves: without transfer weighting, the hinter is rewarded purely for creating mixed-outcome groups, and reasoner hint reliance climbs steadily as training progresses. With transfer weighting, HiLL keeps hint reliance consistently low, meaning the hinter learns to produce hints whose induced correct trajectories remain plausible under the original no-hint input. With the accuracy gains of HiLL over HiLL w/o TW in Table 1, this confirms that lower hint reliance translates into stronger transfer to the no-hint policy, as predicted by Proposition 1. 
+
+Transfer temperature controls the signal creation–transfer trade-off. The temperature T in hinter reward defined in Eq. (7) controls how aggressively the transfer weight penalizes hint reliance. We show in Figure 3 its effect on Llama-3.2-3B-Instruct across three metrics: (i) signal creation, i.e., the average reduction in all-incorrect ratio after hinting where higher value means more degenerate groups in reasoner batch are converted to mixed-outcome groups, (ii) signal transfer, i.e., exp( −ˆρc)
+
+averaged over training where higher value means correct hinted trajectories are more likely under the original no-hint input, and (iii) in-distribution accuracy, i.e., average reasoner performance over in-distribution math benchmarks. The results show that a smaller T imposes a stronger penalty, yielding higher signal transfer but reducing signal creation as the hinter becomes over-constrained. A larger T relaxes the penalty, creating more signal but with lower transferability. The choice of T =0 .3
+
+in our experiments provides a good balance between signal creation and signal transfer, achieving strong accuracy performance. Nevertheless, all three T values tested in HiLL outperform HiLL w/o TW ,indicating that even a loose transfer weighting is beneficial for the reasoner training. 
+
+HiLL learns to hint more concisely and conceptually. Beyond the quantitative metrics above, transfer weighting also shapes the nature of the generated hints. We report in Figure 4 the average hint length in words and the average number of math expressions (e.g., inline equations, symbols) per hint, both computed over hints collected on a fixed interval of 50 steps across training. The results show that HiLL produces shorter hints with fewer math expressions than HiLL w/o TW on both back-bones. Table 2 illustrates the qualitative difference with two actual examples: HiLL hints suggest a 8Table 2: Example hints generated by HiLL and HiLL w/o TW on the same question. HiLL provides conceptual strategies while HiLL w/o TW tends to set up the computation directly.                                                                         
+
+> Question (excerpt) Hint from HiLL Hint from HiLL w/o TW
+> A line segment AB of length 1 moves on the x-axis. Point
+> P(0 ,1) is connected to A
+> by a line, and point Q(1 ,2)
+> is connected to Bby a line. Find the equation of the tra-jectory of the intersection point R.Consider expressing the intersection in terms of a parameter a, then eliminate it to reveal the hidden trajectory.
+> (18 words, hinted pass rate 0.13)
+> Let A= ( a, 0) and B= ( a+1 ,0) for a real parameter a̸= 0 . Write the equation of line
+> P A , where P= (0 ,1) , and the equation of line QB , where Q= (1 ,2) , both in terms of
+> a. Find the coordinates (x, y )of their inter-section point Ras a function of a.. . .
+> (108 words, hinted pass rate 0.38)
+> In trapezoid ABCD ,AB ∥
+> CD ,AB =33 ,CD =21 , the non-parallel sides are 10 and 14, and ∠A,∠Bare both acute. Find the length of the shorter diagonal. The shorter diagonal emerges from a triangle where 14, 12, and 10 form a critical configu-ration, with the angle between them yielding a result just above 25.
+> (27 words, hinted pass rate 0.13)
+> Draw a line DE ∥BC from point Dto side
+> AB , intersecting AB at point E. This creates triangle ADE with DE = 10 ,AE = 12 ,and AD = 14 . Use the Law of Cosines in triangle ADE to find cos A. Then apply the same angle ∠Ain . . .
+> (97 words, hinted pass rate 0.50) Llama Qwen
+> 0
+> 25
+> 50
+> 75
+> Hint Length  79
+> 29
+> 41 32
+> HiLL w/o TW
+> HiLL
+> Llama Qwen
+> 0
+> 2
+> 4
+> 6
+> Math Expr.  5.6
+> 1.6
+> 2.7 2.1
+
+Figure 4: Hint length and math expressions per hint. high-level strategy (e.g., “parameterize then eliminate” or “look for a critical triangle configuration”) without carrying out the compu-tation, whereas HiLL w/o TW hints tend to set up the algebra directly by defining coordinates, writing equations, or applying specific the-orems. This behavior emerges naturally from our transfer-weighted hint learning objective. Hints that perform key steps for the reasoner would induce high hint reliance, as the resulting correct trajectories become unlikely under the original input. The transfer weight penal-izes such hints (Eq. (7) ), steering the hinter toward generating more conceptual guidance whose induced correct trajectories the reasoner could plausibly produce on its own. 
+
+HiLL trades off latency for more effective learning signals. HiLL introduces additional per-step computation beyond standard GRPO: for each degenerate all-incorrect group in the batch, the hinter gen-erates a hint, the reasoner re-samples trajectories conditioned on the hinted input, and hint reliance is estimated from the resulting trajectories. The hinter is then updated via its own GRPO step. Because these operations are triggered only for all-incorrect groups, the overhead scales directly with the frequency of such groups. On Llama-3.2-3B-Instruct, which has a high all-incorrect ratio throughout training as shown in Figure 2, HiLL averages roughly 3.8× the per-step wall-clock time of GRPO. On the stronger Qwen2.5-7B-Instruct backbone, which produces fewer degenerate groups, the multiplier drops to roughly 2.6×, comparable to SAGE’s 2.3× on the same backbone, as SAGE also targets collapsed groups by progressively trying up to L=3 hint levels and rolling out at each level until a correct trajectory is found. We view this as a practical trade-off: the extra computation targets exactly the groups from which GRPO extracts no learning signal, converting them into useful training data that drives the accuracy gains reported in Table 1. 
+
+## 6 Conclusion 
+
+In this paper, we introduced HiLL, a co-training framework that addresses two limitations of existing hint-based approaches to GRPO’s advantage collapse. First, rather than relying on fixed or externally generated hints, HiLL jointly trains a hinter policy that generates hints online conditioned on the reasoner’s current failures, allowing hint generation to stay calibrated as the reasoner improves. Second, rather than rewarding hints solely for creating mixed-outcome groups, HiLL introduces hint reliance as a measure of whether hinted success is likely to transfer back to the no-hint policy, and uses it to define a transfer-weighted reward that steers the hinter toward hints whose induced correct trajectories remain plausible without the hint. Experiments across eight benchmarks and two backbone LLMs show that HiLL consistently outperforms GRPO and prior hint-based baselines. Our analysis further reveals that transfer weighting keeps hint reliance low throughout training and 9naturally produces shorter, more conceptual hints. Together, these results demonstrate the value of adaptive and transfer-aware hint learning for RL. 
+
+## References 
+
+[1] Justin Chih-Yao Chen, Becky Xiangyu Peng, Prafulla Kumar Choubey, Kung-Hsiang Huang, Jiaxin Zhang, Mohit Bansal, and Chien-Sheng Wu. Nudging the boundaries of llm reasoning. 
+
+arXiv preprint arXiv:2509.25666 , 2025. [2] Hugging Face. Open r1: A fully open reproduction of deepseek-r1, january 2025. URL https://github. com/huggingface/open-r1 , 7, 2025. [3] Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Peiyi Wang, Qihao Zhu, Runxin Xu, Ruoyu Zhang, Shirong Ma, Xiao Bi, et al. Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning. arXiv preprint arXiv:2501.12948 , 2025. [4] Chaoqun He, Renjie Luo, Yuzhuo Bai, Shengding Hu, Zhen Thai, Junhao Shen, Jinyi Hu, Xu Han, Yujie Huang, Yuxiang Zhang, et al. Olympiadbench: A challenging benchmark for promoting agi with olympiad-level bilingual multimodal scientific problems. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 3828–3850, 2024. [5] Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt. Measuring mathematical problem solving with the math dataset. 
+
+arXiv preprint arXiv:2103.03874 , 2021. [6] Jonas Hübotter, Frederike Lübeck, Lejs Behric, Anton Baumann, Marco Bagatella, Daniel Marta, Ido Hakimi, Idan Shenfeld, Thomas Kleine Buening, Carlos Guestrin, et al. Reinforcement learning via self-distillation. arXiv preprint arXiv:2601.20802 , 2026. [7] Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody Hao Yu, Joseph Gonzalez, Hao Zhang, and Ion Stoica. Efficient memory management for large language model serving with pagedattention. In Proceedings of the 29th symposium on operating systems principles , pages 611–626, 2023. [8] Thanh-Long V. Le, Myeongho Jeon, Kim Vu, Viet Dac Lai, and Eunho Yang. No prompt left behind: Exploiting zero-variance prompts in LLM reinforcement learning via entropy-guided advantage shaping. In The Fourteenth International Conference on Learning Representations ,2026. URL https://openreview.net/forum?id=kiXFIESZKv .[9] Aitor Lewkowycz, Anders Andreassen, David Dohan, Ethan Dyer, Henryk Michalewski, Vinay Ramasesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo Gutman-Solo, et al. Solving quan-titative reasoning problems with language models. Advances in neural information processing systems , 35:3843–3857, 2022. [10] Jia Li, Edward Beeching, Lewis Tunstall, Ben Lipkin, Roman Soletskyi, Shengyi Huang, Kashif Rasul, Longhui Yu, Albert Q Jiang, Ziju Shen, et al. Numinamath: The largest public dataset in ai4maths with 860k pairs of competition math problems and solutions. Hugging Face repository ,13(9):9, 2024. [11] Ziniu Li, Congliang Chen, Tianyun Yang, Tian Ding, Ruoyu Sun, Ge Zhang, Wenhao Huang, and Zhi-Quan Luo. Knapsack rl: Unlocking exploration of llms via optimizing budget allocation. 
+
+arXiv preprint arXiv:2509.25849 , 2025. [12] Baohao Liao, Hanze Dong, Xinxing Xu, Christof Monz, and Jiang Bian. Self-hinting language models enhance reinforcement learning. arXiv preprint arXiv:2602.03143 , 2026. [13] MAA Committees. AIME problems and solutions, 2024. URL https:// artofproblemsolving.com/wiki/index.php/AIME_Problems_and_Solutions .[14] MAA Committees. AIME problems and solutions, 2025. URL https:// artofproblemsolving.com/wiki/index.php/AIME_Problems_and_Solutions .10 [15] AI Meta. Introducing meta llama 3: The most capable openly available llm to date. Meta AI , 2 (5):6, 2024. [16] Philipp Moritz, Robert Nishihara, Stephanie Wang, Alexey Tumanov, Richard Liaw, Eric Liang, Melih Elibol, Zongheng Yang, William Paul, Michael I Jordan, et al. Ray: A distributed framework for emerging {AI } applications. In 13th USENIX symposium on operating systems design and implementation (OSDI 18) , pages 561–577, 2018. [17] Youssef Mroueh. Reinforcement learning with verifiable rewards: Grpo’s effective loss, dynam-ics, and success amplification. arXiv preprint arXiv:2503.06639 , 2025. [18] Gongrui Nan, Siye Chen, Jing Huang, Mengyu Lu, Dexun Wang, Chunmei Xie, Weiqi Xiong, Xianzhou Zeng, Qixuan Zhou, Yadong Li, et al. Ngrpo: Negative-enhanced group relative policy optimization. arXiv preprint arXiv:2509.18851 , 2025. [19] Shubham Parashar, Shurui Gui, Xiner Li, Hongyi Ling, Sushil Vemuri, Blake Olson, Eric Li, Yu Zhang, James Caverlee, Dileep Kalathil, et al. Curriculum reinforcement learning from easy to hard tasks improves llm reasoning. arXiv preprint arXiv:2506.06632 , 2025. [20] Deng Qiyuan, Kehai Chen, Min Zhang, and Zhongwen Xu. Hipo: Self-hint policy optimization for rlvr. In The Fourteenth International Conference on Learning Representations .[21] Yuxiao Qu, Amrith Setlur, Virginia Smith, Ruslan Salakhutdinov, and Aviral Kumar. Pope: Learning to reason on hard problems via privileged on-policy exploration. arXiv preprint arXiv:2601.18779 , 2026. [22] David Rein, Betty Li Hou, Asa Cooper Stickland, Jackson Petty, Richard Yuanzhe Pang, Julien Dirani, Julian Michael, and Samuel R Bowman. Gpqa: A graduate-level google-proof q&a benchmark. In First conference on language modeling , 2024. [23] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Yang Wu, et al. Deepseekmath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. [24] Idan Shenfeld, Mehul Damani, Jonas Hübotter, and Pulkit Agrawal. Self-distillation enables continual learning. arXiv preprint arXiv:2601.19897 , 2026. [25] Guangming Sheng, Chi Zhang, Zilingfeng Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua Peng, Haibin Lin, and Chuan Wu. Hybridflow: A flexible and efficient rlhf framework. In 
+
+Proceedings of the Twentieth European Conference on Computer Systems , pages 1279–1297, 2025. [26] Yubo Wang, Xueguang Ma, Ge Zhang, Yuansheng Ni, Abhranil Chandra, Shiguang Guo, Weiming Ren, Aaran Arulraj, Xuan He, Ziyan Jiang, et al. Mmlu-pro: A more robust and challenging multi-task language understanding benchmark. Advances in Neural Information Processing Systems , 37:95266–95290, 2024. [27] Xumeng Wen, Zihan Liu, Shun Zheng, Shengyu Ye, Zhirong Wu, Yang Wang, Zhijian Xu, Xiao Liang, Junjie Li, Ziming Miao, et al. Reinforcement learning with verifiable rewards implicitly incentivizes correct reasoning in base llms. arXiv preprint arXiv:2506.14245 , 2025. [28] Wei Xiong, Chenlu Ye, Baohao Liao, Hanze Dong, Xinxing Xu, Christof Monz, Jiang Bian, Nan Jiang, and Tong Zhang. Reinforce-ada: An adaptive sampling framework for reinforce-style llm training. arXiv preprint arXiv:2510.04996 , 2025. [29] Yixuan Even Xu, Yash Savani, Fei Fang, and J Zico Kolter. Not all rollouts are useful: Down-sampling rollouts in llm reinforcement learning. arXiv preprint arXiv:2504.13818 , 2025. [30] Jianhao Yan, Yafu Li, Zican Hu, Zhi Wang, Ganqu Cui, Xiaoye Qu, Yu Cheng, and Yue Zhang. Learning to reason under off-policy guidance. arXiv preprint arXiv:2504.14945 , 2025. [31] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. 11 [32] An Yang, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chengyuan Li, Dayiheng Liu, Fei Huang, Haoran Wei, and et al. Qwen2.5 technical report, 2025. URL 
+
+https://arxiv.org/abs/2412.15115 .[33] Jiarui Yao, Yifan Hao, Hanning Zhang, Hanze Dong, Wei Xiong, Nan Jiang, and Tong Zhang. Optimizing chain-of-thought reasoners via gradient variance minimization in rejection sampling and rl. arXiv preprint arXiv:2505.02391 , 2025. [34] Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian Fan, Gaohong Liu, Lingjun Liu, et al. Dapo: An open-source llm reinforcement learning system at scale. arXiv preprint arXiv:2503.14476 , 2025. [35] Kaiyi Zhang, Ang Lv, Jinpeng Li, Yongbo Wang, Feng Wang, Haoyuan Hu, and Rui Yan. Stephint: Multi-level stepwise hints enhance reinforcement learning to reason. arXiv preprint arXiv:2507.02841 , 2025. [36] Shijie Zhang, Guohao Sun, Kevin Zhang, Xiang Guo, and Rujun Guo. Clpo: Curriculum learning meets policy optimization for llm reasoning. arXiv preprint arXiv:2509.25004 , 2025. [37] Xichen Zhang, Sitong Wu, Yinghao Zhu, Haoru Tan, Shaozuo Yu, Ziyi He, and Jiaya Jia. Scaf-grpo: Scaffolded group relative policy optimization for enhancing llm reasoning. arXiv preprint arXiv:2510.19807 , 2025. [38] Siyan Zhao, Zhihui Xie, Mengchen Liu, Jing Huang, Guan Pang, Feiyu Chen, and Aditya Grover. Self-distilled reasoner: On-policy self-distillation for large language models. arXiv preprint arXiv:2601.18734 , 2026. [39] Haizhong Zheng, Yang Zhou, Brian R Bartoldson, Bhavya Kailkhura, Fan Lai, Jiawei Zhao, and Beidi Chen. Act only when it pays: Efficient reinforcement learning for llm reasoning via selective rollouts. arXiv preprint arXiv:2506.02177 , 2025. 
+
+## A Proof of Proposition 1 
+
+We restate Proposition 1 for convenience. For a question-hint pair (q, h ), let Ph(τ ) = πθ (τ | q+h)
+
+and P (τ ) = πθ (τ | q) denote the trajectory distributions under the hinted and original inputs, with success probabilities ph = Ph
+
+ r(τ )=1  and p = P  r(τ )=1 . If ph > 0, then 
+
+ρc(q, h ) = log ph
+
+p + DKL 
+
+ Ph(· | r=1) P (· | r=1) ,
+
+and therefore 
+
+p ≥ ph · exp  −ρc(q, h ).
+
+Proof. Let S = {τ : r(τ ) = 1 } denote the set of correct trajectories. For any τ ∈ S , write 
+
+Ph(τ ) = ph Ph(τ | r=1) , P (τ ) = p P (τ | r=1) .
+
+Therefore, the per-trajectory hint reliance (Eq. 4) satisfies 
+
+ρ(τ ; q, h ) = log Ph(τ )
+
+P (τ )= log ph
+
+p + log Ph(τ | r=1) 
+
+P (τ | r=1) .
+
+Taking expectation under Ph(· | r=1) gives 
+
+ρc(q, h ) = log ph
+
+p + Eτ ∼Ph(·| r=1) 
+
+
+
+log Ph(τ | r=1) 
+
+P (τ | r=1) 
+
+
+
+= log ph
+
+p + DKL 
+
+ Ph(· | r=1) P (· | r=1) ,
+
+which proves the identity. Since DKL 
+
+ Ph(· | r=1) P (· | r=1)  ≥ 0, we obtain ρc(q, h ) ≥
+
+log( ph/p ), and rearranging yields 
+
+p ≥ ph · exp  −ρc(q, h ).
+
+12 B Prompts for Hinter and Reasoner 
+
+This section lists all prompt templates used in HiLL. We do not set a system prompt for the hinter. Note that for the hinted reasoner input, we simply append the hint after the original question without adding explicit bridging prose such as “Here is a hint to help you:” as used in Liao et al. [12] . We empirically observed that such phrasing increases hint reliance by inducing reasoner outputs like “Given the hint, . . . ” which are less likely under the no-hint input and thus less transferable. 
+
+User Prompt for Hint Generation 
+
+You are a Pedagogical Hint Generator for a Mathematical Reasoner. TASK: GENERATE A MINIMAL HINT OBJECTIVE The Reasoner failed the Original Question. Your goal is to generate a minimal but useful hint that helps the Reasoner find the correct logical path. Provide a strategic nudge, not a solution. The Reasoner must still perform the deduction themselves. INPUTS 1) Original Question: 
+
+{original_question} 
+
+2) Reasoner’s Failed Attempt: 
+
+{rollout_responses} 
+
+3) Ground Truth Solution (Hidden from Reasoner; For Your Reference Only): 
+
+{ground_truth_solution} 
+
+GUIDELINES 1. Analyze the failure to identify the missing insight or misconception. 2. Provide a conceptual pointer, such as a relevant theorem, a structural property, an alternative representation, or an intermediate goal. 3. Do not reveal the final answer or any specific numerical values, formulas with substituted numbers, or computed intermediate steps. OUTPUT FORMAT (Follow strictly) <analysis> [Briefly identify the logic breakdown and the necessary insight.] </analysis> <hint> [Your concise hint — 1 to 3 sentences maximum.] </hint> 
+
+System Prompt for Reasoner 
+
+Please reason step by step, and put your final answer within \boxed{}. 
+
+User Prompt for Reasoner 
+
+{question} 
+
+13 User Prompt for Reasoner with Hint 
+
+{question} {hint} 
+
+14

@@ -1,0 +1,175 @@
+Title: Beyond the Parameters: A Technical Survey of Contextual Enrichment in Large Language Models: From In-Context Prompting to Causal Retrieval-Augmented Generation
+
+URL Source: https://arxiv.org/pdf/2604.03174v1
+
+Published Time: Mon, 06 Apr 2026 00:58:08 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Beyond the Parameters: A Technical Survey of Contextual Enrichment in Large Language Models 
+
+From In-Context Prompting to Causal Retrieval-Augmented Generation Prakhar Bansal 
+
+prakharb13@gmail.com 
+
+Shivangi Agarwal 
+
+shivangia@iiitd.ac.in 
+
+Abstract 
+
+Large language models (LLMs) encode vast world knowledge in their parameters, yet they remain fundamentally limited by static knowledge, finite context windows, and weakly structured causal rea-soning. This survey provides a unified account of augmentation strategies along a single axis: the degree of structured context supplied at in-ference time. We cover in-context learning and prompt engineering, Retrieval-Augmented Genera-tion (RAG), GraphRAG, and CausalRAG. Beyond conceptual comparison, we provide a transparent literature-screening protocol, a claim-audit frame-work, and a structured cross-paper evidence syn-thesis that distinguishes higher-confidence findings from emerging results. The paper concludes with a deployment-oriented decision framework and con-crete research priorities for trustworthy retrieval-augmented NLP. 
+
+Keywords: retrieval-augmented generation, causal reasoning, knowledge graphs, in-context learning, LLM augmentation, faithfulness, TrustNLP 
+
+1 Introduction 
+
+Transformer-based language models have shown strong generality across language understanding and generation tasks. However, reliability in knowledge-intensive settings remains constrained by three recurring gaps: a knowledge gap (facts not encoded in model parameters), a retrieval gap 
+
+(relevant evidence not surfaced), and a reasoning gap (causally incoherent outputs despite relevant evidence). We frame the progression from prompting to RAG, GraphRAG, and CausalRAG as a systematic response to these gaps. Each step introduces richer contextual structure and typically trades higher in-dexing complexity for better faithfulness and rea-soning quality (Lewis et al., 2020; Edge et al., 2024; Wang et al., 2025). 
+
+Contributions. This survey makes four contri-butions: (i) a unified contextual-enrichment tax-onomy connecting prompting, RAG, GraphRAG, and CausalRAG; (ii) a methodological protocol for literature selection and evidence grading; (iii) a claim-audit table that links high-impact statements to primary sources and confidence levels; and (iv) a practitioner-focused decision framework for trust-worthy deployment in high-stakes settings. 
+
+Scope and Organization. This survey targets ML practitioners and researchers seeking a co-herent comparison of retrieval augmentation paradigms. We do not propose a new algorithm. In-stead, we formalize and compare established meth-ods using common notation and evaluation criteria. 
+
+2 Survey Methodology 
+
+2.1 Literature Collection Protocol 
+
+We conducted a structured literature collection across peer-reviewed venues and major preprint repositories for retrieval-augmented generation and causal reasoning in LLM systems. The search win-dow for this draft ends in March 2026. Candidate papers were screened by title and abstract, then full-text reviewed for methodological relevance. 
+
+Inclusion Criteria. Papers were included if they: (i) propose, evaluate, or systematically ana-lyze prompting, RAG, GraphRAG, or CausalRAG pipelines; (ii) report concrete retrieval or genera-tion behavior rather than purely conceptual com-mentary; and (iii) provide enough methodological detail to support comparative interpretation. 
+
+Exclusion Criteria. We excluded works lacking technical detail, duplicate versions without sub-stantive updates, and papers that do not expose 1             
+
+> arXiv:2604.03174v1 [cs.CL] 3 Apr 2026 Table 1: Three failure gaps in knowledge-intensive question answering and paradigm-level coverage (authors’ synthesis based on cited literature).
+> Gap Prompting RAG GraphRAG CausalRAG
+> Knowledge gap ◦Yes Yes Yes Retrieval gap No ◦Yes Yes Reasoning gap No No ◦Yes
+
+evidence supporting claims about faithfulness, re-trieval quality, or causal reasoning. 
+
+2.2 Evidence Grading 
+
+We use three evidence grades in this survey. High confidence indicates repeated support across mul-tiple studies and settings. Medium confidence 
+
+indicates strong but still limited or heterogeneous evidence. Emerging evidence indicates promising results with narrow benchmark or dataset cover-age. These grades guide wording throughout the manuscript. 
+
+3 Context in Large Language Models 
+
+3.1 What is Context? 
+
+In transformer architectures, context is the visible token sequence x = ( x1, . . . , x n) during genera-tion. We distinguish three context types: paramet-ric context (stored in model weights), in-context knowledge (prompt-provided information), and re-trieved context (externally retrieved evidence in-serted at inference time). 
+
+In-Context Learning and Prompt Engineering. 
+
+Few-shot prompting demonstrates that large mod-els can adapt to novel tasks from examples with-out gradient updates (Brown et al., 2020). Prompt engineering broadens this paradigm with zero-shot prompting, chain-of-thought prompting, and retrieval-augmented prompting (Liu et al., 2023; Wei et al., 2022). 
+
+Context-Window Limitations. Even with long-context models, lost-in-the-middle degradation and noise from irrelevant inserted text remain practical failure modes (Liu et al., 2024). Separately, purely parametric knowledge can become stale as world facts change, which motivates retrieval-grounded generation (Petroni et al., 2019; Lewis et al., 2020). 
+
+4 Retrieval-Augmented Generation (RAG) 
+
+4.1 Background and Definition 
+
+RAG grounds generation in non-parametric exter-nal knowledge. Let D = {d1, . . . , d m} be a corpus indexed into chunk embeddings. For query q, the retriever selects top-k chunks; the generator con-ditions on q plus retrieved chunks (Lewis et al., 2020). 
+
+Retrieval Architectures. Sparse retrieval (e.g., BM25) is interpretable and efficient but can miss semantic matches (Robertson and Zaragoza, 2009). Dense retrieval captures semantic similarity but is costlier and domain-sensitive (Karpukhin et al., 2020). Hybrid pipelines often improve robustness by combining both (Chen et al., 2023). 
+
+Advanced Variants. Recent variants include it-erative or multi-hop RAG, Self-RAG (adaptive re-trieval and reflection), and modular RAG pipelines with query rewriting, reranking, and post-filtering (Trivedi et al., 2023; Asai et al., 2024; Gao et al., 2023). 
+
+4.2 Limitations 
+
+Vanilla RAG is limited by contextual fragmenta-tion, semantic-similarity bias, and limited global summarization for corpus-level questions. 
+
+5 Graph Retrieval-Augmented Genera-tion (GraphRAG) 
+
+5.1 Motivation and Formulation 
+
+GraphRAG replaces flat chunk retrieval with knowledge-graph indexing. During indexing, sys-tems extract triples (head, relation, tail ) and of-ten produce community summaries via graph clus-tering. At query time, local or global graph retrieval provides structured evidence to generation (Edge et al., 2024; Peng et al., 2024; Han et al., 2025). 2Advantages. GraphRAG improves multi-hop re-lational reasoning, supports global thematic synthe-sis, and improves traceability of generated claims. 
+
+Limitations. Key bottlenecks include expensive graph construction, entity resolution noise, tempo-ral rigidity, and associative (rather than explicitly causal) edges. 
+
+6 Causal Retrieval-Augmented Genera-tion (CausalRAG) 
+
+6.1 Motivation 
+
+Causal questions (“Why did X happen?”, “What if Y changed?”) require more than topical re-trieval. CausalRAG introduces directed causal structure into retrieval to support faithful, inter-pretable causal explanations (Pearl, 2009; Samara-jeewa et al., 2024; Wang et al., 2025). 
+
+Causal Graph Foundation. Using structural causal modeling intuition, causal graphs encode directed relations and support observational, inter-ventional, and counterfactual reasoning modes. 
+
+Pipeline. CausalRAG extracts directed causal triples from source text, indexes them, and retrieves causally connected subgraphs via graph walks from query-linked seed nodes. Generation is then condi-tioned on a causally grounded evidence narrative. 
+
+Empirical Pattern. Reported evidence from cur-rently available benchmarks suggests improved answer faithfulness and retrieval precision over vanilla RAG, with stronger causal coherence than purely associative graph retrieval (Wang et al., 2025). Because benchmark settings vary across papers, these results should be interpreted as in-dicative rather than directly comparable. 
+
+7 Unified Comparative Framework 
+
+7.1 Contextual Enrichment Axis 
+
+Prompting, RAG, GraphRAG, and CausalRAG can be viewed as a monotonic increase in context struc-ture. This yields a practical trade-off: higher index-ing complexity in exchange for higher reasoning faithfulness. 
+
+7.2 Quantitative Evidence Across Four Paradigms 
+
+Table 2 summarizes representative quantitative results from primary papers across the four paradigms. Each row states the exact systems being compared, the metric and unit, and reported values with deltas. Cross-row comparisons across differ-ent papers should not be treated as head-to-head performance rankings. 
+
+Interpretation note: All numerical deltas in Table 2 are within-study comparisons under each cited pa-per’s own models, dataset split, and evaluation pro-tocol; they are not cross-paper rankings. 
+
+Metric note: “Composite score (author-defined)” follows Wang et al. (2025), which reports an aggre-gate score over answer faithfulness, context preci-sion, and context recall (Figure 5). The paper does not provide an explicit weighting formula for this aggregate in the main text. 
+
+Scope note: The GraphRAG and CausalRAG slice rows from Wang et al. (2025) come from a controlled follow-up case study on one mar-keting paper and one question, evaluated on abstract/introduction/full-text slices; this is not a cross-dataset leaderboard. 
+
+When to Use Which. Prompting is suitable for lightweight, in-window tasks. RAG is a practical default for factual grounding at scale. GraphRAG is preferred for multi-hop/entity-centric questions and corpus-level synthesis. CausalRAG is best for root-cause and high-stakes explanatory tasks where interpretability is critical. 
+
+Worked Example. For an industry finance query such as “Why did operating margin decline in Q3 after the pricing update?”, prompting can produce plausible but ungrounded narratives. RAG can re-trieve earnings-call passages and management com-mentary. Graph-based retrieval can connect entities such as product line, region, and cost center across filings. CausalRAG can prioritize directed causal chains—for example, price reduction → lower unit revenue → margin compression—while keeping each step linked to source evidence. 
+
+7.3 Claim Audit Table 
+
+Table 4 documents high-impact technical claims, their supporting citations, and a confidence label that reflects evidence maturity in the literature. 3Table 2: Quantitative evidence matrix with explicit metric definitions and scope constraints. All values are reported in the cited source studies.                                   
+
+> Paradigm Source Dataset Systems compared Metric (unit) Reported values Delta
+> Prompting (CoT) Wei et al. (2022) GSM8K PaLM 540B: CoT vs standard prompting Solve rate (%) 57.0 vs 18.0 +39.0 pts RAG Lewis et al. (2020) Natural Ques-tions (Open-domain QA) RAG vs T5-11B (closed-book) Exact Match (EM, %) 44.5 vs 34.5 +10.0 pts GraphRAG-Global (slice comparison) Wang et al. (2025) OpenAlex single-paper case study GraphRAG-Global: abstract vs full text Composite score (author-defined) 49.98 vs 76.37 +26.39 GraphRAG-Local (slice comparison) Wang et al. (2025) OpenAlex single-paper case study GraphRAG-Local: abstract vs full text Composite score (author-defined) 62.29 vs 84.27 +21.98 CausalRAG (slice compar-ison) Wang et al. (2025) OpenAlex single-paper case study CausalRAG: abstract, intro, and full text Composite score (author-defined) 72.43, 74.86, 91.69 +19.26 (abstract to full) CausalRAG (k=s sweep) Wang et al. (2025) OpenAlex CausalRAG: k=s=1 vs k=s=5 Author-reported score 0.534 vs 0.824 +0.290
+
+Table 3: Comparative summary across paradigms (authors’ synthesis). 
+
+Criterion Prompting RAG GraphRAG CausalRAG 
+
+Indexing cost None Low to Medium High High to Very High Relational reasoning Limited Limited Strong Strong Causal reasoning Weak Weak Partial Strong Global summary Weak Moderate Strong Strong Typical faithfulness Low to Medium Medium Medium to High High Table 4: Claim audit for key statements in this survey (authors’ evidence grading with explicit source attribution). 
+
+Claim Primary support Confidence Notes 
+
+RAG improves factual grounding versus prompting-only baselines in knowledge-intensive QA. Lewis et al. (2020); Chen et al. (2023) High Established across multiple benchmarks. CausalRAG improves faithful-ness and causal coherence over vanilla RAG and associative graph retrieval in reported set-tings. Wang et al. (2025); Samara-jeewa et al. (2024) Medium Evidence is promising but still limited in scale. GraphRAG supports stronger re-lational and global-corpus reason-ing than flat top-k chunk retrieval. Edge et al. (2024); Han et al. (2025); Peng et al. (2024) Medium to High Strong conceptual fit; evalu-ation setups vary. Long-context prompting alone suffers from placement sensitiv-ity (lost-in-the-middle). Liu et al. (2024) High Strong evidence in con-trolled long-context evalu-ations. Automated causal extraction re-mains error-prone and expensive in current LLM pipelines. Jiralerspong et al. (2024); Wang et al. (2025) Medium Active research area; meth-ods evolving quickly. 
+
+48 Limitations 
+
+Open challenges include scalable causal extraction, standardized causal evaluation metrics, dynamic maintenance of evolving causal graphs, multilin-gual causal retrieval, and integration with agentic LLM workflows. 
+
+Threats to Validity. Three threats shape the in-terpretation of this survey. First, cross-paper exper-imental heterogeneity limits strict numerical com-parability. Second, publication and survivorship bias may over-represent positive outcomes. Third, recency effects are substantial in fast-moving LLM research; conclusions should be periodically re-audited as new evaluations appear. 
+
+9 Broader Impact 
+
+This survey discusses trustworthiness-oriented re-trieval augmentation strategies and is intended to support safer, evidence-grounded use of LLMs in high-stakes domains. Potential risks include over-confidence in automatically extracted causal struc-ture, inappropriate transfer of benchmark findings to deployment settings, and misuse for persuasive but weakly grounded narratives. We mitigate these risks by explicitly labeling evidence confidence, separating within-study findings from cross-study interpretation, and highlighting unresolved limita-tions and evaluation gaps. 
+
+10 Alignment with TrustNLP 
+
+This survey aligns with TrustNLP themes on causal inference, faithfulness and safety, hallucination reduction, interpretability, and trustworthy high-stakes applications. 
+
+Workshop Relevance. The paper emphasizes trustworthiness through evidence-aware claim cal-ibration, explicit uncertainty reporting, and a deployment-oriented view of failure modes. This framing is designed to be directly useful for TrustNLP reviewers evaluating methodological rigor and practical trustworthiness impact. 
+
+11 Conclusion 
+
+Context enrichment for LLMs is best treated as an engineering continuum rather than a binary choice. CausalRAG is a promising direction for faithful causal question answering, but it carries substan-tial indexing and maintenance costs and is sup-ported by a still-emerging evidence base. Future progress depends on scalable causal extraction, ro-bust evaluation standards, and tighter integration with planning-capable LLM agents. 
+
+References 
+
+Akari Asai, Zeqiu Wu, Yizhong Wang, Avirup Sil, and Hannaneh Hajishirzi. Self-RAG: Learning to retrieve, generate, and critique through self-reflection. In International Conference on Learn-ing Representations (ICLR) , 2024. Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D. Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini Agar-wal, Ariel Herbert-Voss, Gretchen Krueger, Tom Henighan, Rewon Child, Aditya Ramesh, Daniel Ziegler, Jeffrey Wu, Clemens Winter, Chris Hesse, Mark Chen, Eric Sigler, Mateusz Litwin, Scott Gray, Benjamin Chess, Jack Clark, Christopher Berner, Sam McCandlish, Alec Rad-ford, Ilya Sutskever, and Dario Amodei. Lan-guage models are few-shot learners. In Ad-vances in Neural Information Processing Sys-tems (NeurIPS) , 2020. Jiawei Chen, Hongyu Lin, Xianpei Han, and Le Sun. Benchmarking large language models in retrieval-augmented generation. arXiv preprint arXiv:2309.01431 , 2023. Darren Edge, Ha Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva Mody, Steven Tru-itt, and Jonathan Larson. From local to global: A graph RAG approach to query-focused sum-marization. arXiv preprint arXiv:2404.16130 ,2024. Shahul Es, Jithin James, Luis Espinosa-Anke, and Steven Schockaert. RAGAS: Automated evalu-ation of retrieval-augmented generation. arXiv preprint arXiv:2309.15217 , 2023. Yunfan Gao, Yun Xiong, Xinyu Gao, Kangxiang Jia, Jinliu Pan, Yuxi Bi, Yi Dai, Jiawei Sun, Meng Wang, and Haofen Wang. Retrieval-augmented generation for large language mod-els: A survey. arXiv preprint arXiv:2312.10997 ,2023. doi: 10.48550/arXiv.2312.10997. URL 
+
+https://arxiv.org/abs/2312.109 97 .Zirui Guo, Lianghao Xia, Yanhua Yu, Tu Ao, and Chao Huang. LightRAG: Simple and fast 5retrieval-augmented generation. arXiv preprint arXiv:2410.05779 , 2024. Haoyu Han, Yu Wang, Harry Shomer, Kai Guo, Jiayuan Ding, Yongjia Lei, Mahantesh Halap-panavar, Ryan A. Rossi, Subhabrata Mukherjee, Xianfeng Tang, Qi He, Zhigang Hua, Bo Long, Tong Zhao, Neil Shah, Amin Javari, Yinglong Xia, and Jiliang Tang. Retrieval-augmented gen-eration with graphs (GraphRAG). arXiv preprint arXiv:2501.00309 , 2025. Thomas Jiralerspong, Xiaoyin Chen, Yash More, Vedant Shah, and Yoshua Bengio. Efficient causal graph discovery using large language models. arXiv preprint arXiv:2402.01207 , 2024. Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and Wen tau Yih. Dense passage re-trieval for open-domain question answering. In 
+
+Proceedings of the 2020 Conference on Empir-ical Methods in Natural Language Processing (EMNLP) , 2020. Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich K"uttler, Mike Lewis, Wen tau Yih, Tim Rockt"aschel, Sebastian Riedel, and Douwe Kiela. Retrieval-augmented gener-ation for knowledge-intensive NLP tasks. In 
+
+Advances in Neural Information Processing Sys-tems (NeurIPS) , pages 9459–9474, 2020. Nelson F. Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua, Fabio Petroni, and Percy Liang. Lost in the middle: How lan-guage models use long contexts. Transactions of the Association for Computational Linguistics ,12:157–173, 2024. Pengfei Liu, Weizhe Yuan, Jinlan Fu, Zhengbao Jiang, Hiroaki Hayashi, and Graham Neubig. Pre-train, prompt, and predict: A systematic sur-vey of prompting methods in natural language processing. ACM Computing Surveys , 2023. Judea Pearl. Causality: Models, Reasoning, and Inference . Cambridge University Press, 2009. Boci Peng, Yun Zhu, Yongchao Liu, Xiaohe Bo, Haizhou Shi, Chuntao Hong, Yan Zhang, and Siliang Tang. Graph retrieval-augmented genera-tion: A survey. arXiv preprint arXiv:2408.08921 ,2024. Fabio Petroni, Tim Rockt"aschel, Sebastian Riedel, Patrick Lewis, Anton Bakhtin, Yuxiang Wu, and Alexander Miller. Language models as knowl-edge bases? In Proceedings of EMNLP-IJCNLP ,2019. Stephen Robertson and Hugo Zaragoza. The proba-bilistic relevance framework: BM25 and beyond. 
+
+Foundations and Trends in Information Retrieval ,3(4):333–389, 2009. Chamika Samarajeewa, Dimuthu De Silva, Erik Os-ipov, Damminda Alahakoon, and Milos Manic. Causal reasoning in large language models using causal graph retrieval augmented generation. In 
+
+2024 16th International Conference on Human System Interaction (HSI) , pages 1–6, 2024. doi: 10.1109/HSI61632.2024.10613566. Bernhard Sch"olkopf, Francesco Locatello, Stefan Bauer, Nan Rosemary Ke, Nal Kalchbrenner, Anirudh Goyal, and Yoshua Bengio. Toward causal representation learning. Proceedings of the IEEE , 109(5):612–634, 2021. Harsh Trivedi, Niranjan Balasubramanian, Tushar Khot, and Ashish Sabharwal. Interleaving retrieval with chain-of-thought reasoning for knowledge-intensive multi-step questions. In 
+
+Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Vol-ume 1: Long Papers) , pages 10014–10037, Toronto, Canada, 2023. doi: 10.18653/v1/2023 .acl-long.557. URL https://aclantholo gy.org/2023.acl-long.557/ .Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, and Illia Polosukhin. Attention is all you need. In Advances in Neural Information Processing Systems (NeurIPS) , 2017. Nengbo Wang, Xiaotian Han, Jagdip Singh, Jing Ma, and Vipin Chaudhary. CausalRAG: Integrat-ing causal graphs into retrieval-augmented gen-eration. In Findings of the Association for Com-putational Linguistics: ACL 2025 , pages 22680– 22693, 2025. doi: 10.18653/v1/2025.findings-a cl.1165. URL https://aclanthology.o rg/2025.findings-acl.1165/ .Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed H. Chi, Quoc V. Le, and Denny Zhou. Chain-of-thought 6prompting elicits reasoning in large language models. In Advances in Neural Information Pro-cessing Systems (NeurIPS) , 2022. Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. ReAct: Synergizing reasoning and acting in lan-guage models. In International Conference on Learning Representations (ICLR) , 2023. Penghao Zhao, Hailin Zhang, Qinhan Yu, Zhengren Wang, Yunteng Geng, Fangcheng Fu, Ling Yang, Wentao Zhang, Jie Jiang, and Bin Cui. Retrieval-augmented generation for AI-generated content: A survey. Data Science and Engineering , 2025. doi: 10.1007/s41019-025-00335-5. 7

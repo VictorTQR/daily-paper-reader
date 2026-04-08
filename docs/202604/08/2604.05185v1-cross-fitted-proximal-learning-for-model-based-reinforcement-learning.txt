@@ -1,0 +1,1044 @@
+Title: Cross-fitted Proximal Learning for Model-Based Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.05185v1
+
+Published Time: Wed, 08 Apr 2026 00:18:48 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Cross-fitted Proximal Learning for Model-Based Reinforcement Learning 
+
+Nishanth Venkatesh 1, Student Member, IEEE , and Andreas A. Malikopoulos 2, Senior Member, IEEE 
+
+Abstract — Model-based reinforcement learning is attractive for sequential decision-making because it explicitly estimates reward and transition models and then supports planning through simulated rollouts. In offline settings with hidden con-founding, however, models learned directly from observational data may be biased. This challenge is especially pronounced in partially observable systems, where latent factors may jointly affect actions, rewards, and future observations. Recent work has shown that policy evaluation in such confounded partially observable Markov decision processes (POMDPs) can be re-duced to estimating reward-emission and observation-transition bridge functions satisfying conditional moment restrictions (CMRs). In this paper, we study the statistical estimation of these bridge functions. We formulate bridge learning as a CMR problem with nuisance objects given by a conditional mean embedding and a conditional density. We then develop a K-fold cross-fitted extension of the existing two-stage bridge estimator. The proposed procedure preserves the original bridge-based identification strategy while using the available data more efficiently than a single sample split. We also derive an oracle-comparator bound for the cross-fitted estimator and decompose the resulting error into a Stage I term induced by nuisance estimation and a Stage II term induced by empirical averaging. 
+
+I. I NTRODUCTION 
+
+Model-based reinforcement learning (MBRL) is widely regarded as a data-efficient approach to sequential decision-making. Its effectiveness stems from explicitly estimating the system dynamics and reward mechanism and then planning through simulated rollouts [1]. Most MBRL methods implic-itly assume that the data-generating process is fully observed and free of hidden factors that jointly influence decisions and outcomes. However, this assumption is often violated in many real-world settings. For example, consider human-robot interaction, routing and maneuvering of connected and automated vehicles in mixed traffic [2], [3], medical records, and personalized decision systems [4], [5]. In such settings, the offline dataset may omit important latent variables that affect both the decisions and the evolution of the system. When actions depend on these hidden variables, the observed data may encode spurious correlations among state, action, next state, and reward. In causal inference, this phenomenon is referred to as confounding . Hence, transition and reward   
+
+> This research was supported in part by NSF under Grants CNS-2401007, CMMI-2348381, IIS-2415478, and in part by MathWorks. Nishanth Venkatesh is with the Department of Systems Engineering, Cornell University, Ithaca, NY, USA.(email: ns942@cornell.edu )Andreas A. Malikopoulos is with the Applied Mathematics, Systems Engineering, Mechanical Engineering, Electrical & Computer Engineering, and School of Civil & Environmental Engineering, Cornell University, Ithaca, NY, USA. (email: amaliko@cornell.edu )
+
+models learned directly from observational data could po-tentially induce arbitrary correlations and bias into planning. These difficulties are particularly severe in offline settings with partial observability, especially when the observed his-tory is insufficient to recover, the latent state and the behavior policy may be correlated with unobserved factors that also affect rewards and transitions [6], [7]. Recent progress on MBRL in confounded partially observ-able Markov decision processes (POMDPs) [8] provides a bridge function-based framework for identifying reward and transition mechanisms from observational data. In particular, although these mechanisms are not directly identifiable from observational trajectories, they can be recovered through bridge functions satisfying suitable conditional moment re-strictions (CMRs). Building on ideas from proximal causal inference and kernel methods, they propose a nonparametric two-stage procedure for estimating these bridge functions. This yields an estimator for off-policy evaluation and sup-ports downstream policy optimization. More broadly, this perspective connects confounded sequential decision-making with the literature on proxy-based causal identification and two-stage learning under ill-posed inverse problems [9]–[13]. Classical CMR approaches based on generalized method of moments [14], sieve minimum distance and related con-ditional moment methods [15]–[17], and kernel methods [11] provide principled estimators for two-stage estimation problems. More recent efforts [11], [18], [19] employ deep neural networks to parameterize and estimate solutions to CMR problems. However, these estimators may still suffer from the propagation of first-stage errors into the target estimator through a naive plug-in step. From this viewpoint, the two-stage bridge-estimation procedure of [8] can be naturally interpreted as a structured CMR problem. Motivated by this connection, we revisit the two-stage bridge estimator of [8] through the lens of cross-fitting. Building on recent work on double machine learn-ing for CMRs [20], we reformulate reward-emission and observation-transition bridge estimation as CMR problems with nuisance objects corresponding to the conditional mean embedding and the conditional density. We then replace the single-split construction in [8] with a K-fold cross-fitted procedure. For each fold, nuisance objects are estimated on the complementary sample, and the bridge criterion is evaluated on the held-out fold. The foldwise criteria are then aggregated to obtain the final estimator. This modification leaves the identification strategy unchanged and preserves the model-based structure of the original method. At the same time, it uses the available data more efficiently than a one-
+
+> arXiv:2604.05185v1 [cs.LG] 6 Apr 2026
+
+shot split and reduces the dependence of the estimator on any single partition of the sample. Our aim in this paper is to develop a cross-fitted version of the bridge estimator of [8] for confounded POMDPs and to clarify its connection with the general theory of CMR estimation. At the present stage, we view the cross-fitting construction itself as the main methodological con-tribution. The double machine learning literature suggests that orthogonality can further reduce the impact of first-stage regularization bias on the second stage. However, deriving a valid Neyman-orthogonal score for bridge estimation in confounded POMDPs is beyond the scope of the present work. We therefore leave orthogonality to future work. Even without this step, the proposed cross-fitted formulation provides a systematic refinement of the estimator in [8] and leads to an oracle-comparator analysis that separates the contribution of nuisance estimation from that of empirical averaging. The remainder of the paper is organized as follows. In Section II, we introduce the confounded POMDP model, state the bridge existence and completeness assumptions, and present the bridge-based representation of policy value. In Section III, we formulate bridge learning as a CMR problem, introduce the nuisance objects and the cross-fitted two-stage estimator, and establish the oracle-comparator de-composition. In Section IV, we present a numerical example comparing a one-shot sample-splitting baseline with the proposed cross-fitted estimator to illustrate the improved sample efficiency of cross-fitting. In Section V, we draw concluding remarks and outline several directions for future research. Finally, in Appendix I, we present the stage-wise error analysis and supporting bounds used in the proof. II. P ROBLEM FORMULATION 
+
+We consider an episodic finite-horizon partially observable Markov decision process (POMDP) given by the tuple M = X , Y, U, R, T, ν 1, {Pt}T −1 
+
+> t=1
+
+, {Et}Tt=1 , {rt}Tt=1 
+
+, where X ,
+
+Y, U, and R denote the state, observation, action, and reward spaces, respectively. The finite horizon is given by T . The collections {Pt}T −1 
+
+> t=1
+
+and {Et}Tt=1 denote the state transition and observation emission kernels, respectively. The initial state distribution is denoted by ν1 ∈ ∆( X ), where ∆( X ) is the set of all probability distributions over X . Throughout this paper, upper-case letters denote random variables, while lower-case letters denote their realizations. At each time t,the random variables Xt ∈ X , Yt ∈ Y , and Ut ∈ U denote the system state, observation, and control action, respectively. The state of the system Xt is unobserved, and we only have access to the observations Yt at each time t. At time t, the latent state evolves as Xt+1 ∼ Pt( · | Xt, U t), with the observations generated as Yt ∼ Et( · | Xt). The reward support is denoted by R = [ −1, 1] and the reward satisfies 
+
+E[Rt | Xt = x, U t = u] = rt(x, u ), ∀(x, u ) ∈ X × U .
+
+Assumption 1. At the beginning of each episode, before the first control action is selected, the decision maker receives an additional measurement M ∈ Y of the state of the system. 
+
+Remark 1. The variable M models prior information that is often available in control applications before feedback decisions begin, such as an initial sensor snapshot, a cali-bration reading, or a baseline measurement. From a control viewpoint, M is simply a pre-action measurement of the hidden initial condition. From an identification viewpoint, M
+
+serves as an auxiliary baseline measurement whose role will be formalized later through the bridge-based assumptions. We define the observed history up to time t by Ht =(Y1, U 1, . . . , Y t, U t), with the space of history given as the cartesian product Ht = Ntj=1 (Y ×U ). Since M serves as an auxiliary observation available before the sequential interac-tion, we treat it separately from history Ht. A control policy determines the action at each time. Specifically, a history-dependent policy is a sequence of control laws given by π =
+
+{πt}Tt=1 with πt : Y × Y × H t−1 → ∆( U). For any policy 
+
+π, we define the performance of the policy as the value of the policy, given by V (π) = Eπ
+
+hPTt=1 Rt X1 ∼ ν1
+
+i
+
+,where Eπ denotes that the expectation is with respect to the probability distribution induced by the policy π on the trajectory of the POMDP. We consider that we have access to a dataset Db =
+
+{mi, {yit, u it, r it}Tt=1 }Ni=1 , generated by an unknown behav-ioral policy πb = {πb 
+
+> t
+
+}Tt=1 . In the most general setting, the behavioral policy may depend on information beyond the observed quantities within the dataset, including the state of the system. We note that the state of the system Xt is not recorded within the dataset, and all we can hope to learn about the system is the observation evolution and reward emission. The broader objective is to evaluate the performance of any given policy πe. Existing bridge-based identification results [8], [21], [22] show that policy evaluation reduces to learning stage-wise bridge functions. A bridge function is an observable object whose conditional expectation recovers a target conditional law involving unobserved variables. In particular, we consider reward and observation transi-tion bridge functions [8] that recover the reward-emission and observation-transition laws used in bridge-based policy evaluation. Consequently, when such bridge functions exist, the value of a given policy πe admits a representation in terms of observed variables alone. Motivated by this connection, we first state the assumptions underlying this bridge-based reformulation and then present the resulting bridge-based representation of policy value. We turn next to bridge learning and develop a cross-fitted estimator for the bridge functions. 
+
+Assumption 2 (Bridge existence) . We assume that there exist reward-emission bridge functions bR = bRt : U × Y × R × Y → R Tt=1 such that, for each t = 1 , . . . , T and for all (rt, y t) ∈ R × Y 
+
+EbRt (Ut, Y t, r t, y t) | Ht−1, U t, M 
+
+= p(rt, y t | Ht−1, U t, M ), (1) and there exist observation-transition bridge functions bD =bDt : U × Y × Y × Y → R T −1 
+
+> t=1
+
+such that, for each t =1, . . . , T − 1 and for all (yt+1 , y t) ∈ Y × Y 
+
+EbDt (Ut, Y t, y t+1 , y t) | Ht−1, U t, M 
+
+= p(yt+1 , y t | Ht−1, U t, M ). (2) 
+
+Remark 2. Assumption 2 is an existence condition for the bridge functions and is standard in bridge-based identifica-tion [23]. In particular, bridge existence follows under suit-able regularity and completeness conditions on the relevant conditional expectation operators [8], [22]. 
+
+Assumption 3 (Bridge completeness) . We assume that for each t = 1 , . . . , T , if a measurable function gt : X × U → R
+
+satisfies 
+
+Egt(Xt, U t) | Ut, H t−1, M  = 0 a.s. , (3) then gt(Xt, U t) = 0 holds almost surely. 
+
+Remark 3. Assumption 3 is an injectivity condition on the conditional expectation map gt 7 → E[gt(Xt, U t) |
+
+Ut, H t−1, M ]. It ensures that the latent state-action quan-tity appearing in the bridge-based policy-value formula is uniquely determined by observable conditional moments. This is the notion of uniqueness needed for the identification of policy value. However, the bridge functions themselves need not be unique. Multiple bridge functions may induce the same latent conditional expectation and hence the same policy value. To connect bridge learning to policy evaluation, we state the bridge-based identification step in the notation of our work, following [8]. For each t = 1 , . . . , T , define 
+
+ft(rt, h t, m ) = 
+
+Z
+
+> Yt−1
+
+bRt (ut, ˜yt−1, r t, y t)
+
+·
+
+> t−1
+
+Y
+
+> j=1
+
+bDj (uj , ˜yj−1, ˜yj , y j ) d˜y1: t−1,
+
+(4) where ht = ( y1, u 1, . . . , y t, u t), is the realization of history at time t and ˜y0 = m. The empty product is interpreted as for t = 1 , f1(r1, h 1, m ) = bR 
+
+> 1
+
+(u1, m, r 1, y 1).The following proposition is the analogue, in the present notation, of the main identification step in [8]. 
+
+Proposition 1. Suppose Assumptions 2–3 hold. Then, for each t = 1, . . . , T , the stage-wise reward law under a history-dependent policy π is identified by 
+
+pπ (rt) = 
+
+Z
+
+> Y
+
+Z
+
+> Ht
+
+
+
+> t
+
+Y
+
+> j=1
+
+πj (uj | yj , m, h j−1)
+
+
+
+· ft(rt, h t, m ) dh t p(m) dm. (5) 
+
+Therefore, the policy value is identified by 
+
+V (π) = 
+
+> T
+
+X
+
+> t=1
+
+Z
+
+> R
+
+Z
+
+> Y
+
+Z
+
+> Ht
+
+rt
+
+
+
+> t
+
+Y
+
+> j=1
+
+πj (uj | yj , m, h j−1)
+
+
+
+ft(rt, h t, m ) dh t p(m) dm dr t,
+
+(6) 
+
+where, p(m) denotes the distribution of the additional mea-surement M .
+
+Hence, policy evaluation reduces to identifying the col-lection of stage-wise reward laws {pπ (rt)}Tt=1 . By Propo-sition 1, this further reduces to estimating the reward-emission bridges {bRt }Tt=1 , the observation-transition bridges 
+
+{bDt }T −1 
+
+> t=1
+
+, and the distribution of the additional measurement. The latter can be estimated empirically, so the main statistical challenge lies in learning the bridge functions. This motivates the following problem. 
+
+Problem 1. Given a dataset Db, generated under an unknown behavioral policy πb, estimate the stage-wise reward-emission bridge functions {bRt }Tt=1 and observation-transition bridge functions {bDt }T −1 
+
+> t=1
+
+from observed data alone. The goal is to construct estimators {ˆbRt }Tt=1 and {ˆbDt }T −1
+
+> t=1
+
+that approximately satisfy the bridge relations in Assump-tion 2. Then, the approximate bridge functions can be used in the identified representation of the stage-wise reward laws and, consequently, of the policy value. In the next section, we develop a cross-fitted two-stage bridge-learning procedure for this task. III. B RIDGE LEARNING 
+
+In this section, we formulate bridge estimation as a generic CMR problem. Motivated by the bridge-learning framework of [8] and the nuisance-target separation used in double machine learning [24], we develop a cross-fitted two-stage estimation procedure over a prescribed bridge class B. Next, we introduce a risk functional under the true data-generating distribution and its cross-fitted empirical counterpart on the class B. These functionals allow us to compare the empirical cross-fitted estimator with the best-in-class bridge in B.Since both bridge equations have the same conditional moment structure, we introduce a generic bridge-learning problem that covers both cases. At each time t, we introduce the generic variables Wt = ( Ut, Y t), ZRt = ( Rt, Y t), ZDt =(Yt+1 , Y t), Ct = ( Ht−1, U t, M ). The corresponding spaces are given by Wt = U × Y , ZRt = R × Y , ZDt = Y × Y , and 
+
+Ct = Ht−1 × U × Y . Accordingly, the corresponding bridge equations are 
+
+EbRt (Wt, z Rt ) | Ct
+
+ = p(zRt | Ct), zRt ∈ Z Rt , (7) 
+
+EbDt (Wt, z Dt ) | Ct
+
+ = p(zDt | Ct), zDt ∈ Z Dt . (8) To simplify the notation, we suppress the time index and write W = Wt, Z ∈ { ZRt , Z Dt }, and C = Ct. Here, Z
+
+denotes either (Rt, Y t) or (Yt+1 , Y t), depending on the bridge under consideration. The generic bridge-learning problem then is to estimate a function b ∈ B that satisfies the generic CMR 
+
+E[b(W, z ) | C] = p(z | C), z ∈ Z . (9) More specifically, we recall that we have access to the dataset Db. Hence, for the generic CMR, we can construct a dataset D based on samples of the generic random variables (W, Z, C ). Essentially, this allows us to consider solving the CMR in (9), given a dataset of i.i.d samples D =
+
+{(wi, c i, z i)}Ni=1 . The bridge-learning problem is then to estimate a function b that approximately satisfies the generic CMR in (9). 
+
+A. Bridge class and kernel representation 
+
+We adopt a kernel-based formulation of the bridge-learning problem, following [8], [13]. We consider a bridge class B ⊆ H W ⊗ H Z , where HW and HZ are reproducing kernel Hilbert spaces (RKHS). The bridge equation in (9) involves a conditional expectation operator applied to the bridge function b ∈ B . We use an RKHS representation to express this conditional expectation in a linear inner-product form through conditional mean embeddings. To obtain this representation, we map the variables W and Z to their corresponding RKHSs. Let φ : W → H W and ϕ : Z → H Z
+
+denote the canonical feature maps. The conditional mean embedding μW |C , which summarizes the conditional law of 
+
+W given C in the RKHS HW , is defined by 
+
+μW |C (c) = Eφ(W ) | C = c, c ∈ C . (10) Then, for any b ∈ B, and any c ∈ C, the conditional expectation operation in (9) can be written as 
+
+E[b(W, z ) | C = c] = μW |C (c) ⊗ ϕ(z), b , z ∈ Z , (11) where ⟨· , ·⟩ denotes the inner product on HW ⊗ H Z . We note that, for each c ∈ C and z ∈ Z , the tensor product 
+
+μW |C (c) ⊗ ϕ(z) is an element of HW ⊗ H Z . Since b ∈ B ⊆ HW ⊗ H Z , the inner product in (11) is well defined. The representation in (11) describes the conditional mo-ment under the true law of (W, C, Z ). Since in practice we only observe the sample D, these quantities are not directly available. Therefore, we distinguish between population ob-jects, defined under the true law of (W, C, Z ), and empirical objects, constructed from the sample D. To assess how well a bridge function b ∈ B satisfies the CMR in (9), we introduce the following population risk functional. 
+
+Definition 1. Let ν be a fixed reference probability measure on Z. For any b ∈ B , we define 
+
+L(b) = 
+
+Z
+
+> Z
+
+E
+
+h
+
+(E[b(W, z ) | C] − p(z | C)) 2i
+
+dν (z), (12) 
+
+=
+
+Z
+
+> Z
+
+E
+
+h  μW |C (C) ⊗ ϕ(z), b − p(z | C)2i
+
+dν (z).
+
+(13) The risk L(b) aggregates the squared residual in (9) over 
+
+z ∈ Z and provides a scalar criterion for comparing bridge functions in B. Since (9) is a functional condition in z, the measure ν determines how the CMR residual is aggregated over Z.In the empirical bridge-learning procedure, we estimate 
+
+b over the prescribed class B and include regularization to stabilize estimation. Accordingly, we consider the corre-sponding penalized population objective given by 
+
+Lλ(b) = L(b) + λ∥b∥2  
+
+> HW⊗H Z
+
+. (14) Later, we compare the cross-fitted empirical bridge esti-mator with the best penalized bridge in B under the true law of (W, C, Z ). This motivates the following definition of an oracle comparator. 
+
+Definition 2 (Oracle comparator) . The oracle comparator is any minimizer of the penalized population objective over the bridge class B:
+
+b† 
+
+> λ
+
+∈ arg min  
+
+> b∈B
+
+Lλ(b). (15) 
+
+Remark 4. We do not assume that the working bridge class 
+
+B contains a bridge satisfying (9). Accordingly, b† 
+
+> λ
+
+is defined only as the best penalized approximation over B.Next, we turn to the cross-fitted two-stage bridge-learning procedure. Stage I estimates the nuisance objects that enter the bridge criterion, while Stage II uses these estimates as plug-ins to construct the bridge estimator over the class B.First, we introduce the nuisance objects and then define the corresponding cross-fitted empirical risk. 
+
+B. Nuisance objects 
+
+The bridge criterion in (13) depends on the conditional mean embedding of W given C and the conditional density of Z given C. These quantities are not the primary inferential targets, but they must be estimated to construct the bridge estimator. Following the terminology of double machine learning, we refer to such intermediate quantities as nuisance objects. Earlier, μW |C and p(z | C) were used to denote the generic population conditional mean embedding and condi-tional density. For notational clarity, from this point onward, we attach the superscript 0 to indicate the corresponding population objects as 
+
+η0 =  μ0  
+
+> W|C
+
+, p 0(· | C), (16) where η0 denotes the population nuisance collection.. Based on η0, for any (c, z ) ∈ C × Z , we define the corresponding population residual by 
+
+r(b, c, z ; η0) = 
+
+D
+
+μ0  
+
+> W|C
+
+(c) ⊗ ϕ(z), b 
+
+E
+
+− p0(z | c). (17) This residual measures the pointwise discrepancy in the CMR for a given bridge b.
+
+C. Cross-fitted nuisance and bridge estimation 
+
+Let K ∈ N be fixed and assume that K divides N ,the number of observations in the sample D. Let {Ik}Kk=1 
+
+be a partition of [N ] = {1, . . . , N } into K disjoint folds equal size |Ik| = n = N/K . For each k = 1, . . . , K ,let Ick = [N ] \ Ik, DIk = {(wi, c i, z i) : i ∈ Ik}, and 
+
+DIck = {(wi, c i, z i) : i ∈ Ick}. We refer to DIk as the held-out fold and to DIck as the auxiliary sample. Next, we describe the two-stage estimation procedure for the bridge function. a) Stage I - nuisance estimation: Stage I requires an estimator of the conditional mean embedding of W given C
+
+and an estimator of the conditional density of Z given C.For each fold k, we estimate the nuisance objects using only the auxiliary sample DIck . We denote the resulting estimators by 
+
+ˆηk =  ˆμ kW |C , ˆp k(· | C). (18) The superscript k labels the held-out fold used in Stage II, while the estimators themselves are trained on the auxiliary sample DIck . For each fold k, we define the fold-specific plug-in residual for (c, z ) ∈ C × Z by 
+
+r(b, c, z ; ˆ ηk) = 
+
+D
+
+ˆμkW |C (c) ⊗ ϕ(z), b 
+
+E
+
+− ˆpk(z | c). (19) We adapt the kernel-based conditional mean embedding framework of [25] to estimate ˆμ kW |C and use a conditional likelihood-based learner to estimate ˆp k(· | C). Specifically, let ψ : C → H C denote a feature map on C, and let HC→W
+
+be an operator-valued RKHS of maps from HC to HW . A convenient estimator of the conditional mean embedding is the regularized operator regression 
+
+ˆCkW |C ∈ arg min 
+
+> C∈H C→W
+
+1
+
+|Ick|
+
+X
+
+> i∈Ick
+
+∥φ(wi) − Cψ (ci)∥2
+
+> HW
+
++λk 
+
+> 1
+
+∥C∥2 
+
+> HC→W
+
+, (20) and the corresponding nuisance estimate is given by 
+
+ˆμkW |C (c) = ˆCkW |C ψ(c), for c ∈ C .For the conditional density, we use a conditional likelihood-based estimator of the form 
+
+ˆpk ∈ arg max 
+
+> p∈P
+
+1
+
+|Ick|
+
+X
+
+> i∈Ick
+
+log p(zi | ci), (21) for a prescribed model class P.
+
+b) Stage II - bridge estimation: Given the nuisance estimates ˆηk, we evaluate candidate bridge functions on the held-out fold Ik. To define the empirical analogue of the population risk in (13), the integral over Z is approximated by Monte Carlo simulation. For each fold k, let {˜z km}Mk
+
+> m=1
+
+be i.i.d. auxiliary draws from ν, independent of the held-out data DIk , conditional on DIck . The foldwise empirical loss is then defined by 
+
+ˆLk(b) = 1
+
+|Ik|
+
+X
+
+> i∈Ik
+
+1
+
+MkMkX
+
+> m=1
+
+ r(b, c i, ˜z km; ˆ ηk)2 . (22) Thus, the held-out sample DIk averages over the distribu-tion of C, while the auxiliary draws {˜z km}Mk 
+
+> m=1
+
+approximate integration over Z with respect to ν.The corresponding cross-fitted empirical risk for any b ∈ B 
+
+is 
+
+ˆLcf (b) = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+ˆLk(b) + λ∥b∥2  
+
+> HW⊗H Z
+
+, (23) where λ is the common stage II regularization parameter. The cross-fitted bridge estimator is then defined by 
+
+ˆbcf ∈ arg min 
+
+> b∈B
+
+ˆLcf (b). (24) Before comparing the cross-fitted bridge estimator and the oracle comparator, we introduce an intermediate risk. The intermediate risk separates the effect of nuisance estimation from that of empirical averaging. The foldwise intermediate risk is given by 
+
+˜Lk(b) = 
+
+Z
+
+> Z
+
+E
+
+h r(b, C, z ; ˆ ηk)2 DIck
+
+i
+
+dν (z), (25) and the corresponding cross-fitted intermediate risk is 
+
+˜Lcf (b) = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+˜Lk(b) + λ∥b∥2  
+
+> HW⊗H Z
+
+. (26) This allows us to decompose the oracle comparison error into a Stage I term induced by nuisance estimation and a Stage II term induced by empirical averaging. The next theorem formalizes this decomposition. 
+
+Theorem 1 (Oracle theorem) . Let b† 
+
+> λ
+
+denote the oracle comparator from Definition 2. Then 
+
+Lλ(ˆbcf ) − Lλ(b†
+
+> λ
+
+) ≤ 2 sup 
+
+> b∈B
+
+Lλ(b) − ˆLcf (b) (27) 
+
+≤ 2 sup 
+
+> b∈B
+
+Lλ(b) − ˜Lcf (b) + 2 sup 
+
+> b∈B
+
+˜Lcf (b) − ˆLcf (b) .
+
+(28) 
+
+Proof. By adding and subtracting ˆLcf (ˆbcf ) and ˆLcf (b†
+
+> λ
+
+), we obtain 
+
+Lλ(ˆbcf ) − Lλ(b†
+
+> λ
+
+) = Lλ(ˆbcf ) − ˆLcf (ˆbcf )+ ˆLcf (ˆbcf ) − ˆLcf (b†
+
+> λ
+
+) + ˆLcf (b†
+
+> λ
+
+) − Lλ(b†
+
+> λ
+
+).
+
+(29) By definition, ˆbcf is a minimizer of ˆLcf over B, we have 
+
+ˆLcf (ˆbcf ) ≤ ˆLcf (b†
+
+> λ
+
+). (30) Hence, 
+
+Lλ(ˆbcf ) − Lλ(b†
+
+> λ
+
+) ≤ Lλ(ˆbcf ) − ˆLcf (ˆbcf ) + ˆLcf (b†
+
+> λ
+
+) − Lλ(b†
+
+> λ
+
+)
+
+(31) 
+
+≤ 2 sup 
+
+> b∈B
+
+Lλ(b) − ˆLcf (b) . (32) The second bound follows from the triangle inequality: 
+
+Lλ(b) − ˆLcf (b) ≤ Lλ(b) − ˜Lcf (b) + ˜Lcf (b) − ˆLcf (b) .
+
+(33) Taking the supremum over b ∈ B gives (28). The first term in (28) is the nuisance-induced error from Stage I. The second term is the empirical-process error from Stage 2. To provide bounds on the errors from each stage, we state our assumptions and provide a detailed analysis in Appendix I. Fig. 1: Comparison of observation-transition recovery IV. S IMULATION 
+
+We consider a 2-step confounded POMDP and focus on the first-stage observation-transition bridge. The system is a low-dimensional nonlinear Gaussian POMDP with binary actions, and the latent state contains a hidden binary contex-tual factor. The observations consist only of the visible state coordinate and proxy measurements. We construct the POMDP so that both the logged action and the next observed state depend on the hidden contextual component. Consequently, the observational transition is generally biased relative to the intervention target relevant for planning. The observation-transition bridge is used to recover this deconfounded observation evolution from ob-servable data. The bridge relation in (2) identifies the full deconfounded observable transition law. For visualization, we consider a low-dimensional functional of this law, namely the conditional mean of the visible state coordinate con-tained in yt+1 . This mean therefore provides a natural and tractable summary of CMR satisfaction. Thus, the reported mean-squared error should be understood as a summary of observation-transition recovery, rather than as a metric for recovery of the full conditional distribution. We compare a one-shot 50 –50 sample-splitting baseline with the proposed K-fold cross-fitted estimator. Figure 1 reports the mean-squared error for recovery of the decon-founded first-stage observation-transition target as a function of sample size. Cross-fitting improves recovery across the full sample-size range considered: the error decreases from 
+
+0.1749 to 0.0956 at N = 120 , from 0.1627 to 0.0797 at 
+
+N = 240 , from 0.1032 to 0.0517 at N = 480 , from 0.0907 to 
+
+0.0339 at N = 960 , and from 0.0771 to 0.0248 at N = 1920 .These results suggest that both methods improve with larger samples, while the cross-fitted estimator is consistently more sample-efficient than one-shot sample splitting in this setting. V. C ONCLUSION 
+
+In this paper, we provided a principled statistical refine-ment of existing bridge-learning methods for model-based offline reinforcement learning under hidden confounding. We formulated bridge estimation as a conditional moment restriction problem with nuisance components given by a conditional mean embedding and a conditional density. This leads to a K-fold cross-fitted two-stage estimator and enables a sharper statistical analysis than a single-sample split. Our main result establishes an oracle comparator bound and decomposes the excess risk into a first-stage nuisance-estimation term and a second-stage empirical-process term. We provide a principled extension of existing bridge-learning methods for model-based offline reinforcement learning un-der hidden confounding. This paper focused on the bridge-learning problem and its statistical analysis. In particular, we studied cross-fitted bridge estimation and its oracle-style guarantees, while leav-ing the development of Neyman-orthogonal or doubly robust bridge estimators, as well as end-to-end guarantees for policy optimization, to future work. Future work should strengthen the oracle-style analysis into explicit finite-sample bounds under concrete assumptions on the nuisance learners and the bridge class. It should also translate the bridge-estimation error into downstream policy-value error bounds. A further direction is to develop orthogonalized bridge-learning objec-tives that are less sensitive to first-stage regularization bias and better suited to flexible nuisance estimation. REFERENCES [1] R. S. Sutton, “Dyna, an integrated architecture for learning, planning, and reacting,” ACM SIGART Bulletin , vol. 2, no. 4, pp. 160–163, 1991. [2] N. Venkatesh, V.-A. Le, A. Dave, and A. A. Malikopoulos, “Connected and automated vehicles in mixed-traffic: Learning human driver be-havior for effective on-ramp merging,” in 2023 62nd IEEE Conference on Decision and Control (CDC) , pp. 92–97, IEEE, 2023. [3] H. Bang, J.-H. Cho, C. Wu, and A. A. Malikopoulos, “Route rec-ommendations for traffic management under learned partial driver compliance,” in 65th American Control Conference (ACC) , 2025. to appear. [4] N. Venkatesh, H. Bang, and A. A. Malikopoulos, “Off-policy evalua-tion for sequential persuasion process with unobserved confounding,” in 2025 IEEE 64th Conference on Decision and Control (CDC) ,pp. 5867–5872, IEEE, 2025. [5] A. Dave, H. Bang, and A. A. Malikopoulos, “A framework for effective ai recommendations in cyber-physical-human systems,” IEEE Control Systems Letters , vol. 8, pp. 1379–1384, 2024. [6] R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduc-tion . MIT Press, 2 ed., 2018. [7] S. Levine, A. Kumar, G. Tucker, and J. Fu, “Offline reinforcement learning: Tutorial, review, and perspectives on open problems,” arXiv preprint arXiv:2005.01643 , 2020. [8] M. Hong, Z. Qi, and Y. Xu, “Model-based reinforcement learning for confounded pomdps,” in Forty-first International Conference on Machine Learning , 2024. [9] W. Miao, Z. Geng, and E. J. T. Tchetgen, “Identifying causal effects with proxy variables of an unmeasured confounder,” Biometrika ,vol. 105, no. 4, pp. 987–993, 2018. [10] A. Mastouri, Y. Zhu, L. Gultchin, A. Korba, R. Silva, M. Kusner, A. Gretton, and K. Muandet, “Proximal causal learning with kernels: Two-stage estimation and moment restriction,” in International con-ference on machine learning , pp. 7512–7523, PMLR, 2021. [11] R. Singh, M. Sahani, and A. Gretton, “Kernel instrumental variable regression,” Advances in Neural Information Processing Systems ,vol. 32, 2019. [12] K. Muandet, K. Fukumizu, B. Sriperumbudur, and B. Sch¨ olkopf, “Kernel mean embedding of distributions: A review and beyond,”   
+
+> Foundations and Trends in Machine Learning , vol. 10, no. 1–2, pp. 1– 144, 2017. [13] L. Song, J. Huang, A. Smola, and K. Fukumizu, “Hilbert space embeddings of conditional distributions with applications to dynamical systems,” in Proceedings of the 26th annual international conference on machine learning , pp. 961–968, 2009.
+
+[14] L. P. Hansen, “Large sample properties of generalized method of moments estimators,” Econometrica , vol. 50, no. 4, pp. 1029–1054, 1982. [15] W. K. Newey and J. L. Powell, “Instrumental variable estimation of nonparametric models,” Econometrica , vol. 71, no. 5, pp. 1565–1578, 2003. [16] C. Ai and X. Chen, “Efficient estimation of models with conditional moment restrictions containing unknown functions,” Econometrica ,vol. 71, no. 6, pp. 1795–1843, 2003. [17] X. Chen and D. Pouzo, “Estimation of nonparametric conditional moment models with possibly nonsmooth generalized residuals,” 
+
+Econometrica , vol. 80, no. 1, pp. 277–321, 2012. [18] A. Bennett, N. Kallus, and T. Schnabel, “Deep generalized method of moments for instrumental variable analysis,” in Advances in Neural Information Processing Systems , vol. 32, 2019. [19] J. Hartford, G. Lewis, K. Leyton-Brown, and M. Taddy, “Deep IV: A flexible approach for counterfactual prediction,” in Proceedings of the 34th International Conference on Machine Learning , vol. 70 of 
+
+Proceedings of Machine Learning Research , pp. 1414–1423, PMLR, 2017. [20] D. Shao, A. Soleymani, F. Quinzan, and M. Kwiatkowska, “Learning decision policies with instrumental variables through double machine learning,” arXiv preprint arXiv:2405.08498 , 2024. [21] Q. Kuang, J. Wang, F. Zhou, and Z. Qi, “Breaking the order barrier: Off-policy evaluation for confounded pomdps,” in The Thirty-ninth Annual Conference on Neural Information Processing Systems .[22] A. Bennett and N. Kallus, “Proximal reinforcement learning: Efficient off-policy evaluation in partially observed markov decision processes,” 
+
+Operations Research , vol. 72, no. 3, pp. 1071–1086, 2024. [23] W. Miao, X. Shi, Y. Li, and E. T. Tchetgen, “A confounding bridge approach for double negative control inference on causal effects,” 
+
+arXiv preprint arXiv:1808.04945 , 2018. [24] V. Chernozhukov, D. Chetverikov, M. Demirer, E. Duflo, C. Hansen, W. K. Newey, and J. M. Robins, “Double/debiased machine learning for treatment and structural parameters,” The Econometrics Journal ,vol. 21, no. 1, pp. C1–C68, 2018. [25] L. Song, K. Fukumizu, and A. Gretton, “Kernel embeddings of con-ditional distributions: A unified kernel framework for nonparametric inference in graphical models,” IEEE Signal Processing Magazine ,vol. 30, no. 4, pp. 98–111, 2013. 
+
+APPENDIX ISTAGE -WISE ERROR ANALYSIS 
+
+The decomposition in Theorem 1 holds in general for any bridge class B. To convert it into high-level bounds, next, we impose regularity assumptions and analyze the Stage I and Stage II terms separately. Throughout this appendix, ∥ · ∥HW ⊗H Z denotes the RKHS norm on HW ⊗ H Z .
+
+Assumption 4 (Bounded feature map) . There exists a con-stant KZ < ∞ such that, sup z∈Z ∥ϕ(z)∥HZ ≤ KZ .
+
+Assumption 5 (Bounded bridge class) . There exists a con-stant B < ∞ such that, sup b∈B ∥b∥HW ⊗H Z ≤ B. 
+
+A. Stage I error 
+
+We begin with the first term in (28). By the definition of 
+
+˜Lcf and the triangle inequality, 
+
+sup 
+
+> b∈B
+
+Lλ(b) − ˜Lcf (b) = sup 
+
+> b∈B
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+ L(b) − ˜Lk(b) (34) 
+
+≤ 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+sup 
+
+> b∈B
+
+L(b) − ˜Lk(b) . (35) It therefore suffices to control the foldwise absolute differ-ence |L(b) − ˜Lk(b)|.
+
+Lemma 1. For each fold k and each b ∈ B ,
+
+L(b) − ˜Lk(b) = 
+
+Z
+
+> Z
+
+E
+
+h
+
+r(b, C, z ; η0)2 − r(b, C, z ; ˆ ηk)2 DIck
+
+i
+
+dν (z).
+
+(36) 
+
+Proof. By the definition of ˜Lk(b),
+
+Z
+
+> Z
+
+E
+
+h
+
+r(b, C, z ; η0)2 − r(b, C, z ; ˆ ηk)2 DIck
+
+i
+
+dν (z)=
+
+Z
+
+> Z
+
+E
+
+h
+
+r(b, C, z ; η0)2 DIck
+
+i
+
+dν (z) − ˜Lk(b). (37) Since η0 is nonrandom with respect to the sigma algebra 
+
+σ(DIck ), we have 
+
+E
+
+h
+
+r(b, C, z ; η0)2 DIck
+
+i
+
+= Er(b, C, z ; η0)2. (38) Substituting this into the previous equation gives us (36). We apply Lemma 1 and consider the identity |E[X | G ]| ≤ 
+
+E[|X| | G ] to get 
+
+sup 
+
+> b∈B
+
+L(b) − ˜Lk(b)
+
+≤ sup 
+
+> b∈B
+
+Z
+
+> Z
+
+E
+
+h
+
+r(b, C, z ; η0)2 − r(b, C, z ; ˆ ηk)2 DIck
+
+i
+
+dν (z).
+
+(39) Next, we use the identity 
+
+|a2 − d2| = |a − d|| a + d| ≤ | a − d|2 + 2 |d|| a − d|. (40) We apply this pointwise with a = r(b, C, z ; ˆ ηk) and d =
+
+r(b, C, z ; η0). Substituting into (39) gives 
+
+sup 
+
+> b∈B
+
+L(b) − ˜Lk(b) ≤ sup 
+
+> b∈B
+
+∆k(b) + 2 sup 
+
+> b∈B
+
+Γk(b), (41) where, 
+
+∆k(b) := 
+
+Z
+
+> Z
+
+E
+
+h
+
+a − d 2 DIck
+
+i
+
+dν (z), (42) 
+
+Γk(b) := 
+
+Z
+
+> Z
+
+E
+
+h
+
+|d| a − d DIck
+
+i
+
+dν (z). (43) We refer to ∆k(b) as the residual drift term and to Γk(b) as the cross-term. 
+
+a) Residual drift bound.: We first bound ∆k(b). By the definition of the residuals, 
+
+r(b, C, z ; η0) − r(b, C, z ; ˆ ηk)= ⟨ μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C) ⊗ ϕ(z), b ⟩
+
++ ˆ pk(z | C) − p0(z | C).
+
+(44) Applying the triangle inequality gives 
+
+r(b, C, z ; η0) − r(b, C, z ; ˆ ηk)
+
+≤
+
+D μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C) ⊗ ϕ(z), b 
+
+E
+
++ ˆpk(z | C) − p0(z | C) . (45) We next bound the inner-product term by Cauchy-Schwarz: 
+
+D μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C) ⊗ ϕ(z), b 
+
+E
+
+≤  μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C) ⊗ ϕ(z) HW ⊗H Z
+
+∥b∥HW ⊗H Z
+
+(46) 
+
+= ∥μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C)∥HW ∥ϕ(z)∥HZ ∥b∥HW ⊗H Z .
+
+(47) Using Assumptions 4 and 5, we obtain 
+
+r(b, C, z ; η0) − r(b, C, z ; ˆ ηk)
+
+≤ KZ B∥μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C)∥HW
+
++ p0(z | C) − ˆpk(z | C) . (48) Substituting (48) into the definition of ∆k(b) yields 
+
+∆k(b) ≤
+
+Z
+
+> Z
+
+E
+
+h Ak(C) + Bk(C, z )2 DIck
+
+i
+
+dν (z), (49) where, for brevity, we set 
+
+Ak(C) = KZ B∥μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C)∥HW , (50) 
+
+Bk(C, z ) = p0(z | C) − ˆpk(z | C) . (51) Using the identity (x + y)2 ≤ 2x2 + 2 y2, we conclude that 
+
+∆k(b) ≤ 2∆ μ,k + 2∆ p,k , (52) where 
+
+∆μk =
+
+K2 
+
+> Z
+
+B2
+
+Z
+
+> Z
+
+E
+
+h
+
+∥μ0  
+
+> W|C
+
+(C) − ˆμkW |C (C)∥2 
+
+> HW
+
+DIck
+
+i
+
+dν (z),
+
+(53) 
+
+∆pk =
+
+Z
+
+> Z
+
+E
+
+h
+
+|p0(z | C) − ˆpk(z | C)|2 DIck
+
+i
+
+dν (z). (54) 
+
+b) Cross-term bound.: We next bound Γk(b). We apply the conditional H¨ older inequality with conjugate exponents 
+
+p = q = 2 to obtain 
+
+Γk(b) ≤
+
+Z
+
+> Z
+
+
+
+Er(b, C, z ; η0)21/2
+
+×
+
+
+
+E
+
+h r(b, C, z ; ˆ ηk) − r(b, C, z ; η0)2 DIck
+
+i 1/2
+
+dν (z).
+
+(55) A second application of H¨ older’s inequality over the integral in z, again with conjugate exponents p = q = 2 , yields 
+
+Γk(b) ≤ L(b)1/2 ∆k(b)1/2. (56) Combining (41), (52), and (56), we obtain 
+
+sup 
+
+> b∈B
+
+L(b) − ˜Lk(b) ≤ 2 sup 
+
+> b∈B
+
+∆k(b) + 2 sup 
+
+> b∈B
+
+L(b)1/2∆k(b)1/2.
+
+(57) Hence, the Stage I term is controlled by the conditional errors of the nuisance estimators. 
+
+B. Stage II residual 
+
+In this subsection, we study the second term in (28). By the definitions of ˜Lcf and ˆLcf ,
+
+˜Lcf (b) − ˆLcf (b) = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+  ˜Lk(b) − ˆLk(b). (58) Hence, by the triangle inequality, 
+
+sup 
+
+> b∈B
+
+˜Lcf (b) − ˆLcf (b) ≤ 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+sup 
+
+> b∈B
+
+˜Lk(b) − ˆLk(b) . (59) It therefore suffices to control the foldwise deviation 
+
+sup b∈B | ˜Lk(b) − ˆLk(b)|.For each fold k and each b ∈ B , define the quadratic loss 
+
+ℓkb (c, z ) :=  r(b, c, z ; ˆ ηk)2 , (c, z ) ∈ C × Z . (60) Let Zν be an auxiliary random variable with distribution 
+
+ν, independent of C conditional on DIck . Then, by the definitions of ˜Lk and ˆLk,
+
+˜Lk(b) = E
+
+h
+
+ℓkb (C, Z ν ) DIck
+
+i
+
+, (61) 
+
+ˆLk(b) = 1
+
+|Ik|Mk
+
+X
+
+> i∈Ik
+> Mk
+
+X
+
+> m=1
+
+ℓkb (ci, ˜z km). (62) Therefore, 
+
+sup 
+
+> b∈B
+
+˜Lk(b) − ˆLk(b)
+
+= sup 
+
+> b∈B
+
+E
+
+h
+
+ℓkb (C, Z ν ) DIck
+
+i
+
+− 1
+
+|Ik|Mk
+
+X
+
+> i∈Ik
+> Mk
+
+X
+
+> m=1
+
+ℓkb (ci, ˜z km) .
+
+(63) Conditional on DIck , the nuisance estimate ˆηk is fixed. Hence, the loss class 
+
+Lk := (c, z ) 7 → ℓkb (c, z ) : b ∈ B (64) is deterministic on fold k. Thus, (63) is a standard uniform deviation term for a quadratic loss class. This is exactly the same empirical-process object that appears in the second-stage analysis of [8], with the only difference being that the present argument is conditional on the auxiliary sample. Accordingly, under the same boundedness and complexity assumptions imposed in [8] for the corresponding second-stage loss class, each foldwise residual in (59) admits the same type of control. Averaging over the folds then yields the corresponding bound for the full Stage II term. Thus, the present decomposition does not introduce a new Stage II argument. Rather, it shows that, after conditioning on the auxiliary sample, the Stage II term falls within the same proof template as in [8]. Cross-fitting changes only the conditioning structure, not the underlying empirical-process mechanism.

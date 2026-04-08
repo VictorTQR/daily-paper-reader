@@ -1,0 +1,1315 @@
+Title: Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback
+
+URL Source: https://arxiv.org/pdf/2604.03641v1
+
+Published Time: Tue, 07 Apr 2026 00:36:07 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+Jongsoo Lee 1 Jangwon Kim 1 Soohee Han 2
+
+# Abstract 
+
+Reinforcement learning in real-world systems is often accompanied by delayed feedback, which breaks the Markov assumption and impedes both learning and control. Canonical state augmenta-tion approaches cause the state-space explosion, which introduces a severe sample-complexity bur-den. Despite recent progress, the state-of-the-art augmentation-based baselines remain incom-plete: they either predominantly reduce the bur-den on the critic or adopt non-unified treatments for the actor and critic. To provide a structured and sample-efficient solution, we propose delayed homomorphic reinforcement learning (DHRL), a framework grounded in MDP homomorphisms that collapses belief-equivalent augmented states and enables efficient policy learning on the re-sulting abstract MDP without loss of optimality. We provide theoretical analyses of state-space compression bounds and sample complexity, and introduce a practical algorithm. Experiments on continuous control tasks in MuJoCo benchmark confirm that our algorithm outperforms strong augmentation-based baselines, particularly under long delays. 
+
+# 1. Introduction 
+
+Despite the remarkable successes of reinforcement learning (RL) in pivotal domains (Mnih et al., 2013; Brown et al., 2020; Degrave et al., 2022; Zhuang et al., 2025; Fan et al., 2025), sequential decision making in real-world systems is often accompanied by unavoidable delays arising from sensing, actuation, and communication latencies (Ge et al., 2013; Abad ´ıa et al., 2021; Kaufmann et al., 2022). Such delays break the delay-free interaction assumption implicit in standard Markov decision processes (MDPs) (Bellman, 
+
+> 1
+
+Department of Convergence IT Engineering, POSTECH, Po-hang, 37673, South Korea 2Department of Electrical Engineer-ing, POSTECH, Pohang, 37673, South Korea. Correspondence to: Soohee Han <sooheehan@postech.ac.kr >.
+
+Preprint. April 7, 2026. 
+
+1957b), inducing non-Markovian dynamics that impede the learning and destabilize the behavior of agents at inference time (Hwangbo et al., 2017; Mahmood et al., 2018). Yet, despite their prevalence in dynamic systems, delays remain underexplored in the RL literature. A canonical approach to compensating for delayed effects is state augmentation, which incorporates action histories into the state to restore the Markovian dynamics (Bertsekas, 1987; Katsikopoulos & Engelbrecht, 2003). While theoreti-cally well-founded, this augmentation substantially enlarges the state space itself, resulting in markedly higher sample complexity (Walsh et al., 2009; Derman et al., 2021). Al-though several remedies have been proposed with the state-of-the-art actor–critic algorithms, they remain incomplete: existing approaches either predominantly ease the burden on the critic or rely on non-unified treatments for the actor and critic (Kim et al., 2023; Wang et al., 2023; Wu et al., 2024b). This motivates the need for a unified and sample-efficient solution in which both the actor and critic can be trained without being hampered by the state-space explosion issue. To provide such a structured and sample-efficient solution, we present delayed homomorphic reinforcement learning (DHRL), a framework grounded in MDP homomorphisms (Ravindran & Barto, 2001; Panangaden et al., 2024). We first define a belief-equivalence relation on the augmented state space and show that it induces a compact abstract MDP, in which policies can be learned and then lifted back onto the original MDP without loss of optimality. We present theoret-ical analyses of state-space compression bounds and sample complexity, highlighting the resulting efficiency gains. We instantiate the DHRL framework with two representative algorithms: delayed homomorphic value iteration (DHVI), which applies value iteration (Sutton et al., 1998) on finite domains, and deep delayed homomorphic policy gradient (D 2HPG), a deep actor–critic algorithm for continuous do-mains grounded in the stochastic homomorphic policy gradi-ent theorem (Panangaden et al., 2024). Empirical results on continuous control tasks in MuJoCo benchmark (Todorov et al., 2012) demonstrate that our algorithm achieves supe-rior performance to strong augmentation-based baselines, especially in long-delay environments. 1
+
+> arXiv:2604.03641v1 [cs.LG] 4 Apr 2026 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback
+
+# 2. Preliminaries 
+
+2.1. Delayed Reinforcement Learning 
+
+A finite MDP is defined as M = ( S, A, Ψ, P, R), where S
+
+and A are the finite set of states and actions, Ψ ⊆ S × A is the set of admissible state-action pairs, P : Ψ ×S → [0 , 1] is the transition kernel, and R : Ψ → R is the reward function. A policy π : Ψ → [0 , 1] maps the state-to-action distribution. For ease of understanding, we assume the state-dependent action set is non-empty and identical across all states, i.e, 
+
+As = A, where As = {a | (s, a ) = ψ ∈ Ψ} ⊆ A .At each discrete time step t, the RL agent observes a state 
+
+st ∈ S from the environment, selects an action at ∈ A 
+
+according to π, receives a reward rt = R(st, a t), and then observes the next state st+1 . The agent repeats this process to find an optimal policy π∗ that maximizes the expected discounted return. The value functions are then defined as: 
+
+V π
+
+> M
+
+(s) ≜ Eπ
+
+" ∞X
+
+> k=0
+
+γkrt+k | st = s
+
+#
+
+, (1) 
+
+Qπ
+
+> M
+
+(s, a ) ≜ Eπ
+
+" ∞X
+
+> k=0
+
+γkrt+k | st = s, a t = a
+
+#
+
+, (2) where γ ∈ [0 , 1) is a discount factor, V π
+
+> M
+
+(s) is a state-value function denoting the expected return starting from state s under the policy π, and Qπ
+
+> M
+
+(s, a ) is an action-value function representing the expected return starting from state 
+
+s, taking action a, and thereafter following the policy π. The value functions can be expressed recursively via the Bellman equations (Bellman, 1957a), whose exact solutions in finite MDPs can be obtained by iterative methods such as value iteration (Sutton et al., 1998). Note that the standard MDP formulation assumes that the process is Markovian. Under delayed feedback, however, the standard state representation may no longer be sufficient to preserve Markovian dynamics. Thus, the conventional RL algorithms can suffer substantial performance degradation in both learning and control. An environment with delayed feedback can be formulated as a delayed MDP M+ = ( M, ∆) , where ∆ ∈ N denotes the fixed delay. This MDP formulation can be reduced to a 
+
+regular MDP M∆ = ( X , A, Ψ∆, P∆, R∆), where X =
+
+S × A ∆ is the finite set of augmented states, Ψ∆ ⊆ X × A 
+
+is the set of admissible augmented state-action pairs, and 
+
+P∆ : Ψ ∆ × X → [0 , 1] and R∆ : Ψ ∆ → R represent the augmented transition kernel and augmented reward function, respectively. A regular policy π∆ : Ψ ∆ → [0 , 1] maps the augmented state-to-action distribution. We assume that the augmented state-dependent action set is non-empty and identical across all augmented states, i.e, Ax = A, where 
+
+Ax = {a | (x, a ) = ψ∆ ∈ Ψ∆} ⊆ A . For all t > ∆, the augmented state xt ∈ X is defined as 
+
+xt ≜ (st−∆, a t−∆, a t−∆+1 , . . . , a t−1), (3) which is composed of the last observed state and the most recent ∆ actions. The augmented transition kernel is then defined as 
+
+P∆(xt+1 | xt, a t) (4) 
+
+≜ P(st−∆+1 | st−∆, a t−∆)δat (a′
+
+> t
+
+)
+
+> ∆−1
+
+Y
+
+> i=1
+
+δat−i (a′
+
+> t−i
+
+),
+
+where δ denotes the Dirac-delta distribution. Given xt, the state st is inferred through a belief defined as 
+
+b∆(st | xt) (5) 
+
+≜
+
+Z
+
+> S∆−1
+
+P(st | st−1, a t−1)
+
+> t−2
+
+Y
+
+> i=t−∆
+
+P(si+1 | si, a i)ds i+1 ,
+
+which represents the probability of being in st given xt. In addition, the augmented reward function is defined as the expectation under this belief 
+
+˜rt = R∆(xt, a t) ≜ Est∼b∆(·| xt)
+
+R(st, a t), (6) since the state st is not explicitly observed at time t. The reg-ular MDP defined over the augmented state space X yields a delay-free MDP equivalent to M+, which enables the direct application of conventional RL algorithms (Bertsekas, 1987; Katsikopoulos & Engelbrecht, 2003). Although delays may arise at multiple points in the agent-environment interaction, only their total amount matters for decision-making (Wang et al., 2023). This observation allows us to treat different delay sources equivalently and simplifies the analysis. Accordingly, we focus on the ob-servation delay without loss of generality and assume that reward feedback arrives concurrently with state feedback, so that the agent does not learn from partial information (Katsikopoulos & Engelbrecht, 2003; Kim et al., 2023). 
+
+2.2. Finite MDP Homomorphism 
+
+A finite MDP homomorphism (Ravindran & Barto, 2001) is a surjective mapping from an MDP M onto an abstract MDP ¯M that preserves the dynamics of M while collaps-ing redundant state-action distinctions. Theoretical results confirm that a policy can be learned in the abstract MDP and lifted back to the original MDP without loss of optimality. The finite MDP homomorphism is defined as follows. 
+
+Definition 2.1. A finite MDP homomorphism hs =  fs, g s)
+
+from an MDP M = ( S, A, Ψ, P, R) onto an abstract MDP 
+
+¯M = ( ¯S, ¯A, ¯Ψ, ¯P, ¯R) is a tuple of surjective maps, where 
+
+fs : S → ¯S and gs : As → ¯Afs(s) that satisfy 
+
+¯R (fs(s), g s(a)) = R(s, a ), (7) 
+
+¯P (fs(s′) | fs(s), g s(a)) = X
+
+> s′′ ∈Gs
+
+P(s′′ | s, a ), (8) 2Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+for all s, s ′ ∈ S , a ∈ A s, where Gs is the block in B|S to which s′ belongs, B is the partition of Ψ induced by the equivalence relation under hs, and B|S is the projection of 
+
+B onto S. Here, ¯M is called a homomorphic image of M.The notion of finite MDP homomorphism leads to optimal value equivalence and the preservation of optimal policies. Concretely, for any (s, a ) ∈ Ψ, it satisfies 
+
+Q∗M(s, a ) = Q∗¯M
+
+ fs(s), g s(a). (9) An analogous equivalence holds for state-value functions. Moreover, any policy ¯π on ¯M can be lifted back to M via 
+
+π↑(a | s) = ¯π ¯a | fs(s)
+
+|g−1 
+
+> s
+
+(¯ a)| , (10) for any s ∈ S , a ∈ g−1 
+
+> s
+
+(¯ a) with ¯a ∈ ¯Af (s), where g−1 
+
+> s
+
+(¯ a)
+
+denotes the set of actions that have the same image ¯a under 
+
+gs. Crucially, the policy lifting preserves the optimality, thus justifying learning policies in the abstract MDP. To improve sample efficiency, it is therefore desirable to identify the most compact homomorphic image of a given MDP. As shown in Ravindran & Barto (2001), given a partition B
+
+of M that is reward-respecting and satisfies the stochastic substitution property (SSP) , one can construct the quotient MDP M/B . Moreover, there exists a homomorphism hs :
+
+M → M /B . Therefore, by appropriately choosing B, the quotient MDP M/B can provide a useful abstraction of M.Thus, we aim to identify a reward-respecting SSP partition 
+
+B that induces a desired abstract MDP, i.e., ¯M := M/B .
+
+2.3. Lax Bisimulation Metric 
+
+A bisimulation relation (Givan et al., 2003) is an equivalence relation ∼ on S that groups states according to the dynam-ics of MDP. Formally, two states s, s ′ ∈ S are said to be bisimilar (i.e., s ∼ s′) if, for every action a ∈ A and every equivalence class G ∈ S / ∼, we have R(s, a ) = R(s′, a )
+
+and P(G | s, a ) = P(G | s′, a ). For brevity, we use the shorthand P(G | s, a ) := P 
+
+> s′′ ∈G
+
+P(s′′ | s, a ).Despite yielding compact abstractions, exact equivalence relations are often too rigid in practice. To quantify approxi-mate equivalence relation instead, Taylor et al. (2008) intro-duce the notion of a lax bisimulation metric. Formally, given a metric d on the state space S, the behavioral similarity for state-action pairs ψ, ψ ′ ∈ Ψ is measured by 
+
+Ed (ψ, ψ ′) (11) 
+
+= cr |R (ψ) − R (ψ′)| + cpKd (P(· | ψ), P(· | ψ′)) ,
+
+where cr , c p ≥ 0 are constants with cr + cp ≤ 1 and Kd de-notes the Kantorovich distance for the metric d between the induced next-state distributions. This metric provides a theo-retical basis for approximate MDP homomorphisms (Ravin-dran & Barto, 2004) by relaxing the strict equalities in Eqs. (7)-(8) while bounding the optimal value difference. 
+
+# 3. Delayed Homomorphic RL 
+
+Although theoretically well founded, the approach of state augmentation inevitably increases the sample complexity as the augmented state space X = S × A ∆ grows exponen-tially in ∆ (Derman et al., 2021). In particular, the sample complexity of Q-learning in M∆ is given by 
+
+O
+
+ log( |X ||A| )
+
+ε2.5(1 − γ)5
+
+
+
+, (12) which characterizes the number of learning samples required for Q-learning to attain an ϵ-optimal policy (Ghavamzadeh et al., 2011; Wu et al., 2024b). To address this limitation, we propose delayed homomorphic reinforcement learning (DHRL), an RL framework grounded in MDP homomor-phisms that enables extremely sample-efficient learning on regular MDPs in a structured manner. 
+
+3.1. Belief-induced Abstract MDP 
+
+We define a belief-equivalence relation over the augmented state space X and show that it induces a desired compact abstract MDP. We then provide a theoretical analysis of the state-space compression bounds and sample complexity in the resulting abstraction. To facilitate an exact abstraction of the given MDP and to simplify the theoretical analysis, we restrict our focus on deterministic transition dynamics. This deterministic formulation can serve as a foundation for extensions to stochastic environments via approximate finite MDP homomorphisms, but we leave such extensions to future work. We first formalize the finite MDP homomor-phisms under delayed settings below. 
+
+Definition 3.1. Let M∆ and ¯M∆ be the regular MDP and its homomorphic image under hx = ( fx, g x). A finite MDP homomorphism hx is a tuple of surjective maps, in which 
+
+fx : X → ¯X and gx : Ax → ¯Afx(x) that satisfy 
+
+¯R∆ (fx(x), g x(a)) = R∆(x, a ), (13) 
+
+¯P∆ (fx(x′) | fx(x), g x(a)) = X
+
+> x′′ ∈Gx
+
+P∆(x′′ | x, a ), (14) for all x, x ′ ∈ X , a ∈ A x. Here, Gx represents the block in B∆|X to which x′ belongs, where B∆ is the partition of Ψ∆ induced by the equivalence relation under hx, and 
+
+B∆|X is the projection of B∆ onto X .To obtain such homomorphic image ¯M∆, one can construct a reward-respecting SSP partition B∆ of M∆, from which the corresponding quotient MDP M∆/B ∆ can be derived, such that ¯M∆ := M∆/B ∆. To this end, we define a belief-equivalence relation over the augmented state space. 
+
+Definition 3.2 (belief-equivalence) . Let x, x ′ ∈ X be two augmented states. We say that x and x′ are belief-equivalent if they induce the same belief over the underlying state, i.e., 
+
+b∆(· | x) = b∆(· | x′), (15) 3Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+which is denoted by x ≡b∆ x′.Intuitively, if any two augmented states are belief-equivalent, then merging them does not incur any loss of information at the belief level, as they induce the same belief. Based on the belief-equivalence relation, the following can be derived. 
+
+Proposition 3.3. A partition B∆ of M∆ induced by belief-equivalence relation is a reward-respecting SSP partition. Proof. See Appendix B.1 This implies that the homomorphic image ¯M∆ can be de-rived from the belief-induced partition B∆ of M∆. More-over, the following corollary suggests that an optimal policy on ¯M∆ can be propagated back onto the delayed MDP M+
+
+without loss of optimality. 
+
+Corollary 3.4 (Preservation of optimality) . Let M+ be a delayed MDP, M∆ be the regular reformulation, and ¯M∆
+
+be the homomorphic image of M∆. An optimal policy in 
+
+¯M∆ can be lifted back onto M+ without loss of optimality. Proof sketch. By Theorem 2 in Ravindran & Barto (2001), an optimal policy in the homomorphic image ¯M∆ retains its optimality when lifted back to M∆. By the equivalence relation between M+ and M∆ (Katsikopoulos & Engel-brecht, 2003), the optimality is preserved in M+. Thus, the corollary follows immediately. Consequently, the policy learning can be performed more sample-efficiently in the homomorphic image ¯M∆ induced by the belief-equivalence relation, and the resulting policy can be lifted back onto the underlying delayed MDP M+
+
+without loss of optimality. In other words, by identifying the compact abstract MDP, the state-space explosion issue inher-ent in augmentation-based approaches can be addressed in a principled and structured manner. In particular, under de-terministic transition dynamics, the belief-induced abstract MDP can be identified with the delay-free MDP M (i.e., 
+
+¯M∆ := M). See Appendix D.1 for further discussion. 
+
+3.2. State-space Compression Bound 
+
+We present a theoretical analysis of state-space reducibil-ity under the belief-equivalence relation and highlight the sample-efficiency gains achieved by the DHRL framework. 
+
+Proposition 3.5. Given the deterministic transition kernel 
+
+P, the augmented state space X reduces to the abstract state space ¯X with a compression ratio ζ such that 
+
+ζ := | ¯X | |X | ≤ 1
+
+|A| ∆ , (16) 
+
+for any ∆ ∈ N. In particular, | ¯X | ≤ |S| .Proof. See Appendix B.2 Proposition 3.5 shows that, under deterministic dynamics, the state-space compression is upper-bounded by 1/|A| ∆.This implies the abstract state space is no larger than the un-derlying state space S, which yields the following corollary. 
+
+Corollary 3.6. Given the deterministic transition kernel P,the sample complexity of Q-learning on ¯M∆ is given by 
+
+O
+
+ log( |S||A| )
+
+ε2.5(1 − γ)5
+
+
+
+. (17) 
+
+Proof. See Appendix B.3 This suggests that the sample complexity of Q-learning on belief-induced abstract MDP eliminates the ∆-dependent sample-complexity burden induced by state augmentation. Moreover, the abstraction can yield an even more compact abstract space ¯X that is smaller than the underlying state space S by merging behaviorally indistinguishable states and discarding states that are unreachable under the current policy and the MDP dynamics. Consequently, the policy learning on regular MDPs can be performed at a delay-free level, which substantially improves the sample efficiency. In practice, the exact equality in Definition 3.2 is unlikely to occur under stochastic dynamics, especially over a large augmented state space. For theoretical analysis, we intro-duce a relaxed version of belief-equivalence relation based on total variation distance. Concretely, for ε ∈ (0 , 1) , we consider an ε-abstract partition of X such that any two aug-mented states x, x ′ ∈ X belonging to the same ε-abstract block satisfies 
+
+∥b∆(· | x) − b∆(· | x′)∥TV ≤ ε, (18) where ∥ · ∥ TV denotes the total variation distance. Note that this relaxation is introduced solely to quantify an approx-imate state-space compression under stochastic dynamics. Thus, the resulting state aggregation may not yield a reward-respecting SSP partition unless ε = 0 . Let ¯Xε denote the corresponding ε-abstract state space. The following propo-sition quantifies the resulting state-space compression ratio. 
+
+Proposition 3.7. Suppose the transition kernel P is stochas-tic, and assume that there is an overlap constant η∆ ∈ (0 , 1] 
+
+such that, for any x, x ′ ∈ X 
+
+X
+
+> s∈S
+
+min ( b∆(s | x), b ∆(s | x′)) ≥ η∆. (19) 
+
+Then the augmented state space X reduces to the ε-abstract state space ¯Xε with a compression ratio ζε such that 
+
+ζε := | ¯Xε||X | ≤ 1
+
+|X | +
+
+
+
+1 − 1
+
+|X | 
+
+
+
+· min 
+
+
+
+1, (1 − η∆)
+
+ε/ 2
+
+
+
+,
+
+(20) 
+
+for any ε ∈ (0 , 1) and ∆ ∈ N.
+
+4Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+Proof. See Appendix B.4 This suggests that when the overlap constant η∆ is suffi-ciently large, the delay-induced growth of the augmented state space can be substantially mitigated under belief-based state aggregation. Intuitively, if any two beliefs share at least 
+
+η∆ total probability mass, then their total variation distance is uniformly bounded by 1−η∆. As η∆ increases, more aug-mented states become indistinguishable at the belief level and can be grouped into the same ε-abstract block, leading to stronger space compression. Motivated by these theoret-ical insights, we present two representative algorithms for the DHRL framework in the following section. 
+
+3.3. Delayed Homomorphic Value Iteration 
+
+For finite MDPs, the finite MDP homomorphism hx from the regular MDP M∆ to its homomorphic image ¯M∆ can be exactly constructed from the belief-equivalence relation under deterministic dynamics. Thus, the Bellman optimality operator ¯T∆ can be applied to update the abstract state-value function V ¯M∆ . Concretely, for any abstract state ¯x ∈ ¯X , the Bellman (optimality) backup is given by 
+
+¯T∆V ¯M∆ (¯ x) (21) 
+
+= max  
+
+> ¯a∈¯A¯x
+
+ ¯R∆(¯ x, ¯a) + γ X 
+
+> ¯x′∈¯X
+
+¯P∆(¯ x′ | ¯x, ¯a)V ¯M∆ (¯ x′)
+
+
+
+,
+
+where ¯T∆ is a γ-contraction with respect to ∥·∥ ∞. Therefore, it admits a unique fixed point by the Banach fixed-point theorem, which is the optimal abstract state-value function on ¯M∆ (Sutton et al., 1998). For completeness, we provide a standard proof that ¯T∆ is a γ-contraction with respect to the supremum norm ∥ · ∥ ∞ in Appendix B.5. Consequently, repeated application of ¯T∆ converges to the optimal abstract state-value function on ¯M∆, from which an optimal policy can be extracted via one-step look-ahead and then lifted back to M∆. By Corollary 3.4, this lifted policy preserves optimality on the underlying delayed MDP 
+
+M+. Therefore, the optimal control problem for M+ can be solved via planning/learning on ¯M∆. We refer to this algorithm as delayed homomorphic value iteration (DHVI). Although we present the value iteration, other methods such as Q-learning can be employed, with convergence and opti-mality guarantees under standard conditions (Li et al., 2006). In practice, however, DHVI requires explicit construction of the exact homomorphism under the belief-equivalence relation, which may not be feasible in large-scale or contin-uous domains. Accordingly, we use DHVI only to provide a simple empirical validation of the compression behavior pre-dicted by our theoretical analysis, rather than as a practical algorithm for general-purpose control. 
+
+3.4. Deep Delayed Homomorphic Policy Gradient 
+
+So far, we have presented theoretical results for finite do-mains based on the belief-equivalence relation and the finite MDP homomorphism. We now extend the DHRL frame-work to more practical settings with continuous domains, where the finite-space constructions do not directly carry over due to the measurability requirements. To this end, we adopt the continuous MDP homomorphisms and stochastic homomorphic policy gradient theorem formalized in Panan-gaden et al. (2024). In this study, we briefly reproduce the key notions needed for our algorithm in Appendix C and refer to Panangaden et al. (2024) for the full formalism. Panangaden et al. (2024) established the existence of ho-momorphisms between continuous MDPs and showed that core properties known in finite spaces extend to continuous spaces analogously. Crucially, they prove that the standard policy gradient (Sutton et al., 1999) in the original MDP equals that in its abstract MDP. Thus, the performance mea-sure defined in the original MDP can be updated using the policy gradient computed in its abstract MDP, yielding the following stochastic homomorphic policy gradient theorem. 
+
+Lemma 3.8 (Theorem 17 in Panangaden et al. (2024)) . Let 
+
+¯M∆ be the homomorphic image of a continuous MDP ho-momorphism hx = ( fx, g x) from the regular MDP M∆
+
+with continuous augmented state and action spaces. Let 
+
+π↑ 
+
+> θ
+
+and ¯πθ be the stochastic policies defined on M∆ and 
+
+¯M∆, respectively, where π↑ 
+
+> θ
+
+is a regular (lifted) policy that can be obtained from the abstract policy ¯πθ via the policy lifting. Then the policy gradient of the performance measure 
+
+JM∆ (θ) w.r.t. θ defined on M∆ is given by 
+
+∇θ JM∆ (θ) (22) 
+
+=
+
+Z 
+
+> ¯x∈¯X
+
+ρ¯πθ (¯ x)
+
+Z 
+
+> ¯a∈¯A
+
+Q¯πθ 
+
+> ¯M∆
+
+(¯ x, ¯a)∇θ ¯πθ (d¯a | ¯x)d¯x, 
+
+where ρ¯πθ denotes the discounted stationary distribution on 
+
+¯M∆ induced by the abstract policy ¯πθ .
+
+Lemma 3.8 implies that we can optimize the regular policy 
+
+π↑ 
+
+> θ
+
+on M∆ by using the gradient samples obtained in ¯M∆,which enables highly sample-efficient learning. Building on this result, we propose a deep actor-critic algorithm, termed the deep delayed homomorphic policy gradient (D 2HPG), which learns the critic and policy on M∆ in a structured and sample-efficient manner. The overall training pipeline closely resembles Panangaden et al. (2024), yet admits sub-stantial simplification under a mild assumption, as discussed in Appendix D.1 and Algorithm 1. Below, we first describe the original training pipeline and then briefly discuss our practical implementation. The homomorphism mapping h(ξ, ω ) = ( fξ , g ω ) is param-eterized by ξ, ω and learned by minimizing the following lax bisimulation loss Llax using a paired transition samples 5Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+{(xi, a i, x i+1 , ˜ri), (xj , a j , x j+1 , ˜rj )} drawn from a replay buffer D (Mnih et al., 2013): 
+
+Llax (ξ, ω ) (23) 
+
+= ED [∥fξ (xi) − fξ (xj )∥1 − (|˜ri − ˜rj | + W2(κi, κ j ))] ,
+
+where κt := ¯Pτ (· | fξ (xt), g ω (xt, a t)) is simply modeled as a Gaussian distribution, and W2 is a 2-Wasserstein dis-tance, which admits a closed-form expression for Gaussian distributions. The parameterized abstract reward model ¯Rν
+
+and the abstract transition model ¯Pτ is jointly learned with the homomorphism h(ξ, ω ) via the auxiliary loss Lh:
+
+Lh(ν, τ ) = ED
+
+∥fξ (xi+1 ) − ¯xi+1 ∥22 + (˜ ri − ¯r+ 
+
+> i
+
+)2 (24) where ¯r+ 
+
+> i
+
+= ¯Rν (fξ (xi), g ω (xi, a i)) denotes the predicted abstract reward, and ¯xi+1 ∼ ¯Pτ (· | fξ (xi), g ω (xi, a i)) .The overall training loss is defined as Llax + Lh.The policy lifting in a continuous domain is approximated by the sampling-based method. Assume that two stochas-tic policies π↑ 
+
+> θ
+
+and ¯πθ′ are parameterized by independent neural networks. The regular policy π↑ 
+
+> θ
+
+is trained by any stochastic actor-critic algorithm, and the abstract policy ¯πθ′
+
+is trained by the stochastic homomorphic policy gradient in Lemma 3.8. Then the lifting loss Llift can be derived as an approximation of policy lifting (Kaipio & Somersalo, 2005) by matching the conditional expectation and standard deviation of the abstract actions conditioned on observations sampled from the replay buffer: 
+
+Llift (θ, θ ′) (25) 
+
+= Ea∼π↑  
+
+> θ(·| xi)
+
+[gω (xi, a )] − E¯a∼¯πθ′ (·| fξ (xi)) [¯ a] 22
+
++ σa∼π↑  
+
+> θ(·| xi)
+
+[gω (xi, a )] − σ¯a∼¯πθ′ (·| fξ (xi)) [¯ a] 22
+
+,
+
+where σ[·] denotes the standard deviation. By minimizing this loss, the regular policy π↑ 
+
+> θ
+
+and the abstract policy ¯πθ′ are aligned so that information contained in the abstract gradient estimates can be effectively distilled into the regular policy. Although one could, in principle, optimize the regular policy using only the stochastic homomorphic policy gradient, the empirical findings in Panangaden et al. (2024) indicate that it is often more effective to train the regular policy with a stochastic actor-critic algorithm and to implement an auxil-iary update through the above policy-alignment procedure. Consistent with Panangaden et al. (2024), we employ two separate critics to improve learning stability: the critic Qϕ1
+
+and the abstract critic Qϕ2 . The training loss for each critic is given by 
+
+Lcritic (ϕ1) (26) 
+
+= ED
+
+(˜ ri + γQ ϕ′ 
+
+> 1
+
+(xi+1 , a i+1 ) − Qϕ1 (xi, a i)) 2,
+
+Labstract-critic (ϕ2) (27) 
+
+= ED
+
+(¯ r+ 
+
+> i
+
++ γQ ϕ′ 
+
+> 2
+
+(¯ x+
+
+> i+1
+
+, ¯a+
+
+> i+1
+
+) − Qϕ2 (¯ x+ 
+
+> i
+
+, ¯a+ 
+
+> i
+
+)) 2,
+
+where ϕ′ 
+
+> 1
+
+and ϕ′ 
+
+> 2
+
+denote the parameters of target networks with ¯x+ 
+
+> t
+
+= fξ (xt), ¯a+ 
+
+> t
+
+= gω (xt, a t) for t ∈ { i, i + 1 }, and 
+
+¯r+ 
+
+> i
+
+= ¯Rν (fξ (xi), g ω (xi, a i)) . The overall critic-training loss is defined as Lcritic + Labstract-critic .In practice, we view the delay-free MDP as the homomor-phic image of the regular MDP under a mild assumption, so that the abstract policy and critic are identified with the delay-free policy and critic. This substantially simplifies the original learning pipeline, since it allows us to learn the delay-free components directly from time-aligned transition samples stored in the replay buffer and to align the regular policy with the delay-free policy by minimizing the lifting loss in Eq. (25) , without explicitly learning the homomor-phism map and the abstract dynamics models. We defer a more detailed justification of this setting to Appendix D.1. 
+
+# 4. Experiments 
+
+4.1. Validation for Theoretical Analysis 
+
+We validate the state-space compression bound discussed in Section 3.2 using the DHVI algorithm. The test environment is a 4 × 4 grid world with four actions ( up , down , left ,
+
+right ) under deterministic dynamics, where the goal is located at point (3 , 3) . The RL agent receives a reward of 1 only upon reaching the goal state and 0 otherwise. This simple yet structured environment highlights the efficacy of the DHRL framework compared to the naive approach that applies the conventional RL algorithms on a regular MDP. The results are summarized in Table 1. MDP Ψ Cardinality 
+
+∆ = 2 ∆ = 4 ∆ = 6 
+
+Delayed S × A 64 64 64 
+
+Regular X × A 1024 16384 262144 
+
+Abstract ¯X × ¯A 64 64 64 
+
+Compression ratio (%) 6.25 0.39 0.02  
+
+> Table 1. Cardinality of the set of admissible state-action pairs.
+
+From the results, we confirm that the admissible state-action space of the regular MDP grows exponentially in ∆. In con-trast, the corresponding space of the abstract MDP remains constant and independent of ∆, leading to markedly faster convergence. Note that the observed space compression ra-tio ζ is also consistent with the theoretical bound ζ ≤ 1/4∆,where |A| = | ¯A| = 4 . In addition, Figure 1 reports the num-ber of Bellman backups required for the Bellman residual to fall below the tolerance ε = 10 −6 with γ = 0 .95 . As shown, value iteration on the abstract MDP (DHVI) requires sub-stantially fewer Bellman backups than value iteration on the regular MDP (naive VI). These empirical results strongly support our claim in Proposition 3.5. 6Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback       
+
+> Figure 1. Normalized number of Bellman backups of value itera-tion on the regular MDP (naive VI) and the abstract MDP (DHVI) with different delays ∆ = {2,4,6}. Naive VI is used as the base-line (normalized to 1.0), and the numbers in parentheses indicate the actual number of Bellman backups until convergence.
+
+4.2. Performance Evaluation of D 2HPG 
+
+We evaluate the proposed D 2HPG algorithm on continuous-control MuJoCo benchmarks and compare it with the state-of-the-art delayed RL baselines, including naive SAC, aug-mented SAC (Katsikopoulos & Engelbrecht, 2003), delayed SAC (Derman et al., 2021), BPQL (Kim et al., 2023), and VDPO (Wu et al., 2024a). Concretely, naive SAC is a memo-ryless baseline that ignores delays and acts solely on the cur-rently available state information. Delayed SAC is a model-based baseline that approximates delay-free dynamics and infers unobserved states via recursive one-step prediction. Augmented SAC, BPQL, and VDPO are state augmenta-tion baselines that formulate regular MDPs with augmented states, but differ in how they learn the regular policy in the resulting enlarged space. Augmented SAC directly applies SAC on the regular MDP; BPQL improves sample efficiency by employing an alternative representation of augmented value functions; and VDPO learns a delay-free policy and then distills it into the regular policy via behavior cloning. Before comparing against all baselines, we first examine the performance gap between learning the regular policy with naive SAC (i.e., augmented SAC) and with D 2HPG, where we optimize the regular policy solely using the stochastic homomorphic policy gradient for a fair comparison. We refer to this variant as D 2HPG-naive. As shown in Figure 2, D2HPG-naive consistently outperforms augmented SAC by a notable margin, with the performance gap becoming more pronounced as the delay ∆ grows. These empirical results highlight the benefits of our approach, particularly in high-dimensional spaces (i.e, long-delay environments). We then compare D 2HPG against the delayed RL baselines. Since D 2HPG can be combined with any stable stochastic actor-critic algorithm for learning a regular policy, we adopt   
+
+> Figure 2. Normalized performance (average returns) of augmented SAC and D 2HPG-naive with different delays in HalfCheetah-v3 MuJoCo task, where D 2HPG-naive is used as the baseline (normal-ized to 1.0). Each algorithm was evaluated for one million time steps with 5 random seeds.
+
+BPQL as the auxiliary regular-policy learner. The results in Table 2 show that D 2HPG achieves the most remarkable performance across all tasks. In contrast, the canonical base-lines—augmented SAC and delayed SAC—struggle even under a relatively short delay ( ∆ = 5 ). We hypothesize this to the severe sample inefficiency caused by the state-space explosion in augmented SAC, and to error accumulation from recursive state estimation through the approximate dynamics model in delayed SAC. Meanwhile, BPQL and VDPO achieve strong performance and remain competitive state-of-the-art baselines under mild delays ( ∆ = {5, 10 }). However, their performance degrades substantially under long delays ( ∆ = 20 ). By comparison, D 2HPG exhibits rela-tively smaller degradation and achieves a clear performance advantage. Notably, given that D 2HPG outperforms BPQL, these results further suggest that the DHRL framework can serve as a plug-and-play wrapper for existing augmentation-based baselines to further improve their sample efficiency. Additional results are provided in Appendix F. 
+
+4.3. Ablation Study 
+
+We conduct additional experiments comparing the following D2HPG variants: (i) D 2HPG-naive, which updates the regu-lar policy solely using gradient samples obtained from the homomorphic image; (ii) D 2HPG-SAC, which trains the reg-ular policy with SAC and applies auxiliary updates via the policy-alignment with the abstract policy; and (iii) D 2HPG-BPQL, which replaces SAC with BPQL as the regular-policy learner while retaining the same policy-alignment mecha-nism. In addition, we report the computational overhead of D2HPG in terms of wall-clock runtime. The corresponding results are provided in Appendix G. 7Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+Table 2. Results on the MuJoCo benchmarks under fixed delays with ∆ ∈ { 5, 10 , 20 }. Each algorithm was evaluated for one million time steps with 5 random seeds, where the standard deviations of average returns are denoted by ±. The best performance is shaded in gray. 
+
+Environment Ant-v3 HalfCheetah-v3 Hopper-v3 Walker2d-v3 Humanoid-v3 InvertedPendulum-v2 
+
+∆ Algorithm 
+
+× Delay-free SAC 3279 .2±180 8608 .4±57 2435 .2±23 3305 .5±234 3228 .1±410 964 .3±29 
+
+5Naive SAC −74 .9±4 −276 .3±5 88 .8±10 44 .5±20 398 .3±6 32 .1±2
+
+Augmented SAC 881 .9±103 2130 .9±344 2230 .8±178 1265 .4±303 629 .2±56 935 .7±38 
+
+Delayed SAC 1093 .6±132 1753 .1±198 1536 .6±248 858 .8±207 505 .9±68 925 .5±18 
+
+VDPO 4373 .3±181 4819 .5±36 1917 .6±105 3402 .9±263 2843 .2±482 764 .5±136 
+
+BPQL 3754 .1±102 5216 .3±43 2136 .3±158 2477 .4±140 3162 .9±276 945 .5±20 
+
+D2HPG (ours) 3852 .3±198 5226 .4±87 2509 .8±157 2704 .7±328 3320 .6±255 949 .8±6
+
+10 Naive SAC −79 .2±7 −281 .3±11 39 .7±6 59 .2±7 394 .1±10 20 .7±1
+
+Augmented SAC 880 .7±30 946 .2±94 1002 .6±182 1335 .6±348 520 .5±5 932 .2±15 
+
+Delayed SAC 924 .3±66 555 .1±23 1403 .1±216 207 .5±29 341 .6±11 714 .2±50 
+
+VDPO 3085 .2±106 3328 .5±184 1942 .3±114 2588 .4±201 2189 .4±474 597 .3±110 
+
+BPQL 2824 .9±103 4266 .6±192 2045 .2±190 2331 .6±252 2889 .5±310 919 .7±34 
+
+D2HPG (ours) 3010 .6±70 4551 .4±118 2374 .8±160 2387 .5±263 2996 .4±285 937 .3±22 
+
+20 Naive SAC −83 .9±7 −262 .1±5 27 .6±5 54 .6±11 362 .9±5 24 .3±2
+
+Augmented SAC 697 .4±80 110 .7±120 298 .6±21 347 .2±51 340 .6±82 340 .7±84 
+
+Delayed SAC 817 .9±78 552 .5±40 595 .5±90 102 .9±3 407 .2±11 67 .7±10 
+
+VDPO 2419 .7±95 2342 .3±164 1359 .5±165 795 .2±123 791 .3±88 19 .4±8
+
+BPQL 2069 .5±138 2861 .3±241 1526 .7±227 846 .7±443 1197 .7±457 568 .1±79 
+
+D2HPG (ours) 2694 .3±99 4089 .4±146 1818 .9±211 1151 .6±246 1829 .5±333 637 .3±53 
+
+# 5. Limitation 
+
+Although the DHRL framework demonstrates strong per-formance in policy learning under delays, it relies on the often unrealistic assumption of fixed delays. This may sub-stantially limit its applicability in real-world settings, where delays are random with unknown characteristics. Notably, the DHRL framework can be readily extended to the random delay environments by following the conservative agent for-mulation of Lee et al. (2025). In particular, they assume that random delays are bounded by a known maximum delay, ∆max ∈ N. Under this assump-tion, a random-delay environment can be reformulated as a constant-delay surrogate, enabling conventional fixed-delay methods to be applied directly to random-delay settings. However, since this surrogate is constructed for the worst-case delay (i.e., ∆max ), the resulting augmented formulation can incur a substantial sample-complexity burden. Neverthe-less, strong empirical performance has been reported when the surrogate is combined with sample-efficient fixed-delay baselines such as BPQL and VDPO. Building on this in-sight, we expect that improving sample efficiency through our proposed algorithm will further strengthen performance under random delays, making the extension practical. To support this claim, we provide a brief empirical validation under bounded random delays in Appendix G. 
+
+# 6. Conclusion 
+
+In this study, we investigated reinforcement learning with delayed feedback and showed that the canonical state aug-mentation approaches often induce a state-space explosion that substantially increases sample-complexity burden and degrades the performance of the RL agent. This reveals a key bottleneck that existing augmentation-based baselines have not yet addressed in a structured manner. To address this limitation, we proposed delayed homomorphic rein-forcement learning (DHRL), which leverages the MDP ho-momorphisms to construct a compact abstract MDP, where policies can be learned more sample-efficiently and lifted back onto the original MDP without loss of optimality. We provided theoretical analyses of state-space compression bounds and the resulting sample complexity, showing that the DHRL framework can eliminate—or substantially miti-gate—the sample-complexity burden in augmentation-based approaches in a structured manner. We instantiated DHRL with the DHVI algorithm for finite domains and the D 2HPG algorithm for continuous domains. Empirically, our algo-rithm outperformed strong augmentation-based baselines on continuous control tasks in MuJoCo. A promising direction is to extend DHRL to stochastic dynamics via approximate homomorphisms, preserving the same abstraction principle while broadening its applicability. 8Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# References 
+
+Abad´ ıa, I., Naveros, F., Ros, E., Carrillo, R. R., and Luque, N. R. A cerebellar-based solution to the nondeterministic time delay problem in robotic control. Science Robotics ,6(58):eabf2756, 2021. Bellman, R. Dynamic Programming . Princeton University Press, 1957a. Bellman, R. A markovian decision process. Journal of Mathematics and Mechanics , pp. 679–684, 1957b. Bertsekas, D. P. Dynamic programming: Deterministic and stochastic models . Prentice-Hall, Inc., 1987. Brown, T., Mann, B., Ryder, N., Subbiah, M., Kaplan, J. D., Dhariwal, P., Neelakantan, A., Shyam, P., Sastry, G., Askell, A., et al. Language models are few-shot learners. 
+
+Advances in Neural Information Processing Systems , 33: 1877–1901, 2020. Chen, B., Xu, M., Li, L., and Zhao, D. Delay-aware model-based reinforcement learning for continuous control. Neu-rocomputing , 450:119–128, 2021. Degrave, J., Felici, F., Buchli, J., Neunert, M., Tracey, B., Carpanese, F., Ewalds, T., Hafner, R., Abdolmaleki, A., de Las Casas, D., et al. Magnetic control of tokamak plasmas through deep reinforcement learning. Nature ,602(7897):414–419, 2022. Derman, E., Dalal, G., and Mannor, S. Acting in delayed environments with non-stationary Markov policies. arXiv preprint arXiv:2101.11992 , 2021. Duell, S., Udluft, S., and Sterzing, V. Solving partially ob-servable reinforcement learning problems with recurrent neural networks. In Neural Networks: Tricks of the Trade: Second Edition , pp. 709–733. Springer, 2012. Fan, Y., Fu, Q., Chen, J., Wang, Y., Lu, Y., and Liu, K. A deep reinforcement learning control method for multi-zone precooling in commercial buildings. Applied Ther-mal Engineering , 260:124987, 2025. Firoiu, V., Ju, T., and Tenenbaum, J. At human speed: deep reinforcement learning with action delay. arXiv preprint arXiv:1810.07286 , 2018. Ge, Y., Chen, Q., Jiang, M., and Huang, Y. Modeling of random delays in networked control systems. Journal of Control Science and Engineering , 2013(1):383415, 2013. Ghavamzadeh, M., Kappen, H., Azar, M., and Munos, R. Speedy q-learning. Advances in Neural Information Pro-cessing Systems , 24, 2011. Givan, R., Dean, T., and Greig, M. Equivalence notions and model minimization in markov decision processes. 
+
+Artificial Intelligence , 147(1-2):163–223, 2003. Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., Kumar, V., Zhu, H., Gupta, A., Abbeel, P., et al. Soft actor-critic algorithms and applications. arXiv preprint arXiv:1812.05905 , 2018. Hwangbo, J., Sa, I., Siegwart, R., and Hutter, M. Control of a quadrotor with reinforcement learning. IEEE Robotics and Automation Letters , 2(4):2096–2103, 2017. Kaipio, J. P. and Somersalo, E. Statistical and computational inverse problems . Springer, 2005. Katsikopoulos, K. V. and Engelbrecht, S. E. Markov de-cision processes with delays and asynchronous cost col-lection. IEEE Transactions on Automatic Control , 48(4): 568–574, 2003. Kaufmann, E., Bauersfeld, L., and Scaramuzza, D. Abenchmark comparison of learned control policies for agile quadrotor flight. In 2022 International Conference on Robotics and Automation (ICRA) , pp. 10504–10510. IEEE, 2022. Kim, J., Kim, H., Kang, J., Baek, J., and Han, S. Belief projection-based reinforcement learning for environments with delayed feedback. Advances in Neural Information Processing Systems , 36:678–696, 2023. Kingma, D. P. Adam: A method for stochastic optimization. 
+
+arXiv preprint arXiv:1412.6980 , 2014. Lee, J., Kim, J., Jeong, J., and Han, S. Reinforcement learning via conservative agent for environments with random delays. arXiv preprint arXiv:2507.18992 , 2025. Li, L., Walsh, T. J., and Littman, M. L. Towards a unified theory of state abstraction for mdps. AI&M , 1(2):3, 2006. Mahmood, A. R., Korenkevych, D., Komer, B. J., and Bergstra, J. Setting up a reinforcement learning task with a real-world robot. In 2018 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) , pp. 4635–4640. IEEE, 2018. Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., and Riedmiller, M. Playing atari with deep reinforcement learning. arXiv preprint arXiv:1312.5602 , 2013. Panangaden, P., Rezaei-Shoshtari, S., Zhao, R., Meger, D., and Precup, D. Policy gradient methods in the presence of symmetries and state abstractions. Journal of Machine Learning Research , 25(71):1–57, 2024. 9Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+Ravindran, B. and Barto, A. G. Symmetries and model minimization in Markov decision processes, 2001. Ravindran, B. and Barto, A. G. Approximate homomor-phisms: A framework for non-exact minimization in Markov decision processes. 2004. Rezaei-Shoshtari, S., Zhao, R., Panangaden, P., Meger, D., and Precup, D. Continuous MDP homomorphisms and homomorphic policy gradient. Advances in Neural Infor-mation Processing Systems , 35:20189–20204, 2022. Sutton, R. S., Barto, A. G., et al. Reinforcement learning: An introduction , volume 1. MIT press Cambridge, 1998. Sutton, R. S., McAllester, D., Singh, S., and Mansour, Y. Policy gradient methods for reinforcement learning with function approximation. Advances in Neural Information Processing Systems , 12, 1999. Taylor, J., Precup, D., and Panagaden, P. Bounding perfor-mance loss in approximate mdp homomorphisms. Ad-vances in Neural Information Processing Systems , 21, 2008. Todorov, E., Erez, T., and Tassa, Y. Mujoco: A physics engine for model-based control. In 2012 IEEE/RSJ Inter-national Conference on Intelligent Robots and Systems ,pp. 5026–5033. IEEE, 2012. Walsh, T. J., Nouri, A., Li, L., and Littman, M. L. Learning and planning in environments with delayed feedback. 
+
+Autonomous Agents and Multi-Agent Systems , 18:83–105, 2009. Wang, W., Han, D., Luo, X., and Li, D. Addressing signal delay in deep reinforcement learning. In The Twelfth International Conference on Learning Representations ,2023. Wu, Q., Zhan, S. S., Wang, Y., Wang, Y., Lin, C.-W., Lv, C., Zhu, Q., and Huang, C. Variational delayed policy optimization. Advances in Neural Information Processing Systems , 37:54330–54356, 2024a. Wu, Q., Zhan, S. S., Wang, Y., Wang, Y., Lin, C.-W., Lv, C., Zhu, Q., Schmidhuber, J., and Huang, C. Boosting reinforcement learning with strongly delayed feedback through auxiliary short delays. In International Confer-ence on Machine Learning , pp. 53973–53998. PMLR, 2024b. Zhuang, Z., Yao, S., and Zhao, H. Humanoid parkour learn-ing. In Conference on Robot Learning , pp. 1975–1991. PMLR, 2025. 10 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# A. Related Work 
+
+Through iterative interaction with the environment, the RL agents can acquire proficient decision-making capabilities for complex and challenging tasks. In many real-world settings, however, feedback from the environment can be delayed, which can break the fundamental Markov assumption and degrade the performance of the resulting control policy (Hwangbo et al., 2017; Mahmood et al., 2018). To cope with delayed effects, existing delayed RL methods typically follow one of two strategies: i) state augmentation approaches that incorporate sufficient information into the original state to ensure that the augmented state representation induces Markovian dynamics, and ii) model-based approaches that infer the delayed information using an approximated dynamics model learned from the underlying delay-free MDP. Concretely, the state augmentation approach incorporates action histories into the original state to obtain an equivalent delay-free MDP (i.e., regular MDP), enabling the use of conventional RL algorithms without explicitly accounting for delays (Katsikopoulos & Engelbrecht, 2003; Bertsekas, 1987). While it provides a solid theoretical foundation, the state reformulation can dramatically enlarge the state space, leading to substantially higher sample complexity—an effect often referred to as the state-space explosion . To address this limitation, Kim et al. (2023) proposes an alternative augmented value representation evaluated with respect to the original state space rather than the augmented one, effectively mitigating the sample inefficiency. Wu et al. (2024b) mitigate performance degradation by using auxiliary tasks with shorter delays to assist critic learning for longer delays. Wang et al. (2023) proposes delay-reconciled critic training, which time-calibrates the trajectories to restore non-delayed information for offline critic updates. However, the actors in these approaches still require augmented states, since the true (i.e., non-delayed) observation cannot be accessed at inference time. Consequently, the problem of sample complexity remains only partially alleviated, with the burden shifted away from the critics but persisting for the actors. To the best of our knowledge, the closest work to ours is Wu et al. (2024a) that proposes an iterative method that first learns a delay-free policy and then distills it into the regular policy in delayed MDPs via behavior cloning, achieving respectable sample efficiency. However, behavior cloning between two policies is often sensitive to distribution mismatch, particularly in high-dimensional spaces, for which we provide empirical evidence in our experiments in Appendix F. These observations underscore the necessity of a unified and stable solution in which both the actor and critic can operate without being hampered by the state-space explosion issue. The model-based approach is another line of work on delay compensation that seeks to restore Markov dynamics via planning with an approximated delay-free dynamics model (Walsh et al., 2009; Duell et al., 2012; Firoiu et al., 2018; Chen et al., 2021; Derman et al., 2021). Specifically, it learns a delay-free dynamics model from transition samples collected in a delay-free MDP and infers unobserved states via recursive one-step predictions. However, while it avoids the state-space explosion suffered by state augmentation approaches, the model-based approaches often rely heavily on accurate dynamics modeling and are therefore vulnerable to model errors and stochasticity inherent in the environment. Crucially, even small prediction inaccuracies can accumulate through recursion, substantially degrading the performance and stability of RL agents, especially under long-delay regimes. Although several strong model-based methods have been proposed, a detailed investigation of this line of work is beyond the scope of our study. Motivated by the lack of a unified and stable solution in state-augmentation approaches, we propose delayed homomorphic reinforcement learning (DHRL), a framework grounded in MDP homomorphisms. Concretely, we define a belief-equivalence relation over the augmented state space, and show that it induces a compact abstract MDP of the given regular MDP by collapsing redundant augmented state distinctions. Importantly, the policies can be learned in this abstract MDP and then lifted back to the underlying delayed MDP without loss of optimality, effectively mitigating the sample-complexity burden inherent in state-augmentation baselines. Thus, DHRL provides a sample-efficient solution to augmentation-based approaches by allowing both the actor and critic to benefit from state-space compression in a structured and stable manner. 11 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# B. Proofs 
+
+We first reproduce the notions of a reward-respecting partition and the stochastic substitution property (SSP) formalized in Ravindran & Barto (2001), which will be used to prove Proposition 3.3. 
+
+Definition B.1 (reward-respecting partition (Ravindran & Barto, 2001)) . A partition B of an MDP M = ( S, A, Ψ, P, R)
+
+is said to be reward-respecting if (s1, a 1) ≡B (s2, a 2) implies R(s1, a 1) = R(s2, a 2) for all (s1, a 1), (s2, a 2) ∈ Ψ.
+
+Definition B.2 (stochastic substitution property (Ravindran & Barto, 2001)) . A partition B of an MDP M = ( S, A, Ψ, P, R)
+
+has the stochastic substitution property if for all (s1, a 1), (s2, a 2) ∈ Ψ, (s1, a 1) ≡B (s2, a 2) implies P(G | s1, a 1) = 
+
+P(G | s2, a 2) for all G ∈ B|S. For brevity, we use the shorthand P(G | s, a ) := P 
+
+> s′′ ∈G
+
+P(s′′ | s, a ).
+
+Theorem B.3 (Theorem 4 in Ravindran & Barto (2001)) . Let B be a reward-respecting SSP partition of an MDP 
+
+M = ( S, A, Ψ, P, R). Then there exists a finite MDP homomorphism from M to the quotient MDP M/B .
+
+B.1. Proof for Proposition 3.3 Proposition 3.3. A partition B∆ of M∆ induced by belief-equivalence relation is a reward-respecting SSP partition. Proof. Let M+ = ( S, A, Ψ, P, R, ∆) be a delayed MDP, and M∆ = ( X , A, Ψ∆, P∆, R∆) be its regular formulation. By definition 3.2, the two augmented states x1, x 2 ∈ X are belief-equivalent if it satisfies 
+
+b∆(· | x1) = b∆(· | x2), (28) where the induced equivalence classes are referred to as belief classes. Since x1 and x2 in the same belief class induce the same belief over the underlying state space S, we have 
+
+R∆(x1, a ) = Es∼b∆(·| x1)[R(s, a )] = Es∼b∆(·| x2)[R(s, a )] = R∆(x2, a ), (29) for all a ∈ A . Thus, the partition B∆ is a reward-respecting partition for M∆. Subsequently, to verify that the partition B∆
+
+satisfies the SSP, we need to show that, for all a ∈ A and Gx ∈ B∆|X ,
+
+X
+
+> x′∈Gx
+
+P∆(x′ | x1, a ) = X
+
+> x′∈Gx
+
+P∆(x′ | x2, a ), (30) whenever x1 and x2 belong to the same belief class. Let P(S) denote the probability simplex over the state space S, and define the belief-update operator F : P(S) × A → P(S), which maps a belief b ∈ P(S) and an action a ∈ A to the next belief b′ ∈ P(S) induced by the underlying deterministic transition kernel P. Let τ∆ : X × A → X be the deterministic augmented transition kernel induced by the same underlying transition kernel. Then, for any augmented state x ∈ X , the next belief b′ is given by 
+
+F b∆(· | x), a  = b′
+
+> ∆
+
+(· | τ∆(x, a )) . (31) Accordingly, the belief-equivalence b∆(· | x1) = b∆(· | x2) implies 
+
+F b∆(· | x1), a  = F b∆(· | x2), a  =⇒ b′
+
+> ∆
+
+(· | τ∆(x1, a )) = b′
+
+> ∆
+
+(· | τ∆(x2, a )) , (32) yielding the belief-equivalence relation over the next augmented states, i.e., τ∆(x1, a ) ≡b∆ τ∆(x2, a ). From this result, we have the probabilities of transitioning from the belief-equivalent augmented states x1, x 2 to the block Gx that satisfy 
+
+X
+
+> x′∈Gx
+
+P∆(x′ | x1, a ) = 1{τ∆(x1, a ) ∈ Gx} = 1{τ∆(x2, a ) ∈ Gx} = X
+
+> x′∈Gx
+
+P∆(x′ | x2, a ), (33) for all a ∈ A and for all Gx ∈ B∆|X . This suggests that starting from any two augmented states in the same belief class, the probability of transitioning to every other belief class under the same action a is identical. Consequently, the partition 
+
+B∆ of M∆ satisfies the SSP, and thus B∆ is a reward-respecting SSP partition for M∆. This completes the proof. 12 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+B.2. Proof of Proposition 3.5 Proposition 3.5. Given the deterministic transition kernel P, the augmented state space X reduces to the abstract state space ¯X with compression ratio ζ such that 
+
+ζ := | ¯X | |X | ≤ 1
+
+|A| ∆ , (34) 
+
+for any ∆ ∈ N. In particular, | ¯X | ≤ |S| .Proof. Let M+ = ( S, A, Ψ, P, R, ∆) be a delayed MDP, M∆ = ( X , A, Ψ∆, P∆, R∆) be the regular reformulation of 
+
+M+, and ¯M∆ = ( ¯X , ¯A, ¯Ψ∆, ¯P∆, ¯R∆) be the homomorphic image of M∆ induced by the belief-equivalence relation. Under deterministic dynamics, the belief b∆(· | x) at an augmented state x ∈ X collapses to a Dirac measure at the underlying state s ∈ S corresponding to x. Hence, there exists a map F∆ : X → S such that b∆(· | x) = δF∆(x) for all 
+
+x ∈ X . Since the abstract state space ¯X can be identified by the set of underlying states represented by the augmented states, its cardinality satisfies 
+
+| ¯X | = |im( F∆)| = |{ s ∈ S | ∃ x ∈ X s.t. F∆(x) = s}| ≤ |S| , (35) where im( F∆) denotes the image of F∆. The state-space compression ratio ζ is thus given by 
+
+ζ := | ¯X | |X | = |im( F∆)||S||A| ∆ ≤ |S| |S||A| ∆ = 1
+
+|A| ∆ , (36) where |X | = |S||A| ∆. This completes the proof. 
+
+B.3. Proof for Corollary 3.6 Corollary 3.6. Given the deterministic transition kernel P, the sample complexity of Q-learning on ¯M∆ is given by 
+
+O
+
+ log( |S||A| )
+
+ε2.5(1 − γ)5
+
+
+
+. (37) 
+
+Proof. Let M+ = ( S, A, Ψ, P, R, ∆) be a delayed MDP, M∆ = ( X , A, Ψ∆, P∆, R∆) be the regular reformulation of 
+
+M+, and ¯M∆ = ( ¯X , ¯A, ¯Ψ∆, ¯P∆, ¯R∆) be the homomorphic image of M∆ induced by the belief-equivalence relation. From the result in Ghavamzadeh et al. (2011); Wu et al. (2024b), the sample complexity of Q-learning in ¯M∆ is given by 
+
+O
+
+ log( | ¯X || ¯A| )
+
+ε2.5(1 − γ)5
+
+
+
+. (38) Assume the deterministic transition kernel P. Then it follows that 
+
+log( | ¯X || ¯A| ) ≤ log( |X || ¯A| /|A| ∆) (∵ | ¯X | ≤ |X | /|A| ∆) (39) 
+
+= log( |S||A| ∆| ¯A| /|A| ∆) (40) 
+
+= log( |S|| ¯A| ). (41) Since ¯A is the image of A under the surjective action mapping, we have | ¯A| ≤ |A| . Therefore, 
+
+log( |S|| ¯A| ) ≤ log( |S||A| ). (42) Substituting this into the sample complexity bound in Eq. (37) gives 
+
+O
+
+ log  |S||A| 
+
+ε2.5(1 − γ)5
+
+
+
+, (43) where the ∆-dependent factor inside the logarithm is eliminated. This concludes the proof. 13 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+B.4. Proof for Proposition 3.7 Proposition 3.7. Suppose the transition kernel P is stochastic, and assume that there is an overlap constant η∆ ∈ (0 , 1] 
+
+such that, for any x, x ′ ∈ X 
+
+X
+
+> s∈S
+
+min ( b∆(s | x), b ∆(s | x′)) ≥ η∆. (44) 
+
+Then the augmented state space X reduces to the ε-abstract space ¯Xε with compression ratio ζε such that 
+
+ζε := | ¯Xε||X | ≤ 1
+
+|X | +
+
+
+
+1 − 1
+
+|X | 
+
+
+
+· min 
+
+
+
+1, (1 − η∆)
+
+ε/ 2
+
+
+
+, (45) 
+
+for any ε ∈ (0 , 1) and ∆ ∈ N.Proof. Let M+ = ( S, A, Ψ, P, R, ∆) be a delayed MDP, M∆ = ( X , A, Ψ∆, P∆, R∆) be the regular reformulation of 
+
+M+, and ¯M∆ = ( ¯X , ¯A, ¯Ψ∆, ¯P∆, ¯R∆) be the homomorphic image of M∆ induced by the belief-equivalence relation. Given the stochastic transition kernel P, we consider an ε-abstract partition of the augmented state space X such that any two augmented states x, x ′ belonging to the same ε-abstract block satisfy 
+
+∥b∆(· | x) − b∆(· | x′)∥TV ≤ ε (46) for some ε ∈ (0 , 1) , where the corresponding ε-abstract state space is denoted by ¯Xε. Subsequently, suppose that there exists an overlap constant η∆ ∈ (0 , 1] such that, for any x, x ′ ∈ X ,
+
+X
+
+> s∈S
+
+min ( b∆(s | x), b ∆(s | x′)) ≥ η∆. (47) This implies that any two belief distributions share at least η∆ total probability mass. Then it directly follows that 
+
+∥b∆(· | x) − b∆(· | x′)∥TV = 1 − X
+
+> s∈S
+
+min( b∆(s | x), b ∆(s | x′)) (48) 
+
+≤ 1 − η∆, (49) for any x, x ′ ∈ X . We then upper bound the number of ε-distinguishable blocks induced on X , i.e., the cardinality of ¯Xε. To this end, fix an augmented state x0 ∈ X and define, for each x ∈ X \ { x0}, the indicator 
+
+Ix ≜ 1{∥ b∆(· | x0) − b∆(· | x)∥TV > ε/ 2}. (50) Let U denote the uniform distribution over X \ { x0}, i.e., 
+
+U (x) = 1
+
+|X | − 1 , ∀x ∈ X \ { x0}, (51) and let X ∼ U and define the nonnegative random variable 
+
+Z ≜ ∥b∆(· | x0) − b∆(· | X)∥TV . (52) By Eq. (49), we have Z ≤ (1 − η∆) almost surely, and hence EU [Z] ≤ (1 − η∆). Applying Markov’s inequality yields 
+
+P(Z > ε/ 2) ≤ EU [Z]
+
+ε/ 2 ≤ min 
+
+
+
+1, (1 − η∆)
+
+ε/ 2
+
+
+
+. (53) By the definition of Ix, we also have 
+
+P(Z > ε/ 2) = 1
+
+|X | − 1
+
+X
+
+> x̸=x0
+
+Ix, (54) 14 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+where P 
+
+> x̸=x0
+
+Ix counts the number of augmented states that are farther than ε/ 2 from x0 in total variation. Therefore, 
+
+X
+
+> x̸=x0
+
+Ix ≤ (|X | − 1) · min 
+
+
+
+1, (1 − η∆)
+
+ε/ 2
+
+
+
+. (55) A valid upper bound on the number of ε-abstract blocks is then 
+
+| ¯Xε| ≤ 1 + X
+
+> x̸=x0
+
+Ix ≤ 1 + ( |X | − 1) · min 
+
+
+
+1, (1 − η∆)
+
+ε/ 2
+
+
+
+, (56) where we aggregate all augmented states within the ε/ 2-ball around x0 into a single block and treat the remaining augmented states as singleton blocks. Dividing both sides by |X | yields the state-space compression bound 
+
+ζε := | ¯Xε||X | ≤ 1
+
+|X | +
+
+
+
+1 − 1
+
+|X | 
+
+
+
+· min 
+
+
+
+1, (1 − η∆)
+
+ε/ 2
+
+
+
+. (57) This completes the proof. 
+
+B.5. Proof for γ-contraction of the Bellman optimality operator ¯T∆
+
+For completeness, we show that the Bellman optimality operator ¯T∆ is a γ-contraction with respect to ∥ · ∥ ∞ and admits a unique fixed point, which is the optimal state-value function on ¯M∆.
+
+Proof. Let V (1) ¯M∆ , V (2) ¯M∆ : ¯X → R be the arbitrary state-value functions on the abstract MDP ¯M∆ = ( ¯X , ¯A, ¯Ψ∆, ¯P∆, ¯R∆).For any ¯x ∈ ¯X , the Bellman optimality operator ¯T∆ is defined as: 
+
+¯T∆V (1) ¯M∆ (¯ x) = max  
+
+> ¯a∈¯A
+
+ ¯R∆(¯ x, ¯a) + γ X 
+
+> ¯x′∈¯X
+
+¯P∆(¯ x′ | ¯x, ¯a)V (1) ¯M∆ (¯ x′)
+
+
+
+, (58) 
+
+¯T∆V (2) ¯M∆ (¯ x) = max  
+
+> ¯a∈¯A
+
+ ¯R∆(¯ x, ¯a) + γ X 
+
+> ¯x′∈¯X
+
+¯P∆(¯ x′ | ¯x, ¯a)V (2) ¯M∆ (¯ x′)
+
+
+
+, (59) where γ ∈ [0 , 1) . By the triangle inequality, we have 
+
+¯T∆V (1) ¯M∆ (¯ x) − ¯T∆V (2) ¯M∆ (¯ x) ≤ max  
+
+> ¯a∈¯A
+
+γ X 
+
+> ¯x′∈¯X
+
+¯P∆(¯ x′ | ¯x, ¯a)
+
+
+
+V (1) ¯M∆ (¯ x′) − V (2) ¯M∆ (¯ x′)
+
+
+
+(60) 
+
+≤ γ X 
+
+> ¯x′∈¯X
+
+¯P∆(¯ x′ | ¯x, ¯a) V (1) ¯M∆ − V (2) ¯M∆ ∞
+
+(61) 
+
+= γ V (1) ¯M∆ − V (2) ¯M∆ ∞
+
+. (62) Taking the supremum over ¯x ∈ ¯X yields 
+
+¯T∆V (1) ¯M∆ − ¯T∆V (2) ¯M∆ ∞
+
+≤ γ V (1) ¯M∆ − V (2) ¯M∆ ∞
+
+. (63) Thus ¯T∆ is a γ-contraction with respect to the maximum norm. By Banach’s fixed-point theorem, it admits a unique fixed point, which is the optimal abstract state-value function on ¯M∆ (Sutton et al., 1998). 15 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# C. Continuous MDP Homomorphism and Stochastic Homomorphic Policy Gradient 
+
+In this section, we briefly reproduce the key results established in Rezaei-Shoshtari et al. (2022); Panangaden et al. (2024) and refer to Panangaden et al. (2024) for the full formalism. These results are appropriately modified and adapted to the delayed setting to support our algorithm. 
+
+Definition C.1. A continuous MDP is defined as M = ( S, Σ, A, P, R), where S is the state space assumed to be a Polish space with σ-algebra Σ, A ⊂ Rn is the action space assumed to be a locally compact metric space, P : S × A × Σ → [0 , 1] 
+
+is a transition kernel such that for each (s, a ) ∈ S × A , C ∈ Σ 7 → P (C | s, a ) is a probability measure on Σ, and 
+
+R : S × A → R is a reward function. Moreover, for all s ∈ S and C ∈ Σ, the map a 7 → P (C | s, a ) is smooth on A.
+
+Definition C.2. A continuous MDP homomorphism is a map hs = ( fs, g s) : M → ¯M, where fs : S → ¯S and for every 
+
+s ∈ S , gs : A → ¯A are measurable, surjective maps such that 
+
+R(s, a ) = ¯R(fs(s), g s(a)) (64) 
+
+P(f −1 
+
+> s
+
+( ¯C) | s, a ) = ¯P( ¯C | fs(s), g s(a)) (65) for all s ∈ S , a ∈ A , ¯C ∈ ¯Σ. The condition on the reward function is directly extended from the finite case, and the condition on the transition kernel is defined by the σ-algebra on ¯M, which implies that the measure ¯P(· | fs(s), g s(a)) is the push-forward measure of P(· | s, a ) under the mapping fs.
+
+Theorem C.3 (Optimal value equivalence) . Let ¯M be the homomorphic image of a continuous MDP M under the continuous MDP homomorphism h = ( fs, g s). Then for any (s, a ) ∈ S × A , it satisfies 
+
+Q∗M(s, a ) = Q∗¯M(fs(s), g s(a)) . (66) 
+
+An analogous equivalence extends to the optimal state-value functions. 
+
+Theorem C.4 (Lifting policy) . Let ¯M be the homomorphic image of a continuous MDP M under the continuous MDP homomorphism hs = ( fs, g s). Then any policy ¯π on ¯M can be lifted back onto M via the relation 
+
+π↑(g−1 
+
+> s
+
+(β) | s) = ¯ π(β | fs(s)) (67) 
+
+for every Borel set β ∈ ¯A and s ∈ S , where π↑ is a lifted policy of ¯π.
+
+Theorem C.5 (Value equivalence) . Let ¯M be the homomorphic image of a continuous MDP M under the continuous MDP homomorphism hs = ( fs, g s), and let π↑ be the lifted policy of ¯π on M. Then for any (s, a ) ∈ S × A , it satisfies 
+
+Qπ↑
+
+> M
+
+(s, a ) = Q¯π¯M(fs(s), g s(a)) , (68) 
+
+where Qπ↑ 
+
+> M
+
+is the action-value function for policy π↑ on M. An analogous equivalence extends to the state-value functions. 
+
+Theorem C.6 (Policy gradient in Sutton et al. (1998)) . Let πθ : S × A → [0 , 1] be a stochastic policy defined on M. Then the gradient of the performance measure JM(θ) = Eπθ [V πθ 
+
+> M
+
+(s)] with respect to θ is given by 
+
+∇θ JM(θ) = 
+
+Z
+
+> s∈S
+
+ρπθ (s)
+
+Z
+
+> a∈A
+
+Qπθ
+
+> M
+
+(s, a )∇θ πθ (da | s)ds, (69) 
+
+where ρπθ denotes the discounted stationary distribution on M under the policy πθ .
+
+Theorem C.7 (Stochastic homomorphic policy gradient) . Let ¯M be the homomorphic image of a continuous MDP M
+
+under the continuous MDP homomorphism hs = ( fs, g s). For a stochastic policy ¯πθ defined on ¯M, the gradient of the performance measure JM(θ) with respect to θ is given by 
+
+∇θ JM(θ) = 
+
+Z 
+
+> ¯s∈¯S
+
+ρ¯πθ (¯ s)
+
+Z 
+
+> ¯a∈¯A
+
+Q¯πθ
+
+> ¯M
+
+(¯ s, ¯a)∇θ ¯πθ (d¯a | ¯s)d¯s, (70) 
+
+where π↑ 
+
+> θ
+
+is a lifted policy of ¯πθ and ρ¯πθ denotes the discounted stationary distribution on ¯M under the policy ¯πθ .
+
+16 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# D. Experimental Details 
+
+D.1. Implementation details 
+
+Following the original learning pipeline of Panangaden et al. (2024), we simultaneously learn the regular policy π↑ 
+
+> θ
+
+and homomorphism mapping hx using the lax bisimulation metric. Given these learned components, we then train the abstract policy and critic in the homomorphic image of the regular MDP, and align the abstract and regular policies by minimizing the lifting loss in Eq (25), so that gradient information obtained in the abstract MDP is distilled to the regular policy. In practice, under the mild assumption that the underlying transition dynamics are deterministic, we can view the delay-free MDP as the homomorphic image of the regular MDP (i.e., ¯M∆ := M). Concretely, let τ : S ×A → S and τ∆ : X ×A → X 
+
+denote the deterministic transition functions of M and M∆, respectively. Under this setting, the belief induced by any augmented state x ∈ X collapses to a Dirac measure on S, i.e., there exists a map F∆ : X → S such that 
+
+b∆(· | x) = δF∆(x). (71) Defining the state mapping fx : X → S by fx(x) = F∆(x), and the action mapping gx : A → A by gx(a) = a (identity), then we have 
+
+R∆(x, a ) = Es∼b∆(·| x) [R(s, a )] = R(fx(x), a ) = R(fx(x), g x(a)) , (72) and the transition satisfies 
+
+fx(τ∆(x, a )) = τ (fx(x), g x(a)) , (73) for all (x, a ) ∈ Ψ∆. Therefore, the pair (fx, g x) defines a homomorphism map from M∆ to M (up to reachability), which enables us to update the regular policy using the gradient samples obtained from the delay-free MDP. This motivates and justifies our implementation choice of viewing the delay-free MDP as the homomorphic image of the regular MDP. Consequently, the abstract policy and critic defined on abstract MDP are consistent with the delay-free policy and critic on delay-free MDP by directly setting the abstract variables to the delay-free ones (i.e., ¯xt ≡ st and ¯at ≡ at). This seemingly simple assumption greatly simplifies the original training pipeline of Panangaden et al. (2024) in that we can train the delay-free components directly from time-aligned transition samples stored in the replay buffer (see Algorithm 1), and align the regular policy with the delay-free policy by minimizing the lifting loss in Eq. (25) , without explicitly learning a separate homomorphism map and abstract dynamics models. A schematic overview of the D 2HPG algorithm is presented in figure 3.     
+
+> Figure 3. A schematic overview of D 2HPG, where we assume the homomorphic image of M∆corresponds to M.
+
+17 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+D.2. Hyperparameters 
+
+The hyperparameters of D 2HPG variants are aligned with those used in Kim et al. (2023); Panangaden et al. (2024). Because all baselines included in our experiments are built upon SAC (Haarnoja et al., 2018), we adopt a shared hyperparameter con-figuration recommended by BPQL and VDPO across all algorithms to ensure a fair comparison. The detailed configuration is reported in Table 3.  
+
+> Table 3. Hyperparameters for the baseline algorithms.
+
+Hyperparameters Values Actor network 256, 256 Critic network 256, 256 Learning rate (actor) 3e-4 Learning rate (beta-critic) 3e-4 Temperature ( α) 0.2 Discount factor ( γ) 0.99 Replay buffer size 1e6 Batch size 256 Target entropy -dim (A)
+
+Target smoothing coefficient ( β) 0.005 Optimizer Adam (Kingma, 2014) Total time steps 1e6 
+
+D.3. Environment details  
+
+> Table 4. Environment details of the MuJoCo benchmark.
+
+Environmet State dimension Action dimension Time step (s) Ant-v3 27 8 0.05 HalfCheetah-v3 17 6 0.05 Walker2d-v3 17 6 0.008 Hopper-v3 11 3 0.008 Humanoid-v3 376 17 0.015 InvertedPendulum-v2 4 1 0.04  
+
+> Figure 4. Visual illustration of continuous control tasks in MuJoCo benchmark: (a) Ant-v3 (b) HalfCheetah-v3, (c) Walker2d-v3, (d) Hopper-v3, (e) Humanoid-v3, and (f) InvertedPendulum-v2
+
+18 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# E. Pseudo-code for D 2HPG 
+
+In this section, we summarize the D 2HPG algorithm. For practical implementation, we introduce a temporary buffer B
+
+that stores the most recent observations, rewards, and executed action sequence, which enables the RL agent to construct augmented states with timely information. Notably, the augmented reward ˜r can be empirically estimated from transition samples stored in the replay buffer D, i.e., 
+
+R∆(xt−∆, a t−∆) ≈ ED [R(st−∆, a t−∆)] . (74) As discussed in Appendix D.1, we may assume that the delay-free MDP is the homomorphic image of the regular MDP. Under this assumption, the abstract policy and critic coincide with the delay-free policy and critic, respectively. Consequently, we can train the delay-free components directly from transitions stored in the replay buffer and align the regular policy via the lifting loss, without explicitly learning the homomorphism map or the abstract dynamics models (line 23 in Algorithm 1). 
+
+Algorithm 1 Deep delayed homomorphic policy gradient (D 2HPG) 
+
+1: Input: policies π↑ 
+
+> θ
+
+, ¯πθ′ , critics Qϕ1 , Q ϕ2 , target critics Qϕ′ 
+
+> 1
+
+, Q ϕ′ 
+
+> 2
+
+, replay buffer D, temporary buffer B, delay ∆, target smoothing coefficient β, replay warm-up size N , episodic length H, and total number of episodes E.
+
+2: Initialize B ← ∅ , D ← ∅ 
+
+3: for episode e = 1 to E do 
+
+4: for time step t = 1 to H do 
+
+5: if t ≤ ∆ then 
+
+6: select random action at
+
+7: execute at on environment 
+
+8: put at, observed state, reward to B
+
+9: else 
+
+10: get st−∆, a t−∆, a t−∆+1 , . . . , s t−1 from B
+
+11: xt ← (st−∆, a t−∆, a t−∆+1 , . . . , a t−1)
+
+12: sample action at ∼ π↑ 
+
+> θ
+
+(xt)
+
+13: put at, observed state, reward to B
+
+14: if t > 2∆ then 
+
+15: get st−∆, s t−∆+1 , s t−2∆ , s t−2∆+1 , a t−2∆ , a t−2∆+1 , . . . , a t−∆, r t−∆ from B
+
+16: xt−∆ ← (st−2∆ , a t−2∆ , a t−2∆+1 , . . . , a t−∆−1)
+
+17: xt−∆+1 ← (st−2∆+1 , a t−2∆+1 , a t−2∆+2 , . . . , a t−∆)
+
+18: D ← D ∪ (xt−∆, s t−∆, a t−∆, r t−∆, x t−∆+1 , s t−∆+1 )
+
+19: end if 
+
+20: end if 
+
+21: if |D| ≥ N then 
+
+22: sample and permute a mini-batch Di ∼ D 
+
+23: train homomorphism map h(ξ, ω ) and dynamics models ¯Pτ , ¯Rν via Llax + Lh (can be omitted) 
+
+24: train critics Qϕ1 and Qϕ2 via Lcritic + Labstract-critic 
+
+25: train regular policy π↑ 
+
+> θ
+
+via stochastic actor-critic algorithm (optional) 
+
+26: train abstract policy ¯πθ′ via the stochastic homomorphic policy gradient in Lemma 3.8 
+
+27: align the policies π↑ 
+
+> θ
+
+and ¯πθ′ via Llift 
+
+28: update target critics Qϕ′ 
+
+> 1
+
+and Qϕ′ 
+
+> 2
+
+: ϕ′ 
+
+> 1
+
+← βϕ 1 + (1 − β)ϕ′
+
+> 1
+
+, ϕ′ 
+
+> 2
+
+← βϕ 2 + (1 − β)ϕ′
+
+> 2
+
+29: end if 
+
+30: end for 
+
+31: end for 
+
+32: Output: policies π↑ 
+
+> θ
+
+, ¯πθ′
+
+19 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# F. Full Results 
+
+In this section, we report the performance curves of each algorithm evaluated on the MuJoCo benchmarks with different fixed delays ∆ ∈ { 5, 10 , 20 }. All baselines were evaluated for one million time steps with five random seeds, where the shaded regions represent the standard deviation of average returns. 
+
+Figure 5. Performance curves of each algorithm on the MuJoCo benchmarks with ∆ = 5 .
+
+Figure 6. Performance curves of each algorithm on the MuJoCo benchmarks with ∆ = 10 .
+
+20 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback   
+
+> Figure 7. Performance curves of each algorithm on the MuJoCo benchmarks with ∆ = 20 .
+
+As demonstrated, VDPO shows respectable performance in some tasks, but its behavior is highly task-dependent and becomes increasingly unstable as the delay ∆ grows. BPQL provides strong and generally consistent performance under mild delays ( ∆ = {5, 10 }). However, it exhibits a substantial degradation under long delay ( ∆ = 20 ). In contrast, D 2HPG remains stable across all tasks and maintains strong performance even under long delays, achieving a clear advantage over the state-of-the-art augmentation-based baselines. 21 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+# G. Ablation Study 
+
+G.1. Performance evaluation for D 2HPG variants 
+
+We compare the following three D 2HPG variants in various MuJoCo benchmark: (i) D 2HPG-naive, which updates the regular policy solely using gradient samples obtained from the homomorphic image; (ii) D 2HPG-SAC, which trains the regular policy with SAC and applies auxiliary updates via the policy-alignment with the abstract policy; and (iii) D 2HPG-BPQL, which replaces SAC with BPQL as the regular-policy learner while retaining the same policy-alignment mechanism. As shown in Fig. 8, D 2HPG-naive substantially outperforms augmented SAC, indicating the clear benefits of our approach. Moreover, consistent with the empirical findings of Panangaden et al. (2024), learning the regular policy with a stable stochastic actor-critic algorithm and implementing an auxiliary policy-alignment with the abstract policy tends to be more sample-efficient and often yields stronger performance (D 2HPG-BPQL). These results further suggest that the proposed DHRL framework can act as a plug-and-play wrapper for existing augmentation-based baselines.     
+
+> (a) Ant-v3
+> (b) HalfCheetah-v3
+> (c) Hopper-v3
+> Figure 8. Normalized performance (average returns) of D 2HPG variants in various MuJoCo benchmarks, where D 2HPG-BPQL is used as the baseline (normalized to 1.0). Each algorithm was evaluated for one million time steps with five random seeds.
+
+22 Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback 
+
+G.2. Computational overheads  
+
+> Figure 9. Wall-clock runtime comparison across baselines over one million time steps.
+
+We quantify the computational overhead of D 2HPG variants in terms of wall-clock runtime and compare it with delayed RL baselines. The wall-clock runtimes were measured over one million time steps in HalfCheetah-v3 on an NVIDIA RTX 3060 Ti GPU and an Intel i7-12700KF CPU. The results are reported in Fig. 9. Compared to BPQL, D 2HPG-BPQL incurs additional wall-clock overhead due to the auxiliary policy-alignment updates, reflecting a trade-off between improved sample efficiency and increased computational cost. Nevertheless, D 2HPG-BPQL remains substantially more time-efficient than VDPO and Delayed SAC in terms of wall-clock runtime. 
+
+G.3. Extension to Random delays 
+
+As mentioned in the main text, we can employ the conservative-agent formulation of Lee et al. (2025) to extend the DHRL framework to random-delay environments. In particular, this formulation transforms a random-delay environment into a constant-delay surrogate with a fixed delay ∆ = ∆ max , where ∆max ∈ N denotes the known upper bound on the random delay. Consequently, this approach allows any fixed-delay method to be naturally extended to random-delay environments without any algorithmic modification, thereby supporting the extension of our DHRL framework to bounded random delays. To empirically validate our argument, we compare the performance of D 2HPG-BPQL under uniformly distributed random delays over {0, 1, . . . , ∆max } with ∆max ∈ { 5, 10 , 20 } against its performance under fixed delays with ∆ = {5, 10 , 20 }.The results in Fig. 10 demonstrate that the two different agents yield nearly identical performance across all tasks, as reported in Lee et al. (2025). This supports our claim that the DHRL framework can be readily extended to random-delay environments via the conservative-agent formulation. We leave more comprehensive extensions to future work.               
+
+> Figure 10. Performance curves of the D 2HPG agent trained in fixed-delay MDP with ∆ = {5,10 ,20 }and that of the D 2HPG agent trained in random-delay MDP with uniformly distributed delays over {0,1, . . . , ∆max }, where ∆max ={5,10 ,20 }. Each algorithm was evaluated for one million time steps with five random seeds, where the shaded regions denote the standard deviation of average returns.
+
+23

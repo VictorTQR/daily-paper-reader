@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04808v1/fig-001.webp",
+      "caption": "Figure 13. We vary the number of timesteps we use to train the policy π without concepts in MiniGrid. Typically, we have π = π∗, but here, we demonstrate that the DRS and DRS-log algorithms perform well even when π is trained for only 100k timesteps.",
+      "page": 15,
+      "index": 1,
+      "width": 425,
+      "height": 325
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04808v1/fig-002.webp",
+      "caption": "Figure 6. We assess the impact of concept selection upon test-time intervention across four environments. Across all four environments, the DRS algorithm has the highest reward both before and after intervention, showing that well-selected concepts improve intervention.",
+      "page": 7,
+      "index": 2,
+      "width": 994,
+      "height": 232
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04808v1/fig-003.webp",
+      "caption": "Figure 11. We vary the number of timesteps that we train policies for in CartPole, while also varying the accuracy of concept predictors (left) or the number of concepts selected (right). When the number of concepts is small or the accuracy of the concepts is low, policies fail to train, with the efficiency of training increasing with both parameters.",
+      "page": 14,
+      "index": 3,
+      "width": 482,
+      "height": 283
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04808v1/fig-004.webp",
+      "caption": "Figure 10. We compare the time to compute across methods and datasets, and find that all algorithms run in under ten minutes. While DRS and DRS-log take longer than variance and greedy, they still run quickly across environments.",
+      "page": 14,
+      "index": 4,
+      "width": 983,
+      "height": 191
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04808v1/fig-005.webp",
+      "caption": "Figure 2. Concept-based models rely on a set of decision-relevant concepts that help distinguish between different states, yet currently these concepts are manually selected. In this work, we study how to identify and select decision-relevant concepts. Our key insight is that decision-relevant concepts best separate “different” states, where difference is defined by their decision consequences. We use this insight to develop algorithms for concept selection with performance guarantees.",
+      "page": 3,
+      "index": 5,
+      "width": 971,
+      "height": 456
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04808v1/fig-006.webp",
+      "caption": "Figure 9. We compare concept selection algorithms while varying the number of concepts selected k with perfect (top) and imperfect (bottom) concept predictors. We find that for CartPole and MiniGrid, DRS outperforms baselines across values of k, while for environments such as Boxing and Glucose, a threshold number of concepts is needed before DRS outperforms baselines.",
+      "page": 13,
+      "index": 6,
+      "width": 995,
+      "height": 364
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04808v1/fig-007.webp",
+      "caption": "Figure 8. We assess the performance of a) not relaxing constraint P1c for DRS and b) varying ρ for CartPole and MiniGrid. We find that ρ = 0.75 performs well across perfect and imperfect settings, while introducing P1c leads to lower performance in CartPole.",
+      "page": 12,
+      "index": 7,
+      "width": 439,
+      "height": 296
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05533v1/fig-001.webp",
+      "caption": "Table 1. From-scratch learning in Minecraft (Success@0→10 / Success@0→30). Higher is better. Results are averaged over worlds, map variants, and resource configurations. v denotes full model; u denotes component disabled.",
+      "page": 6,
+      "index": 1,
+      "width": 1024,
+      "height": 323
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05533v1/fig-002.webp",
+      "caption": "Figure 2. Comparison of item unlocking progress across different agents. The x-axis represents the iteration steps, and the y-axis indicates the number of unique items unlocked. Our method shows a significantly faster progression, exhibiting a “rapid unlocking” phenomenon in the mid-stage, where similar items are unlocked in an explosive manner. Compared to previous methods (MP5 [38], Voyager [42], JARVIS-1 [45], and MrSteve [36]), our approach achieves equivalent milestones about 1.3×–1.7× faster.",
+      "page": 2,
+      "index": 2,
+      "width": 486,
+      "height": 250
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05533v1/fig-003.webp",
+      "caption": "Figure 8. Continuous learning performance comparison. The figure shows the success rate (%) over 31 training episodes (0–30) across five agents: Ours, JARVIS-1, MP5, MrSteve, and Voyager. The shaded region (episodes 5–15) highlights the fast learning phase of our method. Compared to all baselines, our method demonstrates a faster learning rate in the mid-phase.",
+      "page": 7,
+      "index": 3,
+      "width": 487,
+      "height": 343
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05533v1/fig-004.webp",
+      "caption": "Figure 3. Overview of motivation and Problem Framework. (a) Traditional MLLM-based agents struggle to generalize across complex real-world environments due to different state transitions and causal relations (hard to transfer) and may exhibit unstable control arising from hallucinations. (b) The proposed Structured In-Context Learning framework introduces a unified CSD that decomposes environmental knowledge into five explicit transfer dimensions.",
+      "page": 3,
+      "index": 4,
+      "width": 487,
+      "height": 360
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05533v1/fig-005.webp",
+      "caption": "Figure 9. Transferring from a wooden pickaxe to a stone pickaxe.",
+      "page": 8,
+      "index": 5,
+      "width": 485,
+      "height": 316
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05533v1/fig-006.webp",
+      "caption": "Figure 4. Overview of the CSD schema.",
+      "page": 4,
+      "index": 6,
+      "width": 484,
+      "height": 262
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05533v1/fig-007.webp",
+      "caption": "Figure 6. Overview of our iterative framework. The system performs perception, memory retrieval, planning, verification, and execution in a loop. A three-layer architecture (perception, decision, execution) interacts with short- and long-term memory to support structured ICAL and case-based transfer.",
+      "page": 5,
+      "index": 7,
+      "width": 487,
+      "height": 502
+    }
+  ]
+}

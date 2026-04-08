@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02687v1/fig-001.webp",
+      "caption": "Fig. 4: Two simulations showing 3 (left) and 4 (right) agent teams navigating through obstacles. The color of the obstacles matches with the agent that knows of it. Both scenarios are able to infer and avoid the obstacles, successfully reaching their goal positions.",
+      "page": 7,
+      "index": 1,
+      "width": 500,
+      "height": 360
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02687v1/fig-002.webp",
+      "caption": "Fig. 5: Convergence regions of the regularized Newton method (left) and Input Matching (right). White denotes divergence. Newton’s method converges from most initializations, whereas Input Matching requires initialization near the true obstacle.",
+      "page": 7,
+      "index": 2,
+      "width": 504,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02687v1/fig-003.webp",
+      "caption": "Fig. 6: Two rope-connected quadrupeds navigate around an obstacle (left) and through a gap between two walls (right). The rear robot knows the obstacles, while the front robot infers them from the rear robot’s safety-filtered actions.",
+      "page": 7,
+      "index": 3,
+      "width": 506,
+      "height": 402
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02687v1/fig-004.webp",
+      "caption": "Fig. 3: Two teams of two agents cross diagonally toward opposite goals (left). The robust CBF constraint enables decentralized collision-free crossing, with the left team yielding. The distance plot (right) confirms the inter-team distance never drops below the safety threshold.",
+      "page": 7,
+      "index": 4,
+      "width": 502,
+      "height": 251
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02687v1/fig-005.webp",
+      "caption": "Fig. 2: A single trial from a Monte-Carlo rollout where we generate random obstacles and goal positions for two double integrator agents connected by a formation constraint. We compare two inference methods (KKT vs. IM) and two obstacle-avoidance formulations (CBF vs. Circle). We observe that CBF + KKT is able to avoid all collisions while the other methods have at least one collision.",
+      "page": 6,
+      "index": 5,
+      "width": 504,
+      "height": 479
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02687v1/fig-006.webp",
+      "caption": "Fig. 7: Trajectory plots of the hardware experiments depicted in Figure 6. The plots confirm that agents were able to avoid obstacles, maintain formation constraints, and reach their goals.",
+      "page": 8,
+      "index": 6,
+      "width": 512,
+      "height": 321
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02687v1/fig-007.webp",
+      "caption": "Fig. 1: Applying our decentralized constraint inference and planning method to a furniture-moving task. Agents share a goal but possess asymmetric knowledge of environmental constraints (Agent 1 initially knows of the obstacle but Agent 2 does not). Our method enables decentralized constraint inference and safe planning, with theoretical guarantees on constraint identifiability and safety without direct communication among agents.",
+      "page": 1,
+      "index": 7,
+      "width": 512,
+      "height": 312
+    }
+  ]
+}

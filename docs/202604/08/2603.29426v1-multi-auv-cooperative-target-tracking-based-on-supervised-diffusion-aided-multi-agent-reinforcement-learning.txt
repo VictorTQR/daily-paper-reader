@@ -1,0 +1,1517 @@
+Title: Multi-AUV Cooperative Target Tracking Based on Supervised Diffusion-Aided Multi-Agent Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2603.29426v1
+
+Published Time: Wed, 01 Apr 2026 00:50:09 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+> JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 1
+
+# Multi-AUV Cooperative Target Tracking Based on Supervised Diffusion-Aided Multi-Agent Reinforcement Learning 
+
+Jiaao Ma, Chuan Lin, Member, IEEE , Guangjie Han, Fellow, IEEE , Shengchao Zhu, Student Member, IEEE, 
+
+Zhenyu Wang, Chen An 
+
+Abstract —In recent years, advances in underwater networking and multi-agent reinforcement learning (MARL) have signifi-cantly expanded multi-autonomous underwater vehicle (AUV) applications in marine exploration and target tracking. However, current MARL-driven cooperative tracking faces three critical challenges: 1) non-stationarity in decentralized coordination, where local policy updates destabilize teammates’ observation spaces, preventing convergence; 2) sparse-reward exploration inefficiency from limited underwater visibility and constrained sensor ranges, causing high-variance learning; and 3) water disturbance fragility combined with handcrafted reward depen-dency that degrades real-world robustness under unmodeled hydrodynamic conditions. To address these challenges, this paper proposes a hierarchical MARL architecture comprising four layers: global training scheduling, multi-agent coordination, local decision-making, and real-time execution. This architecture opti-mizes task allocation and inter-AUV coordination through hier-archical decomposition. Building on this foundation, we propose the Supervised Diffusion-Aided MARL (SDA-MARL) algorithm featuring three innovations: 1) a dual-decision architecture with segregated experience pools mitigating non-stationarity through structured experience replay; 2) a supervised learning mecha-nism guiding the diffusion model’s reverse denoising process to generate high-fidelity training samples that accelerate conver-gence; and 3) disturbance-robust policy learning incorporating behavioral cloning loss to guide the Deep Deterministic Policy Gradient (DDPG) network update using high-quality replay ac-tions, eliminating handcrafted reward dependency. The tracking algorithm based on SDA-MARL proposed in this paper achieves superior precision, robustness to dynamic ocean conditions, and computational efficiency compared to state-of-the-art methods in comprehensive underwater simulations. 
+
+Index Terms —Autonomous underwater vehicle (AUV), multi-AUV system, underwater target tracking, multi-agent reinforce-ment learning, diffusion model, supervised learning. 
+
+I. I NTRODUCTION 
+
+# As the largest connected ecosystem on Earth, the ocean serves as a critical arena for resource exploitation, en-vironmental monitoring, and maritime security [1]. To meet 
+
+Corresponding author: Guangjie Han 
+
+Jiaao Ma, Chuan Lin, and Zhenyu Wang are with Software College, Northeastern University, Shenyang, China. (e-mails: 2727746375@qq.com; chuanlin1988@gmail.com; larrywang1019@outlook.com;). Guangjie Han is with Key Laboratory of Maritime Intelligent Network Information Technology, Ministry of Education, Hohai University. (e-mails: hanguangjie@gmail.com). Shengchao Zhu is with the College of Computer Science and Soft-ware Engineering, Hohai University, Nanjing, 210013, China (e-mail: zhushengchao77@gmail.com). Chen An is with the College of Computer Science and Engineering, North-eastern University, Shenyang, China (e-mail: 20235854@stu.neu.edu.cn). 
+
+these demands, multi-AUV systems have been extensively developed and widely applied to seabed resource exploration, ecological monitoring, scientific surveys, and especially co-operative tracking tasks, where multiple AUVs must jointly pursue dynamic targets and maintain coordinated following of underwater objects [2, 3]. However, the complexity of the marine environment and the dynamic nature of underwater tar-get motion pose substantial challenges to reliable and efficient cooperative tracking [4]. Multi-agent reinforcement learning (MARL) offers a dis-tributed decision-making framework to coordinate multiple AUVs, enabling agents to learn cooperative strategies through environmental interaction while balancing global objectives with individual goals [5]. Compared to centralized control, MARL offers key advantages, including decentralized percep-tion, asynchronous decision-making, and strong adaptability to environmental uncertainties, making it particularly suitable for multi-AUV systems where each AUV acts as an autonomous agent that collaborates through local observations [6]. Recent studies have reported notable progress in the application of MARL to multi-AUV cooperation, particularly in tracking dynamic underwater targets under the centralized training paradigm with decentralized execution (CTDE) [7]. Despite these advances, existing learning-based methods for underwater cooperative tracking remain limited. Conventional single-agent RL or centralized RL frameworks suffer from poor scalability and heavy communication burdens when ex-tended to multi-AUV scenarios. Moreover, many methods rely on accurate environmental modeling and handcrafted reward functions, rendering them fragile to unmodeled hydrodynamic disturbances and domain shifts in real-world ocean environ-ments [8]. Even within MARL frameworks, the combination of partial observability, delayed sparse rewards, and strong en-vironmental disturbances frequently leads to unstable training and policies that are difficult to deploy safely. However, current MARL-driven cooperative tracking in multi-AUV systems faces three fundamental challenges: 1) non-stationarity in decentralized coordination: Local policy updates in decentralized settings dynamically alter teammates’ observation spaces, inducing non-stationary environments that prevent stable policy convergence [9, 10]; 2) sparse-reward exploration inefficiency: Limited underwater visibility and constrained sensor ranges yield sparse delayed rewards during target tracking, causing high-variance exploration and slow learning [11, 12]; 3) unmodeled hydrodynamic disturbances  
+
+> arXiv:2603.29426v1 [cs.NI] 31 Mar 2026 JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 2
+
+and reward dependency: Unmodeled hydrodynamic distur-bances combined with handcrafted reward functions critically degrade policy robustness and real-world deployment reliabil-ity [8, 13]. To address the aforementioned issues, this paper introduces the concept of efficient sample generation and proposes a Supervised Diffusion-Aided MARL (SDA-MARL) framework for multi-AUV cooperative tracking. The framework inte-grates three core innovations: 1) a dual-decision architecture that mitigates non-stationarity through segregated experience pools; 2) a supervised learning mechanism that leverages high-quality replay actions to accelerate convergence and reduce exploration variance; 3) disturbance-robust policy learning via a diffusion model trained on high-quality replay actions to gen-erate robust actions, eliminating dependency on handcrafted rewards. In total, the main contributions of this work are: 1) Based on diffusion models, we propose SDA-MARL, an algorithm that schedules multi-AUV systems for target tracking in sparse-reward environments. Within SDA-MARL, we design a dual-decision network architecture integrated with a structured experience replay mecha-nism to mitigate non-stationarity during MARL training. 2) Furthermore, in SDA-MARL, we introduce a supervised learning component to guide the update of the diffusion model. By training the diffusion model to match high-quality actions from the replay buffer, this supervised signal reduces exploratory variance during early training stages and accelerates convergence, while also maintain-ing stability through direct imitation of demonstrated behaviors. 3) Meanwhile, in SDA-MARL, we introduce a behavioral cloning loss to guide the training of the Deep Deter-ministic Policy Gradient (DDPG) Actor network. This loss trains the Actor to imitate high-quality actions synthesized by the diffusion model based on the replay buffer, which accelerates policy convergence and en-hances robustness to dynamic underwater disturbances, thereby reducing the dependence on explicit reward engineering. The remainder of this paper is organized as follows. Section II reviews the related work. Section III displays the formula-tion of the problem and the system preliminaries. Section IV proposes the SDA-MARL framework. Section V details the SDA-MARL-based cooperative tracking algorithm for multi-AUV systems. Section VI presents experimental evaluations and results. Finally, Section VII concludes the paper and outlines future research directions. II. R ELATED WORKS 
+
+In this section, we mainly study the latest research products related to the subject, specifically divided into the follow-ing two areas: 1) AUV target tracking algorithms based on RL/MARL; 2) reinforcement learning methods based on diffusion models. 
+
+A. AUV Target Tracking Algorithms Based on RL/MARL 
+
+Existing research demonstrates that single-AUV target tracking systems provide integrated perception, planning, and control capabilities [14], delivering reliable performance in well-defined small-scale scenarios through their simple archi-tecture. However, these systems exhibit inherent limitations in complex, large-scale, dynamic multi-target environments: constrained perception range, insufficient parallel tasking ca-pability, poor disturbance resistance, and robustness overly dependent on a single platform [15]. To overcome these bottlenecks, the research focus has shifted to multi-AUV cooperative tracking systems. Utilizing swarm control and distributed coordination, such systems en-able real-time information sharing and joint decision-making among platforms. This significantly extends the perceptual field, enhances parallel multi-target tracking capability, and improves overall system resilience and mission efficiency [16]. In [17], the authors propose a TD3 deep reinforcement learning-based end-to-end motion planning and control strat-egy for AUVs. Using a 6-DOF dynamic model with direct rudder angle control, the method achieves robust path planning and precise target arrival in unknown environments with ocean currents through a composite reward function. In [18], the authors present a few-shot underwater visual object tracking framework integrating a Kalman filter with reinforcement learning-based twin network optimization. Its hybrid architecture coordinates motion prior and dynamic hyperparameter optimization to achieve robust tracking under data scarcity and complex underwater disturbances, validated on experimental platforms. In [19], the authors develop a multi-AUV cooperative per-ception and decision-making framework for dynamic target tracking. The hybrid architecture combines CNN-based target localization using axis-frequency electric field signals with MARL, modeling cooperative tracking as a partially observ-able Markov game to enable autonomous decision-making under constraints in unknown environments. While RL/MARL has been widely used in multi-AUV track-ing tasks, it still struggles with environmental adaptability, training stability, and multi-target robustness. Diffusion mod-els, with their strong policy generation capabilities, now offer a promising way to build more scalable and robust collaborative decision-making frameworks for multi-AUV systems. 
+
+B. Reinforcement Learning Methods Based on Diffusion Mod-els 
+
+Recently, diffusion model-driven reinforcement learning has emerged as a promising interdisciplinary frontier, bridging the gap between generative AI and decision-making intelligence [20]. Leveraging probabilistic foundations and strong genera-tive capabilities, the diffusion model effectively supports core tasks including policy optimization, environment modeling, and multi-agent collaboration [21]. This has spurred diverse studies that underscore its potential to boost policy sampling efficiency, enhance representational diversity and robustness, and facilitate multi-agent coordination—offering a promising pathway toward high-performance decision systems in com-plex dynamic environments [22]. In [23], the authors propose Diffusion-QL, an offline rein-forcement learning algorithm that employs a state-conditioned JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 3
+
+diffusion model to represent multi-modal policies. The method injects Q-learning gradients directly into the diffusion reverse process, guiding action generation toward high-value regions while respecting data constraints, and achieves state-of-the-art performance on D4RL benchmarks. In [24], the authors propose FISOR, a framework that integrates reachability analysis with diffusion models to en-force hard safety constraints in offline RL. It identifies the maximum feasible region via inverse expectile regression, training a feasibility-aware policy through weighted diffusion to maximize rewards in feasible states and minimize violations elsewhere. On DSRL benchmarks, FISOR uniquely satisfies all safety requirements across tasks while achieving state-of-the-art returns. In [25], the authors propose QVPO, a method that integrates diffusion models into online reinforcement learning. The ap-proach utilizes a Q-weighted variational loss for policy opti-mization, uniform-sample entropy regularization for enhanced exploration, and a behavior policy that selects high-value actions from multiple diffusion samples. This method achieves state-of-the-art performance on MuJoCo benchmarks, outper-forming baseline algorithms including SAC, TD3, DIPO, and QSM. In summary, despite progress in multi-AUV cooperative tracking and diffusion-based RL, critical challenges persist in dynamic environment adaptation, swarm training stability, and robust multi-target tracking. To bridge these gaps, this paper proposes a hierarchical generative MARL framework guided by a supervised diffusion technique, enhancing scalability and robustness for complex underwater operations. III. P RELIMINARY MATERIALS 
+
+In this section, to accurately simulate the process of avoid-ing obstacles and tracking targets underwater while adapting to real dynamic effects, this paper incorporates the influence of ocean currents into the modeling. Furthermore, we transform the tracking problem in multi-AUV systems into a Markov decision process (MDP). 
+
+A. Modeling of Underwater Environment Detection 
+
+In complex underwater environments, accurately determin-ing the relative positions between AUVs and their targets is critical. In this work, the sonar technology is employed for AUV positioning. A sonar-equipped AUV emits acoustic waves to scan its surroundings. A fan-shaped array then captures echo signals from various directions, enabling target localization based on echo strength. The entire detection process is mathematically modeled and optimized using the classic active sonar equation presented as Eq. (1): 
+
+EM = SL − 2TL + TS − (NL − DI) − DT , (1) where EM is excess margin, SL is source level, TL is transmission loss, TS is target strength, NL is ambient noise level, DI is the directional index, DT is the detection threshold (all in dB). 
+
+B. Ocean Circulation Modeling 
+
+The complexity of the marine environment, particularly the dynamics of ocean currents, presents significant challenges for AUV-based tracking. To quantify and simulate the fluid dynamic forces central to these environmental interactions, the fundamental Navier-Stokes equations are employed, as given in Eq. (2): 
+
+ρ
+
+ ∂u
+
+∂t + u · ∇ u
+
+
+
+= −∇ p + μ∇2u + F , (2) where ρ is fluid density, u is velocity field, ∂u 
+
+> ∂t
+
+is temporal derivative, u · ∇ u is convective term, ∇p is pressure gradient, 
+
+μ is dynamic viscosity, ∇2u is diffusive term, and F is external force. Meanwhile, our work models as well as the hydrodynamic forces on an AUV in ocean currents, especially the drag force (FD ), lift force ( FL), and virtual mass force ( FV M ), which are displayed in Eq. (3), Eq. (4), and Eq. (5), respectively. 
+
+FD = 12 ρu 2CD A, (3) where ρ represents fluid density, u is the relative velocity, CD
+
+is the drag coefficient, and A is the frontal area. 
+
+FL = 12 ρu 2CLA, (4) where CL is the lift coefficient. 
+
+FV M = ρC V M V ∂u ∂t , (5) where CV M is the virtual mass coefficient, and V represents the displaced volume. These forces constitute the external force term F in the Reynolds-Averaged Navier-Stokes (RANS) equation: 
+
+ρ
+
+ ∂u
+
+∂t + u · ∇ u
+
+
+
+= −∇ p + μ∇2u + ∇ · (−ρu′u′) + F , (6) where p is pressure, μ is dynamic viscosity, and u′u′ represents the Reynolds stress tensor. Eqs. (4)–(6) collectively compute the time-varying hydro-dynamic loads and their resultant force vector acting on the AUV. To model the collisions between AUVs, we formulate a smooth repulsive force mechanism based on continuous contact mechanics. The smooth penetration depth function is defined as: 
+
+σ(d) = k · log 
+
+
+
+1 + exp 
+
+
+
+− d − (ra + rb)
+
+k
+
+ 
+
+, (7) where d = ∥pa − pb∥ ∈ R+ denotes the Euclidean distance between AUV, ra, r b ∈ R+ represent their respective collision radii, and k > 0 is the smoothing parameter that governs the transition sharpness near contact boundaries. The collision force vector Fcollision is then expressed as: 
+
+Fcollision = Fcontact · σ(d) · pa − pb
+
+∥pa − pb∥ , (8) where Fcontact > 0 is the contact stiffness coefficient that controls the repulsive force strength, and pa−pb 
+
+> ∥pa−pb∥
+
+is the unit JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 4
+
+direction vector from AUV b to AUV a. Eqs. (7)–(8) provide a smooth and continuous collision model that ensures stable force computations during both numerical simulation and RL training in multi-AUV systems. 
+
+C. Markov Decision Process Modeling 
+
+In the decision-making process for multi-AUV systems, the environment can be defined as an MDP comprising five components: state space S, action space A, state transition probability P, reward function R, and discount factor γ, as expressed in Eq. (9): 
+
+M = ⟨S , A, P, R, γ ⟩ (9) The state space S encodes comprehensive environmen-tal awareness via sonar-derived spatial relationships between AUVs and surrounding objects (including obstacles and AUVs). Formulated as S = {s1, s 2, . . . , s |S| }, each state vector si = ( ηi, ϕ i, o i), i = 1 , 2, · · · , |S| integrates three or-thogonal components: the ego-motion state ηi = ( ppos , p vel ) ∈
+
+R6 capturing the i-th AUV’s 3D position ppos and velocity 
+
+pvel , the perceptual state ϕi encoding processed environmental features from acoustic sensing, and the observation state oi =(κi, σ i, λ i) ∈ RNk ×dk +Nσ ×dσ +Nλ×dλ representing relative positions of Nk tracked targets, Nσ neighboring AUVs, and 
+
+Nλ environmental landmarks. The action space A defines the continuous control inputs for multi-AUV systems, formalized as A = {a1, a 2, . . . , a |A|}
+
+where each action vector ai = [ax, a y , a z ]⊤ ∈ R3, i =1, 2, · · · , |A| represents normalized thrust commands along the Cartesian axes. These control signals are generated by a policy network with tanh activation, ensuring bounded outputs within [−1, 1] to maintain physical feasibility of propulsion commands while enabling precise maneuverability in complex underwater environments. The state transition probability P(s′|s, a ) follows physically-constrained kinematic models that govern the evolution of multi-AUV systems. The discount factor 
+
+γ ∈ [0 , 1) modulates the temporal credit assignment in policy evaluation, where γ approaching one denotes multi-AUV systems prioritize long-term cumulative rewards through strategic path planning, while γ approximating zero emphasizes that the systems prefer the short-term reward. In our work, the reward function R incorporates multiple performance factors through a weighted composite structure. We specifically integrate tracking accuracy metrics, collision avoidance penalties, and environmental constraint satisfac-tion to enhance multi-AUV coordination effectiveness. The proposed reward aims to balance the exploration-exploitation tradeoffs while maintaining stability during policy optimiza-tion. The details about the reward design are showcased in Section V. IV. H IERARCHICAL MULTI -AUV MARL B ASED ON 
+
+SUPERVISED DIFFUSION 
+
+This section introduces generative AI and proposes a hier-archical multi-AUV MARL framework based on a supervised diffusion model, aiming to mitigate training instability caused by heterogeneous sample quality in experience replay buffers. To address the complex coordination and learning challenges in underwater multi-agent settings, we design a structured four-layer architecture that integrates centralized guidance with decentralized execution. The proposed hierarchy not only stabilizes training but also enhances scalability and operational coherence between distributed AUVs. 
+
+A. Proposed Hierarchical Multi-AUV MARL Architecture 
+
+This subsection details the four-layer architecture of the proposed hierarchical framework, as illustrated in Fig. 1. The design decouples system functions into specialized layers for global training scheduling, multi-agent coordination, local policy generation, and real-time execution. Building upon the software-defined MARL concept from our prior work [26, 27], this structure establishes clear functional boundaries with bidi-rectional information flow. It is engineered to enable adaptive decision-making and robust integration, directly addressing the core challenges of exploration efficiency and training stability in distributed underwater operations. 
+
+Global Training Scheduling Layer: In this layer, the Unmanned Surface Vessel-based Global Controller (USV-GC) functions as the centralized mission controller (as shown in Fig. 1), receiving global task specifications via satellite communications. The USV-GC utilizes a northbound interface to decompose the global mission into spatially bounded sub-tasks according to operational regions. These sub-tasks are subsequently allocated to designated underwater coordinators based on their territorial assignments. Each coordinator exe-cutes region-specific operations within its assigned underwater domain, implementing underwater acoustic communication and multi-target tracking procedures while complying with physical operation constraints. 
+
+Multi-AUV Coordination Layer: This layer processes sub-task assignments from upper tiers and executes localized information processing. In this layer, the coordinator nodes establish bidirectional communication with adjacent-region peers to enable cross-domain data exchange. Each coordinator decomposes tasks into executable primitives and assigns them to AUVs via capability-aware task assignment. Meanwhile, this layer also implements a centralized training paradigm where coordinators integrate global evaluation networks that aggregate AUV state information for policy optimization. Further, a unified experience replay buffer has been deployed in this layer to enhance inter-AUV knowledge transfer. To guarantee a synchronized global view, the periodic synchro-nization protocol is deployed to transmit processed local data upward to global schedulers and laterally to peer coordinators. 
+
+Local Policy Generation Layer: As the policy execution unit, this layer receives distributed tasks from the coordina-tion layer and initiates local training. Each AUV employs a diffusion-based generative policy that produces exploratory ac-tion distributions through multi-step denoising. The interaction samples are stored in local experience buffers, where policy optimization combines behavior cloning and Q-learning. Fur-thermore, the DDPG networks are refined via diffusion model-guided loss to approach optimal behaviors, while bidirectional JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 5Multi -agent                                    
+
+> coordination
+> layer
+> Global  training
+> scheduling
+> layer
+> Local  decision
+> ge neration
+> layer
+> Receive global
+> missions from
+> satellites
+> Handle global tasks
+> and break them
+> down
+> Assign the global
+> task to the
+> collaborative
+> AUVs
+> Decomposed task
+> Local task Local task
+> Real -time
+> application
+> layer
+> O
+> O
+> A
+> Sample supervised
+> learning
+> XNX2X1
+> Reverse denoising
+> XNX2X1
+> Reverse denoising
+> Store Store
+> Dual decision network sample collection process
+> O
+> O
+> A
+> Sample supervised
+> learning
+> XNX2X1
+> Reverse denoising
+> Store Store
+> Dual decision network sample collection process
+> Sampling
+> Soft update
+> Soft update 2Q2QNQNQ2QNQ2QNQ1Q1Q
+> Sampling
+> Soft update
+> Soft update 2QNQ2QNQ1Q1Q
+> Critic network update process
+> USV -GC Coordinator AUV Target Critic Network
+> for Diffusion
+> Critic Network
+> for DDPG
+> Actor Network
+> for DDPG
+> Critic Network
+> for Diffusion
+> Normal Sample Noisy Sample
+
+North -bound API 
+
+O AO A
+
+Update 
+
+O
+
+A   
+
+> O
+> A
+> OAOA
+> Update Update
+
+South -bound API                       
+
+> Samping Samping
+> Multi -agent
+> coordination
+> layer
+> Global  training
+> scheduling
+> layer
+> Local  decision
+> ge neration
+> layer
+> Receive global
+> missions from
+> satellites
+> Handle global tasks
+> and break them
+> down
+> Assign the global
+> task to the
+> collaborative
+> AUVs
+> Decomposed task
+> Local task
+> Real -time
+> application
+> layer
+> O
+> O
+> A
+> Sample supervised
+> learning
+> XNX2X1
+> Reverse denoising
+> Store Store
+> Dual decision network sample collection process
+> Sampling
+> Soft update
+> Soft update 2QNQ2QNQ1Q1Q
+> Critic network update process
+> USV -GC Coordinator AUV Target Critic Network
+> for Diffusion
+> Critic Network
+> for DDPG
+> Actor Network
+> for DDPG
+> Critic Network
+> for Diffusion
+> Normal Sample Noisy Sample
+
+North -bound API 
+
+O AO A
+
+Update 
+
+O
+
+A   
+
+> O
+> A
+> OAOA
+> Update Update
+
+South -bound API  
+
+> Samping Samping
+
+Fig. 1: Architecture of hierarchical multi-AUV MARL framework based on supervised diffusion communication with upper layers maintains consistent state representations for coordinated decision-making. 
+
+Real-Time Execution Layer: This layer executes opti-mized policies through the AUVs. Each AUV integrates dual decision architectures: a diffusion model and a DDPG net-work. During environmental interaction, the diffusion model first generates diverse exploration trajectories. These trajec-tories, combined with real interaction data from the DDPG, populate the shared experience replay buffer. The proposed dual decision architectures are jointly trained on sampled experiences, where the diffusion model provides supervisory signals for behavior cloning while the DDPG optimizes ac-tion selection. This synergistic framework accelerates target acquisition and obstacle avoidance capabilities, yielding rapid convergence of cumulative rewards during training. For details about our proposed generative MARL algorithm, please refer to the concept in Section IV-B. In summary, the proposed generative hierarchical multi-AUV MARL architecture implements a centralized training with a decentralized execution framework. The integration of diffusion models and DDPG networks as dual decision-making architectures within each AUV yields accelerated conver-gence stability for distributed underwater tracking tasks. This paradigm simultaneously enhances system cohesion while substantially reducing inter-module coupling complexity. 
+
+B. Proposed Generative Multi-AUV MARL Algorithm 
+
+To address reward oscillation and convergence challenges in underwater multi-agent training under dynamically complex environments, this paper proposes a Supervised Diffusion model-based Multi-Agent Reinforcement Learning algorithm (SDA-MARL), as shown in Fig. 2. The proposed algorithm implements a dual decision architecture combining DDPG with diffusion model. This framework employs the diffusion component to generate high-quality synthetic experiences that enhance replay buffer diversity, while a supervised learning mechanism constrains diffusion model training using Q-value feedback to optimize sample quality. This integrated approach fundamentally stabilizes training dynamics by regulating the experience distribution at its source. 
+
+1) Positive Sample Generation Based on Diffusion Model: 
+
+In conventional multi-AUV MARL frameworks, multi-AUV systems typically collect environmental interaction experi-ences for replay buffer storage. However, this manner exhibits inherent limitations: immature policies during early training phases generate low-quality experiences that accumulate in the buffer and propagate through policy updates, inducing value estimation bias and policy gradient oscillations that compromise convergence stability and speed. To overcome these limitations, this paper introduces a collaborative dif-fusion model-based training architecture that systematically enhances robustness and convergence performance through structured experience generation and quality-aware filtering mechanisms. In the proposed SDA-MARL algorithm, the experience replay buffer maintains a dual-component structure. One parti-tion consists of authentic interaction trajectories generated by the DDPG decision component exploring the environment. The JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 6Storage 
+
+AUV 
+
+> Diffusion
+> Actor
+> Generate
+> sample
+> Supervison
+> learning
+
+o1
+
+o2
+
+> ON
+
+o1
+
+o2                             
+
+> ON
+> Current
+> obervation
+> Input Current
+> action
+> Output
+> Environment
+> Current state
+> Current action
+> Current reward
+> Next state
+> Current state
+> Current action
+> Current reward
+> Next state
+> Decision -making architecture Reverse diffusion method
+> Positive
+> sample Distance supervison
+> All
+> sample Positive
+> sample Distance supervison
+> All
+> sample
+> θsupervison
+> Supervised learning architecture
+> Deterministic policy network Sample storage
+> A. Multi -agent data generation framework
+> A1
+> A2
+> AN
+> A1
+> A2
+> AN
+> Buffer
+> Sample
+> Sampling
+> Concatenate
+> All action
+> All state Input 1Q2QNQ1Q2QNQ
+> Soft update
+> Actor loss
+> Forward diffusion
+> X1X2XN
+> Forward diffusion
+> X1X2XN
+> Q-loss
+> BC -loss
+> Soft update 1Q2QNQ1Q2QNQ
+> Reverse denoising
+> XNX2X1
+> Reverse denoising
+> XNX2X1
+> Reverse denoising
+> XNX2X1
+> Reverse denoising
+> XNX2X1
+
+o1
+
+o2
+
+> ON
+
+o1
+
+o2
+
+> ON
+> Current state
+> Current action
+> Current reward
+> Next state
+> Current state
+> Current action
+> Current reward
+> Next state
+> A1
+> A2
+> AN
+> A1
+> A2
+> AN
+
+o1
+
+o2
+
+> ON
+
+o1
+
+o2
+
+> ON
+
++
+
+> Input
+> parameters
+> Input
+> parameters
+> A1
+> A2
+> AN
+> A1
+> A2
+> AN
+
+o1
+
+o2
+
+> ON
+
+o1
+
+o2
+
+> ON
+
++    
+
+> Total loss
+> Deep Deterministic Policy Gradient network update
+> Diffusion model network update
+> B. Network architecture update
+
+AUV 
+
+> Diffusion
+> Actor
+> Generate
+> sample
+> Supervison
+> learning
+
+o1
+
+o2                    
+
+> ON
+> Current
+> obervation
+> Input Current
+> action
+> Output
+> Environment
+> Current state
+> Current action
+> Current reward
+> Next state
+> Decision -making architecture Reverse diffusion method
+> Positive
+> sample Distance supervison
+> All
+> sample
+> θsupervison
+> Supervised learning architecture
+> Deterministic policy network Sample storage
+> A. Multi -agent data generation framework
+> A1
+> A2
+> AN
+> Buffer
+> Sample
+> Sampling
+> Concatenate
+> All action
+> All state Input 1Q2QNQ
+> Soft update
+> Actor loss
+> Forward diffusion
+> X1X2XN
+> Q-loss
+> BC -loss
+> Soft update 1Q2QNQ
+> Reverse denoising
+> XNX2X1
+> Reverse denoising
+> XNX2X1
+
+o1
+
+o2
+
+> ON
+> Current state
+> Current action
+> Current reward
+> Next state
+> A1
+> A2
+> AN
+
+o1
+
+o2
+
+> ON
+
++
+
+> Input
+> parameters
+> A1
+> A2
+> AN
+
+o1
+
+o2
+
+> ON
+
++    
+
+> Total loss
+> Deep Deterministic Policy Gradient network update
+> Diffusion model network update
+> B. Network architecture update
+
+Fig. 2: Workflow of proposed generative multi-AUV MARL algorithm other partition comprises synthetic experiences produced by diffusion models. To enable decentralized training efficiency, each AUV independently hosts a paired architecture containing both a DDPG network and a diffusion model, establishing lo-calized training units capable of joint experience optimization without centralized coordination overhead. In the diffusion model deployed on AUV, data generation follows a dual-phase process: forward diffusion progressively injects noise into clean samples. At the same time, a neural network executes reverse denoising to reconstruct data distri-butions. This mechanism generates novel samples consistent with the original training distribution, thereby enhancing di-versity while preserving sample authenticity. In summary, the diffusion model in the proposed SDA-MARL includes the following three steps to generate the samples: 
+
+Step 1: Forward Diffusion in Action Space 
+
+We define the noise schedule {βt}Tt=1 and the corresponding signal retention coefficients: 
+
+αt = 1 − βt, ¯αt =
+
+tY
+
+s=1 
+
+αs, (10) where T is the total number of diffusion steps, t denotes the current timestep, βt controls the injected noise at timestep t, αt
+
+denotes the per-step signal retention, and ¯αt is the cumulative signal retention from timestep 1 to t.Given an original action sample x0, the t-step forward diffusion admits the closed-form Gaussian distribution: 
+
+q(x t | x0) = N xt; √¯αt x0, (1 − ¯αt)I , (11) where x0 is the original clean action, xt is the noisy action at timestep t, N (μ, Σ) denotes a multivariate Gaussian dis-tribution with mean μ and covariance Σ, and I is the identity matrix. 
+
+Step 2: State-Conditioned Reverse Denoising and Sam-pling 
+
+In diffusion-based reinforcement learning, the policy recon-structs actions by reversing the diffusion process in the action space. Starting from a noisy action xt and conditioning on the current state st, the network ϵθ predicts the noise injected at timestep t and thereby yields an estimate of the clean action: 
+
+ˆx0 = 1
+
+√¯αt
+
+ xt − √1 − ¯αt ϵθ (x t, t, st) , (12) where st is the current state observation, ϵθ (x t, t, st) is a neural network that predicts the noise component conditioned on the noisy action, timestep, and state, and ˆx0 is the estimated clean action. The model-predicted mean of the reverse diffusion transition is given by 
+
+μθ (x t, t, st) = 
+
+√¯αt−1(1 − ¯αt)1 − ¯αt−1
+
+xt +
+
+√αt βt
+
+1 − ¯αt−1
+
+ˆx0, (13) where ¯αt−1 is the cumulative signal retention up to timestep 
+
+t − 1, and the coefficients are functions of the noise schedule parameters αt, ¯αt, and βt.At inference time, the policy starts from pure Gaussian noise in the action space: 
+
+xT ∼ N (0 , I) , (14) where xT denotes the initial noisy action at the final timestep 
+
+T , and 0 is the zero vector. For each timestep t from T down to 1, the policy iteratively applies state-conditioned denoising. At each step, the reverse transition samples 
+
+xt−1 = 1
+
+√αt
+
+xt − βt
+
+√1 − ¯αt
+
+ϵθ (x t, t, st) + σtz, (15) where xt−1 is the denoised action at timestep t − 1, σt is a time-dependent standard deviation determined by the noise schedule, and z ∼ N (0 , I) is standard Gaussian noise sampled independently at each step. 
+
+Step 3: Training the State-Conditioned Diffusion Policy 
+
+To train the diffusion-based policy, the noise prediction network is optimized using transition samples collected in the replay buffer B:
+
+Ltrain = E(s t,at)∼B , ϵ, t 
+
+h
+
+ϵ − ϵθ
+
+ √¯αt at + √1 − ¯αt ϵ, t, st
+
+ 2i
+
+,
+
+(16) where B is the replay buffer storing transition samples, at is the ground-truth action sampled from the replay buffer, ϵ ∼N (0 , I) is the noise used in the forward diffusion, and Ltrain 
+
+is the training loss that measures the discrepancy between the predicted noise and the actual noise injected during forward diffusion. 
+
+2) Network Update Based on Diffusion Q-Driven Behav-ioral Clone: a) Q Learning-Guided Behavior Cloning Network: 
+
+The diffusion actor employs a dual loss: behavior cloning minimizes action distribution divergence for stability, while Q-loss maximizes expected returns to guide the policy toward high-value regions. Their joint optimization enables sustained JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 7
+
+performance improvement without sacrificing training stabil-ity. The total actor loss combines both objectives: 
+
+Lactor = LBC + η · L Q, (17) where Lactor denotes the total Actor loss, LBC is the behavior cloning loss, LQ represents the Q-loss, and η > 0 is the weighting coefficient that balances the contribution of the Q-loss. The per-sample diffusion loss measures the mean squared error between the injected noise and its prediction by the diffusion model: 
+
+Ldiffusion (a, s ) = Et∼Uniform (0 ,T ) 
+
+> ϵ∼N (0 ,I)
+
+h
+
+∥ϵ − ϵθ (a t, t, s )∥22
+
+i
+
+, (18) where ϵ is standard Gaussian noise, at = √¯αt a + √1 − ¯αt ϵ
+
+is the noisy action at step t, and ϵθ (·) is the noise prediction network conditioned on state s.Note that LBC is computed as the expected diffusion de-noising loss over actions sampled from the replay buffer: 
+
+LBC = E(s,a )∼D [Ldiffusion (a, s )] . (19) The Q-loss provides value-based guidance by encouraging 
+
+πθ to maximize the estimated Q-value, using a randomly selected Critic network from a clipped double-Q ensemble for stability: 
+
+LQ = −Es∼D 
+
+Qi(s, π θ (s)) , i ∈ { 1, 2}, (20) where the index i is randomly sampled from {1, 2} at each update step to mitigate overestimation bias. 
+
+b) Dual Q-Network Architecture for Value Estimation: 
+
+To mitigate Q-value overestimation, the value network em-ploys a dual Q-network architecture. This architecture lever-ages two Critic networks operating in tandem to learn more accurate value functions. Specifically, each Critic network minimizes the error between its current value prediction and a target value, thereby progressively reducing estimation bias. The aforementioned mechanism provides Actor policy updates with stable and unbiased value gradients. The Critic network is trained using a double-Q architecture to mitigate overestimation bias. The total Critic loss is the sum of the individual losses for the two Q-networks: 
+
+Lcritic = LQ1 + LQ2 , (21) where Lcritic denotes the total Critic loss, and LQ1 , LQ2
+
+represent the losses for the two Q-networks. Each Q-network is trained to minimize the mean squared error between its prediction and a target Q-value computed from the replay buffer: 
+
+LQi = E(s,a,r,s ′,d )∼D 
+
+h
+
+(Qi(s, a ) − y)2i
+
+, i ∈ { 1, 2}, (22) where Qi(s, a ) estimates the expected cumulative return for taking action a in state s, and y is the target value. The target value y incorporates a clipped double-Q backup to stabilize learning, using actions that maximize the target Q-functions over a candidate action set A (e.g., generated by the diffusion policy): 
+
+y = r + γ(1 − d) · min  
+
+> k∈{ 1,2}
+
+max   
+
+> aj∈A
+
+Qtarget  
+
+> k
+
+(s′, a j ), (23) where r is the immediate reward, γ ∈ [0 , 1) is the discount factor, d ∈ { 0, 1} is the episode termination flag, and Qtarget 
+
+> k
+
+denotes the target networks updated via exponential moving averages. In Eq. (23), the min operator over dual Critics and max 
+
+over action space A collectively suppresses overestimation bias while maintaining policy improvement guarantees. Totally, Eqs. (21)–(23) formalize the value network architec-ture, which evaluates the long-term value of generated actions to provide critical guidance signals for policy optimization. 
+
+c) Supervised Learning-Driven Action Selection: 
+
+To ensure the quality and utility of the sample produced by the diffusion model, this work further introduces a supervised learning mechanism that guides model outputs through labeled experience filtering. In our work, the high-quality actions identified via behavioral benchmarking are assigned positive labels and stored in the experience replay buffer. Note that a behavioral criterion is proposed to evaluate the action quality by comparing trajectory segments. For an AUV transitioning from position pprev to pcurr toward target ptarget ,we define the displacement vector ∆p i (actual movement) and the target vector ∆p target (desired direction to the goal): 
+
+∆p i = p curr − pprev , ∆p target = p target − pprev . (24) To ensure the labels, the following constraints have to be imposed: 
+
+∥∆p i∥ > ϵ min , ϵmin > 0. (25) Here, we utilize two approaches, named displacement vec-tors evaluation and target approaching evaluation, to evaluate the actions. In displacement vectors evaluation, the action quality is evaluated by the cosine similarity cos( ·) between displacement vectors ∆p i and ∆p target :
+
+cos( θ) = ∆p i · ∆p target 
+
+∥∆p i∥ · ∥ ∆p target ∥ . (26) Obviously, the larger the value of Eq. (26), the larger score the action is achieved. For target approaching evaluation, an action is demon-strated to be approaching the target only when the following 
+
+converge is equal to 1: 
+
+converge =
+
+(
+
+1, if ∥pcurr − ptarget ∥ < ∥pprev − ptarget ∥,
+
+0, otherwise. .
+
+(27) Totally, an action is demonstrated to be available only when the following valid is equal to 1: 
+
+valid =
+
+(
+
+1, if aligned = 1 ∧ converge = 1 ,
+
+0, otherwise, , (28) JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 8
+
+where aligned is the following: 
+
+aligned =
+
+(
+
+1, if cos( θ) > cos( θthreshold ),
+
+0, otherwise, , (29) where θthreshold ∈ (0 , π/ 2) is a predefined angular tolerance. Only experiences satisfying Eq. (28) receive positive labels and populate the replay buffer, ensuring high-quality training data while maintaining distributional diversity. 
+
+Algorithm 1 Tracking Quality Assessment 
+
+Require: Number of agents N , directional tolerance θtol ,displacement threshold ϵmin , position vectors {p(i)
+
+> prev
+
+, p(i)
+
+> curr
+
+}
+
+Ensure: Quality labels L = [ L1, L2, . . . , LN ] 
+
+> 1:
+
+Initialize directional tolerance θtol and displacement threshold ϵmin by Eq. (25).  
+
+> 2:
+
+for i = 1 to N do  
+
+> 3:
+
+Compute displacement vector ∆p i by Eq. (24).  
+
+> 4:
+
+if ∥∆p i∥ < ϵ min then  
+
+> 5:
+
+Assign Li = 0 . 
+
+> 6:
+
+continue . 
+
+> 7:
+
+Calculate cosine similarity by Eq. (26).  
+
+> 8:
+
+Evaluate target approach by Eq. (27).  
+
+> 9:
+
+Determine alignment condition by Eq. (29).  
+
+> 10:
+
+Set Li = 1 if conditions in Eq. (28) are satisfied.  
+
+> 11:
+
+return quality labels L.
+
+Algorithm 2 High-Value Experience Harvesting 
+
+Require: Number of episodes nep , episode horizon H, explo-ration noise σ, minimum valid agent ratio α = 1 /3
+
+Ensure: Total harvested samples Nsamples  
+
+> 1:
+
+Initialize episode horizon H and exploration noise σ. 
+
+> 2:
+
+for e = 1 to nep do  
+
+> 3:
+
+Reset environment state s. 
+
+> 4:
+
+for t = 1 to H do  
+
+> 5:
+
+Obtain agent positions {p(i)
+
+> prev
+
+}. 
+
+> 6:
+
+Generate action a = πθ (s) + N (0 , σ ). 
+
+> 7:
+
+Execute action and obtain new state s′. 
+
+> 8:
+
+Record new positions {p(i)
+
+> curr
+
+}. 
+
+> 9:
+
+Evaluate quality by Algorithm 1 with inputs 
+
+(N, θ tol , ϵ min , {p(i)
+
+> prev
+
+}, {p(i)
+
+> curr
+
+}). 
+
+> 10:
+
+if at least ⌊N/ 3⌋ agents have Li = 1 (valid actions per Eq. (28)) then  
+
+> 11:
+
+Store experience in replay buffer D. 
+
+> 12:
+
+Increment sample count Nsamples . 
+
+> 13:
+
+Update state s ← s′. 
+
+> 14:
+
+if episode terminated then  
+
+> 15:
+
+break . 
+
+> 16:
+
+return total harvested samples Nsamples .In summary, the SDA-MARL algorithm utilizes algorithm 1 and algorithm 2 to assess agent behavior quality and collect high-quality samples. Specifically, each agent receives a binary quality label, and a state-action pair is collected for supervision only when positive tracking behavior is observed in at least one-third of the agents. Algorithm 1 implements tracking quality assessment by first initializing the directional tolerance θtol and displacement threshold ϵmin according to Eq. (25) (Line 1). For each AUV 
+
+i, it computes the displacement vector ∆p i via Eq. (24) (Line 3), and immediately discards insignificant movements with ∥∆p i∥ < ϵ min (Lines 4–6). Valid trajectories are then evaluated through cosine similarity (Eq. (26), Line 8), target approach status (Eq. (27), Line 9), and directional alignment (Eq. (29), Line 10), with the final quality label Li assigned based on the conditions in Eq. (28) (Line 11). Algorithm 2 implements the high-value experience col-lection framework by initializing episode horizon H and exploration noise scale σ (Line 1). It iterates through training episodes (Line 2) and executes environmental interactions where actions are generated through policy network πθ with added exploration noise (Line 6). The algorithm 2 records positional data before action execution (Line 5) and after exe-cution (Line 8), evaluates tracking quality through algorithm 1 (Line 9), and selectively stores experiences when sufficient AUVs ( ≥ ⌊ N/ 3⌋) exhibit valid behaviors per Eq. (28) (Lines 10–12). This selective storage mechanism ensures the replay buffer D maintains high-quality training samples while pre-serving distributional diversity. The algorithm concludes by returning the total count of harvested samples Nsamples that satisfy our behavioral criteria (Line 16), thereby establishing an effective supervised learning pipeline for diffusion model training. V. P ROPOSED MULTI -AUV C OOPERATIVE TARGET 
+
+TRACKING ALGORITHM 
+
+In this section, we present the proposed multi-AUV coop-erative target tracking algorithm. We first elucidate the core cooperative tracking strategy that enables coordinated obser-vation of dynamic targets through spatially distributed sens-ing. Subsequently, we comprehensively detail the complete operational workflow of the proposed multi-AUV cooperative tracking algorithm. 
+
+A. Proposed Reward Function for Multi-AUV Tracking 
+
+This section details the reward function design for under-water intelligent tracking within the SDA-MARL framework. We model the tracking problem as an MDP, where the optimization objective is transformed into maximizing the expected cumulative reward. To achieve robust tracking in complex underwater environments, we establish three essential reward components that collectively optimize policy learning while maintaining long-term tracking stability through adap-tive environmental interactions. The proposed reward function is displayed as follows: 
+
+Ri = α · rpos + β · rcol + γ · rland , (30) where Ri denotes the weighted composite reward for the i-th AUV, with α, β, γ ∈ R+ serving as independent scaling coefficients that balance positional fidelity, collision avoidance, and environmental navigation priorities. The fundamental distance metrics are defined as fol-lows: ptarget denotes the target position, pj represents the JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 9
+
+position of the j-th AUV, and ok indicates the position of the k-th obstacle in the environment: 
+
+
+
+dt = ∥pi − ptarget ∥2,da = min   
+
+> j̸=i
+
+∥pi − pj ∥2,dl = min  
+
+> k∈O
+
+∥pi − ok∥2., (31) where dt represents the Euclidean distance to the target, da
+
+denotes the minimum pairwise distance to neighboring AUVs, 
+
+dl is the distance to the nearest environmental obstacle, O is the set of obstacles with positions ok, and all distances are computed in the configuration space R3.To maintain stable pursuit trajectories while respecting safety constraints, the positional reward component employs a dual-regime penalty structure: 
+
+rpos =
+
+(
+
+w · dt − (w + 1) · δmin  
+
+> t
+
+, if dt ≤ δmin  
+
+> t
+
+,
+
+−dt, otherwise . , (32) where δmin  
+
+> t
+
+> 0 defines the minimum safety margin, and w > 
+
+1 modulates the penalty intensity within the critical proximity zone. Complementing positional control, inter-AUV collision avoidance establishes dynamic repulsive fields between coop-erative AUVs: 
+
+rcol =
+
+(
+
+da − δmin  
+
+> a
+
+, if da < δ min  
+
+> a
+
+,
+
+−da, otherwise . , (33) where δmin  
+
+> a
+
+> 0 specifies the minimum inter-AUV safety distance threshold. Environmental obstacle avoidance is enforced through a binary penalty mechanism: 
+
+rland =
+
+(
+
+−Pland , if dl < δ min  
+
+> l
+
+,
+
+0, otherwise . , (34) where Pland > 0 is a constant penalty magnitude, dl denotes the distance between the i-th AUV and the nearest environ-mental obstacle, and δmin  
+
+> l
+
+is the minimum safe navigation distance threshold. This composite reward structure integrates the three critical components for underwater multi-AUV operations: target pur-suit fidelity, inter-AUV collision avoidance, and environmental obstacle navigation. The synergistic combination of these terms enables stable policy learning in complex hydrodynamic environments while maintaining physically plausible behavior consistent with real-world underwater navigation constraints. 
+
+B. Proposed Tracking Algorithm Based on SDA-MARL 
+
+The proposed multi-AUV tracking process based on SDA-MARL can be systematically decomposed into the following three steps, as illustrated in Fig. 3. 
+
+Step 1: Establishing the underwater acoustic multi-AUV simulation framework. It establishes an integrated underwa-ter acoustic tracking framework featuring entity initialization with environmental constraints, sonar perception modeling under complex channel dynamics, spatial feature extraction of bearing/range/velocity, Markovian state-observation dynamics 
+
+Algorithm 3 Proposed Multi-AUV Target Tracking Algorithm Based on SDA-MARL 
+
+Require: Number of episodes Nep , episode length Lep , batch size B, update interval Iupdate , minimal buffer size Smin ,soft update coefficient τ , EMA update interval Iema .
+
+Ensure: Tracking policy based on the trained SDA-MARL.  
+
+> 1:
+
+Initialize environment env and the MADDPG model 
+
+maddpg . 
+
+> 2:
+
+Initialize replay buffer buffer.  
+
+> 3:
+
+ttotal ← 0. 
+
+> 4:
+
+for e = 1 to Nep do  
+
+> 5:
+
+Reset environment.  
+
+> 6:
+
+Collect high-quality samples using Algorithm 2.  
+
+> 7:
+
+for t = 1 to Lep do  
+
+> 8:
+
+Each AUV i takes action ai = πθi (o i) + Nt based on policy and exploration.  
+
+> 9:
+
+Update environment, obtain next state s′ and re-ward r. 
+
+> 10:
+
+Add transition (s , a, r, s′, done ) to replay buffer with source identifier 0.  
+
+> 11:
+
+Update current state s ← s′ and increment timestep counter ttotal ← ttotal + 1 . 
+
+> 12:
+
+if buffer .size () ≥ Smin and ttotal mod Iupdate = 0 
+
+then  
+
+> 13:
+
+Sample batch B from buffer.  
+
+> 14:
+
+for each AUV i = 1 to N do  
+
+> 15:
+
+Update normal AUV i’s Critic and Actor using transitions from B with source ∈ { 0, 1} (Eqs. (21), (23)).  
+
+> 16:
+
+if transitions with source = 1 exist in B
+
+then  
+
+> 17:
+
+Update diffusion AUV i’s Critic and Actor using transitions with source = 1 (Eqs. (17)–(23)).  
+
+> 18:
+
+if diffusion agent i’s step counter mod 
+
+Iema = 0 then  
+
+> 19:
+
+Update EMA model for diffusion agent i. 
+
+> 20:
+
+Soft update Critic target for diffusion agent i by θcritic target ← (1 − τ )θcritic target + τ θ critic . 
+
+> 21:
+
+Soft update Actor and Critic targets for all normal agents by θtarget ← (1 − τ )θtarget + τ θ . 
+
+> 22:
+
+if done then  
+
+> 23:
+
+break .(P (st+1 |st, a t), O(ot|st, a t)), and unified environment inte-gration for policy training and evaluation. 
+
+Step 2: Designing the generative hierarchical network architecture. It introduces a four-layer hierarchical archi-tecture to translate global missions into distributed AUV execution. It establishes a structured pipeline: the global layer assigns tasks, the coordination layer decomposes them, and the AUV layers implement a dual-path learning module. This design formally defines the interfaces and data flows between strategic generation and deterministic execution, providing the essential framework for implementing the SDA-MARL tracking algorithm in Step 3. JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 10 Step2: Designing the  generative  hierarchical  network  architecture 
+
+USV -GC receives 
+
+global mission 
+
+instructions 
+
+The USV -GC
+
+passes the task to 
+
+the collaborator 
+
+The coordinator 
+
+decomposes tasks and 
+
+assigns them to the AUV 
+
+The AUV uses a 
+
+dual -path parallel 
+
+learning mechanism. 
+
+Step2: Designing the  generative  hierarchical  network  architecture 
+
+USV -GC receives 
+
+global mission 
+
+instructions 
+
+The USV -GC
+
+passes the task to 
+
+the collaborator 
+
+The coordinator 
+
+decomposes tasks and 
+
+assigns them to the AUV 
+
+The AUV uses a 
+
+dual -path parallel 
+
+learning mechanism. 
+
+Step3:  Implementing the  tracking  algorithm  based on SDA -MARL 
+
+Diffusion  model 
+
+path  processing 
+
+Supervised 
+
+learning 
+
+selection 
+
+DDPG n etwork 
+
+path  processing 
+
+Generative  policy 
+
+optimization 
+
+loop 
+
+Dual  decision 
+
+network  experience 
+
+integration 
+
+Step3:  Implementing the  tracking  algorithm  based on SDA -MARL 
+
+Diffusion  model 
+
+path  processing 
+
+Supervised 
+
+learning 
+
+selection 
+
+DDPG n etwork 
+
+path  processing 
+
+Generative  policy 
+
+optimization 
+
+loop 
+
+Dual  decision 
+
+network  experience 
+
+integration 
+
+Step1:  Establishing the  underwater  acoustic  multi -AUV  si mulation  framework 
+
+Entity  configuration 
+
+and  initialization 
+
+Sonar  perception 
+
+model 
+
+construction 
+
+Observation and 
+
+spatial  information 
+
+processing 
+
+Markov 
+
+decision  process 
+
+modeling 
+
+Multi -agent 
+
+collaborative 
+
+tracking 
+
+environment 
+
+Step1:  Establishing the  underwater  acoustic  multi -AUV  si mulation  framework 
+
+Entity  configuration 
+
+and  initialization 
+
+Sonar  perception 
+
+model 
+
+construction 
+
+Observation and 
+
+spatial  information 
+
+processing 
+
+Markov 
+
+decision  process 
+
+modeling 
+
+Multi -agent 
+
+collaborative 
+
+tracking 
+
+environment 
+
+O OO O        
+
+> Reverse denoising
+> XNX2X1
+> Reverse denoising
+> XNX2X1
+> Dual -network decision architecture
+> Q (s,a)=r+ γ⋅Q(s ′, a′) ⋅(1− done) Q (s,a)=r+ γ⋅Q(s ′, a′) ⋅(1− done)
+
+O
+
+A        
+
+> Multi -AUV underwater target tracking
+> Dual -path parallel learning mechanism of generative and deterministic
+> strategies
+
+Algorithm innovation                           
+
+> Hybrid training mechanism of supervised learning and reinforcement learning
+> Data source -based adaptive sample separation and update strategy
+> USV -GCsonar communication Local agent sonar communication
+> Global information reception Local task breakdown
+> Dual decision network architecture Multi -AUV tracking strategy
+
+Step2: Designing the  generative  hierarchical  network  architecture 
+
+USV -GC receives 
+
+global mission 
+
+instructions 
+
+The USV -GC
+
+passes the task to 
+
+the collaborator 
+
+The coordinator 
+
+decomposes tasks and 
+
+assigns them to the AUV 
+
+The AUV uses a 
+
+dual -path parallel 
+
+learning mechanism. 
+
+Step3:  Implementing the  tracking  algorithm  based on SDA -MARL 
+
+Diffusion  model 
+
+path  processing 
+
+Supervised 
+
+learning 
+
+selection 
+
+DDPG n etwork 
+
+path  processing 
+
+Generative  policy 
+
+optimization 
+
+loop 
+
+Dual  decision 
+
+network  experience 
+
+integration 
+
+Step1:  Establishing the  underwater  acoustic  multi -AUV  si mulation  framework 
+
+Entity  configuration 
+
+and  initialization 
+
+Sonar  perception 
+
+model 
+
+construction 
+
+Observation and 
+
+spatial  information 
+
+processing 
+
+Markov 
+
+decision  process 
+
+modeling 
+
+Multi -agent 
+
+collaborative 
+
+tracking 
+
+environment 
+
+O O     
+
+> Reverse denoising
+> XNX2X1
+> Dual -network decision architecture
+> Q (s,a)=r+ γ⋅Q(s ′, a′) ⋅(1− done)
+
+O
+
+A        
+
+> Multi -AUV underwater target tracking
+> Dual -path parallel learning mechanism of generative and deterministic
+> strategies
+
+Algorithm innovation                           
+
+> Hybrid training mechanism of supervised learning and reinforcement learning
+> Data source -based adaptive sample separation and update strategy
+> USV -GCsonar communication Local agent sonar communication
+> Global information reception Local task breakdown
+> Dual decision network architecture Multi -AUV tracking strategy
+
+Fig. 3: Proposed tracking architecture based on SDA-MARL 
+
+Step 3: Implementing the tracking algorithm based on SDA-MARL. At the AUV decision,i.e., local policy genera-tion layer and real-time execution layer, stochastic exploration through diffusion-based sampling and deterministic exploita-tion via direct action output are adaptively fused using histor-ical experience, with key innovations in parallel generative-deterministic learning, hybrid supervised-reinforcement train-ing, and data source-guided adaptive sample management col-lectively enhancing tracking precision in complex underwater environments. In summary, the proposed tracking algorithm is imple-mented in algorithm 3, which integrates all three steps within a unified multi-AUV training loop. Algorithm 3 initializes the environment, MADDPG [28] model, replay buffer, and timestep counter ttotal (Lines 1–3), then iterates over episodes (Line 4). At each episode start, the environment is reset (Line 5) and algorithm 2 harvests high-quality samples (Line 6). Within each episode, actions are generated by the MADDPG policy with exploration noise (Line 8), transitions (s, a, r, s’, done) are recorded and stored with source identifier 0 (Line 10), and the state and timestep counter are updated (Line 11). When the buffer size exceeds Smin and ttotal mod Iupdate = 0 
+
+(Line 12), a batch is sampled (Line 13) to update all agents. Normal agents’ Critics and Actors are updated via Eqs. (21) and (23) using transitions with source identifiers 0 or 1 (Line 15). When high-quality samples (source identifier 1) are avail-able, diffusion agents’ networks are updated using Eqs. (17)– (23) (Line 17), with periodic Exponential Moving Average (EMA) model updates (every Iema steps) and Critic target soft-updates (Lines 18–20). Each update cycle concludes by soft-updating all normal AUVs’ target networks (Line 23). This dual-update mechanism synergistically integrates conventional MADDPG training with diffusion-enhanced policy optimiza-tion to maximize tracking robustness while maintaining sample efficiency. VI. E VALUATIONS 
+
+This section conducts some evaluations to demonstrate the efficiency of our proposed tracking algorithm in terms of av-erage reward values, algorithmic effectiveness, target-tracking accuracy, etc., by comparing our proposed algorithms with some of the state-of-the-art MARL-based tracking algorithms. 
+
+A. Simulation Setup 
+
+All experiments are conducted on a computational platform equipped with an AMD Ryzen 9 8940HX processor, RTX 5060 GPU, and 16 GB RAM, where all the code is imple-mented in Python 3.10. In the evaluations, the target moves at a predefined constant velocity, while AUVs are initially distributed in a circular ring-shaped region approximately 2 km from the target. To comprehensively evaluate algorithm performance, four distinct tracking scenarios are employed in the assessment: 2 AUVs tracking 1 target, 4 AUVs tracking 2 targets, 6 AUVs tracking 2 targets, and 8 AUVs tracking 3 targets. All experiments are performed within a stable underwater simulation environment. All the parameters in the evaluations are detailed in Table I. 
+
+B. Results and Discussion 
+
+To evaluate algorithmic effectiveness, comprehensive com-parisons and analyses are conducted against state-of-the-art MARLs, including DSBM [26], MA-A3C [27], MASAC [29], MAPPO [30], MAAC [31], MATD3 [32], and MADDPG. Our approach is evaluated mainly from the following aspects: 1) convergence speed; 2) tracking accuracy; 3) velocity difference JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 11   
+
+> (a) Scenario of 2 AUVs tracking 1 target (b) Scenario of 4 AUVs tracking 2 targets
+> (c) Scenario of 6 AUVs tracking 2 targets (d) Scenario of 8 AUVs tracking 3 targets
+
+Fig. 4: Convergence speed evaluation stability among multi-AUV systems; 4) path length relative to optimal trajectories; 5) diffusion steps required for strategy generation in our framework; 6) ablation studies validating each component’s contribution to system performance, and 7) system availability. TABLE I: Simulation parameters                                        
+
+> Parameter Description Value
+> NANumber of AUVs [2,4,6,8]
+> NTNumber of Targets [1,2,3]
+> lrLearning rate 1e−3
+> NETraining rounds 4000
+> NhHidden layer neurons 256
+> γDiscount factor 0.95
+> τNetwork update coefficient 1e−2
+> dϕ
+> min Minimum tracking distance 80 m
+> dκ
+> min Minimum AUV distance 80 m
+> LeEpisode length 400
+> BsBuffer size 1,000,000
+> UiUpdate interval 400
+> MsMinimal buffer size 4000
+> BBatch size 256
+> ρFluid density 1000 kg/m 3
+> μFluid viscosity 10 −3Pa ·s
+> DDamping factor 0.25
+> ∆tSimulation time step 0.1 s
+
+1) System convergence speed : To evaluate the convergence speed of the proposed SDA-MARL algorithm, multiple track-ing experiments are conducted across various scenarios, with results presented in Figs. 4(a), 4(b), 4(c), 4(d). Overall, the proposed SDA-MARL algorithm demonstrates significantly faster convergence compared to the other seven algorithms across multiple scenarios. Regarding convergence speed, DSBM and MA-A3C exhibit stable performance, while MAPPO also demonstrates excellent results primarily due to its centralized training architecture combined with Generalized Advantage Estimation (GAE), along with a stochastic policy maintained in its Actor network. This integration effectively balances global coordination and policy diversity in multi-AUV tracking tasks. Notably, our proposed SDA-MARL manifests rapid con-vergence characteristics during early training stages. This advantage stems from the diffusion model-based behavioral cloning loss and supervised learning mechanism integrated within the framework. Specifically, the algorithm continuously generates high-quality action samples through the behavioral cloning loss of the diffusion model, which are systematically stored in the replay buffer for subsequent model training. During DDPG network updates, this behavioral cloning loss serves as a regularization term, guiding the DDPG toward the optimized strategy distribution represented by the diffusion model. This synergistic mechanism effectively accelerates the early-stage convergence process of the SDA-MARL. In the later training stages, the proposed SDA-MARL exhibits stable convergence curves. This stability primarily JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 12 
+
+TABLE II: Tracking accuracy comparison 
+
+Algorithms 2 AUVs Tracking 1 Target 4 AUVs Tracking 2 Targets 6 AUVs Tracking 2 Targets 8 AUVs Tracking 3 Targets 
+
+M ean ± SD M ean ± SD M ean ± SD M ean ± SD 
+
+SDA-MARL 66.44% ±0.06% 68.56% ±1.56% 61.38% ±0.91% 61.67% ±2.34% DBSM 45.70% ±1.75% 47.12% ±2.82% 14.93% ±1.41% 12.69% ±1.77% MA-A3C 41.04% ±3.58% 21.74% ±2.56% 12.53% ±1.32% 10.30% ±0.61% MAPPO 12.37% ±4.88% 8.17% ±3.90% 10.50% ±1.55% 28.20% ±2.16% MASAC 9.81% ±0.19% 5.44% ±0.12% 14.50% ±1.91% 9.04% ±0.08% MAAC 34.37% ±1.43% 31.12% ±0.01% 16.92% ±0.13% 14.52% ±0.48% MATD3 45.10% ±0.05% 25.38% ±0.62% 19.24% ±0.02% 14.68% ±0.04% MADDPG 20.31% ±0.34% 15.06% ±0.74% 9.89% ±0.35% 12.45% ±0.23% TABLE III: Velocity difference mean value comparison 
+
+Algorithms 2 AUVs Tracking 1 Target 4 AUVs Tracking 2 Targets 6 AUVs Tracking 2 Targets 8 AUVs Tracking 3 Targets 
+
+M ean M ean M ean M ean 
+
+SDA-MARL 0.015477 0.017505 0.018757 0.016895 DBSM 0.030882 0.030721 0.026736 0.026041 MA-A3C 0.027531 0.030716 0.028926 0.027545 MAPPO 0.039937 0.035275 0.035289 0.040667 MASAC 0.038340 0.033087 0.034900 0.034166 MAAC 0.032703 0.025876 0.031128 0.035962 MATD3 0.022570 0.028931 0.036616 0.043496 MADDPG 0.041735 0.034485 0.046056 0.044488 TABLE IV: Velocity difference standard deviation comparison 
+
+Algorithms 2 AUVs Tracking 1 Target 4 AUVs Tracking 2 Targets 6 AUVs Tracking 2 Targets 8 AUVs Tracking 3 Targets 
+
+SD SD SD SD 
+
+SDA-MARL 0.000271 0.000165 0.000062 0.000085 DBSM 0.000231 0.000183 0.000157 0.001350 MA-A3C 0.000441 0.000385 0.000145 0.000200 MAPPO 0.000593 0.000367 0.000565 0.000223 MASAC 0.000201 0.000075 0.000065 0.000143 MAAC 0.000039 0.000047 0.000007 0.000170 MATD3 0.000133 0.000010 0.000006 0.000015 MADDPG 0.000080 0.000025 0.000067 0.000093 TABLE V: Path length comparison 
+
+Algorithms 2 AUVs Tracking 1 Target 4 AUVs Tracking 2 Targets 6 AUVs Tracking 2 Targets 8 AUVs Tracking 3 Targets 
+
+M ean ± SD M ean ± SD M ean ± SD M ean ± SD 
+
+SDA-MARL 1.93 ± 0.0053 3.48 ± 0.0044 6.10 ± 0.0341 6.80 ± 0.0257 
+
+DBSM 2.54 ± 0.0192 4.91 ± 0.0424 6.26 ± 0.0475 6.98 ± 0.4590 
+
+MA-A3C 2.22 ± 0.0385 4.87 ± 0.0641 6.78 ± 0.0405 8.36 ± 0.0686 
+
+MAPPO 3.34 ± 0.0330 5.68 ± 0.0459 8.55 ± 0.1274 13 .09 ± 0.0997 
+
+MASAC 3.33 ± 0.0127 4.39 ± 0.0311 10 .80 ± 0.0768 11 .60 ± 0.0528 
+
+MAAC 2.62 ± 0.0020 4.48 ± 0.0054 7.20 ± 0.0024 11 .20 ± 0.0496 
+
+MATD3 2.20 ± 0.0228 4.66 ± 0.0019 8.52 ± 0.0011 14 .33 ± 0.0069 
+
+MADDPG 3.38 ± 0.0031 5.56 ± 0.0020 11 .37 ± 0.0286 14 .74 ± 0.0252 
+
+stems from two synergistic mechanisms: first, the accumula-tion of high-quality samples in the replay buffer under super-vised guidance; second, the stabilizing effect of the diffusion model’s behavioral cloning loss during policy updates. This cloning loss function constrains the DDPG’s Actor outputs within a reasonable range, while the diffusion model inherently provides excellent stability and smoothness. Consequently, the auxiliary DDPG network avoids significant fluctuations during updates, ensuring robust convergence performance throughout the later training phases. 
+
+2) Tracking Accuracy : In multi-AUV tracking tasks, track-ing accuracy serves as a critical metric for evaluating sys-tem performance. In our evaluations, we establish a tracking accuracy threshold of 0.08 as the performance benchmark. Comprehensive experiments are conducted across four rep-resentative scenarios: 2 AUVs tracking 1 target, 4 AUVs tracking 2 targets, 6 AUVs tracking 2 targets, and 8 AUVs tracking 3 targets. The results in Table II demonstrate that our SDA-MARL achieves average tracking accuracies of 66.44%, 68.56%, 61.38%, and 61.67% in the four scenarios, respec-tively. 
+
+3) Velocity Difference : In multi-AUV collaborative track-ing tasks, frequent speed adjustments by AUVs lead to sig-nificant increases in propulsion energy consumption, which JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 13 
+
+undermines the long-term operational sustainability of multi-AUV systems. To quantitatively evaluate this performance aspect, this paper introduces the velocity difference between AUVs and targets. Comprehensive experimental results presented in Table III demonstrate that our SDA-MARL achieves the lowest mean velocity differences across all four tracking scenarios (2 AUVs tracking 1 target, 4 AUVs tracking 2 targets, 6 AUVs tracking 2 targets, 8 AUVs tracking 3 targets). In particular, as shown in Table IV, the standard deviation of SDA-MARL is relatively low compared to that of other algorithms. These results validate the algorithm’s effectiveness in balancing tracking responsiveness and energy conservation while maintaining consistent performance across varying swarm scales and target configurations. These results indicate that the proposed SDA-MARL aims to enable AUVs to rapidly approach targets during the initial tracking phase, subsequently stabilizing the relative velocity between AUVs and targets at a consistently low level. This strategy not only reduces overall system energy consumption but also reflects the stability and convergence characteristics of the control process. 
+
+4) Path Length : Path length serves as a critical indicator of navigation efficiency for AUVs, directly reflecting the AUV’s ability to identify optimal trajectories during target pursuit. Well-trained AUVs tend to develop strategies that minimize travel distance while maintaining effective tracking perfor-mance. This metric provides quantitative validation of policy optimization quality, where shorter paths indicate superior spatial reasoning and decision-making capabilities in complex underwater environments. Experimental results in Table V demonstrate that the SDA-MARL algorithm consistently achieves the shortest path lengths across all evaluation scenarios compared to the other methods. This performance advantage indicates the proposed SDA-MARL’s effectiveness in developing energy-efficient navigation strategies that balance rapid target acquisition with minimal trajectory deviation. The consistent superiority across varying swarm configurations further validates the robustness of our approach in optimizing path planning under different operational complexities. 
+
+Fig. 5: Convergence speed across different numbers of diffu-sion time steps in SDA-MARL 
+
+5) Number of Diffusion Time Step : Fig. 5 presents the average return underwater for different numbers of diffusion time steps ranging from 5 to 50. The results in Fig. 5show similar convergence trends under different numbers of diffusion time steps. Furthermore, as the number of diffusion time steps increases, the convergence speed demonstrates a non-monotonic trend in the medium step range, first rising to a local peak and then declining, which reveals a non-linear dependency between the number of diffusion time steps and system convergence. 
+
+6) Ablation Evaluation : Fig. 6 compares the proposed SDA-MARL algorithm with an ablated version that removes the diffusion model module, its supervised learning guidance component, and the behavioral cloning loss. Without these components, agents cannot leverage high-quality actions dis-tilled from expert trajectories in the replay buffer, resulting in unstable training due to unmitigated non-stationarity and inef-ficient exploration in sparse reward underwater environments. This directly increases suboptimal behaviors such as collisions and target loss, reducing accumulated rewards. The SDA-MARL algorithm achieves higher average rewards and training stability by synergistically integrating diffusion-based action generation, supervised policy guidance, and be-havioral cloning. This confirms the essential role of these inte-grated components in enabling robust coordination for multi-AUV underwater tracking tasks under dynamic conditions. 
+
+7) Availability Evaluation : To further evaluate the pro-posed approach, simulations are conducted in a near-realistic underwater environment developed in Unity3D, with all ex-periments set in 3D scenes containing dynamic obstacles. Fig. 7 illustrates the cooperative tracking process in three typical multi-AUV scenarios. The figure presents the AUVs (yellow mobile entities), the targets (glowing spheres), the oceanic obstacles (screw-shaped objects), and the color-coded trajectories shared by AUVs tracking the same target. The pro-cess is chronologically divided into three stages: initial AUV deployment, mid-phase stable tracking, and final consistent trajectory adherence. Results show that the proposed algorithm effectively coor-dinates the multi-AUV system, maintaining tracking within an acceptable error range and thereby demonstrating the availability, adaptability, and robustness of SDA-MARL under varied conditions. VII. C ONCLUSION 
+
+In the paper, we conduct an in-depth investigation into the problem of cooperative tracking of multiple underwater targets by multi-AUV systems. We construct a hierarchical AUV MARL architecture integrated with a diffusion model. Building upon this architecture, the paper proposes a tracking algorithm based on a proposed SDA-MARL. The proposed SDA-MARL innovatively designs a dual-decision architecture combining the diffusion model and DDPG: the policy distri-bution generated by the diffusion model serves as a supervi-sory signal, and the DDPG network’s policy optimization is guided by a cloning loss, effectively improving the algorithm’s convergence speed and tracking stability. Furthermore, the proposed SDA-MARL introduces a supervised learning mech-anism, dynamically partitioning the experience replay pool JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 14 
+
+(a) Ablation analysis in 4 AUVs tracking 2 tragets (b) Ablation analysis in 8 AUVs tracking 3 tragets 
+
+Fig. 6: Ablation evaluation       
+
+> (a) Initial phase in 4 AUVs tracking 2 targets (b) Mid-phase in 4 AUVs tracking 2targets (c) Final phase in 4 AUV tracking 2 targets
+> (d) Initial phase in 6 AUVs track 2 targets (e) Mid-phase in 6 AUVs tracking 2 targets (f) Final phase in 6 AUVs tracking 2 targets
+> (g) Initial phase in 8 AUVs tracking 3 targets (h) Mid-phase in 8 AUVs tracking 3 targets (i) Final phase in 8 AUVs tracking 3 targets
+
+Fig. 7: Availability evaluation. based on supervised labels, allowing the dual decision mod-ules (diffusion model and DDPG) to independently optimize network parameters based on dedicated experience subsets, effectively decoupling training interference and accelerating policy convergence. Experimental results demonstrate that, compared with current mainstream MARL algorithms, the proposed SDA-MARL algorithm exhibits significant advan-tages in convergence efficiency and other tracking performance metrics. REFERENCES 
+
+[1] O. Hoegh-Guldberg, K. Caldeira, T. Chopin, S. Gaines, P. Haugan, M. Hemer, J. Howard, M. Konar, D. Krause-Jensen, C. E. Lovelock, E. Lindstad, M. Michelin, F. G. Nielsen, E. Northrop, R. W. R. Parker, J. Roy, T. Smith, S. Some, and P. Tyedmers, The Ocean as a Solution to Climate Change: Five Opportunities for Action . Cham: Springer International Publishing, 2023, pp. 619–680. [2] Q. Wang, B. He, Y. Zhang, F. Yu, X. Huang, and R. Yang, “An autonomous cooperative system of multi-auv for underwater targets detection and localization,” Eng. Appl. Artif. Intell. , vol. 121, p. 105907, 2023. JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 15 
+
+[3] Y. Yang, Y. Xiao, and T. Li, “A survey of autonomous underwater vehicle formation: Performance, formation control, and communication capability,” IEEE Communi-cations Surveys & Tutorials , vol. 23, no. 2, pp. 815–841, 2021. [4] E. Fiorelli, N. E. Leonard, P. Bhatta, D. A. Paley, R. Bachmayer, and D. M. Fratantoni, “Multi-auv control and adaptive sampling in monterey bay,” IEEE Journal of Oceanic Engineering , vol. 31, no. 4, pp. 935–948, 2006. [5] Y. Zhang, Y. Zhou, and H. Fujita, “Distributed multi-agent reinforcement learning for cooperative low-carbon control of traffic network flow using cloud-based parallel optimization,” IEEE Transactions on Intelligent Trans-portation Systems , vol. 25, no. 12, pp. 20 715–20 728, 2024. [6] Z. Yang, J. Du, Z. Xia, C. Jiang, A. Benslimane, and Y. Ren, “Secure and cooperative target tracking via auv swarm: A reinforcement learning approach,” in 2021 IEEE Global Communications Conference (GLOBE-COM) , 2021, pp. 1–6. [7] P. Sunehag, G. Lever, A. Gruslys, W. M. Czarnecki, V. Zambaldi, M. Jaderberg, M. Lanctot, N. Sonnerat, J. Z. Leibo, K. Tuyls, and T. Graepel, “Value-decomposition networks for cooperative multi-agent learning based on team reward,” in Proceedings of the 17th International Conference on Autonomous Agents and MultiAgent Sys-tems , ser. AAMAS ’18, 2018, p. 2085–2087. [8] D. Paulius, N. Eales, and Y. Sun, “A Motion Taxon-omy for Manipulation Embedding,” in Proceedings of Robotics: Science and Systems , Corvalis, Oregon, USA, July 2020. [9] H. Nekoei, A. Badrinaaraayanan, A. Sinha, M. Amini, J. Rajendran, A. Mahajan, and S. Chandar, “Dealing with non-stationarity in decentralized cooperative multi-agent deep reinforcement learning via multi-timescale learning,” in Proceedings of The 2nd Conference on Lifelong Learning Agents , ser. Proceedings of Machine Learning Research, S. Chandar, R. Pascanu, H. Sedghi, and D. Precup, Eds., vol. 232. PMLR, 22–25 Aug 2023, pp. 376–398. [10] J. Wei, L. Wang, X. Tao, H. Hu, and H. Wu, “Tackling non-stationarity in decentralized multi-agent reinforce-ment learning with prudent q-learning,” in Web Infor-mation Systems and Applications . Cham: Springer International Publishing, 2022, pp. 403–415. [11] T. Rashid, M. Samvelyan, C. Schroeder, G. Farquhar, J. Foerster, and S. Whiteson, “QMIX: Monotonic value function factorisation for deep multi-agent reinforce-ment learning,” in Proceedings of the 35th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, J. Dy and A. Krause, Eds., vol. 80. PMLR, 10–15 Jul 2018, pp. 4295–4304. [12] J. Shi, J. Fang, Q. Zhang, Q. Wu, B. Zhang, and F. Gao, “Dynamic target tracking of autonomous underwater vehicle based on deep reinforcement learning,” Journal of Marine Science and Engineering , vol. 10, no. 10, 2022. [13] L. Jia and Y. Pei, “Recent advances in multi-agent rein-forcement learning for intelligent automation and control of water environment systems,” Machines , vol. 13, no. 6, 2025. [14] O. Elhaki and K. Shojaei, “Neural network-based target tracking control of underactuated autonomous under-water vehicles with a prescribed performance,” Ocean Engineering , vol. 167, pp. 239–256, 2018. [15] J. Han, R. Huang, X. Yuan, Y. Liu, B. Yin, S. Zou, and Z. Ma, “Vision-based obstacle avoidance and formation control for underwater robotic fish,” IEEE Robotics and Automation Letters , vol. 10, no. 10, pp. 10 442–10 449, 2025. [16] Y. Li, W. Yu, and X. Guan, “Current-aided multiple-auv cooperative localization and target tracking in anchor-free environments,” IEEE/CAA Journal of Automatica Sinica ,vol. 10, no. 3, pp. 792–806, 2023. [17] B. Hadi, A. Khosravi, and P. Sarhadi, “Deep reinforce-ment learning for adaptive path planning and control of an autonomous underwater vehicle,” Applied Ocean Research , vol. 129, p. 103326, 2022. [18] W. Wu, H. Sun, A. Yue, and C. Guo, “Small-sample underwater target tracking via siamese network optimiza-tion with kalman filtering and reinforcement learning,” 
+
+Ocean Engineering , vol. 342, p. 122855, 2025. [19] J. Xu, Y. Ding, Z. Zhang, G. Xie, Z. Wang, Y. Zeng, and G. Li, “Multi-auv assisted seamless underwater target tracking relying on deep learning and reinforcement learning,” in 2024 International Joint Conference on Neural Networks (IJCNN) , 2024, pp. 1–9. [20] H. He, C. Bai, K. Xu, Z. Yang, W. Zhang, D. Wang, B. Zhao, and X. Li, “Diffusion model is an effective planner and data synthesizer for multi-task reinforcement learning,” in Advances in Neural Information Processing Systems , A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine, Eds., vol. 36. Curran Asso-ciates, Inc., 2023, pp. 64 896–64 917. [21] Z. Xian, N. Gkanatsios, T. Gervet, T.-W. Ke, and K. Fragkiadaki, “Chaineddiffuser: Unifying trajectory diffusion and keypose prediction for robotic manipula-tion,” in Conference on Robot Learning , 2023. [22] Z. Zhu, M. Liu, L. Mao, B. Kang, M. Xu, Y. Yu, S. Ermon, and W. Zhang, “Madiff: offline multi-agent learning with diffusion models,” in Proceedings of the 38th International Conference on Neural Information Processing Systems , ser. NIPS ’24. Red Hook, NY, USA: Curran Associates Inc., 2024. [23] Z. Wang, J. J. Hunt, and M. Zhou, “Diffusion policies as an expressive policy class for offline reinforcement learning,” in The Eleventh International Conference on Learning Representations , 2023. [24] Y. Zheng, J. Li, D. Yu, Y. Yang, S. E. Li, X. Zhan, and J. Liu, “Safe offline reinforcement learning with feasibility-guided diffusion model,” in The Twelfth Inter-national Conference on Learning Representations , 2024. [25] S. Ding, K. Hu, Z. Zhang, K. Ren, W. Zhang, J. Yu, J. Wang, and Y. Shi, “Diffusion-based reinforcement learning via q-weighted variational policy optimization,” in The Thirty-eighth Annual Conference on Neural Infor-mation Processing Systems , 2024. JOURNAL OF L ATEX CLASS FILES, VOL. XX, NO. X, XXX XXXX 16 
+
+[26] C. Lin, G. Han, J. Du, T. Xu, and Y. Peng, “Adaptive traffic engineering based on active network measure-ment towards software defined internet of vehicles,” 
+
+IEEE Transactions on Intelligent Transportation Systems ,vol. 22, no. 6, pp. 3697–3706, 2021. [27] S. Zhu, G. Han, C. Lin, and Q. Tao, “Underwater target tracking based on hierarchical software-defined multi-auv reinforcement learning: A multi-auv advantage-attention actor-critic approach,” IEEE Transactions on Mobile Computing , vol. 23, no. 12, pp. 13 639–13 653, 2024. [28] R. Lowe, Y. Wu, A. Tamar, J. Harb, P. Abbeel, and I. Mordatch, “Multi-agent actor-critic for mixed cooperative-competitive environments,” in Proceedings of the 31st International Conference on Neural Infor-mation Processing Systems , ser. NIPS’17. Red Hook, NY, USA: Curran Associates Inc., 2017, p. 6382–6393. [29] X. Wu, X. Li, J. Li, P. C. Ching, V. C. M. Leung, and H. V. Poor, “Caching transient content for iot sens-ing: Multi-agent soft actor-critic,” IEEE Transactions on Communications , vol. 69, no. 9, pp. 5886–5901, 2021. [30] C. Yu, A. Velu, E. Vinitsky, J. Gao, Y. Wang, A. Bayen, and Y. WU, “The surprising effectiveness of ppo in co-operative multi-agent games,” in Advances in Neural In-formation Processing Systems , S. Koyejo, S. Mohamed, A. Agarwal, D. Belgrave, K. Cho, and A. Oh, Eds., vol. 35. Curran Associates, Inc., 2022, pp. 24 611– 24 624. [31] J. Zhao, T. Zhu, S. Xiao, Z. Gao, and H. Sun, “Actor-critic for multi-agent reinforcement learning with self-attention,” International Journal of Pattern Recognition and Artificial Intelligence , vol. 36, no. 09, p. 2252014, 2022. [32] J. Ackermann, V. Gabler, T. Osa, and M. Sugiyama, “Reducing overestimation bias in multi-agent domains using double centralized critics,” 2019. 
+
+Jiaao Ma is currently pursuing a Bachelor’s degree at the Software College, Northeastern University, Shenyang, China. His research interests include rein-forcement learning, diffusion models, and supervised learning. 
+
+Chuan Lin [S’17, M’20] is currently an associate professor with the Software College, Northeastern University, Shenyang, China. He received the B.S. degree in Computer Science and Technology from Liaoning University, Shenyang, China in 2011, the M.S. degree in Computer Science and Technology from Northeastern University, Shenyang, China in 2013, and the Ph.D. degree in computer architec-ture in 2018. From Nove. 2018 to Nove. 2020, he is a Postdoctoral Researcher with the School of Software, Dalian University of Technology, Dalian, China. His research interests include UWSNs, industrial IoT, software-defined networking. 
+
+Guangjie Han [S’03-M’05-SM’18-F’22] is cur-rently a Professor with the Department of Internet of Things Engineering, Hohai University, Changzhou, China. He received his Ph.D. degree from North-eastern University, Shenyang, China, in 2004. In February 2008, he finished his work as a Postdoc-toral Researcher with the Department of Computer Science, Chonnam National University, Gwangju, Korea. From October 2010 to October 2011, he was a Visiting Research Scholar with Osaka University, Suita, Japan. From January 2017 to February 2017, he was a Visiting Professor with City University of Hong Kong, China. From July 2017 to July 2020, he was a Distinguished Professor with Dalian Uni-versity of Technology, China. His current research interests include Internet of Things, Industrial Internet, Machine Learning and Artificial Intelligence, Mobile Computing, Security and Privacy. Dr. Han has over 500 peer-reviewed journal and conference papers, in addition to 160 granted and pending patents. Currently, his H-index is 65 and i10-index is 282 in Google Citation (Google Scholar). The total citation count of his papers raises above 15500+ times. Dr. Han is a Fellow of the UK Institution of Engineering and Technology (FIET). He has served on the Editorial Boards of up to 10 international journals, including the IEEE TII, IEEE TCCN, IEEE TVT, IEEE Systems, etc. He has guest-edited several special issues in IEEE Journals and Magazines, including the IEEE JSAC, IEEE Communications, IEEE Wireless Communications, Computer Networks, etc. Dr. Han has also served as chair of organizing and technical committees in many international conferences. He has been awarded 2020 IEEE Systems Journal Annual Best Paper Award and the 2017-2019 IEEE ACCESS Outstanding Associate Editor Award. He is a Fellow of IEEE. 
+
+Shengchao Zhu (Student member, IEEE) received his B.S. degree in Internet of Things Engineering from Hohai University, Changzhou, China, in 2023. He is currently pursuing the Ph.D. degree with the Department of Computer Science and Technology at Hohai University, Nanjing, China. His current research interests include swarm intelligence, swarm ocean, Multi-Agent Reinforcement Learning. 
+
+Zhenyu Wang is currently pursuing a Bachelor’s degree at the Software College, Northeastern Univer-sity, Shenyang, China. His research interests include reinforcement learning, the Internet of Things, and software-defined networking. 
+
+Chen An is currently pursuing the B.S. degree at the School of Computer Science and Engineer-ing, Northeastern University, China. Her research interests include affective computing, emotional-expression-related hallucinations in large language models, and model interpretability.

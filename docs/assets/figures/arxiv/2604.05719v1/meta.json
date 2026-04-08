@@ -1,0 +1,398 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-001.webp",
+      "caption": "Table 14: Comparison of Lite and Full CyberStrike configurations on Easy challenges.",
+      "page": 70,
+      "index": 1,
+      "width": 823,
+      "height": 185
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-002.webp",
+      "caption": "Figure 6: Tool call composition and configuration effects in CyberStrike.",
+      "page": 70,
+      "index": 2,
+      "width": 805,
+      "height": 331
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-003.webp",
+      "caption": "Figure 16: Workflow of the Cruiser framework.",
+      "page": 102,
+      "index": 3,
+      "width": 827,
+      "height": 534
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-004.webp",
+      "caption": "Figure 30: The prompt of baseline-kimi and baseline-cc",
+      "page": 116,
+      "index": 4,
+      "width": 829,
+      "height": 660
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-005.webp",
+      "caption": "Figure 1: The systematization framework of AutoPT. The upper section aligns with the traditional PT lifecycle. The lower section systematically deconstructs the AutoPT architecture into six core dimensions: Agent Architecture, Agent Plan, Agent Memory, Agent Execution, External Knowledge, and Benchmarks.",
+      "page": 11,
+      "index": 5,
+      "width": 827,
+      "height": 918
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-006.webp",
+      "caption": "Table 2: Dedicated Functions and Corresponding Agent Roles in AutoPT Frameworks",
+      "page": 15,
+      "index": 6,
+      "width": 834,
+      "height": 1156
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-007.webp",
+      "caption": "Figure 25: Framework card of sub-agent.",
+      "page": 111,
+      "index": 7,
+      "width": 829,
+      "height": 852
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-008.webp",
+      "caption": "Figure 8: Workflow of the CTFSOLVER framework.",
+      "page": 94,
+      "index": 8,
+      "width": 827,
+      "height": 373
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-009.webp",
+      "caption": "Table 19: Capability stratification on challenge 026.",
+      "page": 79,
+      "index": 9,
+      "width": 833,
+      "height": 1261
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-010.webp",
+      "caption": "Figure 21: Framework card of SickHackShark.",
+      "page": 107,
+      "index": 10,
+      "width": 829,
+      "height": 1093
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-011.webp",
+      "caption": "Table 11: Ablation study of backbone LLMs on Medium and Hard challenges.",
+      "page": 62,
+      "index": 11,
+      "width": 848,
+      "height": 446
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-012.webp",
+      "caption": "Table 15: Average time and success count by frameworks.",
+      "page": 75,
+      "index": 12,
+      "width": 652,
+      "height": 370
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-013.webp",
+      "caption": "Figure 17: Framework card of Cruiser.",
+      "page": 103,
+      "index": 13,
+      "width": 829,
+      "height": 927
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-014.webp",
+      "caption": "Table 4: PT LLM Agents and Frameworks Comparison",
+      "page": 34,
+      "index": 14,
+      "width": 834,
+      "height": 1216
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-015.webp",
+      "caption": "Figure 4: Tool usage distribution and call volume across frameworks by challenges difficulty.",
+      "page": 66,
+      "index": 15,
+      "width": 819,
+      "height": 516
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-016.webp",
+      "caption": "Figure 12: Workflow of the Tinyctfer framework.",
+      "page": 98,
+      "index": 16,
+      "width": 579,
+      "height": 405
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-017.webp",
+      "caption": "Figure 24: Workflow of the sub-agent framework.",
+      "page": 110,
+      "index": 17,
+      "width": 827,
+      "height": 441
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-018.webp",
+      "caption": "Table 18: Performance of single-agent frameworks with Opus-4.6.",
+      "page": 78,
+      "index": 18,
+      "width": 829,
+      "height": 404
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-019.webp",
+      "caption": "Figure 11: Framework card of LuaN1ao.",
+      "page": 97,
+      "index": 19,
+      "width": 829,
+      "height": 1277
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-020.webp",
+      "caption": "Table 5: Comparison of Evaluation Benchmarks.",
+      "page": 42,
+      "index": 20,
+      "width": 829,
+      "height": 924
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-021.webp",
+      "caption": "Figure 20: Workflow of the SickHackShark framework.",
+      "page": 106,
+      "index": 21,
+      "width": 827,
+      "height": 514
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-022.webp",
+      "caption": "Figure 3: Illustration of various retrieval strategies. It highlights three primary mechanisms: dense retrieval based on vector embeddings, sparse retrieval focusing on exact entity keyword matching, and tool-based retrieval which delegates the retrieval autonomy to the LLM by selecting predefined testing methodologies from a library.",
+      "page": 35,
+      "index": 22,
+      "width": 570,
+      "height": 612
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-023.webp",
+      "caption": "Table 6: Detailed Characteristics of the Benchmark Challenges.",
+      "page": 46,
+      "index": 23,
+      "width": 829,
+      "height": 841
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-024.webp",
+      "caption": "Table 9: Results of the KB ablation study on Medium and Hard challenges.",
+      "page": 60,
+      "index": 24,
+      "width": 817,
+      "height": 404
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-025.webp",
+      "caption": "Table 10: Results of the KB ablation study on Easy challenges.",
+      "page": 60,
+      "index": 25,
+      "width": 833,
+      "height": 816
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-026.webp",
+      "caption": "Table 3: Tool taxonomy for AutoPT agents.",
+      "page": 28,
+      "index": 26,
+      "width": 823,
+      "height": 843
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-027.webp",
+      "caption": "Table 1: General Functions and Corresponding Agent Roles in AutoPT Frameworks",
+      "page": 13,
+      "index": 27,
+      "width": 834,
+      "height": 793
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-028.webp",
+      "caption": "Figure 28: Workflow of the H-Pentest framework.",
+      "page": 114,
+      "index": 28,
+      "width": 826,
+      "height": 480
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-029.webp",
+      "caption": "Table 17: Capability stratification on challenge 022.",
+      "page": 77,
+      "index": 29,
+      "width": 833,
+      "height": 968
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-030.webp",
+      "caption": "Figure 13: Framework card of Tinyctfer.",
+      "page": 99,
+      "index": 30,
+      "width": 829,
+      "height": 1098
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-031.webp",
+      "caption": "Figure 18: Workflow of the CHYing framework.",
+      "page": 104,
+      "index": 31,
+      "width": 825,
+      "height": 403
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-032.webp",
+      "caption": "Figure 5: Tool call distribution of major tools across backbone LLMs and frameworks.",
+      "page": 67,
+      "index": 32,
+      "width": 800,
+      "height": 258
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-033.webp",
+      "caption": "Figure 23: Framework card of newmapta.",
+      "page": 109,
+      "index": 33,
+      "width": 829,
+      "height": 1259
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-034.webp",
+      "caption": "Table 20: Occurrences of flag hallucinations per framework.",
+      "page": 81,
+      "index": 34,
+      "width": 617,
+      "height": 225
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-035.webp",
+      "caption": "Figure 27: Framework card of CyberStrike.",
+      "page": 113,
+      "index": 35,
+      "width": 829,
+      "height": 1285
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-036.webp",
+      "caption": "Table 7: Results of Medium and Hard challenges across frameworks.",
+      "page": 49,
+      "index": 36,
+      "width": 817,
+      "height": 482
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-037.webp",
+      "caption": "Table 8: Results of Easy challenges across frameworks.",
+      "page": 49,
+      "index": 37,
+      "width": 823,
+      "height": 485
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-038.webp",
+      "caption": "Figure 10: Workflow of the LuaN1ao framework.",
+      "page": 96,
+      "index": 38,
+      "width": 827,
+      "height": 500
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-039.webp",
+      "caption": "Figure 2: Taxonomy of planning strategies in AutoPT frameworks.",
+      "page": 17,
+      "index": 39,
+      "width": 813,
+      "height": 339
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-040.webp",
+      "caption": "Figure 7: LLM calls and token consumption of each framework on successfully compromised challenges under Easy and Medium challenges.",
+      "page": 73,
+      "index": 40,
+      "width": 829,
+      "height": 638
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-041.webp",
+      "caption": "Figure 14: Workflow of the XBow-Comp framework.",
+      "page": 100,
+      "index": 41,
+      "width": 827,
+      "height": 407
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-042.webp",
+      "caption": "Figure 19: Framework card of CHYing.",
+      "page": 105,
+      "index": 42,
+      "width": 829,
+      "height": 1267
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-043.webp",
+      "caption": "Figure 29: Framework card of H-Pentest.",
+      "page": 115,
+      "index": 43,
+      "width": 829,
+      "height": 1239
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-044.webp",
+      "caption": "Table 16: Resource consumption of different backbone LLMs on CTFSOLVER and XBowComp across challenges difficulty.",
+      "page": 76,
+      "index": 44,
+      "width": 781,
+      "height": 706
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-045.webp",
+      "caption": "Figure 22: Workflow of the newmapta framework.",
+      "page": 108,
+      "index": 45,
+      "width": 827,
+      "height": 400
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-046.webp",
+      "caption": "Figure 9: Framework card of CTFSOLVER.",
+      "page": 95,
+      "index": 46,
+      "width": 829,
+      "height": 1243
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-047.webp",
+      "caption": "Table 12: Ablation study of backbone LLMs on Easy challenges.",
+      "page": 63,
+      "index": 47,
+      "width": 833,
+      "height": 1320
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-048.webp",
+      "caption": "Figure 26: Workflow of the CyberStrike framework.",
+      "page": 112,
+      "index": 48,
+      "width": 827,
+      "height": 352
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05719v1/fig-049.webp",
+      "caption": "Figure 15: Framework card of XBow-Competition.",
+      "page": 101,
+      "index": 49,
+      "width": 829,
+      "height": 1265
+    }
+  ]
+}

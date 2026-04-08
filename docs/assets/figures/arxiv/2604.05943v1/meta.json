@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05943v1/fig-001.webp",
+      "caption": "Figure 1: Spider plot demonstrating the relative performance of all evaluated approaches on three different environments – SMACv2, Google Research Football (GRF) and POGEMA.",
+      "page": 1,
+      "index": 1,
+      "width": 492,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05943v1/fig-002.webp",
+      "caption": "Table 1: Win rates % (for SMACv2 and GRF) and average throughput (for POGEMA). Higher is better. The table compares MARL-GPT (Multi-Domain) to expert single-task policies and standard offline RL baselines (Single-Domain) across SMACv2, GRF, and POGEMA. MARL-GPT shows strong generalization, often matching or outperforming the expert and baselines. The highlighting indicates the best-performing model (excluding single-task experts).",
+      "page": 6,
+      "index": 2,
+      "width": 1048,
+      "height": 469
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05943v1/fig-003.webp",
+      "caption": "Figure 6: Waveshare JetBot robotic agent used for maze navigation experiments.",
+      "page": 11,
+      "index": 3,
+      "width": 342,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05943v1/fig-004.webp",
+      "caption": "Figure 2: The general pipeline begins with training expert policies across diverseMARL environments using domain-appropriate algorithms (e.g., IPPO, RHCR). These policies generate large-scale datasets of observation-action(-reward) trajectories. MARLGPT is then trained on the aggregated data using cross-entropy loss to predict expert actions and Q-values, enabling a single model to generalize across environments, tasks, and coordination regimes.",
+      "page": 2,
+      "index": 4,
+      "width": 1002,
+      "height": 372
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05943v1/fig-005.webp",
+      "caption": "Figure 4: Online fine-tuning results: (a) Battle won on the terran 5vs5 task (SMACv2). (b–d) Comparison of fine-tuned MARL-GPT and an expert model trained from scratch on GRF.",
+      "page": 7,
+      "index": 5,
+      "width": 504,
+      "height": 380
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05943v1/fig-006.webp",
+      "caption": "Table 5: Learning Hyperparameter Details.",
+      "page": 8,
+      "index": 6,
+      "width": 344,
+      "height": 786
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05943v1/fig-007.webp",
+      "caption": "Figure 3: Illustration of the proposed encoding scheme for multi-agent systems, demonstrated using an example from the SMACv2 environment. Each agent receives a structured, vectorized observation containing information about itself, its allies, and nearby enemies. For each observed agent, the input features (such as position, health, etc.) are enriched with additional embeddings: (a) a positional encoding over the feature dimensions, (b) a global timestep encoding, (c) an agent identity index, and (d) a team index distinguishing allies from enemies. These components are combined via element-wise addition, resulting in a contextualized embedding for each observed agent that can be processed by a transformer encoder. The provided encoding scheme is general and transferable across multi-agent systems. By augmenting raw observation features with agent- and team-specific indices, the encoding enables the model to distinguish between different functional groups (e.g., allies vs. enemies) and individual agents, regardless of environment-specific dynamics or layouts. This structure preserves permutation invariance where appropriate, while still allowing the model to learn role-specific interactions. The encoding supports a dynamic number of agents, limited only by the model’s maximum context size.",
+      "page": 4,
+      "index": 7,
+      "width": 506,
+      "height": 375
+    }
+  ]
+}

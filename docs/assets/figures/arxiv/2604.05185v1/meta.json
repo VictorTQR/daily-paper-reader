@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05185v1/fig-001.webp",
+      "caption": "Fig. 1: Comparison of observation-transition recovery",
+      "page": 6,
+      "index": 1,
+      "width": 512,
+      "height": 325
+    }
+  ]
+}

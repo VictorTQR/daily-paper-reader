@@ -1,0 +1,1701 @@
+Title: Policy Improvement Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.00860v1
+
+Published Time: Thu, 02 Apr 2026 01:01:58 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Policy Improvement Reinforcement Learning 
+
+Huaiyang Wang 1, *
+
+, Xiaojie Li 1,* , Deqing Wang 1, Haoyi Zhou 1, Zixuan Huang 1,Yaodong Yang 2, Jianxin Li 1, Yikun Ban 1,† 1Beihang University 2Peking University 
+
+§ Github Page: jacckma.github.io/pirl/ 
+
+## ABSTRACT 
+
+Reinforcement Learning with Verifiable Rewards (RLVR) has become a central post-training paradigm for improving the reasoning capabilities of large language models. Yet existing methods share a common blind spot: they optimize policies based on instantaneous group-level or batch-level statistics without ever verifying whether the resulting update actually improved the model. This open-loop design — updating in isolation at each step, guided only by within-group (batch) reward signals — means optimization can drift or collapse with no mechanism to detect and correct these failures. We argue that the missing ingredient is policy improvement feedback: the ability to measure and optimize inter-iteration progress directly. To this end, we introduce Policy Improvement Reinforcement Learning (PIRL), a framework that replaces surrogate reward maximization with the explicit objective of maximizing cumulative policy improvement across iterations, and prove this temporal objective is perfectly aligned with maximizing final task performance. Building on PIRL, we propose Policy Improvement Policy Optimization (PIPO), which implements closed-loop optimization through retrospective verification. At each iteration, PIPO evaluates whether the previous update yielded genuine improvement against a sliding-window historical baseline, then actively reinforces beneficial updates and suppresses the harmful ones — transforming an open-loop process into a self-correcting one. We provide theoretical analysis showing that PIPO performs ascent on the PIRL objective in expectation, and experiments on mathematical reasoning benchmarks demonstrate improved stability and performance over GRPO and its variants. Accelerate       
+
+> Reinforce Update
+> Rectify
+> Suppress Update
+> Case 1: Reinforcement
+> 𝚫 𝑱 𝒕 >𝟎 ?
+> End
+> Epoch
+> Completed?
+> PHASE 1: Policy Exploration
+> PHASE 2: Policy Verification
+> Explore
+> Traditional Update
+> No
+> No
+
+Traditional RLVR (PPO, GRPO, …)  Policy Improvement RL                
+
+> Start
+> Epoch
+> Completed? End
+> Yes No Yes
+> 𝜽 𝒕
+> 𝜽 𝒕 −𝟏 𝜽 𝒕 −𝟏
+> 𝜽 𝒕 ′
+> Open Loop Close Loop
+> Start
+> 𝜽 𝒕
+> Rectify
+> Suppress Update
+> Policy Improvement
+> 𝚫 𝑱 𝒕 =𝑱 𝜽 𝒕 −𝑱 (𝜽 𝒉𝒊𝒔 )
+> Accelerat e
+> Reinforce Update
+> Case 1: Improvement Case 2: Suppression
+> 𝚫 𝑱 𝒕 >𝟎 ?Yes No
+
+Missing Verification 
+
+：                  
+
+> Is this update 𝜽 𝒕 better than 𝜽 𝒕 −𝟏 or not?
+> i.e., 𝑱 𝜽 𝒕 −𝑱 𝜽 𝒕 −𝟏 >𝟎 or not?
+> 𝑱 ·:𝐏𝐞𝐫𝐟𝐨𝐫𝐦𝐚𝐧𝐜𝐞 𝐌𝐞𝐚𝐬𝐮𝐫𝐞
+> PHASE 1: Policy Exploration (In Group/Batch )
+
+## ++ Policy Model                   
+
+> →Response(s)
+> Environment
+> →Reward
+> Optimization
+> Method
+> 𝜽 𝒕
+> Policy Improvement
+> 𝚫 𝑱 𝒕 =𝑱 𝜽 𝒕 −𝑱 (𝜽 𝒕 −𝟏 )
+> Case 2: Suppression
+> Yes tt+ 1 t+ 2
+> Training Steps
+> Performance  J( t)
+> J> 0
+> Phase 2
+> Reinforce
+> Phase 1
+> Explore
+> Case 1: Reinforcement (Acceleration)
+> GRPO
+> PIPO (Ours)
+> tt+ 1 t+ 2
+> Training Steps
+> Performance  J( t)
+> J< 0
+> Phase 2
+> Suppress
+> Phase 1
+> Explore
+> Case 2: Suppression (Rectification)
+> GRPO
+> PIPO (Ours)
+
+Figure 1: Overview of Policy Improvement Reinforcement Learning (PIRL) framework. Left : Traditional RLVR methods follow an open-loop paradigm, updating policies from instantaneous rewards without verifying actual improvement. Middle : PIRL introduces a verification stage, forming a closed-loop optimization driven by policy improvement signals. Right : During verification, updates are adaptively regulated: positive signals ( ∆J > 0) are amplified, while negative signals ( ∆J < 0) trigger rectification to suppress harmful updates and stabilize training. 
+
+∗Equal Contribution. †Corresponding Author. For any questions, please feel free to contact: huaiyangwang@buaa.edu.cn ,
+
+yikunb@buaa.edu.cn .
+
+> arXiv:2604.00860v1 [cs.LG] 1 Apr 2026
+
+Policy Improvement Reinforcement Learning 
+
+## 1 Introduction 
+
+Reinforcement Learning with Verifiable Rewards (RLVR) has become a central post-training paradigm for improving the reasoning capabilities of large language models (LLMs) [ 51 , 14 , 60 , 7, 48 ]. By leveraging objective and scalable supervision, RLVR is particularly effective for domains such as mathematical reasoning [ 6, 27 ] and program synthesis [ 47 , 61 ]. Among existing methods, GRPO [ 38 ] and its extensions offer a key practical advantage: they eliminate the need for a critic by normalizing rewards within groups of sampled responses, enabling simple and efficient optimization. As a result, group-based methods have emerged as a dominant paradigm in RLVR. However, these methods share a common blind spot: they optimize policies based on instantaneous group-level [ 52 , 56 , 24 ] or batch-level [ 20 ] statistics without ever verifying whether the resulting update actually improved the model. We show that this open-loop, intra-batch design is misaligned with the underlying RLVR objective in the sparse-reward regimes characteristic of reasoning tasks. Such step-wise optimization can drift or collapse with no mechanism to detect or correct these failures. We argue that the missing ingredient is policy improvement feedback : the ability to measure and optimize inter-iteration progress directly. The ideal goal of RLVR is not to optimize a local surrogate at each step, but to consistently improve policy performance over time. This gap motivates a shift from reward- or advantage-based optimization to a new learning paradigm centered on inter-iteration progress. We formalize this principle as Policy Improvement Reinforcement Learning (PIRL) , which directly optimizes the expected performance gain between successive policies, thereby realigning the learning signal with the ultimate objective of RLVR: monotonic improvement in verifiable reasoning performance. Building on PIRL, we propose Policy Improvement Policy Optimization (PIPO) , a practical algorithm that implements closed-loop optimization through retrospective verification. At each iteration, PIPO evaluates whether the previous update yielded genuine improvement by comparing current performance against a sliding-window historical baseline. A parameter-free Policy Improvement Reward then reinforces beneficial updates and actively suppresses detrimental ones — transforming an open-loop process into a self-correcting one. This mechanism mitigates the gradient distortion inherent in group-normalized methods, leading to more stable and principled training dynamics. Our contributions can be summarized as follows: (1) Novel Problem: We identify the absence of policy improvement feedback in group-based RLVR methods as a root cause of instability in sparse-reward regimes, and introduce 
+
+Policy Improvement Reinforcement Learning , which directly optimizes expected inter-iteration policy improvement, realigning optimization with the ideal RLVR objective. (2) Proposed Algorithm: We propose PIPO, a practical algorithm that operationalizes PIRL through retrospective verification and a parameter-free Policy Improvement Reward, reinforcing genuine improvements while suppressing detrimental updates. (3) Empirical Effectiveness: Experiments on mathematical reasoning benchmarks demonstrate that PIPO consistently outperforms GRPO and its variants, exhibiting smoother training dynamics and improved robustness against mode collapse. 
+
+## 2 Preliminaries 
+
+We consider the standard RLVR setting. For a query q ∼ D , the policy πθ (· | q) generates a response y ∈ Y , which is evaluated by a deterministic verifier returning a binary reward R(q, y ) ∈ { 0, 1}. The objective maximizes the expected rewards: 
+
+JRLVR (θ) = Eq∼D 
+
+Ey∼πθ (·| q)R(q, y ) . (1) 
+
+Definition 2.1 (Policy Success Rate) . For a fixed query q, the policy success rate p(q; θ) is defined as the expected reward under the policy πθ :
+
+p(q; θ) = Ey∼πθ (·| q)[R(q, y )] . (2) Consequently, the ideal policy gradient of the RLVR objective can be expressed as: 
+
+gideal = ∇θ JRLVR (θ) = Eq∼D [∇θ p(q; θ)] . (3) For each query q, GRPO samples a group of G responses yi ∼ πθold (· | q) with corresponding rewards Ri := R(q, y i).Let μq = 1
+
+> G
+
+PGi=1 Ri and σq =
+
+q 1
+
+> G
+
+PGi=1 (Ri − μq )2 denote the group-level reward mean and standard deviation respectively. The standard GRPO objective is formulated as: 
+
+JGRPO (θ) = Eq, {yi}
+
+ 1
+
+G
+
+> G
+
+X
+
+> i=1
+
+min 
+
+
+
+ρiAi, clip (ρi, 1 − ϵ, 1 + ϵ)Ai
+
+
+
+(4) where the group-relative advantage is Ai = Ri−μq 
+
+> σq
+
+, and ρi = πθ (yi|q)  
+
+> πθold (yi|q)
+
+denotes the importance sampling ratio. 2Policy Improvement Reinforcement Learning 0.0 0.2 0.4 0.6 0.8 1.0            
+
+> pt
+> 10 0
+> 10 1
+> 10 2
+> log 10  (pt) Explosion Explosion
+> GRPO ( G= 128 )GRPO ( G= 8 )RLVR
+> 0100 200
+> Step
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> Grad Norm
+> GRPO + PIPO
+> GRPO
+> 0100 200
+> Step
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> 0.85
+> Pass@1
+> GRPO + PIPO
+> GRPO
+> Theoretical Gradient Distortion Empirical Stability
+> (a) (b)
+
+Figure 2: Theoretical distortion and empirical instability of GRPO. (a) Gradient Distortion: The gradient scaling factor η(pt) evaluated across success rates pt. As established in Corollary 3.2, GRPO ( G = 8 , 128 ) exhibit severe sensitivity explosion at the boundaries ( pt → 0, 1). (b) Empirical Stability: Standard GRPO suffers from drastic gradient norm spikes (left) and severe Pass@1 collapse (right). Incorporating PIPO effectively stabilizes training. 
+
+## 3 The Vulnerability of Group-Relative Policy Optimization 
+
+In this section, we expose a fundamental structural limitation inherent in standard group-based policy optimization. We analytically demonstrate that GRPO’s reliance on instantaneous spatial statistics for advantage normalization fundamentally destabilizes the gradient estimator, particularly in the extreme probability regimes characteristic of reasoning tasks. For a query q, let Sq := PGi=1 R(q, y i) denote the number of successes in a group of size G. Degenerate batches (Sq ∈ { 0, G }) produce identical rewards across the group, resulting in zero group-relative advantages. Consequently, GRPO optimization is strictly conditioned on the non-degenerate event E := {1 ≤ Sq ≤ G − 1}.Within this regime, group-relative normalization alters the gradient estimator. For analysis, we assume the policy remains in a local trust region ( πθ ≈ πθold ), so the clipping mechanism is inactive. 
+
+Theorem 3.1 (Gradient Distortion) . Under the above conditions, the expected GRPO update direction satisfies 
+
+gGRPO (θ) = η(p(q; θ)) · gideal ,
+
+where gideal = ∇θ JRLVR (θ) and the scaling factor is 
+
+η(p) = 
+
+PG−1
+
+> k=1
+
+pk(G − k) Gk
+
+pk(1 − p)G−k
+
+G p (1 − p) (1 − pG − (1 − p)G) .
+
+Thus, GRPO applies a state-dependent rescaling to the ideal gradient, indicating that it does not perform unbiased gradient ascent on RLVR objective. 
+
+Theorem 3.1 shows that even in an idealized setting, the GRPO update is structurally misaligned with RLVR. In practical implementations with clipping and other optimization artifacts, this mismatch will be further amplified. 
+
+Corollary 3.2 (Sensitivity Explosion) . At the probability boundaries ( p → 0 or p → 1), the gradient scaling factor exhibits a symmetric singularity and diverges to infinity: 
+
+η(p) ∼√G − 1
+
+G · p(1 − p) −→ ∞ .
+
+Corollary 3.2 exposes a critical vulnerability of GRPO in reasoning tasks. For extremely hard ( p ≈ 0) or easy ( p ≈ 1)queries, group-relative optimization will over-amplify rare stochastic signals. This unbounded scaling causes gradient noise to dominate the update, inevitably leading to severe training instability and mode collapse. Crucially, because this singularity is mathematically intrinsic to intra-group advantage normalization, it broadly afflicts existing GRPO variants like DAPO[54] and GSPO[58]. 3Policy Improvement Reinforcement Learning 
+
+## 4 Policy Improvement Reinforcement Learning 
+
+As established in Section 3, standard group-relative methods are inherently misaligned with the underlying RLVR objective. By relying solely on instantaneous intra-batch statistics, their optimization is confined to a single batch. This 
+
+open-loop and myopic design makes the gradient estimator highly sensitive to noise and boundary singularities. To address this limitation, we introduce policy improvement as feedback, shifting the optimization paradigm from open-loop updates to closed-loop inter-iteration optimization. Specifically, we propose Policy Improvement Reinforcement Learning (PIRL), a learning framework that directly optimizes verifiable performance gain between successive policies. Unlike conventional surrogate objectives based on high-variance relative rewards, PIRL treats this inter-iteration progress as the primary learning signal. We begin by formalizing the ideal measurement of this improvement. 
+
+Definition 4.1 (Policy Improvement) . Let JRLVR (θ) denote the expected performance defined in Eq. (1) . Given an update from θt−1 to θt, the policy improvement at iteration t is defined as the step-wise performance gain: 
+
+∆Jt := JRLVR (θt) − JRLVR (θt−1). (5) Rather than optimizing a single-step surrogate loss, PIRL seeks a trajectory of policies that achieves consistent improvement over time. 
+
+Definition 4.2 (PIRL Objective) . Consider an optimization process over T iterations. The PIRL objective seeks a sequence of policies {θt}Tt=1 that maximizes the cumulative expected policy improvement: 
+
+max 
+
+> {θt}Tt=1
+> T
+
+X
+
+> t=1
+
+E[∆ Jt] . (6) We now demonstrate that this temporal formulation is structurally consistent with the global RLVR objective. 
+
+Theorem 4.3 (Objective Alignment) . For a fixed initialization θ0, maximizing the ideal PIRL objective exactly maximizes the final policy performance: 
+
+arg max 
+
+> {θt}Tt=1
+> T
+
+X
+
+> t=1
+
+E[∆ Jt] = arg max 
+
+> θT
+
+JRLVR (θT ).
+
+As demonstrated by Theorem 4.3, explicitly maximizing the improvement ∆Jt allows PIRL to introduce a temporal feedback mechanism that anchors each update to past performance. This closed-loop formulation encourages a consistently improving performance trajectory, effectively mitigating severe inter-iteration training oscillations. While Definition 4.1 defines the ideal improvement signal, empirical estimations of JRLVR are often influenced by stochasticity — such as varying query difficulty across batches and rollout fluctuations. To stabilize the learning signal, we introduce a smoothed historical baseline over the past K iterations: 
+
+B(K) 
+
+> t−1
+
+= 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+JRLVR (θt−k). (7) The resulting practical improvement signal is: 
+
+∆J(K) 
+
+> t
+
+:= JRLVR (θt) − B (K) 
+
+> t−1
+
+. (8) To ensure this sliding-window mechanism stabilizes the temporal signal without altering the fundamental optimization target, we establish the objective consistency of this smoothed formulation. 
+
+Proposition 4.4 (Objective Consistency) . Maximizing cumulative smoothed improvement PTt=1 E[∆ J(K) 
+
+> t
+
+] is mathematically equivalent to maximizing a positively weighted average of the final K policy performance. 
+
+Proposition 4.4 shows that the sliding-window stabilization redistributes the objective into a temporally smoothed form. By assigning the highest weight to the terminal policy, it preserves the emphasis on final reasoning performance while enabling a robust, closed-loop training process. 4Policy Improvement Reinforcement Learning 
+
+## 5 Policy Improvement Policy Optimization 
+
+Building upon the theoretical foundation of the PIRL framework, we present Policy Improvement Policy Optimization (PIPO), a practical algorithm that operationalizes the smoothed temporal improvement signal. To achieve closed-loop optimization, PIPO implements a chronological two-step mechanism: an exploratory update from the current iteration is retrospectively evaluated and refined in the subsequent step. 
+
+5.1 Policy Improvement Reward 
+
+In the practical instantiation of PIRL, the target learning signal is the smoothed policy improvement ∆J(K) 
+
+> t
+
+from Eq. (8) . We directly approximate this signal using empirical rewards sampled from group-based rollouts. At iteration t,the instantaneous policy performance JRLVR (θt) is estimated by the mean reward μt calculated over a freshly sampled batch Bt:
+
+μt := 1
+
+B
+
+> B
+
+X
+
+> j=1
+
+1
+
+G
+
+> G
+
+X
+
+> i=1
+
+R(qj , y t,i ), yt,i ∼ πθt (· | qj ). (9) Here, μt serves as the objective empirical evidence reflecting the quality of the policy update from the previous iteration. Correspondingly, the smoothed historical baseline B(K) 
+
+> t−1
+
+is approximated by the empirical mean μhis across the past K
+
+iterations. We compute this historical mean and its associated standard deviation σhis as: 
+
+μhis = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+μt−k, σhis =
+
+vuut 1
+
+K − 1
+
+> K
+
+X
+
+> k=1
+
+(μt−k − μhis )2. (10) By definition, the difference μt − μhis serves as the direct empirical estimate of the practical improvement step ∆J(K) 
+
+> t
+
+.To ensure the optimization remains robust across varying batch distributions, we normalize this empirical improvement by the historical standard deviation to obtain the standardized improvement signal :
+
+ξt := μt − μhis 
+
+σhis 
+
+. (11) Specifically, ξt > 0 provides direct evidence of a genuine performance gain ( ∆J(K) 
+
+> t
+
+> 0), indicating that the preceding policy update should be further reinforced. Conversely, ξt ≤ 0 corresponds to a negative practical improvement (∆J(K) 
+
+> t
+
+≤ 0). This explicitly signals that the previous update was derailed by the batch-specific noise or boundary singularities identified in Section 3, triggering the closed-loop mechanism to immediately suppress or rectify the harmful update. To distribute this global verification signal across the intra-group positive and negative samples, we formally define the core reward mechanism of PIPO. 
+
+Definition 5.1 (Policy Improvement Reward) . For each historical sample yt−1,i generated during the previous iteration 
+
+t − 1, the Policy Improvement (PI) Reward evaluated at iteration t is constructed as: 
+
+ˆrPI  
+
+> t,i
+
+:= G · A(yt−1,i )
+
+PGj=1 |A(yt−1,j )|
+
+| {z }
+
+> Local Attribution
+
+· ϕ( μt − μhis 
+
+σhis 
+
+)
+
+| {z }
+
+> Global Verification
+
+, (12) where A(yt−1,i ) = Rt−1,i −μt−1 
+
+> σt−1
+
+denotes the standard intra-group advantage computed at step t −1, and ϕ : R → [−c, c ]
+
+is a bounded clipping function that restricts the update magnitude. This dual-component construction explicitly resolves two fundamental optimization challenges: (1) Global Verification: 
+
+The clipping function ϕ(·) acts as a robust gating mechanism on the temporal improvement signal ξt. By bounding the feedback magnitude, it prevents the global signal from being disproportionately skewed by batch-level noise. (2) Local Attribution: The normalized term proportionally allocates the globally verified global signal across the group. This specific formulation is mathematically designed to neutralize intra-batch noise and realign the policy update direction with the ideal RLVR gradient gideal , a property we formally establish in Section 6.. 5Policy Improvement Reinforcement Learning 
+
+Algorithm 1 PIPO Framework  
+
+> 1:
+
+Input: Batch size B, Group size G, Window K, Learning rates αPI , α std  
+
+> 2:
+
+Initialize memory M ← ∅ , policy θ1 
+
+> 3:
+
+for t = 1 , 2, . . . , T do  
+
+> 4:
+
+Sample qt and generate responses yt ∼ πθt 
+
+> 5:
+
+Compute batch mean μt using Eq. (9) and advantages At 
+
+> 6:
+
+# Phase 2: Retrospective Verification (for step t − 1) 
+
+> 7:
+
+if t > K then  
+
+> 8:
+
+Compute μhis and σhis from M using Eq. (10)  
+
+> 9:
+
+Retrieve previous batch Bt−1 from M 
+
+> 10:
+
+Compute standardized signal ξt using Eq. (11)  
+
+> 11:
+
+Compute Policy Improvement Reward ˆrPI  
+
+> t,i
+
+using Eq. (12)  
+
+> 12:
+
+Update θ′ ← θt + αPI ∇J PI  
+
+> 13:
+
+end if  
+
+> 14:
+
+# Phase 1: Forward Exploration (for step t) 
+
+> 15:
+
+Update θt+1 ← θ′ + αstd ∇J group  
+
+> 16:
+
+Update M with (μt, Bt) 
+
+> 17:
+
+end for  
+
+> 18:
+
+Output: Optimized policy θT +1 
+
+5.2 Dual-Stage Optimization Process 
+
+To implement the temporal feedback loop, PIPO weaves exploration and verification across consecutive iterations, as conceptually depicted in Figure 1. We illustrate this closed-loop mechanism by tracing the chronological lifecycle of an optimization step spanning iteration t and t + 1 , as summarized in Algorithm 1. 
+
+Phase 1: Forward Exploration (at Iteration t). The first phase aims to explore via a standard group-relative update. At iteration t, given the current verified policy θt, we generate a fresh batch Bt = {(qt, y t,i )}Gi=1 . Using this batch, we perform an exploratory step to obtain an updated policy θt+1 :
+
+θt+1 ← θt + αstd · ∇ θ Jgroup (θt; Bt), (13) where αstd is the learning rate and Jgroup denotes a standard spatial optimization objective. In our primary instantiation, this corresponds directly to the GRPO objective defined in Eq. (4) . Importantly, PIPO serves as a model-agnostic meta-framework, allowing seamless integration of variants like GSPO and DAPO. 
+
+Phase 2: Retrospective Verification (at Iteration t + 1 ). The second phase aims to empirically verify the exploratory step performed in Phase 1. At the subsequent iteration t + 1 , the unverified policy πθt+1 interacts with the environment to generate a new batch Bt+1 . The newly computed batch mean μt+1 serves as the objective empirical evidence for the quality of the previous update. Using the PI reward ˆrPI  
+
+> t+1 ,i
+
+derived from μt+1 , we perform a retrospective verification update on the historical batch Bt:
+
+θ′ 
+
+> t+1
+
+← θt+1 + αPI · ∇ θ JPI (θt+1 ; Bt),
+
+JPI = 1
+
+G
+
+> G
+
+X
+
+> i=1
+
+min 
+
+
+
+νi ˆrPI 
+
+> t+1 ,i
+
+, clip( νi, 1 − ϵ, 1 + ϵ)ˆ rPI 
+
+> t+1 ,i
+
+
+
+, (14) where αPI is the learning rate and νi = πθt+1 (yt,i |qt)  
+
+> πθt(yt,i |qt)
+
+is the importance sampling ratio tracking the distribution shift. This retrospective stage acts as a corrective gate: gradient steps from iteration t that are mathematically verified to have improved performance( ξt+1 > 0) are reinforced, while directions leading to suppression ( ξt+1 < 0) are actively rectified. After yielding the verified policy θ′
+
+> t+1
+
+, the algorithm seamlessly reuses the current batch Bt+1 to perform the standard Phase 1 forward exploration, naturally advancing the optimization process. This continuous interleaving of retrospective verification and forward exploration forms a self-sustaining loop that effectively balances aggressive state-space discovery with verifiably stable improvement. 
+
+## 6 Theoretical Analysis 
+
+In the previous section, we introduced PIPO as a closed-loop optimization algorithm. However, a central theoretical question remains: Why does this particular feedback structure lead to better objective alignment with RLVR than 
+
+6Policy Improvement Reinforcement Learning 
+
+standard group-based methods? In this section, we show that PIPO is a principled mechanism that (i) enforces ascent on the PIRL objective, (ii) rectifies the geometric bias inherent in group-normalized estimators, and (iii) induces a strictly superior optimization trajectory when combined with standard group-based updates. 
+
+6.1 Objective Alignment via Policy Improvement 
+
+We begin by establishing that the PIPO update is aligned with the PIRL objective in expectation. To formally characterize the optimization properties, we introduce the following foundational assumptions. 
+
+Assumption 6.1 (Faithful Estimation) . The empirical estimates μt and μhis satisfy the conditional expectations, i.e., 
+
+E[μt | θt] = JRLVR (θt) and E[μhis | θt−K:t−1] = B(K) 
+
+> t−1
+
+.
+
+Assumption 6.2 (Directional Consistency) . The observed performance change ∆J(K) 
+
+> t
+
+serves as a faithful indicator of the alignment between the Phase 1’s exploration update direction gt−1 and the ideal policy gradient ∇JRLVR (θt), such that sign(∆ J(K) 
+
+> t
+
+) = sign( ⟨∇ JRLVR (θt), g t−1⟩).The assumptions are mild and intuitive. The first naturally follows from the Law of Large Numbers, whereby empirical averages over B × G rollouts provide reliable approximations of the expected performance. The second reflects the local linearity of the objective. A performance gain ( ∆J(K) 
+
+> t
+
+> 0) implies an acute angle with the gradient, while a decrease implies an obtuse angle. 
+
+Theorem 6.3 (PIPO Approximates Smoothed PIRL Ascent) . Let ˜A(yt−1,i ) = GA (yt−1,i )   
+
+> PGj=1 |A(yt−1,j )|
+
+denote the nor-malized local advantage. Under Assumptions 6.1 and 6.2, and assuming ϕ(x) = x and σhis > 0, the following hold: (a) The expected Policy Improvement reward assigned to each sample satisfies: 
+
+E[ˆ rPI  
+
+> t,i
+
+| history ] = E[∆ J(K) 
+
+> t
+
+]
+
+σhis 
+
+· ˜A(yt−1,i ).
+
+(b) The retrospective update in Eq. (14) performs first-order ascent on the smoothed PIRL increment ∆J(K)
+
+> t
+
+in expectation. 
+
+Theorem 6.3 demonstrates that PIPO’s reward effectively couples local credit attribution with global performance verification . Unlike open-loop methods, PIPO reinforces previous updates only when they are empirically validated to have improved the model’s overall reasoning capability. 
+
+Intuition: Policy Improvement as Feedback. Standard RLVR methods, such as GRPO, operate in an open-loop fashion: policies are updated based on batch-level statistics without confirming if the step actually yielded a superior model. On the contrary, PIPO closes this loop by treating the realized smoothed improvement ∆J(K)(θt) = 
+
+J(θt) − B (K) 
+
+> t−1
+
+as a ground-truth verification signal. Through the empirical estimator ∆ bJ = μt − μhis , PIPO enforces a simple yet powerful rule: the update’s persistence and magnitude are proportional to the verified gain .
+
+§ Closed-Loop Policy Improvement Mechanism 
+
+PIPO decomposes optimization into a explore–verify–accelerate/rectify loop: 
+
+1. Explore. A candidate policy πθt is explored using a group-based update, producing a tentative improvement. 
+
+2. Verify. The realized improvement proxy ξt evaluates whether this exploration yields genuine performance gains. 
+
+3. Accelerate / Rectify. If ξt > 0, the update is accelerated; if ξt < 0, the update is actively rectified. This feedback structure explicitly enforces policy improvement rather than relying on instantaneous spatial statistics. 
+
+6.2 Geometric Rectification and Gradient Alignment 
+
+While Theorem 6.3 establishes the ascent properties of PIPO, a remaining critical question is its robustness at the boundaries of the capability (i.e., when success probability p → 0 or 1). We now demonstrate that PIPO effectively rectifies the geometric distortion in group-relative methods. 7Policy Improvement Reinforcement Learning 
+
+Theorem 6.4 (Conditional Geometric Rectification) . The PIPO policy improvement design mitigates the sensitivity explosion of group-relative methods identified in Corollary 3.2. Specifically, the expected PIPO gradient remains bounded and aligns with the ideal RLVR gradient: 
+
+E[∇θ JPI ] ∝ ∇ θ p = gideal , as p → 0 or 1.
+
+Theorem 6.4 provides the theoretical foundation for PIPO’s stability. The feedback mechanism naturally induces a damping effect that counteracts the gradient distortion, effectively pre-conditioning the update to realign with RLVR. 
+
+6.3 Superiority of Dual-Stage Dynamics 
+
+Finally, we analyze the total effect of the combined update: ∆θtotal = ∆ θGRPO + ∆ θPIPO . We prove that this dual-stage mechanism acts as a dynamic regulator, producing a trajectory strictly superior to standard GRPO. 
+
+Proposition 6.5 (Dual-Mode Regulation) . Let gt−1 denote the standard exploratory gradient computed during Phase 1, the total update can be expressed as an effective scaling of the original direction: ∆θtotal = k · gt−1. The PIPO mechanism dynamically modulates k based on the verification signal ∆J:
+
+• Acceleration ( ∆J > 0): When improvement is verified, PIPO acts as a momentum booster ( k > α std ), amplifying the update to accelerate convergence. 
+
+• Rectification ( ∆J < 0): When regression is detected, PIPO acts as a brake ( k < α std ), dampening the effective step size to prevent overfitting to noise. Consequently, the combined update ∆θtotal dynamically adapts to the quality of the gradient signal. 
+
+Proposition 6.5 explains the empirical stability of PIPO. By treating the smoothed policy improvement ∆J as an objective confidence metric, the framework dynamically scales the effective gradient: it heavily reinforces directions correlated with genuine performance gains and strongly penalizes those leading to degradation. This retrospective modulation effectively acts as an autonomous filter against the inherent instability of group-relative advantage estimation. 
+
+## 7 Experiments 
+
+We design our experiments to answer the following key questions: (i) Does PIPO consistently improve the performance of state-of-the-art group-based RLVR algorithms across model scales and reasoning benchmarks? (ii) How does the retrospective policy-improvement mechanism affect training dynamics, including stability and reasoning behavior? (iii) 
+
+How sensitive is PIPO to its core design choices, such as the historical window size and rectification strategy? (iv) What is the computational cost of PIPO, and does its performance gain justify the additional overhead? To address these questions, we evaluate PIPO as a plug-and-play module on top of multiple group-based RL baselines, across different model scales, datasets, and ablation settings. 
+
+Setup . We evaluate PIPO across two model scales (Qwen3-4B-Base and Qwen3-8B-Base[ 51 ]) on diverse reasoning benchmarks. We conduct our training on the MATH ataset[ 19 ]. To comprehensively assess mathematical reasoning capabilities, we employ MATH500[ 19 ], AIME 2025, AMC 2023, and MINERVA as evaluation benchmarks. We integrate PIPO as a plug-and-play module atop state-of-the-art group-based RL baselines, including GRPO, GSPO, and DAPO. More implementation details are provided in Appendix B. 
+
+7.1 Main Results Overall Performance. The main results are summarized in Table 1. Across all benchmarks and model scales, PIPO consistently enhances group-based RL algorithms, including GRPO, GSPO, and DAPO. These gains are observed not only in average accuracy but also on the most challenging reasoning benchmarks, demonstrating the robustness of our closed-loop approach. Mechanistically, PIPO refines the optimization trajectory by coupling local advantages with global inter-iteration feedback. By retrospectively filtering noisy or detrimental updates—which are frequently reinforced by standard group-normalized estimators in sparse-reward regimes—PIPO effectively reallocates gradient effort toward updates that demonstrably improve reasoning capability. This self-correcting loop ensures that learning remains efficient and robust, even when instantaneous advantage estimates are dominated by stochastic variance. For example, on the challenging AIME 2025 benchmark, GSPO+PIPO achieves a substantial 7.4% absolute improvement over the GSPO baseline on Qwen3-4B-Base, underscoring the benefit of retrospective policy improvement in difficult, high-variance regimes. 8Policy Improvement Reinforcement Learning Table 1: Main Results on Mathematical Reasoning. We report Pass@1 accuracy (%) for Qwen3-4B-Base and Qwen3-8B-Base. PIPO is applied on top of three baselines: GRPO, GSPO, and DAPO 
+
+QWEN 3-4B-B ASE QWEN 3-8B-B ASE 
+
+METHOD MATH500 AIME25 AMC23 MINERVA AVG . MATH500 AIME25 AMC23 MINERVA AVG .
+
+BASE MODEL 58.6 7.4 37.5 14.0 29.4 67.0 11.1 45.0 17.3 35.1 GRPO 79.5 18.5 60.0 25.4 45.9 84.3 25.9 75.0 28.3 53.4 
+
++ PIPO 81.7 22.2 62.5 27.9 48.6 85.3 29.6 75.0 29.4 54.8 
+
+GSPO 79.5 18.5 60.0 27.2 46.3 81.7 22.2 70.0 27.6 50.4 
+
++ PIPO 81.7 25.9 67.5 24.3 49.9 83.5 29.6 70.0 26.4 52.4 
+
+DAPO 82.5 25.0 62.5 27.0 49.3 84.1 25.9 68.5 28.3 51.7 
+
++ PIPO 82.7 29.6 67.5 27.9 51.9 85.7 29.6 75.0 29.0 54.8 0 50 100 150 200 250                     
+
+> Training Steps
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> Pass@1 Accuracy
+> (a) Accuracy (4B)
+> 050 100 150 200 250
+> Training Steps
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> 0.85
+> Pass@1 Accuracy
+> (b) Accuracy (8B)
+> 050 100 150 200 250
+> Training Steps
+> 500
+> 750
+> 1,000
+> 1,250
+> 1,500
+> 1,750
+> 2,000
+> Response Length
+> (c) Response Length (4B)
+> 050 100 150 200 250
+> Training Steps
+> 500
+> 750
+> 1,000
+> 1,250
+> 1,500
+> 1,750
+> 2,000
+> 2,250
+> Response Length
+> (d) Response Length (8B)
+> DAPO DAPO+PIPO GRPO GRPO+PIPO GSPO GSPO+PIPO
+
+Figure 3: Comparison of training dynamics. (a-b) Accuracy evolution on 4B and 8B models. (c-d) Response length evolution. PIPO (solid lines) consistently outperforms baselines (dashed lines) and promotes sustained reasoning chain growth. 
+
+Training Dynamics. Figure 3 demonstrates the temporal dynamics of average accuracy and response length through-out the training process. RL algorithms applied with PIPO converge to a higher performance plateau in accuracy compared to the original baselines, suggesting that the retrospective verification mechanism effectively filters noise-driven updates observed in Figure 2(b) and stabilizes the exploration direction. In addition, PIPO promotes sustained growth in response length, incentivizing the model to develop sophisticated reasoning chains of thought to tackle challenging tasks. 
+
+7.2 Performance on Scientific Reasoning 
+
+We evaluate PIPO on SciKnowEval [13 ] to assess its ability beyond pure mathematics. As shown in Table 2, PIPO consistently improves performance across all domains. Notably, we observe substantial gains in logic-intensive subjects like Physics (+2.6%) and Material Science (+1.4%) , validating that PIPO reinforces complex reasoning capabilities rather than overfitting to math datasets. Furthermore, robust improvements in knowledge-rich domains like Biology (+1.1%) demonstrate the framework’s versatility across different reasoning modalities. Table 2: SciKnowEval Results for Qwen3-4B-Base. PIPO enhances generalization across scientific reasoning domains. 
+
+Method Chemistry Biology Material Physics Base Model 25.1 38.0 16.9 20.6 GRPO 88.5 88.4 80.0 85.3 
+
++ PIPO 89.4 89.5 81.4 87.9 
+
+Gain +0.9 +1.1 +1.4 +2.6 
+
+7.3 Ablation Studies 
+
+We investigate the impact of the sliding window size K, which modulates the baseline’s temporal sensitivity. As shown in Table 3, PIPO consistently outperforms the GRPO baseline across all K ∈ [4 , 16] . We observe a trade-off: smaller windows ( K = 4 ) yield higher peak performance on difficult tasks but suffer from high variance, whereas larger 9Policy Improvement Reinforcement Learning windows ( K ≥ 12 ) tend to underestimate the rapid policy improvement, resulting in diminishing returns. Consequently, we adopt K = 8 as the optimal equilibrium, balancing rapid adaptation with stable estimation. Table 3: Ablation on Window Size K (Qwen3-4B-Base). PIPO consistently outperforms the baseline. K = 8 achieves the best trade-off between peak performance and stability. 
+
+Method MATH500 AIME25 AMC MINERVA Avg. Baseline (GRPO) 79.5 18.5 60.0 25.4 45.9 PIPO ( K = 4 ) 81.1 25.9 65.0 26.8 49.7 
+
+PIPO ( K = 8 ) 81.7 22.2 62.5 27.9 48.6 PIPO ( K = 12 ) 80.1 18.5 62.5 27.2 47.1 PIPO ( K = 16 ) 81.3 18.5 62.5 27.2 47.4 
+
+A key component of our framework is the clipping function ϕ(·), which controls how policy updates are modulated by the improvement signal ξt. Table 4 compares different rectification ranges to study the effect of incorporating negative improvement signals. Among the evaluated variants, the unidirectional setting ( [0 , 0.5] ) achieves the strongest overall performance (Avg. 48.6%), consistently outperforming configurations that allow negative rectification. Table 4: Ablation on Rectification Range (Qwen3-4B-Base). The Unidirectional setting ( [0 , 0.5] ) yields the best performance. 
+
+Range ϕ(·) MATH500 AIME25 AMC23 MINERVA Avg. Baseline (GRPO) 79.5 18.5 60.0 25.4 45.9 
+
+[−0.5, 0.5] 77.9 18.5 62.5 26.1 46.3 
+
+[−0.2, 0.5] 78.2 18.5 62.5 26.5 46.4 
+
+[0, 0.5] 81.7 22.2 62.5 27.9 48.6 
+
+7.4 Computational Efficiency Qwen3-4B Qwen3-8B    
+
+> 0
+> 50
+> 100
+> 150
+> 200
+> Est. Seconds per Step
+> +19.3% +12.0%
+> (a) Computational Overhead
+> GRPO GRPO + PIPO
+> 0510 15
+> Wall-clock Time (Hours)
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> 0.85
+> Pass@1 Accuracy
+> (b) Accuracy During Training
+> Qwen3-4B GRPO Qwen3-4B GRPO+PIPO Qwen3-8B GRPO Qwen3-8B GRPO+PIPO
+
+Figure 4: Efficiency on MATH dataset. (a) Step Overhead: PIPO incurs a 12–19% per-step latency increase (b) 
+
+Wall-clock Efficiency: Despite lower throughput, PIPO reaches higher accuracy faster than GRPO We present a comprehensive analysis of the trade-off between computational cost and performance in Figure 4. While PIPO incurs a moderate time overhead of approximately 12–19% per step (Figure 4a) due to the retrospective verification mechanism and logit caching, this cost is effectively amortized by its superior sample efficiency. As illustrated in Figure 4b, PIPO consistently outperforms GRPO in wall-clock time , achieving higher accuracy faster despite the added latency. This indicates that the retrospective updates effectively filter out noisy gradients, preventing wasted exploration steps common in standard group-relative optimization. 10 Policy Improvement Reinforcement Learning 
+
+## 8 Related Work 
+
+Critic-Free RL and Advantage Estimation. Following the success of GRPO[ 38 ] and RLOO[ 1] in eliminating value networks within PPO[ 36 ], the field has seen a surge of methodological refinements to stabilize group-relative estimation[ 30 , 32 , 28 , 11 , 33 , 34 , 26 , 35 ]. For example, HA-DW[ 52 ] identifies a fundamental bias in group-relative advantage estimation, showing that it systematically underestimates hard cases and overestimates easy questions. Dr.GRPO [ 31 ] removes variance normalization, GMPO [ 57 ] adopts geometric averaging to handle outliers, while DCPO [ 53 ] and CISPO [ 2 ] introduce adaptive clipping and smooth standardization to alleviate vanishing gradients. Other approaches address estimation bias via reweighting or baseline design, such as OPO [ 17 ]. Finer-grained credit assignment has also been explored by decomposing rewards at the sub-trajectory level [ 15 , 41 ]. Despite these advances, most methods operate within isolated batches and overlook temporal consistency across policy updates. PIPO departs from this paradigm by introducing retrospective verification , which explicitly incorporates cross-iteration policy improvement signals. 
+
+Exploration, Stability, and Mode Collapse. A well-known challenge in RLVR is mode collapse, where optimizing for Pass@1 degrades sample diversity and Pass@k performance [ 46 , 55 , 16 , 8, 4 , 3]. NSR [ 59 ] attributes this effect to excessive positive reinforcement and mitigates it by penalizing incorrect responses. Other lines of work encourage exploration through entropy regularization [ 17 , 9, 12 , 10 ], larger rollout budgets [ 21 , 18 ], curriculum-based training schedules [ 5 , 37 , 42 ]. Alternative objectives, such as MaxRL [ 43 ], aim to preserve generative diversity by aligning RL with maximum likelihood. In contrast, PIPO stabilizes exploration intrinsically via its Policy Improvement Reward ,which suppresses updates that degrade historical performance, acting as a built-in regularizer against mode collapse. 
+
+Beyond Intra-Batch Estimation. Optimizing policies based on isolated batches often suffers from high-variance estimates due to the lack of temporal or global context during the gradient computation[ 40 , 25 , 23 , 22 , 29 , 49 ]. In representation learning, this issue has been addressed using cross-batch memory mechanisms to approximate global statistics [ 45 , 44 ]. Analogously, recent RLVR methods have begun incorporating historical information. SPO [ 50 ]employs a moving-average baseline to avoid degenerate groups, while HA-DW [ 52 ] and OPO [ 17 ] leverage historical statistics to correct bias and reduce variance. However, these approaches primarily use history for baseline adjustment or reweighting. PIPO extends this line of work by treating historical performance as a temporal trust region, enabling retrospective verification that explicitly rejects policy updates inconsistent with monotonic improvement. 
+
+## 9 Conclusion 
+
+This work addresses a fundamental limitation of existing RLVR: optimization relies on step-wise advantage signals without explicitly verifying whether updates yield genuine policy improvement over time. We introduce PIRL, which reframes post-training as the maximization of inter-iteration performance gains, emphasizing verifiable progress rather than instantaneous surrogate objectives. Building on PIRL, we propose PIPO, a closed-loop algorithm that operationalizes this principle through retrospective verification. PIPO uses empirical improvement signals to gate and rectify group-based updates, aligning local credit assignment with global performance feedback. We show theoretically that PIPO ascends the PIRL objective in expectation and mitigates geometric bias in group-normalized estimators. Notably, PIPO serves as a plug-and-play module that can be seamlessly integrated with both PPO-style and GRPO-style methods. Empirically, PIPO consistently improves state-of-the-art RLVR baselines across model scales and reasoning benchmarks, yielding higher accuracy, more stable training, and deeper reasoning. 
+
+## 10 Impact Statement 
+
+This work introduces Policy Improvement Reinforcement Learning as a conceptual shift in how post-training with verifiable rewards is formulated. Rather than treating optimization as a sequence of independent, step-wise updates driven by instantaneous surrogate signals, PIRL reframes learning as the accumulation of verifiable inter-iteration improvements. This perspective highlights a missing temporal dimension in existing RLVR methods and provides a principled lens for analyzing stability, bias, and regression phenomena that arise in sparse-reward reasoning tasks. By making policy improvement itself an explicit optimization target, PIRL offers a unifying objective that remains fully aligned with final-task performance while enabling new forms of feedback control. The proposed PIPO algorithm demonstrates how this principle can be instantiated in practice through retrospective verification, without introducing additional critics or heavy heuristics. More broadly, PIRL suggests a general design paradigm for reinforcement learning systems in which progress, not just reward, becomes the central unit of optimization, with potential implications for scalable, stable post-training of large language models beyond the specific algorithms studied here. 11 Policy Improvement Reinforcement Learning 
+
+## References 
+
+[1] Arash Ahmadian, Chris Cremer, Matthias Gallé, Marzieh Fadaee, Julia Kreutzer, Olivier Pietquin, Ahmet Üstün, and Sara Hooker. Back to basics: Revisiting REINFORCE-style optimization for learning from human feedback in LLMs. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL) ,pages 12248–12267. Association for Computational Linguistics, 2024. [2] Aili Chen, Aonian Li, Bangwei Gong, Binyang Jiang, Bo Fei, Bo Yang, Boji Shan, Changqing Yu, Chao Wang, Cheng Zhu, et al. MiniMax-M1: Scaling test-time compute efficiently with lightning attention. arXiv preprint arXiv:2506.13585 , 2025. [3] Liang Chen, Xueting Han, Qizhou Wang, Bo Han, Jing Bai, Hinrich Schuetze, and Kam-Fai Wong. EEPO: Exploration-enhanced policy optimization via sample-then-forget. In The Fourteenth International Conference on Learning Representations , 2026. [4] Peter Chen, Xiaopeng Li, Ziniu Li, Wotao Yin, Xi Chen, and Tianyi Lin. Exploration vs exploitation: Rethinking RLVR through clipping, entropy, and spurious reward. In The Fourteenth International Conference on Learning Representations , 2026. [5] Xiaoyin Chen, Jiarui Lu, Minsu Kim, Dinghuai Zhang, Jian Tang, Alexandre Piché, Nicolas Gontier, et al. Self-evolving curriculum for LLM reasoning. arXiv preprint arXiv:2505.14970 , 2025. [6] Zehao Chen, Gongxun Li, Tianxiang Ai, Yifei Li, Zixuan Huang, Wang Zhou, Fuzhen Zhuang, Xianglong Liu, Jianxin Li, Deqing Wang, and Yikun Ban. Weak-Driven Learning: How Weak Agents make Strong Agents Stronger. arXiv preprint arXiv:2602.08222 , 2026. [7] Zhijun Chen, Zeyu Ji, Qianren Mao, Hao Wu, Junhang Cheng, Bangjie Qin, Zhuoran Li, Jingzheng Li, Kai Sun, Zizhe Wang, Yikun Ban, Zhu Sun, Xiangyang Ji, and Hailong Sun. Scoring, Reasoning, and Selecting the Best! Ensembling Large Language Models via a Peer-Review Process. arXiv preprint arXiv:2512.23213 , 2026. [8] Zhipeng Chen, Xiaobo Qin, Youbin Wu, Yue Ling, Qinghao Ye, Xin Zhao, and Guang Shi. Pass@k training for adaptively balancing exploration and exploitation of large reasoning models. arXiv preprint , 2026. [9] Daixuan Cheng, Shaohan Huang, Xuekai Zhu, Bo Dai, Wayne Xin Zhao, Zhenliang Zhang, and Furu Wei. Reasoning with exploration: An entropy perspective. arXiv preprint arXiv:2506.14758 , 2025. [10] Runpeng Dai, Linfeng Song, Haolin Liu, Zhenwen Liang, Dian Yu, Haitao Mi, Zhaopeng Tu, Rui Liu, Tong Zheng, Hongtu Zhu, and Dong Yu. CDE: Curiosity-driven exploration for efficient reinforcement learning in large language models. In The Fourteenth International Conference on Learning Representations , 2026. [11] Yanqi Dai, Yuxiang Ji, Xiao Zhang, Yong Wang, Xiangxiang Chu, and Zhiwu Lu. Harder is better: Boosting mathematical reasoning via difficulty-aware GRPO and multi-aspect question reformulation. In The Fourteenth International Conference on Learning Representations , 2026. [12] Jia Deng, Jie Chen, Zhipeng Chen, Wayne Xin Zhao, and Ji-Rong Wen. Decomposing the entropy-performance exchange: The missing keys to unlocking effective reinforcement learning. arXiv preprint arXiv:2508.02260 ,2025. [13] Kehua Feng, Keyan Ding, Weijie Wang, Xiang Zhuang, Zeyuan Wang, Ming Qin, Yu Zhao, Jianhua Yao, Qiang Zhang, and Huajun Chen. Sciknoweval: Evaluating multi-level scientific knowledge of large language models. 
+
+arXiv preprint arXiv:2406.09098 , 2024. [14] Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Peiyi Wang, Qihao Zhu, Runxin Xu, Ruoyu Zhang, Shirong Ma, Xiao Bi, Xiaokang Zhang, Xingkai Yu, Yu Wu, Z. F. Wu, Zhibin Gou, Zhihong Shao, Zhuoshu Li, Ziyi Gao, Aixin Liu, Bing Xue, Bingxuan Wang, Bochao Wu, Bei Feng, Chengda Lu, Chenggang Zhao, Chengqi Deng, Chong Ruan, et al. DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning. Nature ,645(8081):633–638, September 2025. [15] Yiran Guo, Lijie Xu, Jie Liu, Dan Ye, and Shuang Qiu. Segment Policy Optimization: Effective segment-level credit assignment in RL for large language models. In Proceedings of the 39th Annual Conference on Neural Information Processing Systems (NeurIPS) , 2025. [16] Anthony GX-Chen, Jatin Prakash, Jeff Guo, Rob Fergus, and Rajesh Ranganath. KL-regularized reinforcement learning is designed to mode collapse. In The Fourteenth International Conference on Learning Representations ,2026. [17] Yaru Hao, Li Dong, Xun Wu, Shaohan Huang, Zewen Chi, and Furu Wei. On-policy rl with optimal reward baseline. arXiv preprint arXiv:2505.23585 , 2025. 12 Policy Improvement Reinforcement Learning [18] Haoran He, Yuxiao Ye, Qingpeng Cai, Chen Hu, Binxing Jiao, Daxin Jiang, and Ling Pan. Random policy valuation is enough for LLM reasoning with verifiable rewards. In The Fourteenth International Conference on Learning Representations , 2026. [19] Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt. Measuring mathematical problem solving with the math dataset. In Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks , volume 1, 2021. [20] Jian Hu. Reinforce++: A simple and efficient approach for aligning large language models. arXiv e-prints , pages arXiv–2501, 2025. [21] Jian Hu, Mingjie Liu, Ximing Lu, Fang Wu, Zaid Harchaoui, Shizhe Diao, Yejin Choi, Pavlo Molchanov, et al. BroRL: Scaling reinforcement learning via broadened exploration. arXiv preprint arXiv:2510.01180 , 2025. [22] Baizhou Huang and Xiaojun Wan. PROS: Towards compute-efficient RLVR via rollout prefix reuse. In The Fourteenth International Conference on Learning Representations , 2026. [23] Kexin Huang, Haoming Meng, Junkang Wu, Jinda Lu, Chiyu Ma, Ziqian Chen, Xue Wang, Bolin Ding, Jiancan Wu, Xiang Wang, Xiangnan He, Guoyin Wang, and Jingren Zhou. On the direction of RLVR updates for LLM reasoning: Identification and exploitation. In The Fourteenth International Conference on Learning Representations , 2026. [24] Zixuan Huang, Xin Xia, Yuxi Ren, Jianbin Zheng, Xuanda Wang, Zhixia Zhang, Hongyan Xie, Songshi Liang, Zehao Chen, Xuefeng Xiao, Fuzhen Zhuang, Jianxin Li, Yikun Ban, and Deqing Wang. Does Your Reasoning Model Implicitly Know When to Stop Thinking? arXiv preprint arXiv:2602.08354 , 2026. [25] Shuyang Jiang, Yusheng Liao, Ya Zhang, Yanfeng Wang, and Yu Wang. Overthinking reduction with decoupled rewards and curriculum data scheduling. In The Fourteenth International Conference on Learning Representations ,2026. [26] Yingru Li, Jiawei Xu, Ziniu Li, Jiacai Liu, Wei Liu, Yuxuan Tong, Longtao Zheng, Zhenghai Xue, Yaxiang Zhang, Tianle Cai, Ge Zhang, Qian Liu, and Baoxiang Wang. The optimal token baseline: Variance reduction for long-horizon LLM-RL. arXiv preprint arXiv:2602.07078 , 2026. [27] Zhongyi Li, Wan Tian, Yikun Ban, Jinju Chen, Huiming Zhang, Yang Liu, and Fuzhen Zhuang. Counterfactual Credit Policy Optimization for Multi-Agent Collaboration. arXiv preprint arXiv:2603.21563 , 2026. [28] Zhongyi Li, Wan Tian, Jingyu Chen, Kangyao Huang, Huiming Zhang, Hui Yang, Tao Ren, Jinyang Jiang, Yijie Peng, Yikun Ban, and Fuzhen Zhuang. Adaptive Robust Estimator for Multi-Agent Reinforcement Learning. 
+
+arXiv preprint arXiv:2603.21574 , 2026. [29] Xiao Liang, Zhong-Zhi Li, Yeyun Gong, yelong shen, Ying Nian Wu, Zhijiang Guo, and Weizhu Chen. Beyond pass@ 1: Self-play with variational problem synthesis sustains RLVR. In The Fourteenth International Conference on Learning Representations , 2026. [30] Dengcan Liu, Fengkai Yang, Xiaohan Wang, Shurui Yan, Jiajun Chai, Jiahao Li, Yikun Ban, Zhendong Mao, Wei Lin, and Guojun Yin. CDRRM: Contrast-Driven Rubric Generation for Reliable and Interpretable Reward Modeling. arXiv preprint arXiv:2603.08035 , 2026. [31] Zichen Liu, Changyu Chen, Wenjun Li, Penghui Qi, Tianyu Pang, Chao Du, Wee Sun Lee, and Min Lin. Understanding R1-Zero-like training: A critical perspective. In 2nd AI for Math Workshop @ ICML 2025 , 2025. [32] Xiaodong Lu, Xiaohan Wang, Jiajun Chai, Guojun Yin, Wei Lin, Zhijun Chen, Yu Luo, Fuzhen Zhuang, Yikun Ban, and Deqing Wang. Contextual rollout bandits for reinforcement learning with verifiable rewards. arXiv preprint arXiv:2602.08499 , 2026. [33] Daniil Plyusov, Alexey Gorbatovski, Boris Shaposhnikov, Viacheslav Sinii, Alexey Malakhov, and Daniil Gavrilov. F-GRPO: Don’t let your policy learn the obvious and forget the rare. In The 1st Workshop on Scaling Post-training for LLMs , 2026. [34] Penghui Qi, Xiangxin Zhou, Zichen Liu, Tianyu Pang, Chao Du, Min Lin, and Wee Sun Lee. Rethinking the trust region in LLM reinforcement learning. arXiv preprint arXiv:2602.04879 , 2026. [35] Deng Qiyuan, Kehai Chen, Min Zhang, and Zhongwen Xu. HiPO: Self-hint policy optimization for RLVR. In 
+
+The Fourteenth International Conference on Learning Representations , 2026. [36] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017. [37] Amrith Setlur, Chirag Nagpal, Adam Fisch, Xinyang Geng, Jacob Eisenstein, Rishabh Agarwal, Alekh Agarwal, Jonathan Berant, and Aviral Kumar. Rewarding progress: Scaling automated process verifiers for LLM reasoning. In The Thirteenth International Conference on Learning Representations , 2025. 13 Policy Improvement Reinforcement Learning [38] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Yang Wu, et al. Deepseekmath: Pushing the limits of mathematical reasoning in open language models. 
+
+arXiv preprint arXiv:2402.03300 , 2024. [39] Guangming Sheng, Chi Zhang, Zilingfeng Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua Peng, Haibin Lin, and Chuan Wu. HybridFlow: A flexible and efficient RLHF framework. In Proceedings of the Twentieth European Conference on Computer Systems (EuroSys) , pages 1279–1297. ACM, 2025. [40] Taiwei Shi, Sihao Chen, Bowen Jiang, Linxin Song, Longqi Yang, and Jieyu Zhao. Experiential reinforcement learning. arXiv preprint arXiv:2602.13949 , 2026. [41] Wei Sun, Wen Yang, Pu Jian, Qianlong Du, Fuwei Cui, Shuo Ren, and Jiajun Zhang. KTAE: A model-free algorithm to key-tokens advantage estimation in mathematical reasoning. In Proceedings of the 39th Annual Conference on Neural Information Processing Systems (NeurIPS) , 2025. [42] Shobhita Sundaram, John Quan, Ariel Kwiatkowski, Kartik Ahuja, Yann Ollivier, and Julia Kempe. Teaching models to teach themselves: Reasoning at the edge of learnability. arXiv preprint arXiv:2601.18778 , 2026. [43] Fahim Tajwar, Guanning Zeng, Yueer Zhou, Yuda Song, Daman Arora, Yiding Jiang, Jeff Schneider, Ruslan Salakhutdinov, Haiwen Feng, and Andrea Zanette. Maximum likelihood reinforcement learning. In ICLR 2026 Workshop on Scaling Post-training for LLMs , 2026. [44] Jinpeng Wang, Jieming Zhu, and Xiuqiang He. Cross-batch negative sampling for training two-tower recom-menders. In Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval , pages 1632–1636, 2021. [45] Xun Wang, Haozhi Zhang, Weilin Huang, and Matthew R Scott. Cross-batch memory for embedding learning. In 
+
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 6388–6397, 2020. [46] Fang Wu, Weihao Xuan, Ximing Lu, Mingjie Liu, Yi Dong, Zaid Harchaoui, and Yejin Choi. The Invisible Leash: Why RLVR may or may not escape its origin. arXiv preprint arXiv:2507.14843 , 2025. [47] Jiajun Wu, Jian Yang, Wei Zhang, Lin Jing, Yuqing Ma, Ensheng Shi, Yuchi Ma, Zhoujun Li, and Xianglong Liu. UCoder: Unsupervised Code Generation by Internal Probing of Large Language Models. arXiv preprint arXiv:2512.17385 , 2025. [48] Hongyan Xie, Yikun Ban, Ruiyu Fang, Zixuan Huang, Deqing Wang, Jianxin Li, Yitong Yao, Chao Wang, and Shuangyong Song. UniARM: Towards a Unified Autoregressive Reward Model for Multi-Objective Test-Time Alignment. arXiv preprint arXiv:2602.09538 , 2026. [49] Jiaye Xie, Yusheng Zhao, Qixin Zhang, Wanjia Zhao, Weizhi Zhang, Zhiping Xiao, Xiao Luo, Philip S. Yu, and Ming Zhang. Sample lottery: Unsupervised discovery of critical instances for LLM reasoning. In The Fourteenth International Conference on Learning Representations , 2026. [50] Zhongwen Xu and Zihan Ding. Single-stream Policy Optimization. In Proceedings of the 14th International Conference on Learning Representations (ICLR) , 2026. [51] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. [52] Fengkai Yang, Zherui Chen, Xiaohan Wang, Xiaodong Lu, Jiajun Chai, Guojun Yin, Wei Lin, Shuai Ma, Fuzhen Zhuang, Deqing Wang, et al. Your group-relative advantage is biased. arXiv preprint arXiv:2601.08521 , 2026. [53] Shihui Yang, Chengfeng Dou, Peidong Guo, Kai Lu, Qiang Ju, Fei Deng, and Rihui Xin. DCPO: Dynamic clipping policy optimization. arXiv preprint arXiv:2509.02333 , 2025. [54] Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian Fan, Gaohong Liu, Juncai Liu, Lingjun Liu, Xin Liu, Haibin Lin, Zhiqi Lin, Bole Ma, Guangming Sheng, Yuxuan Tong, Chi Zhang, Mofan Zhang, Ru Zhang, Wang Zhang, Hang Zhu, Jinhua Zhu, Jiaze Chen, Jiangjie Chen, Chengyi Wang, Hongli Yu, Yuxuan Song, Xiangpeng Wei, Hao Zhou, Jingjing Liu, Wei-Ying Ma, Ya-Qin Zhang, Lin Yan, Yonghui Wu, and Mingxuan Wang. DAPO: An open-source LLM reinforcement learning system at scale. In 
+
+Proceedings of the 39th Annual Conference on Neural Information Processing Systems (NeurIPS) , 2025. [55] Yang Yue, Zhiqi Chen, Rui Lu, Andrew Zhao, Zhaokai Wang, Shiji Song, and Gao Huang. Does reinforcement learning really incentivize reasoning capacity in LLMs beyond the base model? In Proceedings of the 39th Annual Conference on Neural Information Processing Systems (NeurIPS) , 2025. [56] Zhixia Zhang, Zixuan Huang, Xin Xia, Deqing Wang, Fuzhen Zhuang, Shuai Ma, Ning Ding, Yaodong Yang, Jianxin Li, and Yikun Ban. Heterogeneous Agent Collaborative Reinforcement Learning. arXiv preprint arXiv:2603.02604 , 2026. 14 Policy Improvement Reinforcement Learning [57] Yuzhong Zhao, Yue Liu, Junpeng Liu, Jingye Chen, Xun Wu, Yaru Hao, Tengchao Lv, Shaohan Huang, Lei Cui, Qixiang Ye, Fang Wan, and Furu Wei. Geometric-mean policy optimization. In The Fourteenth International Conference on Learning Representations , 2026. [58] Chujie Zheng, Shixuan Liu, Mingze Li, Xiong-Hui Chen, Bowen Yu, Chang Gao, Kai Dang, Yuqiong Liu, Rui Men, An Yang, et al. Group Sequence Policy Optimization. arXiv preprint arXiv:2507.18071 , 2025. [59] Xinyu Zhu, Mengzhou Xia, Zhepei Wei, Wei-Lin Chen, Danqi Chen, and Yu Meng. The surprising effectiveness of negative reinforcement in LLM reasoning. In Proceedings of the 39th Annual Conference on Neural Information Processing Systems (NeurIPS) , 2025. [60] Jiaru Zou, Yikun Ban, Zihao Li, Yunzhe Qi, Ruizhong Qiu, Ling Yang, and Jingrui He. Transformer copilot: Learning from the mistake log in LLM fine-tuning. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2025. [61] Yuxin Zuo, Bingxiang He, Zeyuan Liu, Shangziqi Zhao, Zixuan Fu, Junlin Yang, Kaiyan Zhang, Yuchen Fan, Ganqu Cui, Cheng Qian, Xiusi Chen, Youbang Sun, Xingtai Lv, Xuekai Zhu, Li Sheng, Ran Li, Huan ang Gao, Yuchen Zhang, Lifan Yuan, Zhiyuan Liu, Bowen Zhou, and Ning Ding. How far can unsupervised RLVR scale LLM training? In The Fourteenth International Conference on Learning Representations , 2026. 15 Policy Improvement Reinforcement Learning 
+
+## A Theoretical Proofs 
+
+A.1 Proofs of Theorem 3.1 and Corollary 3.2 Theorem A.1 (Restatement of Theorem 3.1) . Under the above conditions, the expected GRPO update direction satisfies 
+
+gGRPO (θ) = η(p(q; θ)) · gideal ,
+
+where gideal = ∇θ JRLVR (θ) and the scaling factor is 
+
+η(p) = 
+
+PG−1
+
+> k=1
+
+pk(G − k) Gk
+
+pk(1 − p)G−k
+
+G p (1 − p) (1 − pG − (1 − p)G) .
+
+Thus GRPO follows a state-dependent rescaling of the ideal RLVR gradient. 
+
+To render the GRPO objective analytically tractable, we formally conduct our analysis under a fixed query q and adopt the following standard premises: (i) Non-degenerate Event: We condition our analysis on the non-degenerate event 
+
+E = {1 ≤ S ≤ G − 1}, where the gradient signal is non-zero. (ii) Local Trust Region: We assume the policy remains close to the behavior policy ( πθ ≈ πθold ), rendering the clipping mechanism inactive. (iii) i.i.d. Rollouts: Following standard parallel decoding mechanisms, the G responses are sampled independently and identically given q. This guarantees that the number of successful responses S follows a binomial distribution S ∼ Binomial (G, p ), where 
+
+p = p(q; θ) is the policy success probability. Based on the simplifications above and the non-degenerate event S = {1 ≤ S ≤ G − 1}, we have the policy gradient of GRPO: 
+
+gGRPO = E
+
+"
+
+1
+
+G
+
+> G
+
+X
+
+> i=1
+
+∇θ log πθ (yi) Ri − ˆμ
+
+ˆσ S
+
+#
+
+. (15) To compute this expectation, we first decouple the generation log-derivative ∇θ log πθ (y) from the complex LLM token-generation process. 
+
+Lemma A.2 (Log-Derivative Decomposition) . The response probability can be written as πθ (y) = P(R) πθ (y | R).Assume the policy distributes probability mass uniformly within the sets of correct and incorrect responses. Then the log-likelihood gradient satisfies 
+
+∇θ log πθ (y) = 
+
+
+
+∇θ pt
+
+pt
+
+, R(y) = 1 ,
+
+− ∇θ pt
+
+1 − pt
+
+, R(y) = 0 .
+
+(16) 
+
+Proof. Under conditional uniformity, πθ (y | R) is constant with respect to θ. Hence for a correct response y+ and an incorrect response y−,
+
+πθ (y+) = pt(θ)c+, πθ (y−) = (1 − pt(θ)) c−,
+
+where c+, c − are constants. Taking the log-derivative and using ∇θ log( xc ) = ∇θ x/x yields the result. 
+
+Proof of Theorem 3.1. For any given state S ∈ E , exactly S responses receive a reward of 1, and the remaining G − S
+
+responses receive 0. The group-level reward mean is therefore μ = SG . The empirical variance can be explicitly computed by summing over the correct and incorrect responses: 
+
+σ2 = 1
+
+G
+
+"
+
+S
+
+
+
+1 − SG
+
+2
+
++ ( G − S)
+
+
+
+0 − SG
+
+2#
+
+= S(G − S)
+
+G2 .
+
+Substituting μ and σ into the normalized advantage Ai = ( Ri − μ)/σ , the advantage collapses into two discrete values for correct ( Ri = 1 , denoted as A+ 
+
+> i
+
+) and incorrect ( Ri = 0 , denoted as A− 
+
+> i
+
+) responses: 
+
+A+ 
+
+> i
+
+= 1 − S/G 
+
+pS(G − S)/G =
+
+r G − SS , A− 
+
+> i
+
+= 0 − S/G 
+
+pS(G − S)/G = −
+
+r SG − S . (17) 16 Policy Improvement Reinforcement Learning We can then aggregate the gradient contributions using Lemma A.2: 
+
+> G
+
+X
+
+> i=1
+
+∇θ log πθ (yi)Ai
+
+= X
+
+> y∈correct
+
+∇θ log π(y)A+ 
+
+> i
+
++ X
+
+> y∈incorrect
+
+∇θ log π(y)A−
+
+> i
+
+= S ·
+
+ ∇θ pt
+
+pt
+
+
+
+·
+
+r G − SS
+
++ ( G − S) ·
+
+
+
+− ∇θ pt
+
+1 − pt
+
+
+
+· −
+
+r SG − S
+
+!
+
+=
+
+pS(G − S)
+
+pt(1 − pt) ∇θ pt.
+
+(18) Taking the expectation over the batch outcomes, substituting Eq. (18) into Eq. (15) and recognizing that ∇θ p = gideal ,we obtain: 
+
+gGRPO = E[pS(G − S) | E ]
+
+G · p(1 − p)
+
+!
+
+· gideal . (19) To derive the exact analytical form of the scaling factor η(p), we expand the conditional expectation. Given the i.i.d. premise, the unconditional probability mass function of S is P(S = k) =  Gk
+
+pk(1 − p)G−k. The probability of the non-degenerate event E is the complement of the extremes ( S = 0 and S = G): 
+
+P(E) = 1 − pG − (1 − p)G.
+
+Thus, the conditional expectation can be explicitly written as: 
+
+E[pS(G − S) | E ] = 
+
+> G−1
+
+X
+
+> k=1
+
+pk(G − k) P(S = k)
+
+P(E) =
+
+PG−1
+
+> k=1
+
+pk(G − k) Gk
+
+pk(1 − p)G−k
+
+1 − pG − (1 − p)G . (20) Plugging Eq. (20) back into Eq. (19) directly yields the final expression for η(p) presented in Theorem 3.1. 
+
+Corollary A.3 (Restatement of Corollary 3.2) . At the probability boundaries ( p → 0 or p → 1), the gradient scaling factor exhibits a symmetric singularity and diverges to infinity: 
+
+η(p) ∼√G − 1
+
+G · p(1 − p) −→ ∞ .
+
+Proof of Corollary 3.2. From Theorem 3.1, 
+
+η(p) = 
+
+PG−1
+
+> k=1
+
+pk(G − k) Gk
+
+pk(1 − p)G−k
+
+G p (1 − p) (1 − pG − (1 − p)G) .
+
+As p → 0, the leading term of the numerator is k = 1 :
+
+> G−1
+
+X
+
+> k=1
+
+pk(G − k)
+
+Gk
+
+
+
+pk(1 − p)G−k = √G − 1 Gp (1 − p)G−1 + O(p2).
+
+For the denominator, 
+
+(1 − p)G = 1 − Gp + O(p2), 1 − pG − (1 − p)G = Gp + O(p2).
+
+Taking the ratio gives 
+
+lim 
+
+> p→0
+
+√G − 1 Gp (1 − p)G−1 + O(p2)
+
+Gp + O(p2) = √G − 1.
+
+17 Policy Improvement Reinforcement Learning Substituting back yields 
+
+η(p) = 
+
+√G − 1 + o(1) 
+
+G p (1 − p) ∼√G − 1
+
+G p (1 − p) .
+
+By symmetry of  Gk
+
+ and p(1 − p), the same argument holds as p → 1, implying η(p) → ∞ at both boundaries. 
+
+A.2 Proofs of Theorem 4.3 and Proposition 4.4 
+
+For notational convenience, denote the expected RLVR performance at iteration t by Jt := JRLVR (θt). We assume that the policies prior to optimization ( t ≤ 0) are fixed to the initial base model θ0, so that their performance contributes a constant offset in the following derivations. 
+
+Theorem A.4 (Restatement of Theorem 4.3) . For a fixed initialization θ0, maximizing the ideal PIRL objective exactly maximizes the final policy performance: 
+
+arg max 
+
+> {θt}Tt=1
+> T
+
+X
+
+> t=1
+
+E[∆ Jt] = arg max 
+
+> θT
+
+JRLVR (θT ).
+
+Proof. By Definition 4.1, ∆Jt = Jt − Jt−1. Summing over T iterations gives the telescoping sum 
+
+> T
+
+X
+
+> t=1
+
+∆Jt =
+
+> T
+
+X
+
+> t=1
+
+(Jt − Jt−1)= ( J1 − J0) + ( J2 − J1) + · · · + ( JT − JT −1)= JT − J0.
+
+Since J0 is determined by the fixed initialization θ0, it is constant with respect to the optimization trajectory {θt}Tt=1 .Therefore 
+
+arg max 
+
+> {θt}Tt=1
+> T
+
+X
+
+> t=1
+
+E[∆ Jt] = arg max 
+
+> θT
+
+E[JT − J0] = arg max 
+
+> θT
+
+JT .
+
+This proves the result. 
+
+Proposition A.5 (Restatement of Proposition 4.4) . Maximizing cumulative smoothed improvement PTt=1 E[∆ J(K) 
+
+> t
+
+]
+
+is mathematically equivalent to maximizing a positively weighted average of the final K policy performance. 
+
+Proof. Recall that 
+
+∆J(K) 
+
+> t
+
+= Jt − B (K) 
+
+> t−1
+
+= Jt − 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+Jt−k.
+
+Summing over t = 1 , . . . , T yields 
+
+> T
+
+X
+
+> t=1
+
+∆J(K) 
+
+> t
+
+=
+
+> T
+
+X
+
+> t=1
+
+Jt − 1
+
+K
+
+> T
+
+X
+
+> t=1
+> K
+
+X
+
+> k=1
+
+Jt−k.
+
+We analyze the coefficient of each term Jm.
+
+Intermediate steps ( 1 ≤ m ≤ T − K). The term Jm appears once in the first summation. In the second summation it appears whenever t − k = m, i.e., when t = m + k. Since k ∈ { 1, . . . , K } and m + k ≤ T , this occurs exactly K
+
+times, each with weight 1/K . Thus the net coefficient is 
+
+1 − K · 1
+
+K = 0 .
+
+18 Policy Improvement Reinforcement Learning 
+
+Final K steps ( m = T − i, i = 0 , . . . , K − 1). The term JT −i appears once in the first summation. In the second summation the constraint t = ( T − i) + k ≤ T implies k ≤ i. Hence it appears i times with weight 1/K , giving net coefficient 
+
+wi = 1 − iK = K − iK > 0.
+
+Initialization terms ( m ≤ 0). These terms appear only in the second summation and therefore contribute a constant offset Cinit determined by the fixed pre-optimization history. Combining these coefficients yields 
+
+> T
+
+X
+
+> t=1
+
+∆J(K) 
+
+> t
+
+=
+
+> K−1
+
+X
+
+> i=0
+
+K − iK JT −i + Cinit .
+
+Since Cinit is independent of the optimization variables for t ≥ 1, maximizing the cumulative smoothed improvement is mathematically equivalent to maximizing a positively weighted average of the final K policies. Notably, the weighting coefficients {wi}K−1 
+
+> i=0
+
+form a strictly monotonically decreasing sequence, uniquely assigning the highest priority to the terminal policy JT .
+
+A.3 Proof of Theorem 6.3 Theorem A.6 (Restatement of Theorem 6.3) . Let ˜A(yt−1,i ) = GA (yt−1,i )   
+
+> PGj=1 |A(yt−1,j )|
+
+denote the normalized local advantage. Under Assumptions 6.1 and 6.2, and assuming ϕ(x) = x and σhis > 0, the following hold: (a) The expected Policy Improvement reward assigned to each sample satisfies: 
+
+E[ˆ rPI  
+
+> t,i
+
+| history ] = E[∆ J(K) 
+
+> t
+
+]
+
+σhis 
+
+· ˜A(yt−1,i ).
+
+(b) The retrospective update in Eq. (14) performs first-order ascent on the smoothed PIRL increment ∆J(K)
+
+> t
+
+in expectation. 
+
+Proof. For clarity, we denote the expected performance as J(θ) := JRLVR (θ) and let Ht = {θt, . . . , θ t−K , Bt−1}
+
+represent the conditioning set. (a) By Assumption 6.1, the expectation of ξt = ( μt − μhis )/σ his conditioned on the history Ht is: 
+
+E[ξt | H t] = E[μt | H t] − E[μhis | H t]
+
+σhis 
+
+= J(θt) − B (K)
+
+> t−1
+
+σhis 
+
+= ∆J(K)
+
+> t
+
+σhis 
+
+.
+
+Since σhis > 0, E[ξt | H t] preserves the sign of the smoothed PIRL increment ∆J(K) 
+
+> t
+
+.Substituting this into Eq. 12, we obtain: 
+
+E[ˆ rPI  
+
+> t,i
+
+| H t] = ˜A(yt−1,i )E[ξt | H t] = ∆J(K)
+
+> t
+
+σhis 
+
+· ˜A(yt−1,i ).
+
+This completes the proof of (a). (b) The retrospective objective yields the following gradient evaluated at θt:
+
+∇θ JPI (θt) = 1
+
+G
+
+> G
+
+X
+
+> i=1
+
+νi(θt)ˆ rPI  
+
+> t,i
+
+∇θ log πθt (yt−1,i | qt−1) = ξt γt−1,
+
+where γt−1 is defined by expanding the sum over the historical batch Bt−1 using the PI-reward: 
+
+γt−1 = G
+
+PGj=1 |A(yt−1,j )|
+
+1
+
+G
+
+> G
+
+X
+
+> i=1
+
+νi(θt)A(yt−1,i )∇θ log πθt (yt−1,i | qt−1)
+
+!
+
+= G
+
+PGj=1 |A(yt−1,j )| gt−1.
+
+19 Policy Improvement Reinforcement Learning Since the scaling factor is strictly positive, the vector γt−1 is directionally identical to the standard exploratory gradient 
+
+gt−1. By Assumption 6.2, its alignment with the true gradient follows the sign of the realized improvement: 
+
+sign( ⟨∇ J(θt), γ t−1⟩) = sign( ⟨∇ J(θt), g t−1⟩) = sign(∆ J(K) 
+
+> t
+
+).
+
+Taking the conditional expectation gives: 
+
+E[∇θ JPI (θt) | H t] = E[ξt | H t] γt−1.
+
+Consider a first-order Taylor expansion of J(θ′) around θt for θ′ = θt + αPI ∇θ JPI (θt):
+
+E[J(θ′) − J(θt) | H t] = αPI E[ξt | H t] ⟨∇ J(θt), γ t−1⟩ + o(αPI ).
+
+Since the inner product ⟨∇ J(θt), γ t−1⟩ shares the same sign as ∆J(K) 
+
+> t
+
+, which is also the sign of E[ξt | H t]. Thus, their product is unconditionally non-negative, ensuring: 
+
+E[∆ J(K) 
+
+> t
+
+(θ′) | H t] ≥ E[∆ J(K) 
+
+> t
+
+(θt) | H t] + o(αPI ).
+
+Consequently, the retrospective update consistently yields a superior policy πθ′ regardless of the noise encountered during initial exploration. 
+
+A.4 Proof of Theorem 6.4 Theorem A.7 (Restatement of Theorem 6.4) . The PIPO policy improvement design mitigates the sensitivity explosion of group-relative methods identified in Corollary 3.2. Specifically, the expected PIPO gradient remains bounded and aligns with the ideal RLVR gradient: 
+
+E[∇θ JPI ] ∝ ∇ θ p = gideal , as p → 0 or 1.
+
+Lemma A.8. For any differentiable policy πθ with bounded log-gradients ∥∇ log π∥ ≤ C (a regularity condition typically satisfied by Layer Normalization, Gradient Clipping and other methods in modern LLMs), the realizable probability improvement for a bounded update ∥∆θ∥ ≤ ϵ satisfies: 
+
+∆p = O(min {p, 1 − p}).
+
+Proof. We leverage the structural relationship established in Lemma A.2 .For a successful response ( R(y) = 1 ), Eq. (16) gives: 
+
+∇θ p = pt · ∇ θ log πθ (y).
+
+Applying ∥∇ θ log πθ ∥ ≤ C, we have: 
+
+∥∇ θ p∥ = pt∥∇ θ log πθ ∥ ≤ C · pt.
+
+This bound dominates the scaling behavior as pt → 0. Symmetrically, for a failed response ( R(y) = 0 ), Lemma A.2 implies ∇θ p = −(1 − pt)∇θ log πθ (y), yielding: 
+
+∥∇ θ p∥ ≤ C · (1 − pt).
+
+Combining both regimes, we have ∥∇ θ p∥ ≤ C min( pt, 1 − pt). Since the realizable improvement is approximated by 
+
+∆p ≈ ∇ θ p⊤∆θ for bounded updates, it follows that ∆p = O(min {p, 1 − p}). This completes the proof. 
+
+Proof of Theorem 6.4. For brevity, let Zt−1 = PGj=1 |A(yj )| be the group normalization factor. Recall that at iteration 
+
+t, the Policy Improvement Reward assigns a gated attribution signal to samples from the previous batch Bt−1:
+
+ˆrPI  
+
+> t,i
+
+= G · A(yi)
+
+PGj=1 |A(yj )| · ϕ(ξt),
+
+where ϕ(ξt) is a bounded rectification of the standardized improvement signal ξt. We interpret ∆ bJt ∼ ϕ(ξt) as a tractable estimate of the realized policy improvement ∆Jt.20 Policy Improvement Reinforcement Learning PIPO retrospectively updates the policy using samples from Bt−1 via an importance-weighted objective: 
+
+JPI (θ) = Eq, {yi}∼B t−1
+
+"
+
+1
+
+G
+
+> G
+
+X
+
+> i=1
+
+πθ (yi | q)
+
+πθt−2 (yi | q) ˆrPI 
+
+> t,i
+
+#
+
+.
+
+Taking the gradient and evaluating it at θ = θt, we obtain 
+
+∇θ JPI (θt) = 1
+
+G
+
+> G
+
+X
+
+> i=1
+
+∇θ log πθt (yi | q) · ˆrPI  
+
+> t,i
+
+.
+
+Substituting the Reward definition yields 
+
+∇θ JPI = G ∆ bJt
+
+PGj=1 |A(yj )| · 1
+
+G
+
+> G
+
+X
+
+> i=1
+
+∇θ log πθt (yi | q)A(yi)
+
+!
+
+= G ∆ bJt
+
+Zt−1
+
+· gt−1,
+
+(21) where gt−1 denotes the standard group-based (e.g., GRPO) gradient estimate computed on Bt−1.From Theorem 3.1, we have the exact expression for the GRPO estimator given a specific batch outcome S:
+
+gt−1 =
+
+pS(G − S)
+
+G · p(1 − p)
+
+!
+
+∇θ p. 
+
+Using the discrete advantages derived in Eq. (17): 
+
+Zt−1 = S · | A+| + ( G − S) · | A−|
+
+= S
+
+r G − SS + ( G − S)
+
+r SG − S
+
+= 2 pS(G − S).
+
+Substituting this back into the gradient: 
+
+∇θ JPI = G∆ bJ
+
+2pS(G − S) ·
+
+" p S(G − S)
+
+G · p(1 − p) ∇θ p
+
+#
+
+= ∆ bJ
+
+2p(1 − p) ∇θ p. 
+
+In the RLVR setting ( R ∈ { 0, 1}), the realized improvement ∆ bJt tracks the success probability shift ∆p. By Lemma A.8, we have ∆p = O(min {p, 1 − p}). Since min {p, 1 − p} is asymptotically equivalent to p(1 − p) near the boundaries, the scalar coefficient ∆ bJt 
+
+> p(1 −p)
+
+remains strictly bounded as p → 0 or 1.This directly neutralizes the 1/[p(1 − p)] singularity that causes gradient explosion in standard open-loop methods. Taking expectations, we conclude: 
+
+E[∇θ JPI ] ∝ ∇ θ p = gideal .
+
+PIPO ensures a stable optimization trajectory seamlessly aligned with the ideal RLVR gradient by effectively canceling the geometric curvature of the surrogate objective. 
+
+A.5 Proof of Proposition 6.5 Proposition A.9 (Restatement of Proposition 6.5) . Let gt−1 denote the standard exploratory gradient computed during Phase 1, the total update can be expressed as an effective scaling of the original direction: ∆θtotal = k · gt−1.The PIPO mechanism dynamically modulates k based on the verification signal ∆J:
+
+• Acceleration ( ∆J > 0): When improvement is verified, PIPO acts as a momentum booster ( k > α std ), amplifying the update to accelerate convergence. 
+
+• Rectification ( ∆J < 0): When regression is detected, PIPO acts as a brake ( k < α std ), dampening the effective step size to prevent overfitting to noise. Consequently, the combined update ∆θtotal dynamically adapts to the quality of the gradient signal. 
+
+21 Policy Improvement Reinforcement Learning 
+
+Proof. Let ∆θstd = αstd gt−1 be the standard update applied by GRPO. The PIPO correction step applies ∆θPI =
+
+αPI ∇θ JPI . Using the result from Eq. 21, we can express the total combined update vector ∆θtotal as: 
+
+∆θtotal = αstd gt−1 + αPI 
+
+ G ∆JZt−1
+
+gt−1
+
+
+
+.
+
+Factorizing gt−1, we define the Effective Step Scaling Factor k:
+
+∆θtotal =
+
+
+
+αstd + αPI 
+
+G ∆JZt−1
+
+| {z }
+
+> k
+
+gt−1.
+
+The magnitude of the final parameter displacement is ∥∆θtotal ∥ = |k|∥ gt−1∥. We analyze the behavior of k based on the sign of the verification signal ∆J (noting that αstd , α PI , Z t−1 > 0). 
+
+Case 1: Acceleration (Reinforcement) when ∆J > 0. Since ∆J > 0, the PI-term is strictly positive: δ = αPI ∆JZt−1 >
+
+0. The effective scaling factor becomes: 
+
+k = αstd + δ > α std .
+
+Consequently, the displacement strictly increases: 
+
+∥∆θtotal ∥ = ( αstd + δ)∥gt−1∥ > ∥∆θstd ∥.
+
+This confirms that PIPO retrospectively amplifies the momentum for updates verified to be beneficial. 
+
+Case 2: Rectification (Suppression) when ∆J < 0. Since ∆J < 0, the PI-term is strictly negative: δ = −αPI |∆J| 
+
+> Zt−1
+
+<
+
+0. The effective scaling factor is k = αstd − | δ|. To ensure stability , we assume the PI learning rate satisfies 
+
+αPI < 2αstd Zt−1 
+
+> |∆J|
+
+, which implies |δ| < 2αstd . Under this condition, |k| = |αstd + δ| < α std . Thus, the displacement strictly decreases: 
+
+∥∆θtotal ∥ < ∥∆θstd ∥.
+
+This confirms that PIPO acts as a filter, dampening the effective learning rate for updates that led to performance regression. 
+
+## B Experimental Details 
+
+B.1 Models and Datasets Models We evaluate all methods on Qwen3-4B-Base and Qwen3-8B-Base [ 51 ], covering two representative model scales. We deliberately use base (non-instruction-tuned) models to assess the ability of RLVR methods to elicit reasoning behaviors from scratch, without relying on supervised or alignment priors. 
+
+Datasets All main experiments are trained exclusively on the MATH dataset [ 19 ], which contains approximately 7.5k multi-step mathematical reasoning problems. Evaluation is performed on a diverse set of benchmarks to measure generalization: • MATH500 : A representative subset of the MATH test set. • AIME 2025 and AMC 2023 : Competition-level mathematics benchmarks. • MINERVA : Scientific and quantitative reasoning tasks. In addition, we evaluate on SciKnowEval [13] to test transfer beyond pure mathematics. 
+
+B.2 Baselines 
+
+We apply PIPO as a plug-in enhancement to three representative group-relative RL algorithms: • GRPO [38]: Standard group-relative policy optimization. • GSPO [58]: A variant with sequence-level importance sampling. • DAPO [54]: A method featuring decoupled clipping and degrading group filtering. Each baseline is compared with its PIPO-augmented counterpart (e.g., GRPO vs. GRPO+PIPO) to demonstrate the effectiveness and plug-and-play nature of PIPO. 22 Policy Improvement Reinforcement Learning 
+
+B.3 Prompt Templates 
+
+We use structured prompts to ensure consistent reasoning formats across tasks. The templates for mathematical and scientific reasoning are shown below. 
+
+Prompt for Math 
+
+"{Question} Let’s think step by step and output the final answer within \boxed{}." 
+
+Prompt for SciKnowEval 
+
+"{Question} Please reason step by step and provide your answer in the following format: <reasoning> {Reasoning Process} </reasoning> <answer> {Final Option} </answer>" 
+
+B.4 Training Hyperparameters 
+
+We conduct all RL training within the VeRL framework [ 39 ] on a single compute node equipped with 8 × NVIDIA A100 (80GB) GPUs . All experiments share the same core hyperparameters (e.g., learning rate, KL coefficient, batch size) to ensure fair comparisons. Method-specific settings, such as clipping strategies, follow the original implementations. PIPO introduces additional parameters for retrospective verification, including the historical window size K and the policy improvement learning rate. Detailed configurations for all methods are reported in Table 5. Table 5: Hyperparameter settings for standard Group-relative methods (GRPO, GSPO, DAPO) and their PIPO-enhanced versions 
+
+HYPERPARAMETER GRPO GRPO+PIPO GSPO GSPO+PIPO DAPO DAPO+PIPO 
+
+COMPUTE NODES 1 1 1 1 1 1GPU S PER NODE 8 8 8 8 8 8GENERAL 
+
+USE KL L OSS TRUE TRUE TRUE TRUE TRUE TRUE 
+
+KL L OSS COEF 0.001 0.001 0.001 0.001 0.001 0.001 GRADIENT CLIP 1.0 1.0 1.0 1.0 1.0 1.0 OPTIMIZER ADAM W ADAM W ADAM W ADAM W ADAM W ADAM WTRAINING 
+
+EPOCHS 3 3 3 3 9 9BATCH SIZE 128 128 128 128 128 128 MINI BATCH SIZE 64 64 64 64 64 64 MICRO BATCH SIZE 8 8 8 8 8 8LEARNING RATE 1 × 10 −6 1 × 10 −6 1 × 10 −6 1 × 10 −6 1 × 10 −6 1 × 10 −6
+
+CLIPPING CLIP HIGH (ϵHIGH ) 0.2 0.2 0.0004 0.0004 0.28 0.28 CLIP LOW (ϵLOW ) 0.2 0.2 0.0003 0.0003 0.2 0.2 ROLLOUT 
+
+ROLLOUT (G) 8 8 8 8 8 8TEMPERATURE 1.0 1.0 1.0 1.0 1.0 1.0 MAX PROMPT LEN 512 512 512 512 512 512 MAX RESPONSE LEN 4096 4096 4096 4096 4096 4096 FILTER GROUPS NO NO NO NO YES YES 
+
+PIPO S PECIFIC 
+
+WINDOW SIZE (K) - 8 - 8 - 8PI LR ( αPI ) - 1 × 10 −6 - 1 × 10 −6 - 1 × 10 −6
+
+RECTIFICATION RANGE (ϕ(·)) - [0, 0.5] - [0, 0.5] - [0, 0.5] 
+
+23

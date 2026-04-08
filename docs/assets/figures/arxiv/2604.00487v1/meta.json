@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00487v1/fig-001.webp",
+      "caption": "Fig. 1. Payoff in a 2-Agent case. The gray cloud represents the set of all feasible payoffs given positive bids, with the red line indicating the Pareto Front. The Nash Equilibrium (red star) is located well within the inefficient interior. The three colored dots (yellow, light green, dark green) represent the final converged outcomes of three sequential experimental trials. They illustrate how the agent eventually learn to cooperate and reach the social welfare solution.",
+      "page": 3,
+      "index": 1,
+      "width": 437,
+      "height": 350
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00487v1/fig-002.webp",
+      "caption": "Fig. 3. A controlled perturbation test demonstrating retaliation and forgiveness. An exogenous betrayal shatters trust (θ → 0) and activates punitive inequity aversion (γ → 1.0). A subsequent apology successfully restores cooperation.",
+      "page": 5,
+      "index": 2,
+      "width": 413,
+      "height": 308
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00487v1/fig-003.webp",
+      "caption": "Fig. 4. Dynamic evolution of endogenous social parameters extracted from experimental fits. Trust (θ) gradually builds up through a process of mutual concession and predictably collapses during the Endgame Horizon.",
+      "page": 6,
+      "index": 3,
+      "width": 412,
+      "height": 308
+    }
+  ]
+}

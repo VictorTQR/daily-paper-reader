@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-001.webp",
+      "caption": "Table 1. Performance on LiveCodeBench v5 and v6. We compare our RefineRL models (4B and 4B-2507 versions) against baselines ranging from 4B to 235B parameters. By applying our Skeptical-Agent (i.e., Skeptical@16) to RefineRL-4B-2507, our approach outperforms 32B baselines and achieves performance comparable to the single-attempt performance of significantly larger 235B model.",
+      "page": 6,
+      "index": 1,
+      "width": 821,
+      "height": 346
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-002.webp",
+      "caption": "Table 6. Statistics of the training dataset for Self-Refinement RL. This table details the sample counts for each interaction category. “WA/RE/TLE/CE/MLE” represent trajectories triggered by error-driven feedback. “AC → WA/RE/TLE/CE/MLE” denote trajectories involving skepticism-driven feedback, where the solution passed public test cases but failed on private ones due to the indicated errors.",
+      "page": 11,
+      "index": 2,
+      "width": 675,
+      "height": 389
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-003.webp",
+      "caption": "Figure 6. Detailed templates for constructing the “Error Reason” field based on specific execution errors (WA, TLE, RE, etc.).",
+      "page": 15,
+      "index": 3,
+      "width": 1017,
+      "height": 1206
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-004.webp",
+      "caption": "Table 2. Performance of inference-time strategies. We compare our Skeptical-Agent (Skeptical@16) strategy with different inference-time baselines on 4B models, both before and after self-refinement RL. Notably, our Skeptical-Agent (i.e., Skeptical@16) consistently outperforms the compared baselines, achieving the best inference-time performance across all settings.",
+      "page": 7,
+      "index": 4,
+      "width": 739,
+      "height": 498
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-005.webp",
+      "caption": "Figure 4. The standard system prompt used for initial solution generation and subsequent refinement steps.",
+      "page": 14,
+      "index": 5,
+      "width": 1017,
+      "height": 396
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-006.webp",
+      "caption": "Figure 5. Prompt for error-driven feedback construction.",
+      "page": 14,
+      "index": 6,
+      "width": 1017,
+      "height": 473
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-007.webp",
+      "caption": "Figure 1. Overview of our RefineRL approach. (a) Skeptical-Agent employs local tools to evaluate generated solutions against visible public test cases and enforces rigorous self-refinement even when evaluation results suggest correctness. (b) Self-Refinement RL utilizes self-generated refinement trajectory data from the Skeptical-Agent on real-world CP problems data, along with a novel Squared-incentive reward function, to advance the self-refinement capabilities of LLMs.",
+      "page": 3,
+      "index": 7,
+      "width": 887,
+      "height": 332
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-008.webp",
+      "caption": "Figure 2. Training dynamics of Qwen3-4B. The left plot shows the steady increase in reward, while the right plot shows the corresponding growth in response length, reflecting the model’s internalization of the skeptical reasoning process.",
+      "page": 13,
+      "index": 8,
+      "width": 941,
+      "height": 334
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-009.webp",
+      "caption": "Figure 3. Training dynamics of Qwen3-4B-2507. Similar to the base model, the 2507 variant demonstrates consistent learning progress in terms of reward maximization and increased reasoning length during the RL process.",
+      "page": 13,
+      "index": 9,
+      "width": 941,
+      "height": 335
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-010.webp",
+      "caption": "Table 5. Performance of models trained via Skeptical-RL with the original squared-incentive reward or pass-or-fail reward.",
+      "page": 8,
+      "index": 10,
+      "width": 488,
+      "height": 273
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-011.webp",
+      "caption": "Table 7. Comparison of RL Training Strategies. We contrast three RL setups: Vanilla RL (direct generation), Self-Refinement RL with pass-or-fail rewards, and our Self-Refinement RL (with squared-incentive rewards). Vanilla RL uses only the initial generation subset (∼4.5k), while refinement methods use the full trajectory dataset (∼8.7k). Our method employs a squared reward to incentivize robust self-verification.",
+      "page": 12,
+      "index": 11,
+      "width": 929,
+      "height": 278
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00790v1/fig-012.webp",
+      "caption": "Figure 7. The skeptical-driven feedback prompt (PSkep) triggered when a solution passes local tests (on all public test cases), instructing the agent to self-critique against a checklist.",
+      "page": 16,
+      "index": 12,
+      "width": 1017,
+      "height": 696
+    }
+  ]
+}

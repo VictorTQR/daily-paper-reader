@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-001.webp",
+      "caption": "Figure 7. Performance curves of each algorithm on the MuJoCo benchmarks with ∆ = 20.",
+      "page": 21,
+      "index": 1,
+      "width": 967,
+      "height": 552
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-002.webp",
+      "caption": "Figure 1. Normalized number of Bellman backups of value iteration on the regular MDP (naive VI) and the abstract MDP (DHVI) with different delays ∆ = {2, 4, 6}. Naive VI is used as the baseline (normalized to 1.0), and the numbers in parentheses indicate the actual number of Bellman backups until convergence.",
+      "page": 7,
+      "index": 2,
+      "width": 479,
+      "height": 321
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-003.webp",
+      "caption": "Figure 2. Normalized performance (average returns) of augmented SAC and D2HPG-naive with different delays in HalfCheetah-v3 MuJoCo task, where D2HPG-naive is used as the baseline (normalized to 1.0). Each algorithm was evaluated for one million time steps with 5 random seeds.",
+      "page": 7,
+      "index": 3,
+      "width": 479,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-004.webp",
+      "caption": "Figure 8. Normalized performance (average returns) of D2HPG variants in various MuJoCo benchmarks, where D2HPG-BPQL is used as the baseline (normalized to 1.0). Each algorithm was evaluated for one million time steps with five random seeds.",
+      "page": 22,
+      "index": 4,
+      "width": 845,
+      "height": 945
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-005.webp",
+      "caption": "Table 4. Environment details of the MuJoCo benchmark.",
+      "page": 18,
+      "index": 5,
+      "width": 675,
+      "height": 202
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-006.webp",
+      "caption": "Table 3. Hyperparameters for the baseline algorithms.",
+      "page": 18,
+      "index": 6,
+      "width": 513,
+      "height": 367
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-007.webp",
+      "caption": "Figure 9. Wall-clock runtime comparison across baselines over one million time steps.",
+      "page": 23,
+      "index": 7,
+      "width": 529,
+      "height": 354
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-008.webp",
+      "caption": "Figure 10. Performance curves of the D2HPG agent trained in fixed-delay MDP with ∆ = {5, 10, 20} and that of the D2HPG agent trained in random-delay MDP with uniformly distributed delays over {0, 1, . . . ,∆max}, where ∆max = {5, 10, 20}. Each algorithm was evaluated for one million time steps with five random seeds, where the shaded regions denote the standard deviation of average returns.",
+      "page": 23,
+      "index": 8,
+      "width": 1017,
+      "height": 309
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-009.webp",
+      "caption": "Table 2. Results on the MuJoCo benchmarks under fixed delays with ∆ ∈ {5, 10, 20}. Each algorithm was evaluated for one million time steps with 5 random seeds, where the standard deviations of average returns are denoted by ±. The best performance is shaded in gray.",
+      "page": 8,
+      "index": 9,
+      "width": 1013,
+      "height": 604
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-010.webp",
+      "caption": "Figure 5. Performance curves of each algorithm on the MuJoCo benchmarks with ∆ = 5.",
+      "page": 20,
+      "index": 10,
+      "width": 967,
+      "height": 554
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03641v1/fig-011.webp",
+      "caption": "Figure 6. Performance curves of each algorithm on the MuJoCo benchmarks with ∆ = 10.",
+      "page": 20,
+      "index": 11,
+      "width": 967,
+      "height": 552
+    }
+  ]
+}
