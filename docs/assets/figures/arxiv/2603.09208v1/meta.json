@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-001.webp",
+      "caption": "Table 1: Hyperparameters for Stag Hunt experiments",
+      "page": 47,
+      "index": 1,
+      "width": 614,
+      "height": 470
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-002.webp",
+      "caption": "Table 2: Hyperparameters for Overcooked experiments",
+      "page": 47,
+      "index": 2,
+      "width": 614,
+      "height": 488
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-003.webp",
+      "caption": "Figure 3: Cross-play with unseen partners in Overcooked. Each point represents the reward of two agents trained under a different algorithm and paired at test time without ever seen each other before. The left panel shows RQRE-OVI agent’s reward (vertical axis) versus NQ-OVI agent’s reward (horizontal axis) for each pairing; the right panel reverses the roles. Points above the diagonal indicate that the agent on the vertical axis (in this case RQRE) achieves higher return than its partner. Labels denote the τ value of the corresponding RQRE-OVI agent, and the red diamond marks the QRE-OVI baseline score against NQ-OVI. Across all pairings, RQRE-OVI agents achieve equal or higher ego reward than their cross-play partner, with moderate τ values (e.g., τ = 0.01) yielding the strongest advantage.",
+      "page": 14,
+      "index": 3,
+      "width": 882,
+      "height": 336
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-004.webp",
+      "caption": "Figure 7: Cross-play with a perturbed partner. Ego agent reward as a function of the partner noise for Stag Hunt (left) and Overcooked (right). At each evaluation step, the perturbed partner’s action is replaced with a fixed deterministic action (e.g., always move in a single direction) with probability δ, and the trained policy is executed otherwise. This deterministic perturbation ensures that deviations are high-signal rather than averaging out under uniform noise. The results are averaged over 200 evaluation rollouts at each noise level.",
+      "page": 46,
+      "index": 4,
+      "width": 964,
+      "height": 318
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-005.webp",
+      "caption": "Figure 6: Self play performance for each algorithm in Overcooked over 200 evaluation rollouts.",
+      "page": 45,
+      "index": 5,
+      "width": 590,
+      "height": 379
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-006.webp",
+      "caption": "Figure 2: Cross-play retention (R(δ)/R(0)) as a function of perturbed partner noise (δ): Stag-Hunt (left) and Overcooked (right). At each evaluation step, the partner’s action is a fixed deterministic action (e.g., always move in one direction) with probability δ and otherwise follows its trained policy. This produces high-signal deviations to emphasize the robustness phenomena. Curves are normalized by the δ = 0 baseline, so higher values indicate strong robustness and lower values indicate performance degradation. Results are averaged over 200 evaluation rollouts per noise level.",
+      "page": 13,
+      "index": 6,
+      "width": 890,
+      "height": 291
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-007.webp",
+      "caption": "Figure 1: Self-play team return during training. Moving average of team return over episodes for StagHunt (left) and Overcooked (right). In Stag-Hunt, higher τ drives agents toward the payoff dominant (stag, stag) outcome, while lower τ yields the more robust risk-dominant (hare, hare) outcome. In Overcooked, all RQRE variants and QRE converge to comparable team returns, with Nash variants reaching similar or slightly lower levels.",
+      "page": 12,
+      "index": 7,
+      "width": 890,
+      "height": 325
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-008.webp",
+      "caption": "Figure 4: Dynamic Stag Hunt (left) and Overcooked (right) environments used in experiments.",
+      "page": 44,
+      "index": 8,
+      "width": 658,
+      "height": 293
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09208v1/fig-009.webp",
+      "caption": "Figure 5: Stag Hunt outcome distributions during training. Each panel shows the fraction of stag– stag, hare–hare, and mixed interaction outcomes (rolling average) for a given algorithm and risk-aversion level. NQOVI, QRE, and low risk averse RQRE agents converge to payoff dominant stag–stag outcomes, while highly risk averse agents to risk dominant hare–hare, confirming the expected equilibrium selection.",
+      "page": 44,
+      "index": 9,
+      "width": 979,
+      "height": 352
+    }
+  ]
+}

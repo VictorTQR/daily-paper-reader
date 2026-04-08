@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.28716v1/fig-001.webp",
+      "caption": "Figure 2: Overall framework of D2Skill. D2Skill couples RL with a dynamic dualgranularity skill bank. For each task, training rollouts are divided into a baseline group and a skill group, whose performance gap yields hindsight signals for policy optimization and skill utility estimation. When performance is poor, reflection on representative failed trajectories produces task skills for high-level guidance and step skills for local error correction. Skills are stored with retrieval keys, reused during subsequent interaction, and periodically pruned by utility-based bank management.",
+      "page": 4,
+      "index": 1,
+      "width": 819,
+      "height": 349
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28716v1/fig-002.webp",
+      "caption": "Table 1: Performance on ALFWORLD and WEBSHOP. For ALFWORLD, we report the average success rate (%) for each subtask and the overall success rate. For WEBSHOP, we report the average score and average success rate (%). Unless otherwise stated, all methods are trained for 160 training steps in each environment, evaluated every 5 training steps on 128 validation tasks by default, and reported by their best performance over the entire training run. Following SkillRL, we use an SFT-initialized model for Qwen2.5-7B-Instruct to ensure reliable instruction-following for skill usage, while for Qwen3-4B-Instruct-2507 we directly use the original instruct model. For Qwen3-4B-Instruct-2507, performance on WEBSHOP remains close to zero both before and after training, and is therefore omitted from the table. ∗ denotes results replicated from (Feng et al., 2025) and (Xia et al., 2026). The best and second-best results are highlighted in red and blue, respectively.",
+      "page": 7,
+      "index": 2,
+      "width": 818,
+      "height": 563
+    }
+  ]
+}

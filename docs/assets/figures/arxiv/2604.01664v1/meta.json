@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-001.webp",
+      "caption": "Table 4: mean dependent cost (D), mean peak tokens (P), and summed F1 (S) across context budgets and objective counts.",
+      "page": 15,
+      "index": 1,
+      "width": 830,
+      "height": 306
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-002.webp",
+      "caption": "Table 1: Performance comparison across QA settings. BrowseComp-Plus is evaluated using LLM-as-Judge, while Multi-object QA reports F1 scores summed across objectives.† Reproduced using officially released open-source checkpoints.; ‡ Re-implemented based on released code; § Re-implemented based on the original paper due to no public implementation.",
+      "page": 7,
+      "index": 2,
+      "width": 818,
+      "height": 402
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-003.webp",
+      "caption": "Figure 6: Case study of budget-aware context management. The agent adaptively selects [NONE], [Selective], or [ALL] based on remaining budget, transitioning from full retention to partial and full aggregation as budget tightens, while preserving task-relevant information.",
+      "page": 14,
+      "index": 3,
+      "width": 826,
+      "height": 943
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-004.webp",
+      "caption": "Figure 1: Overview of the proposed framework. (a) The agent first observes the budgetconditioned state bt = (st, rt, |ot|) before loading the pending observation. (b) Conditioned on bt, the policy selects a refinement action ut to perform NULL, PARTIAL, or FULL commitblock aggregation, yielding an updated context C ′ t . (c) The policy is trained with multi-turn GRPO under a progressively tightened budget curriculum, where only trajectories satisfying the context budget contribute reward and optimization.",
+      "page": 3,
+      "index": 4,
+      "width": 824,
+      "height": 467
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-005.webp",
+      "caption": "Figure 2: Performance under different maximum context window sizes (16k-4k tokens) with varying numbers of objectives.",
+      "page": 8,
+      "index": 5,
+      "width": 815,
+      "height": 245
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-006.webp",
+      "caption": "Figure 8: Training dynamics of Qwen2.5-7B-Instruct across Static (8k), Random (4k/8k), and Curriculum-Ours (8→4): Reward, KL Loss, Entropy, and Summary Tool Call Average Times.",
+      "page": 19,
+      "index": 6,
+      "width": 817,
+      "height": 185
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-007.webp",
+      "caption": "Table 6: Global Hyperparameters for RL Training",
+      "page": 17,
+      "index": 7,
+      "width": 826,
+      "height": 337
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-008.webp",
+      "caption": "Figure 4: Ablation of key components across context budgets (16k–4k tokens), measured by summed F1 across objectives. Removing budget metadata (B) degrades performance (Ours w/o B), while adding B alone to a baseline without context management does not improve performance (Search-R1 w/ B). Our full model (Ours Full), which conditions compression on B, achieves the best performance across all objectives and budgets.",
+      "page": 9,
+      "index": 8,
+      "width": 815,
+      "height": 258
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01664v1/fig-009.webp",
+      "caption": "Figure 7: Answer rate comparison across context lengths and objectives.",
+      "page": 16,
+      "index": 9,
+      "width": 805,
+      "height": 234
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-001.webp",
+      "caption": "Table 1. Comparison of representative survey papers on agentic tool use and function calling.",
+      "page": 2,
+      "index": 1,
+      "width": 900,
+      "height": 236
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-002.webp",
+      "caption": "Fig. 3. Illustration of the Prompting as plug-and-play paradigm.",
+      "page": 7,
+      "index": 2,
+      "width": 895,
+      "height": 581
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-003.webp",
+      "caption": "Fig. 4. Training Pipeline of Paradigm II: From Supervision to Internalized Tool-Use Capability.",
+      "page": 10,
+      "index": 3,
+      "width": 895,
+      "height": 443
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-004.webp",
+      "caption": "Fig. 1. Overview of the Agentic Tool Use framework.",
+      "page": 3,
+      "index": 4,
+      "width": 895,
+      "height": 582
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-005.webp",
+      "caption": "Table 5. Summary of representative methodological papers on agentic tool use.",
+      "page": 33,
+      "index": 5,
+      "width": 893,
+      "height": 1146
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-006.webp",
+      "caption": "Fig. 5. An overview of Paradigm III: Reward-Driven Tool Policy Learning.",
+      "page": 13,
+      "index": 6,
+      "width": 895,
+      "height": 521
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-007.webp",
+      "caption": "Fig. 2. Timeline of Agentic Tool Use.",
+      "page": 4,
+      "index": 7,
+      "width": 895,
+      "height": 410
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-008.webp",
+      "caption": "Table 4. Evaluation benchmarks for tool-driven interaction.",
+      "page": 19,
+      "index": 8,
+      "width": 904,
+      "height": 486
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-009.webp",
+      "caption": "Table 3. Representative benchmarks for task completion.",
+      "page": 17,
+      "index": 9,
+      "width": 900,
+      "height": 427
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00835v1/fig-010.webp",
+      "caption": "Table 2. Representative benchmarks for tool usage correctness.",
+      "page": 16,
+      "index": 10,
+      "width": 899,
+      "height": 329
+    }
+  ]
+}

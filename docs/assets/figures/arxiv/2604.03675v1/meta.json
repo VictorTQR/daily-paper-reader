@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.03675v1/fig-001.webp",
+      "caption": "Figure 3: Effect of the process-reward weight α under different model sizes and evaluation metrics. None denotes the variant without prefix evaluator. The settings 0–1.0 correspond to different values of the process-reward weight α. A larger α assigns a higher weight to the process reward relative to the final reward.",
+      "page": 8,
+      "index": 1,
+      "width": 950,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03675v1/fig-002.webp",
+      "caption": "Table 1: Main results on five QA benchmarks. The best result in each column is highlighted in bold. We also report the absolute improvement of PRAISE over the strongest baseline in each column (Impv. vs Best).",
+      "page": 7,
+      "index": 2,
+      "width": 941,
+      "height": 402
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03675v1/fig-003.webp",
+      "caption": "Figure 2: Step-wise analysis of the prefix evaluator under different optimization strategies. Panels (a)–(c) show the evaluator’s F1 across training steps for prefixes taken at Turn 0, Turn 1, and Turn 2, respectively. Panel (d) reports the corresponding F1 gain of joint optimization over the strongest non-joint baseline at each turn.",
+      "page": 7,
+      "index": 3,
+      "width": 950,
+      "height": 222
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03675v1/fig-004.webp",
+      "caption": "Figure 1: Overview of PRAISE. Left: Main Search Rollout. The policy performs multi-turn search and produces a complete trajectory with a final answer. Middle: Prefix Answering. PRAISE extracts prefix states and generates an intermediate answer from each prefix. Right: Reward Assignment and Joint optimization. Prefix answers are scored against the ground-truth answer, step rewards are computed from adjacent score differences, and the final answer receives a terminal reward. All resulting samples are jointly used for PPO training.",
+      "page": 5,
+      "index": 4,
+      "width": 927,
+      "height": 575
+    }
+  ]
+}

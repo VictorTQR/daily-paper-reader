@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.22367v1/fig-001.webp",
+      "caption": "Figure 2. RES token cost remains constant as dataset size grows exponentially (O(1) proof).",
+      "page": 3,
+      "index": 1,
+      "width": 492,
+      "height": 248
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22367v1/fig-002.webp",
+      "caption": "Figure 3. Log-log scaling comparison — RES O(1) vs. Naive O(n). At 16M articles, RES is 1.2 million times cheaper.",
+      "page": 3,
+      "index": 2,
+      "width": 492,
+      "height": 270
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22367v1/fig-003.webp",
+      "caption": "Figure 4. Direct token cost comparison across all 20 query types. RES (red) vs. Naive with 50 articles (blue).",
+      "page": 4,
+      "index": 3,
+      "width": 492,
+      "height": 292
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22367v1/fig-004.webp",
+      "caption": "Figure 5. Distribution of RES token costs across 95 runs. Tight clustering around μ=1,574 confirms predictable cost.",
+      "page": 4,
+      "index": 4,
+      "width": 492,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22367v1/fig-005.webp",
+      "caption": "Figure 1. Detailed RES architecture flow for a sample query. Token costs shown per layer.",
+      "page": 2,
+      "index": 5,
+      "width": 492,
+      "height": 283
+    }
+  ]
+}

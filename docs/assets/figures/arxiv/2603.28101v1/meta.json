@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.28101v1/fig-001.webp",
+      "caption": "Figure 10: Illustration of the placement algorithm. complexity is 𝑂 (𝑛2𝑚), a drastic reduction from the combinatorial baseline𝑂 ( (𝑛−1",
+      "page": 7,
+      "index": 1,
+      "width": 498,
+      "height": 293
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28101v1/fig-002.webp",
+      "caption": "Figure 12: Rollout throughput of agentic RL systems under different workloads and models.",
+      "page": 10,
+      "index": 2,
+      "width": 1042,
+      "height": 219
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28101v1/fig-003.webp",
+      "caption": "Figure 13: Precision of progressive trajectory prediction under different workloads and models.",
+      "page": 10,
+      "index": 3,
+      "width": 1042,
+      "height": 220
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28101v1/fig-004.webp",
+      "caption": "Figure 8: Overview of Heddle.",
+      "page": 5,
+      "index": 4,
+      "width": 494,
+      "height": 250
+    }
+  ]
+}

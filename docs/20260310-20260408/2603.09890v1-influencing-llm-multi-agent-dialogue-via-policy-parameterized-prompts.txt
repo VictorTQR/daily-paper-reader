@@ -1,0 +1,1480 @@
+Title: Influencing LLM Multi-Agent Dialogue via Policy-Parameterized Prompts
+
+URL Source: https://arxiv.org/pdf/2603.09890v1
+
+Published Time: Wed, 11 Mar 2026 01:21:22 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# Influencing LLM Multi-Agent Dialogue via Policy-Parameterized Prompts 
+
+## Hongbo Bo 
+
+University of Bristol Bristol, United Kingdom hongbo.bo@bristol.ac.uk 
+
+## Jingyu Hu 
+
+University of Bristol Bristol, United Kingdom jingyu.hu@bristol.ac.uk 
+
+## Weiru Liu 
+
+University of Bristol Bristol, United Kingdom weiru.liu@bristol.ac.uk 
+
+## ABSTRACT 
+
+Large Language Models (LLMs) have emerged as a new paradigm for multi-agent systems. However, existing research on the be-haviour of LLM-based multi-agents relies on ad hoc prompts and lacks a principled policy perspective. Different from reinforcement learning, we investigate whether prompt-as-action can be parame-terized so as to construct a lightweight policy which consists of a se-quence of state-action pairs to influence conversational behaviours without training. Our framework regards prompts as actions exe-cuted by LLMs, and dynamically constructs prompts through five components based on the current state of the agent. To test the effectiveness of parameterized control, we evaluated the dialogue flow based on five indicators: responsiveness, rebuttal, evidence usage, non-repetition, and stance shift. We conduct experiments using different LLM-driven agents in two discussion scenarios re-lated to the general public and show that prompt parameterization can influence the dialogue dynamics. This result shows that policy-parameterised prompts offer a simple and effective mechanism to influence the dialogue process, which will help the research of multi-agent systems in the direction of social simulation. 
+
+## KEYWORDS 
+
+LLMs, Multiagent System, Social Simulation 
+
+## 1 INTRODUCTION 
+
+Traditional multi-agent simulations often rely on explicit modelling or reinforcement learning to train policies [ 9, 29 , 33 ], enabling agents to learn how to respond and interact. In contrast, Large Lan-guage Models (LLMs) have emerged as a new paradigm for multi-agent systems [ 10 , 18 ], where agents inherently possess natural language generation and knowledge retrieval capabilities without requiring additional training for basic interaction. Based on this potential, LLM-based multi-agent systems have been widely used in social simulation tasks by assigning roles, tasks, and instructions to LLMs in recent studies [8, 23]. LLMs agents in these approaches typically communicate with each other using ad hoc prompts, focusing on whether agents can align human preferences and behaviors like collaboration [ 12 , 28 ,32 ], negotiation [ 1, 5, 19 ] and provide rational plans [ 6, 11 ]. How-ever, these methods lack a principled framework for treating com-munication strategies as policies to systematically control agent behaviors. Without sufficient attention to how agent dialogue can be deliberately shaped and optimized, it becomes difficult to pre-dict agent behavior, optimize communication patterns, and transfer insights across different tasks. 
+
+> 0Accepted at AAMAS 2026
+
+To address this limitation, we expect to propose a principled way to conceptualize and operationalize agent communication strate-gies, one that allows us to formally define, compare, and optimize different strategies for multi-agent dialogue. Specifically, this study focuses on how policy-parameterised prompts can be utilised to influence conversational behaviours in multi-agent discussion dia-logues. This work considers the input prompt itself as an action gener-ated by a lightweight form of policy parameterisation. Specifically, we decompose the prompt into five components: task and persona description (T), dialogue history memory (M), external knowledge base (D), rule template (R), and weight (W). By adaptively parame-terising these components to allow different levels of influence on LLM agents, we can directly impose the significance of different factors on the utterance style of dialogue, thereby modulating their conversational behaviours without any additional training. Within this policy framework, we implement multi-role-based agents with distinct stances and knowledge bases, and engage them in multi-round dialogue on issues related to the general public. To further enhance adaptivity, we design an adaptive weight sched-uler that automatically adjusts the reliance on T/M/D during the dialogue, based on temporal trends and behavioural feedback. To quantify the effects of different control strategies, we propose a set of evaluation metrics, including responsiveness, rebuttal, non-repetition, evidence usage, and stance shift. These metrics allow us to systematically compare dialogue differences under various prompt control modes and to observe the evolution of group stances over time. Our designed framework is to answer the following research questions. RQ1: Can prompt control be used as a lightweight form of policy parameterisation to regulate the conversational behaviours of LLM-based multi-agent systems? RQ2: Do different prompt con-trol strategies (e.g., rule templates and weight scheduling) lead to significant behavioural differences, such as changes in respon-siveness, evidence usage, and stance evolution? To address these questions, we design two discussion scenarios related to the gen-eral public land resources use and educational resource allocation, each involving three agents with distinct personas driven by dif-ferent LLMs. In each scenario, the agents interact over multiple rounds of dialogue, with prompts dynamically constructed from task, memory, and evidence components. We systematically vary control strategies by enabling or disabling rule templates and adjust-ing weight parameters, and evaluate the resulting dialogues along five proposed evaluation metrics. Our results show that prompt parameterisation can effectively influence dialogue, with different strategies leading to distinct patterns in rebuttal, evidence usage, and stance shift. 
+
+> arXiv:2603.09890v1 [cs.AI] 10 Mar 2026
+
+Overall, the core of this study lies in treating prompt control as a lightweight policy to achieve structured regulation of LLM multi-agent dialogue, thereby exploring a social simulation pathway that is distinct from traditional training-based approaches. 
+
+## 2 RELATED WORK 
+
+LLMs Agents and Social Simulation. Recent works have explored the use of LLMs as agents in social simulation, aiming to explore realistic social phenomena by simulating social behaviours. [ 23 ]applied LLMs with memory to build generative agents, and found agents exhibit emergent social behaviors such as information dif-fusion, relationship formation, and coordinating attendance in a sandbox environment. Similar works [ 7 , 20 , 21 ] also utilized LLMs to build the sandbox environment to study social behaviors. [ 24 ]developed a simulated community of 1,000 personas by design prompt chains to generate behaviors like posting, replying, and also anti-social actions. 𝑆 3 system [ 8 ] uses LLM agents to simu-late users’ emotions, attitudes, and interaction behaviours in the social networks, by endowing the agents in the system with the ability to perceive the informational environment. CAMEL [ 17 ] is a multi-agent role-playing framework proposed to leverage inception prompting to initialise roles, tasks, and dialogue formats, enabling LLM-based chat agents to collaborate on complex tasks. [ 3] applies multi-agent LLMs to simulate agent populations, and their results show that such populations can develop social conventions and collective biases through decentralized interactions. [ 25 ] extends society simulations to large scale with over 10k agents and 5 million interactions and analyzed their believable individual and emergent social behaviors. Other studies [ 12 , 19 ] validated the effectiveness of multi-agent systems in collaboration and debate tasks. However, prompts in these systems are typically ad hoc, without a principled treatment as policies. 
+
+LLM Agents Formalization. Several works have sought to abstract LLM-based agents into decision-theoretic frameworks, drawing inspiration from reinforcement learning (RL) or the Belief-Desire-Intention (BDI) model. For instance, LLMs have been cast as poli-cies mapping states to natural-language actions, and also act as a world model combined with Monte Carlo Tree Search for plan-ning search [ 11 ]. BDIPrompting [ 14 ] integrates the BDI model into prompt design to improve proactive action planning and trans-parency in LLMs. Reflexion[ 26 ] is a framework that reinforces LLM agents through verbal feedback, parameterizing a policy as mem-ory to enable trial-and-error learning via self-reflection. [ 6] study whether LLMs can serve as rational players in game theory, by providing inputs with preferences and rules to build belief and desire and then plan the optimal action. [ 30 ] combined LLMs with reinforcement learning (RL) to enable agents to learn strategic lan-guage communication and decision-making for the Werewolf game. These studies focus on questions—whether LLMs can act rationally or align with human decisions, but do not address how LLMs can be controlled in multi-agent. Also, in their study, LLMs were used to generate decisions rather than to execute actions. 
+
+## 3 PROMPT CONTROL AS LIGHTWEIGHT POLICY PARAMETERIZATION 
+
+This section describes how our proposed method influences LLM multi-agent dialogue via policy-parameterized prompts. Figure 1 illustrates the overall framework of our method. 
+
+## 3.1 Multi-Agent Formalization 
+
+We formulate multi-agent discussions as a controllable state–action process where policies are specified directly through prompt con-struction. Specifically, LLM multi-agent conversation is formal-ized as a prompt-parameterized process: We define 𝑁 agents en-gaging in 𝐾 rounds of discussion. For each conversation round 
+
+𝑘 ∈ { 1, 2, ..., 𝐾 }, each agent A𝑖 has a corresponding state 𝑠 (𝑘 ) 
+
+> 𝑖
+
+com-posed of agent memory, evidence and task settings. The policy 𝜋 𝑖 
+
+then maps the state to a constructed prompt as agent’s action 𝑎 (𝑘 ) 
+
+> 𝑖
+
+.We achieve parameterized control over agent behavior through prompts via rules template 𝑅 and weights vector 𝑊 adjustment. 
+
+3.1.1 Agent. Each agent is represented as a quadruple A𝑖 = {𝑄,𝑇 𝑖 ,𝐷 𝑖 , 𝐿𝐿𝑀 𝑖 }, where 𝑄 is the global discussion query among all agents provided by the user, 𝑇 𝑖 includes the task description and agent A𝑖 
+
+persona setting, 𝐷 𝑖 is the agent A𝑖 complete role-specific knowl-edge data, 𝐿𝐿𝑀 𝑖 is the executor of actions to generate dialogues by the agent A𝑖 . As this study specifically examines LLM-based agents, we consider the LLM as part of the agent’s capability that it can call to execute actions (similar to calling other functions, etc.). 
+
+3.1.2 State and Retrieval. At round 𝑘 , the dialogue memory is denoted as 𝑀 (𝑘 ) , consisting of all 𝑘 rounds of utterances. From the full knowledge base 𝐷 𝑖 , the agent retrieves a subset ˆ𝐷 (𝑘 ) 
+
+> 𝑖
+
+via embedding similarity search: 
+
+ˆ𝐷 (𝑘 ) 
+
+> 𝑖
+
+=
+
+
+
+Top -n𝑐 ∈ C ( 𝐷 𝑖 ) cos (𝜙 (𝑐 ), 𝜙 (𝑄 )) , 𝑘 = 1,
+
+Top -n𝑐 ∈ C ( 𝐷 𝑖 ) cos (𝜙 (𝑐 ), 𝜙 (𝑀 (𝑘 ) )) , 𝑘 > 1,
+
+where C( 𝐷 𝑖 ) is the set of chunks obtained by segmentation and 𝜙 (·) 
+
+is the embedding function used in Retrieval-Augmented Generation (RAG) [16]. The state of agent A𝑖 is composed of 𝑠 (𝑘 ) 
+
+> 𝑖
+
+= {𝑇 𝑖 , 𝑄, ˆ𝑀 (𝑘 ) , ˆ𝐷 (𝑘 ) 
+
+> 𝑖
+
+},where ˆ𝑀 (𝑘 ) ⊆ 𝑀 (𝑘 ) denotes the subset of dialogue memory ex-tracted for the current round, consisting of the recent dialogues, while ˆ𝑀 (1) is empty at initialisation. In this study, we adopt a shared message pool setting [ 10 ], in which all agents have access to a com-mon dialogue history; thus, the memory 𝑀 (𝑘 ) is shared rather than individual-based. Our method can also be extended to alternative communication configurations, such as layered, decentralised or centralised. 
+
+3.1.3 Prompt-as-Action. We adopt the prompt-as-action view: the policy 𝜋 𝑖 maps the state 𝑠 (𝑘 ) 
+
+> 𝑖
+
+to an action 𝑎 (𝑘 ) 
+
+> 𝑖
+
+, where the action is the constructed prompt: 𝑎 (𝑘 ) 
+
+> 𝑖
+
+= 𝜋 𝑖 (𝑠 (𝑘 ) 
+
+> 𝑖
+
+). Here, the policy 𝜋 𝑖 generates a action 𝑎 (𝑘 ) 
+
+> 𝑖
+
+based on < 𝑅 ⊕ 𝑊 (𝑘 ) 
+
+> 𝑖
+
+> under state 𝑠 𝑖 , where 𝑅 is the optional rule template and 𝑊 (𝑘 ) 
+
+> 𝑖
+
+= ⟨𝑤 (𝑘 ) 
+
+> 𝑖𝑇
+
+, 𝑤 (𝑘 ) 
+
+> 𝑖𝑀
+
+, 𝑤 (𝑘 ) 
+
+> 𝑖𝐷
+
+⟩ are weights controlling how strongly persona, memory, or retrieved knowledge are emphasized. The operator ⊕ denotes the coupling of rules and weights into a single prompt specification. Concretely, ⊕ yields (a) tiered micro-instructions attached in prompts next to the affected 𝑸 : Should the public be given more "freedom to roam"?                
+
+> [Conservationist 🌲 ]…I believe that the public
+> should be given more freedom to roam…This
+> can foster a deeper connection with nature…
+> [Farmer 🚜 ]…Public freedom to roam is
+> important, but it must not come at the cost of
+> productive farmland….
+> [Community Rep. 🏘 ] … Expanding the Right
+> to Roam is crucial for reducing rural -urban
+> inequality and promoting climate justice…
+> [Conservationist 🌲 ]…Public should be given
+> more freedom to roam, as long as they respect
+> and follow responsible guidelines…
+> [Farmer 🚜 ]No, the public should not be given
+> more freedom to roam on productive farmland.
+> Land autonomy must be protected...
+> [Community Rep. 🏘 ]Yes, expanding Right to
+> Roam is crucial for promoting climate justice
+> and reducing rural -urban inequality...
+> 𝑻 𝒊 :Task and Persona Description
+> You are a farmer representative. You care about food
+> security, stable income, and land autonomy.
+> 𝑴 (𝒌 ):Dialogue History
+> 𝑊 !"
+> ($)
+> Rule
+> None/Light/Struct
+> Example [Light]:
+> First directly answer [Q],
+> then provide 1 –2 pieces of
+> evidence from [D]; respond
+> to [M] if necessary;…
+> You may respond without
+> summarising [M]; avoid
+> verbatim repetition.
+> Reflect the [T] perspective
+> and state your position
+> when appropriate.
+> Before concluding, list at
+> least 2 concrete evidence
+> points from the retrieved
+> snippets [D]; ”
+> "quote/paraphrase and tie
+> them to your claims.
+
+States 𝒔 𝒊  
+
+> (𝒌 )
+
+Actions 𝒂 𝒊 
+
+> (𝒌 )
+
+Outputs 𝑶 (𝒌 )             
+
+> Dialogue History updates
+> M(𝒌 %𝟏 )=𝑶 (𝒌 )UM(𝒌 )
+> 𝑫 𝒊 :Knowledge Base
+> RAG -based chunking
+> Weights
+> Allocation
+> 𝑊 !&
+> ($),𝑊 !'
+> ($),𝑊 !"
+> ($)
+> 1.Time -based
+> trend updating
+> 2.Behaviour -
+> based correction
+> Example
+> 𝑊 '(
+> ())−−
+> 𝑊 '*
+> ())++
+
+Evaluation 
+
+Responsiveness , rebuttal, Non -repetition, 
+
+evidence usage , stance shift 
+
+> 𝑊 !'
+> ($)
+> 𝑊 !&
+> ($)
+
+Figure 1: The overall framework illustrates the process from an agent’s state representation to action generation, LLM-based action execution, and evaluation. 
+
+[T]/[M]/[D] blocks when a weight is low/high (in Section 3.2.2), and (b) an optional rule skeleton inserted in the [R] block when enabled (in Section 3.2.1). In this way, policy-parameterised prompts provide a lightweight mechanism to steer the dialogue process of LLM-based agents. The policy in this study will produce a series of state-action pairs and this can be treated as a trajectory in RL policy learning, noting that in our framework, the trajectory length is determined by the number of rounds 𝐾 of dialogues required. 
+
+3.1.4 Action Execution and Output. The action 𝑎 (𝑘 ) 
+
+> 𝑖
+
+(the prompt) is executed by the LLM, yielding a concrete natural-language output 
+
+𝑜 (𝑘 ) 
+
+> 𝑖
+
+= LLM i (𝑎 (𝑘 ) 
+
+> 𝑖
+
+). In each round 𝑘 , all agents follow the same action generation to generate their own actions for producing their respective output 𝑜 (𝑘 ) 
+
+> 𝑖
+
+. These outputs are then aggregated and appended to 𝑀 (𝑘 ) to form the global dialogue memory 𝑀 (𝑘 +1)
+
+for the next round, which in turn influences subsequent retrieval 
+
+𝑀 (𝑘 +1) = {∪ 𝑁 𝑖 =1𝑜 (𝑘 ) 
+
+> 𝑖
+
+} ∪ 𝑀 (𝑘 ) .
+
+## 3.2 Policy Parameterization 
+
+3.2.1 Rule Templates R. Besides the four information sources 𝑄 , 𝑇 ,
+
+𝑀 , and 𝐷 , we introduce an optional component 𝑅 (rule template), which is designed to steer the interaction behaviour of the agent in a controllable way. The use of 𝑅 allows the agent to specify the format of the output and the way the information is used, thereby shaping its conversational behaviour without changing the underlying model parameters. We design three rule templates that represent incremental degrees of structural constraint: 
+
+• None : No explicit structural instruction is given; the agent directly generates a response based on the concatenated in-formation blocks [𝑇 ], [𝑀 ], [𝐷 ], [𝑄 ], without any additional ordering or format control. 
+
+• Light : Provides minimal structure by specifying a basic re-sponse order and length constraint. ‘First directly answer [Q], then provide 1–2 pieces of evidence from [D]; respond to [M] if necessary; limit the response to at most N sen-tences.’ 
+
+• Struct : Enforces a detailed reasoning structure by decom-posing the discussion into specific categories of key points (supporting, opposing, conflicting, cooperative). ‘First ex-tract four types of key points in order (no more than 3 each) from [M]: 1) arguments supporting the goal, 2) arguments threatening the goal, 3) unresolved points of conflict, 4) potential opportunities for cooperation; then generate a re-sponse of no more than 3 sentences based on these points, giving priority to citing [D].’ This allows us to have a lightweight policy that dynamically generates prompts (or actions) as the dialogue continues so as to steer the emergent discussion patterns among agents. 
+
+3.2.2 Weights Design. To better refine the policy impact on influ-encing agent behaviors, we define a weight set 𝑊 𝑖 = {𝑤 (𝑘 ) 
+
+> 𝑖𝑇
+
+, 𝑤 (𝑘 ) 
+
+> 𝑖𝑀
+
+,𝑤 (𝑘 ) 
+
+> 𝑖𝐷
+
+} for each agent A𝑖 . Each weight 𝑤 ∈ 𝑊 𝑖 takes values in [0, 2]
+
+and can dynamically adjust A𝑖 ’s reliance on the corresponding component (T, M, and D) during conversations. Each weight 𝑤 is then mapped to a three-tier signal system: low if 𝑤 ∈ [ 0, 0.85 ];
+
+mid if 𝑤 ∈ [ 0.85 , 1.25 ]; high if 𝑤 ∈ [ 1.25 , 2]. Each tier corresponds to specific behavioral instructions for the three components. The simplified instructions for each component and tier are outlined below, and complete instructions are provided in Appendix B. 
+
+• T: 
+
+– low: keep persona implicit; focus on arguments; 
+
+– mid: reflect the assigned role’s perspective and express stance when relevant; 
+
+– high: explicitly state role/stance first, then justify; 
+
+• M: 
+
+– low: may reply without summarising; avoid repetition; – mid: consider prior discussion to maintain contextual coherence; 
+
+– high: begin with a brief recap and resolve pending points; 
+
+• D: 
+
+– low: may proceed without citing retrieved snippets if not essential; 
+
+– mid: Use retrieved snippets to support key claims when appropriate; 
+
+– high: provide concrete evidence items before conclud-ing; 
+
+3.2.3 Adaptive Weights. To better reflect the evolving nature of dialogue, we introduce time-based trend updating and behaviour-based correction to update the prompt weights. 
+
+Time-based trend updating. We assume agents should rely more on 𝐷 at early rounds to establish their stance, and rely more on the dialogue history 𝑀 in later rounds to engage with the ongoing debate. Accordingly, we define weights as: 
+
+𝑤 (𝑘 ) 
+
+> 𝑖𝑀
+
+= min {𝑤 (0) 
+
+> 𝑖𝑀
+
++ 0.1𝑘, 2.0},𝑤 (𝑘 ) 
+
+> 𝑖𝐷
+
+= max {𝑤 (0) 
+
+> 𝑖𝐷
+
+− 0.1𝑘, 0.5},𝑤 (𝑘 ) 
+
+> 𝑖𝑇
+
+≡ 𝑤 (0) 
+
+> 𝑖𝑇
+
+.
+
+Behaviour-based correction. After observing the agent’s previous response, we apply an update operator min (·) parameterized by 𝛼 
+
+(different update operators can also be defined). Specifically: 
+
+• If agent failed to use D in previous round 𝑘 − 1:
+
+𝑤 (𝑘 ) 
+
+> 𝑖𝐷
+
+← min {𝑤 (𝑘 ) 
+
+> 𝑖𝐷
+
++ 𝛼, 2.0}• If agent failed to respond to M: 
+
+𝑤 (𝑘 ) 
+
+> 𝑖𝑀
+
+← min {𝑤 (𝑘 ) 
+
+> 𝑖𝑀
+
++ 𝛼, 2.0}
+
+## 3.3 Evaluation 
+
+We evaluate the effectiveness of policy parameterization by five proposed evaluation metrics on the output 𝑜 executed by the agent over the state–action pairs (𝑠, 𝑎 ). We conduct the evaluation us-ing an LLM as the judge model and a text embedding model as the embedding backend. Each metric 𝑚 (𝑜 (𝑘 ) 
+
+> 𝑖
+
+) captures a distinct behavioral dimension: 
+
+• Responsiveness (Resp.) 𝑚 resp 𝑜 (𝑘 ) 
+
+> 𝑖
+
+: Returns 1 if 𝑜 (𝑘 ) 
+
+> 𝑖
+
+ad-dresses the most recent utterance contained in 𝑀 (𝑘 ) , and 0
+
+otherwise. The judge model is prompted with the previous and current utterances to produce a binary decision. 
+
+• Rebuttal 𝑚 rebut 𝑜 (𝑘 ) 
+
+> 𝑖
+
+: Returns 1 if 𝑜 (𝑘 ) 
+
+> 𝑖
+
+explicitly opposes the most recent utterance in 𝑀 (𝑘 ) , as classified by the judge model; 0 otherwise. This directly captures ‘whether a re-buttal occurs.’ 
+
+• Non-repetition (Non-rep.) 𝑚 nrep 𝑜 (𝑘 ) 
+
+> 𝑖
+
+: Measures novelty of 𝑜 (𝑘 ) 
+
+> 𝑖
+
+with respect to the agent’s own previous action 
+
+𝑜 (𝑘 −1) 
+
+> 𝑖
+
+, defined as one minus the similarity between the current and the agent’s previous utterance. Similarity is defined as the maximum of string overlaps 𝑜𝑣𝑒𝑟 () and em-bedding cosine similarity 𝑐𝑜𝑠 () , with additional penalties for repeated sentence openings. Defined as 
+
+𝑚 nrep 𝑜 (𝑘 ) 
+
+> 𝑖
+
+= 1 − max {𝑜𝑣𝑒𝑟 (𝑜 (𝑘 ) 
+
+> 𝑖
+
+, 𝑜 (𝑘 −1) 
+
+> 𝑖
+
+), 𝑐𝑜𝑠 (𝑜 (𝑘 ) 
+
+> 𝑖
+
+, 𝑜 (𝑘 −1) 
+
+> 𝑖
+
+)} • Evidence usage (Evid.) 𝑚 evid 𝑜 (𝑘 ) 
+
+> 𝑖
+
+: Returns 1 if key phrases from the retrieved knowledge component 𝐷 𝑖 appear in 𝑜 (𝑘 ) 
+
+> 𝑖
+
+,and 0 otherwise. 
+
+• Stance shift 𝑚 stance 𝑜 (𝑘 ) 
+
+> 𝑖
+
+: Computes the cosine similarity between the embedding of 𝑜 (𝑘 ) 
+
+> 𝑖
+
+and the embedding of the persona description 𝑇 𝑖 . Tracking 𝑚 stance across rounds re-veals whether the agent remains aligned with or diverges from its original stance. Each metric is averaged over all dialogue rounds for a given agent, and the overall performance is obtained by taking the mean across all agents. 
+
+## 4 EXPERIMENTS 
+
+This section presents the experimental setup and evaluation of our proposed method. The implementation code is available in the supplementary materials. 
+
+## 4.1 Experiment Settings 
+
+To evaluate the effectiveness of the proposed policy parameter-ization governing agent behaviour through experiments, we de-sign two scenarios: Land Resource Use (Land) and Educational Re-source Allocation (Education), and instantiate three agents with distinct personas with tasks (T) and knowledge base (D) for each scenario. The knowledge bases are collected from publicly avail-able materials, including government policy documents, blogs, and relevant websites, and are further summarised and supplemented using ChatGPT-5 1 [22 ] to ensure consistency and clarity. While processing these materials, ChatGPT-5 simultaneously identifies key stakeholder perspectives and formulates them into correspond-ing agent roles and task descriptions (T). More information about these knowledge bases are provided in the appendix A The three agents in each scenario are driven by three different LLMs, Qwen3-8B 2 [31 ], Llama3-8B 3 [4], and Mistral-7B 4 [15 ], which are shown in Table 2. 
+
+Table 2: Agents and LLM assignments across two scenarios. Land Education Agent LLM Agent LLM 
+
+Farmer Qwen3 Rural Teacher Qwen3 Conservationist Llama3 Urban Parent Llama3 Community Rep. Mistral Policy Maker Mistral Each agent is paired with its own role-specific external knowl-edge base and engages in 10 rounds of dialogue on a controversial topic query 𝑄 (e.g., “Should farmland be converted to forest?”). For retrieved knowledge ( ˆ𝐷 (𝑘 ) 
+
+> 𝑖
+
+), we adopt a retrieval-augmented gen-eration (RAG) setup: at each round, the agent retrieves the top-3 
+
+> 1https://openai.com/index/introducing-gpt-5/
+> 2Qwen3-8B https://qwen.ai/research
+> 3Meta-Llama-3-8B https://www.llama.com/models/llama-3/
+> 4Mistral 7B https://mistral.ai/news/announcing-mistral-7b
+
+Table 1: Overall performance of policies under different rule templates on 5 queries over 10-round conversation. Values are the mean ± std of 5 runs experiments. Because Rebuttal and Evid. are binary (0/1), the mean is just the proportion of 1s and the standard deviation can appear large relative to the mean. Land Education Query Rule Resp. Rebuttal Non-rep. Evid. Stance Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.88 ±0.33 0.19 ±0.40 0.47 ±0.42 0.10 ±0.30 0.52 ±0.08 0.88 ±0.33 0.25 ±0.43 0.45 ±0.41 0.13 ±0.34 0.52 ±0.09 
+
+Light 0.90 ±0.30 0.21 ±0.41 0.33 ±0.35 0.32 ±0.47 0.51 ±0.09 0.87 ±0.34 0.27 ±0.44 0.41 ±0.36 0.25 ±0.44 0.52 ±0.11 
+
+Struct 0.74 ±0.44 0.27 ±0.45 0.58 ±0.39 0.31 ±0.46 0.49 ±0.09 0.89 ±0.32 0.09 ±0.29 0.54 ±0.37 0.17 ±0.37 0.52 ±0.11 
+
+Q2 None 0.87 ±0.34 0.37 ±0.48 0.47 ±0.44 0.11 ±0.31 0.49 ±0.08 0.85 ±0.35 0.15 ±0.36 0.41 ±0.41 0.37 ±0.48 0.48 ±0.07 
+
+Light 0.89 ±0.31 0.31 ±0.47 0.32 ±0.34 0.27 ±0.44 0.45 ±0.06 0.89 ±0.32 0.06 ±0.24 0.35 ±0.35 0.41 ±0.49 0.45 ±0.08 
+
+Struct 0.79 ±0.41 0.17 ±0.38 0.64 ±0.34 0.05 ±0.21 0.46 ±0.07 0.90 ±0.30 0.06 ±0.24 0.68 ±0.30 0.21 ±0.41 0.52 ±0.07 
+
+Q3 None 0.90 ±0.30 0.00 ±0.00 0.42 ±0.42 0.09 ±0.28 0.47 ±0.07 0.88 ±0.33 0.17 ±0.38 0.47 ±0.39 0.10 ±0.30 0.49 ±0.06 
+
+Light 0.90 ±0.30 0.08 ±0.27 0.38 ±0.38 0.19 ±0.39 0.45 ±0.05 0.89 ±0.31 0.15 ±0.36 0.36 ±0.35 0.25 ±0.43 0.49 ±0.05 
+
+Struct 0.86 ±0.35 0.04 ±0.20 0.70 ±0.32 0.15 ±0.35 0.45 ±0.07 0.89 ±0.32 0.06 ±0.24 0.61 ±0.32 0.24 ±0.43 0.51 ±0.05 
+
+Q4 None 0.79 ±0.41 0.43 ±0.50 0.34 ±0.38 0.10 ±0.30 0.49 ±0.06 0.85 ±0.35 0.13 ±0.34 0.53 ±0.35 0.10 ±0.30 0.47 ±0.11 
+
+Light 0.68 ±0.47 0.51 ±0.50 0.29 ±0.35 0.50 ±0.50 0.50 ±0.08 0.88 ±0.33 0.17 ±0.37 0.39 ±0.33 0.35 ±0.48 0.45 ±0.12 
+
+Struct 0.76 ±0.43 0.37 ±0.48 0.54 ±0.36 0.28 ±0.45 0.49 ±0.07 0.88 ±0.33 0.03 ±0.18 0.65 ±0.28 0.17 ±0.38 0.49 ±0.11 
+
+Q5 None 0.83 ±0.37 0.40 ±0.49 0.46 ±0.41 0.08 ±0.27 0.44 ±0.07 0.78 ±0.42 0.07 ±0.25 0.48 ±0.40 0.09 ±0.28 0.44 ±0.07 
+
+Light 0.87 ±0.34 0.43 ±0.50 0.32 ±0.35 0.13 ±0.33 0.44 ±0.04 0.85 ±0.36 0.00 ±0.00 0.39 ±0.36 0.27 ±0.44 0.42 ±0.05 
+
+Struct 0.87 ±0.34 0.23 ±0.42 0.68 ±0.35 0.20 ±0.40 0.47 ±0.07 0.89 ±0.31 0.09 ±0.28 0.61 ±0.34 0.22 ±0.42 0.50 ±0.07 
+
+Overall None 0.85 ±0.35 0.28 ±0.45 0.43 ±0.42 0.10 ±0.29 0.48 ±0.07 0.85 ±0.36 0.15 ±0.36 0.47 ±0.39 0.16 ±0.37 0.48 ±0.09 
+
+Light 0.85 ±0.36 0.31 ±0.46 0.33 ±0.36 0.28 ±0.45 0.47 ±0.07 0.88 ±0.33 0.13 ±0.34 0.38 ±0.35 0.30 ±0.46 0.47 ±0.09 
+
+Struct 0.80 ±0.40 0.22 ±0.41 0.62 ±0.36 0.20 ±0.40 0.47 ±0.08 0.89 ±0.31 0.07 ±0.25 0.62 ±0.33 0.20 ±0.40 0.51 ±0.09 
+
+relevant passages from its knowledge base using the current topic and recent dialogue memory (following Subsection 3.1.2), and ap-pends them to the prompt. Prompts are dynamically constructed from the framework introduced in Section 3. We compare different prompt control strategies by varying the rule template 𝑅 while keeping weight parameters fixed to 𝑤 𝑇 = 1.0, 𝑤 𝑀 = 1.0, 𝑤 𝐷 = 1.0.For evaluation, we use Llama3 as the judge model to classify each dialogue round along evaluation metrics, and the embedding model all-MiniLM-L6-v2 5 [ 27 ] is employed to compute semantic similari-ties for the evaluation metrics. Each value of metrics represents the average score across all agents and all rounds. For each scenario, we conduct five independent runs per query over five public topic queries corresponding to the scenario. Here are 5 topic queries for each scenario, which are manually formulated based on the content of the materials covering multiple aspects: 
+
+• Land: 
+
+– Q1: ‘Should the public be given more freedom to roam?’ 
+
+– Q2: ‘Should farmers be restricted from expanding farm-land in sensitive ecological areas?’ 
+
+– Q3: ‘What responsibilities do farmers bear in address-ing climate change?’ 
+
+– Q4: ‘How should land planning in the UK be formu-lated over the next 50 years?’ 
+
+– Q5: ‘Should public greenways be built on private farm-land?’ 
+
+• Education: 
+
+> 5https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+
+– Q1: ‘How should governments allocate limited educa-tion funds between rural schools with poor facilities and urban schools facing intense competition?’ 
+
+– Q2: ‘Should reliance on standardized exams be reduced, given the disadvantages for rural students and the heavy pressure on urban students?’ 
+
+– Q3: ‘Should public universities adjust tuition policies to improve access for low-income rural students while maintaining fairness for urban families?’ 
+
+– Q4: ‘Should governments invest in digital infrastruc-ture and AI tutors in rural schools before expanding them in urban schools?’ 
+
+– Q5: ‘Should education policy prioritize funding for student support services (e.g., boarding schools in rural areas, mental health in urban schools)?’ 
+
+## 4.2 Main Study 
+
+To discuss the research questions regarding policy parameterization effectiveness, the main study compares the performance under different Rules and Weights in the policy. 
+
+4.2.1 The Effectiveness of Rules. Based on results in Table 1, we can observe that using different rules for the same topic query can make a difference in various metrics. This shows that the agent’s behaviour can be parameterised by the policy generation process (RQ1). Second, for RQ2, different rule strategies bring distinct be-havioural trade-offs. For non-repetition, Struct has the best perfor-mance, which means clearly structured rules and strong constraint 0 1 2 3 4 5 6 7 8 9
+
+> Round
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Responsiveness
+> None
+> Light
+> Struct
+
+(a) Responsiveness–Land 0 1 2 3 4 5 6 7 8 9 
+
+> Round
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Evidence Usage
+> None
+> Light
+> Struct
+
+(b) Evidence usage–Land 0 1 2 3 4 5 6 7 8 9 
+
+> Round
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Non-repetition
+> None
+> Light
+> Struct
+
+(c) Non-repetition–Land 0 1 2 3 4 5 6 7 8 9
+
+> Round
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Responsiveness
+> None
+> Light
+> Struct
+
+(d) Responsiveness–Education 0 1 2 3 4 5 6 7 8 9 
+
+> Round
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Evidence Usage
+> None
+> Light
+> Struct
+
+(e) Evidence usage–Education 0 1 2 3 4 5 6 7 8 9 
+
+> Round
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Non-repetition
+> None
+> Light
+> Struct
+
+(f) Non-repetition–Education 
+
+Figure 2: Round-wise changes of three dialogue metrics under different rule templates. Each curve shows the mean value (with 95% confidence interval). 
+
+prompts can reduce repetitions. For evidence usage, Light signifi-cantly improves the performance, which suggests that Light rules encourage the use of external knowledge, but excessive structuring may suppress evidence usage. For rebuttal, Light and Struct show the higher overall rebuttal rates, reflecting more interactive and argumentative exchanges. For stance consistency, scores remain similar across all conditions (overall 0.47–0.51), implying that rule templates primarily affect interaction style rather than core issue positions. Finally, these results illustrate the potential of prompt as an interpretable influence for social simulation. Figure 2 illustrates how responsiveness, evidence usage, and non-repetition evolve across dialogue rounds. Responsiveness remains relatively stable under all three rule settings. However, for evidence usage, the degree of fluctuation increases with the level of structural constraint: the None condition produces the smoothest trajectory, while the Struct condition exhibits the most pronounced variation. For non-repetition, all three conditions initially decline and then converge toward a stable value, with Struct maintaining the highest level and Light the lowest. 
+
+4.2.2 Weights Sensitivity. We further investigate whether different weight configurations impact performance by systematically vary-ing each weight on the Land scenario while holding the other two weights unchanged. We report the overall results in the main text, with complete topic-level indicators in Appendix C. From Table 3, we can observe: 1. Responsiveness remained above 0.8 regardless of weight changes, with minimal fluctuation. 2. When 
+
+𝑊 𝑇 increases to 1.5, the rebuttal rate increases significantly, indi-cating that when persona(T) is emphasised more, agents are more likely to engage in conflict and rebuttal. The same situation also occurs in the non-stance, high 𝑊 𝑇 can also lead the agent to be more ‘loyal to the role’ and its stance clearer and more stable. 3. About evi-dence usage and 𝑊 𝐷 , we observe a cross-over effect: when 𝑊 𝐷 = 0.5,the Light condition achieves higher evidence usage, whereas when 
+
+𝑊 𝐷 = 1.5, the None condition is comparatively stronger. This sug-gests that rules can enforce evidence integration even under weak weights, while in the absence of rules, stronger weights are neces-sary to drive evidence use. 
+
+4.2.3 The Effectiveness of Adaptive Weights. To investigate the effectiveness of different weights in influencing agent behaviors, we employ adaptive weights with initial parameters set as 𝑤 𝑇 = 1.0,
+
+𝑤 𝑀 = 1.0, 𝑤 𝐷 = 1.0, and 𝛼 = 0.2 and conduct experiments on the Land scenario under the same settings as the main study. We give an example of the change of 𝑤 𝑀 and 𝑤 𝐷 in Figure 3, and the complete experimental results are in Table 4. As shown in Table 4, the overall averages are similar to those obtained without adaptive control, indicating that adaptive weights do not substantially alter mean performance. However, when ex-amining round-wise trajectories (results in Figure 4), we observe that, for evidence usage, the curve dynamics differ from those in the main study: In the final round, the scores are lower compared to the main study, the reason is that under the adaptive setting, 𝑤 𝐷 
+
+decreases over time. While in the initial rounds, the scores increase when the weight 𝑤 𝐷 is set too low. This pattern is especially evi-dent in the None condition. These findings indicate that adaptive weights can effectively regulate the dialogue process according to their configuration. Table 3: Overall performance of policies with different weights and rule templates in the Land scenario. The de-tailed experimental results are presented in Appendix C. Weights Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+𝑤 𝑇 = 1.0 None 0.85 ±0.35 0.28 ±0.45 0.43 ±0.42 0.10 ±0.29 0.48 ±0.07 
+
+𝑤 𝑀 = 1.0 Light 0.85 ±0.36 0.31 ±0.46 0.33 ±0.36 0.28 ±0.45 0.47 ±0.07 
+
+𝑤 𝐷 = 1.0 Struct 0.80 ±0.40 0.22 ±0.41 0.62 ±0.36 0.20 ±0.40 0.47 ±0.08 
+
+𝑤 𝑇 = 1.0 None 0.86 ±0.34 0.28 ±0.45 0.30 ±0.35 0.30 ±0.46 0.47 ±0.08 
+
+𝑤 𝑀 = 1.0 Light 0.84 ±0.37 0.33 ±0.47 0.31 ±0.34 0.28 ±0.45 0.44 ±0.10 
+
+𝑤 𝐷 = 1.5 Struct 0.82 ±0.38 0.17 ±0.37 0.49 ±0.40 0.17 ±0.37 0.48 ±0.07 
+
+𝑤 𝑇 = 1.0 None 0.86 ±0.35 0.28 ±0.45 0.47 ±0.40 0.12 ±0.32 0.51 ±0.08 
+
+𝑤 𝑀 = 1.5 Light 0.86 ±0.34 0.34 ±0.47 0.36 ±0.36 0.26 ±0.44 0.46 ±0.08 
+
+𝑤 𝐷 = 1.0 Struct 0.82 ±0.38 0.20 ±0.40 0.49 ±0.40 0.20 ±0.40 0.49 ±0.07 
+
+𝑤 𝑇 = 1.5 None 0.81 ±0.39 0.45 ±0.50 0.26 ±0.37 0.05 ±0.23 0.55 ±0.07 
+
+𝑤 𝑀 = 1.0 Light 0.83 ±0.37 0.45 ±0.50 0.30 ±0.34 0.28 ±0.45 0.52 ±0.08 
+
+𝑤 𝐷 = 1.0 Struct 0.74 ±0.44 0.47 ±0.50 0.36 ±0.39 0.16 ±0.37 0.54 ±0.07 
+
+𝑤 𝑇 = 1.0 None 0.87 ±0.34 0.31 ±0.46 0.31 ±0.39 0.09 ±0.29 0.48 ±0.07 
+
+𝑤 𝑀 = 0.5 Light 0.85 ±0.35 0.36 ±0.48 0.34 ±0.35 0.32 ±0.47 0.46 ±0.07 
+
+𝑤 𝐷 = 1.0 Struct 0.79 ±0.41 0.23 ±0.42 0.52 ±0.39 0.23 ±0.42 0.49 ±0.07 
+
+𝑤 𝑇 = 1.0 None 0.85 ±0.35 0.32 ±0.47 0.41 ±0.41 0.10 ±0.29 0.50 ±0.08 
+
+𝑤 𝑀 = 1.0 Light 0.86 ±0.35 0.31 ±0.46 0.34 ±0.35 0.39 ±0.49 0.47 ±0.08 
+
+𝑤 𝐷 = 0.5 Struct 0.82 ±0.39 0.16 ±0.36 0.57 ±0.38 0.19 ±0.39 0.49 ±0.06 
+
+𝑤 𝑇 = 0.5 None 0.87 ±0.34 0.32 ±0.47 0.30 ±0.39 0.08 ±0.27 0.50 ±0.07 
+
+𝑤 𝑀 = 1.0 Light 0.88 ±0.32 0.37 ±0.48 0.30 ±0.36 0.36 ±0.48 0.47 ±0.07 
+
+𝑤 𝐷 = 1.0 Struct 0.81 ±0.39 0.27 ±0.44 0.49 ±0.40 0.27 ±0.44 0.51 ±0.08 2 4 6 8 
+
+> Round
+> 1.0
+> 1.2
+> 1.4
+> 1.6 Rule
+> None
+> Light
+> Struct
+
+(a) 𝑊 𝐷 2 4 6 8  
+
+> Round
+> 1.0
+> 1.2
+> 1.4
+> 1.6 Rule
+> None
+> Light
+> Struct
+
+(b) 𝑊 𝑀 
+
+Figure 3: An Example of Adaptive Weight Changes. Farmer agent’s 𝑊 𝐷 and 𝑊 𝑀 changes in 10 rounds under the Q1 topic. Table 4: Overall performance of policies with adaptive weight settings in the Land scenario, averaged over all agents. De-tailed results are presented in Appendix G. Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+None 0.86 ±0.35 0.26 ±0.44 0.45 ±0.39 0.18 ±0.38 0.48 ±0.07 
+
+Light 0.85 ±0.36 0.39 ±0.49 0.37 ±0.35 0.29 ±0.46 0.45 ±0.07 
+
+Struct 0.82 ±0.38 0.13 ±0.34 0.52 ±0.40 0.16 ±0.37 0.48 ±0.07 
+
+4.2.4 Weight Interval and 𝛼 . Our choice of the range for adaptive weights follows directly from our definition of the weight scale: We treat 1.0 as the mid-tier value, so weights naturally lie within 
+
+[0, 2]. One could equivalently rescale the scale to other values, but this would simply require adjusting the tier thresholds (currently 
+
+Table 5: Effect of Different 𝛼 Values. 
+
+𝛼 Rule Resp. Reb. Non-rep. Evid. Stance 
+
+0.05 None 0.83 ± 0.38 0.24 ± 0.43 0.54 ± 0.38 0.15 ± 0.35 0.49 ± 0.08 
+
+Light 0.83 ± 0.37 0.25 ± 0.43 0.42 ± 0.36 0.21 ± 0.41 0.46 ± 0.08 
+
+Struct 0.84 ± 0.37 0.10 ± 0.30 0.62 ± 0.36 0.18 ± 0.39 0.49 ± 0.06 
+
+0.1 None 0.83 ± 0.37 0.20 ± 0.40 0.54 ± 0.37 0.17 ± 0.38 0.49 ± 0.08 
+
+Light 0.84 ± 0.37 0.24 ± 0.42 0.41 ± 0.35 0.28 ± 0.45 0.46 ± 0.08 
+
+Struct 0.83 ± 0.37 0.08 ± 0.28 0.58 ± 0.37 0.20 ± 0.40 0.49 ± 0.06 
+
+0.4 None 0.84 ± 0.37 0.24 ± 0.43 0.47 ± 0.38 0.21 ± 0.41 0.48 ± 0.07 
+
+Light 0.84 ± 0.37 0.25 ± 0.43 0.41 ± 0.36 0.28 ± 0.45 0.46 ± 0.08 
+
+Struct 0.83 ± 0.38 0.08 ± 0.27 0.56 ± 0.37 0.20 ± 0.40 0.49 ± 0.06 
+
+0.85 and 1.25). The thresholds and 𝛼 operate together. Therefore, we only need to determine one parameter and adjust the other one. We chose to fix the thresholds, tested multiple 𝛼 values in Table 5: the overall metrics remained stable across all settings, and 𝛼 mainly affects the weight trajectories. Different 𝛼 values determine how frequently weights cross tiers and how smoothly they evolve. This indicates that 𝛼 mainly controls the smoothness of adaptation and adjusts the dialogue dynamics according to their configuration. 
+
+## 4.3 Backbone LLMs Variations 
+
+We conduct two extra experiments on the Land scenario with dif-ferent backbone LLMs configurations. We first test a homogeneous setup 𝑆 1 where all agents share the same backbone LLM (Qwen3). The results in Table 6 shows this configuration generally yields lower responsiveness, rebuttal, and non-repetition compared to our main heterogeneous setup. This indicates that model diversity contributes to richer and more interactive discussions, whereas us-ing a uniform backbone LLM leads to less dynamic conversational behaviour. Second, we test an alternative heterogeneous setup to exam-ine whether different heterogeneous backbone LLMs choices pre-serve the observed trends. We reassign ⟨Llama3, Mistral, Qwen3 ⟩ to 
+
+⟨Farmer, Conservationist, Community Rep ⟩, and denote this config-uration as S2 . Similarly, by reassigning ⟨Mistral, Qwen3, Llama3 ⟩ to the same roles, we obtain configuration S3 . Together with the main study, these three settings (main, S2 , S3 ) ensure that each agent is paired with a different backbone LLM. The results in Table 6 show that although the results exhibit slight variations compared to the main study, the overall conclusions remain consistent. Moreover, the heterogeneous backbone configuration continues to outperform the homogeneous all-Qwen3 setting, confirming that diversity in backbones LLMs leads to more robust and effective conversational behaviours. In Appendix F, we provide additional experimental results on (1) the effect of different LLM backbones on agent-level behaviour, and (2) agent-level performance in larger multi-agent systems with more agents. The results show that, although agent-level performance exhibits slight variations across different backbone settings, the overall behaviours remain primarily influenced by the rules. To avoid self-evaluation bias, the judge model is used exclusively for evaluation and is not part of the proposed framework. We further note that three out of the five evaluation metrics are embedding-based, and therefore do not rely on a judge model. However, we still evaluated the system using three independent judge models 0 1 2 3 4 5 6 7 8 9
+
+> Round
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Responsiveness
+> None
+> Light
+> Struct
+
+(a) Responsiveness 0 1 2 3 4 5 6 7 8 9 
+
+> Round
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Evidence Usage
+> None
+> Light
+> Struct
+
+(b) Evidence usage 0 1 2 3 4 5 6 7 8 9 
+
+> Round
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Non-repetition
+> None
+> Light
+> Struct
+
+(c) Non-repetition 
+
+Figure 4: Round-wise changes of three dialogue metrics with adaptive weights. Table 6: Overall performance of policies comparison be-tween homogeneous ( 𝑆 1) and heterogeneous ( 𝑆 2, 𝑆 3) back-bone LLMs variants. Results reported as mean ±std. Detailed performance is in Appendix E. 
+
+Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+S1 None 0.67 ±0.47 0.28 ±0.45 0.25 ±0.39 0.14 ±0.35 0.48 ±0.07 
+
+Light 0.59 ±0.49 0.26 ±0.44 0.26 ±0.37 0.16 ±0.36 0.44 ±0.08 
+
+Struct 0.74 ±0.44 0.12 ±0.33 0.38 ±0.41 0.10 ±0.29 0.47 ±0.07 
+
+S2 None 0.71 ±0.45 0.26 ±0.44 0.39 ±0.40 0.06 ±0.23 0.48 ±0.09 
+
+Light 0.72 ±0.45 0.30 ±0.46 0.33 ±0.35 0.42 ±0.49 0.46 ±0.09 
+
+Struct 0.70 ±0.46 0.16 ±0.37 0.61 ±0.36 0.22 ±0.42 0.50 ±0.09 
+
+S3 None 0.79 ±0.41 0.23 ±0.42 0.46 ±0.40 0.12 ±0.32 0.47 ±0.08 
+
+Light 0.85 ±0.36 0.24 ±0.43 0.35 ±0.36 0.24 ±0.43 0.46 ±0.07 
+
+Struct 0.84 ±0.36 0.08 ±0.27 0.67 ±0.34 0.24 ±0.43 0.50 ±0.06 
+
+on a controlled setting of 10-round dialogues with 5 runs each. The results are highly consistent across different judges, indicating that our conclusions are robust to the choice of judge model. 
+
+## 4.4 Ablation Study 
+
+Having examined the effects of the rule 𝑅 and weight parameters 
+
+𝑊 in the previous experiments, we now investigate the remaining three components, task 𝑇 , memory 𝑀 , and external knowledge base 
+
+𝐷 , through a set of ablation studies conducted on the Land scenario. Figure 5 reports the results of our ablation study, where we selec-tively remove 𝑇 , 𝑀 and 𝐷 . The results show that each component contributes in a distinct way. 𝑇 substantially increases rebuttal fre-quency and stance consistency, which verifies that a clear person and task description leads to conflict with other agents and a stable stance. 𝐷 increases the evidence usage, indicating that evidence retrieval can encourage grounded discussion. 𝑀 will cause a higher repetition, because when 𝑀 joins, the agent will use the informa-tion from the previous dialogue rounds to generate the response. Combining components reveals complementarities: 𝐷 +𝑇 produces the most balanced performance, simultaneously improving rebuttal, evidence usage, and stance. However, enabling all three dimensions together yields only moderate improvements across metrics (like in Responsiveness, because of the use of 𝑀 ), suggesting that the effects of 𝑇 , 𝑀 , and 𝐷 can partially offset one another. Overall, these results highlight the interpretable roles of different components. We also conduct an ablation study on the EDU scenario, which supports the same conclusion as in the Land setting, and part of the experimental results are shown in Appendix H. 
+
+## 5 DISCUSSION 
+
+The significance of our proposed parameterized framework of the policy generation process in this study for influencing LLM-based multi-agent systems is that it redefines the role of language models in social simulations. The language model is no longer a text gener-ator, but rather a social actor with adjustable parameters. Through our framework, each agent’s dialogue response process, which is produced by prompt-as-action, can be mapped to a set of variables with clear meanings. Future work could extend our framework with techniques like fine-tuning [ 2 ] and inference-time interventions [13 ] to customize agent policy parameters. This framework enables responses to be controlled by a set of clearly defined cognitive and social strategies, making social simulations more diverse and flexi-ble, and providing a mechanism for controllable, measurable, and theoretically grounded social experiments. 
+
+## 6 CONCLUSION 
+
+In this study, we proposed a lightweight policy parameterised frame-work that regards the prompt-as-action to influence the LLM-based multi-agent dialogue. By constructing prompts through different compoents adaptively, we show that dialogue behaviours can be systematically influenced without additional training. Experiments across two scenarios demonstrated that different component set-tings yielded distinct effects. Overall, our findings highlight policy-parameterised prompts as an effective and interpretable mechanism for steering LLM-driven multi-agent dialogue systems, offering a promising direction for controllable social simulations. 
+
+## 7 ACKNOWLEDGMENTS 
+
+The support of the Economic and Social Research Council (ESRC) is gratefully acknowledged. Grant Ref ES/W002639/1. Hongbo Bo is funded by ESRC Centre for Sociodigital Futures (ES/W002639/1), Jingyu Hu is funded by EPSRC-DTP ( EP/W524414/1/2894964). Weiru Liu is partially funded by ESRC Centre for Sociodigital Fu-tures (ES/W002639/1). We thank Keri Facer for the documentation list and helpful discussion. None 
+
+> only T
+> only D
+> only M
+> M+D
+> M+T
+> D+T
+> All
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Score
+
+Rule = None 
+
+> None
+> only T
+> only D
+> only M
+> M+D
+> M+T
+> D+T
+> All
+
+Rule = Light 
+
+> None
+> only T
+> only D
+> only M
+> M+D
+> M+T
+> D+T
+> All
+
+Rule = Struct 
+
+Resp Rebut Nonrep Evid Stance Figure 5: Ablation Study of Components T, M and D. REFERENCES 
+
+[1] Sahar Abdelnabi, Amr Gomaa, Sarath Sivaprasad, Lea Schönherr, and Mario Fritz. 2023. LLM-Deliberation: Evaluating LLMs with Interactive Multi-Agent Negotiation Games. (2023). [2] Ahmed Agiza, Mohamed Mostagir, and Sherief Reda. 2024. Politune: Analyzing the impact of data selection and fine-tuning on economic and political biases in large language models. In Proceedings of the AAAI/ACM Conference on AI, Ethics, and Society , Vol. 7. 2–12. [3] Ariel Flint Ashery, Luca Maria Aiello, and Andrea Baronchelli. 2025. Emergent social conventions and collective bias in LLM populations. Science Advances 11, 20 (2025), eadu9368. [4] Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan, et al. 2024. The llama 3 herd of models. arXiv e-prints (2024), arXiv–2407. [5] Andrew Estornell and Yang Liu. 2024. Multi-LLM debate: Framework, principals, and interventions. Advances in Neural Information Processing Systems 37 (2024), 28938–28964. [6] Caoyun Fan, Jindou Chen, Yaohui Jin, and Hao He. 2024. Can large language mod-els serve as rational players in game theory? a systematic analysis. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38. 17960–17967. [7] Linxi Fan, Guanzhi Wang, Yunfan Jiang, Ajay Mandlekar, Yuncong Yang, Haoyi Zhu, Andrew Tang, De-An Huang, Yuke Zhu, and Anima Anandkumar. 2022. Minedojo: Building open-ended embodied agents with internet-scale knowledge. 
+
+Advances in Neural Information Processing Systems 35 (2022), 18343–18362. [8] Chen Gao, Xiaochong Lan, Zhihong Lu, Jinzhu Mao, Jinghua Piao, Huandong Wang, Depeng Jin, and Yong Li. 2023. S3: Social-network simulation system with large language model-empowered agents. arXiv preprint arXiv:2307.14984 
+
+(2023). [9] Sven Gronauer and Klaus Diepold. 2022. Multi-agent deep reinforcement learn-ing: a survey. Artificial Intelligence Review 55, 2 (2022), 895–943. [10] Taicheng Guo, Xiuying Chen, Yaqi Wang, Ruidi Chang, Shichao Pei, Nitesh V Chawla, Olaf Wiest, and Xiangliang Zhang. 2024. Large language model based multi-agents: A survey of progress and challenges. arXiv preprint arXiv:2402.01680 (2024). [11] Shibo Hao, Yi Gu, Haodi Ma, Joshua Jiahua Hong, Zhen Wang, Daisy Zhe Wang, and Zhiting Hu. 2023. Reasoning with language model is planning with world model. arXiv preprint arXiv:2305.14992 (2023). [12] Sirui Hong, Mingchen Zhuge, Jonathan Chen, Xiawu Zheng, Yuheng Cheng, Ceyao Zhang, Jinlin Wang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, et al .2024. MetaGPT: Meta programming for a multi-agent collaborative framework. International Conference on Learning Representations, ICLR. [13] Jingyu Hu, Mengyue Yang, Mengnan Du, and Weiru Liu. 2025. Fine-Grained Interpretation of Political Opinions in Large Language Models. arXiv preprint arXiv:2506.04774 (2025). [14] Minsu Jang, Youngwoo Yoon, Jaewoo Choi, Hyobin Ong, and Jaehong Kim. 2023. A structured prompting based on belief-desire-intention model for proactive and explainable task planning. In Proceedings of the 11th International Conference on Human-Agent Interaction . 375–377. [15] Albert Jiang, Patrick von Platen, Nazar Habib, Teven Le Scao, Thomas Wolf, and Mistral AI. 2023. Mistral 7B. arXiv preprint arXiv:2310.06825 (2023). https: //arxiv.org/abs/2310.06825 [16] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rock-täschel, et al . 2020. Retrieval-augmented generation for knowledge-intensive nlp tasks. Advances in neural information processing systems 33 (2020), 9459–9474. [17] Guohao Li, Hasan Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem. 2023. Camel: Communicative agents for" mind" exploration of large language model society. Advances in Neural Information Processing Systems 36 (2023), 51991–52008. [18] Xinyi Li, Sai Wang, Siqi Zeng, Yu Wu, and Yi Yang. 2024. A survey on LLM-based multi-agent systems: workflow, infrastructure, and challenges. Vicinagearth 1, 1 (2024), 9. [19] Tian Liang, Zhiwei He, Wenxiang Jiao, Xing Wang, Yan Wang, Rui Wang, Yujiu Yang, Shuming Shi, and Zhaopeng Tu. 2023. Encouraging divergent thinking in large language models through multi-agent debate. arXiv preprint arXiv:2305.19118 (2023). [20] Jiaju Lin, Haoran Zhao, Aochi Zhang, Yiting Wu, Huqiuyue Ping, and Qin Chen. 2023. Agentsims: An open-source sandbox for large language model evaluation. 
+
+arXiv preprint arXiv:2308.04026 (2023). [21] Ruibo Liu, Ruixin Yang, Chenyan Jia, Ge Zhang, Denny Zhou, Andrew M Dai, Diyi Yang, and Soroush Vosoughi. 2023. Training socially aligned language models in simulated human society. arXiv preprint arXiv:2305.16960 2 (2023). [22] OpenAI. 2025. ChatGPT-5. https://chat.openai.com/. Large language model. [23] Joon Sung Park, Joseph O’Brien, Carrie Jun Cai, Meredith Ringel Morris, Percy Liang, and Michael S Bernstein. 2023. Generative agents: Interactive simulacra of human behavior. In Proceedings of the 36th annual acm symposium on user interface software and technology . 1–22. [24] Joon Sung Park, Lindsay Popowski, Carrie Cai, Meredith Ringel Morris, Percy Liang, and Michael S Bernstein. 2022. Social simulacra: Creating populated prototypes for social computing systems. In Proceedings of the 35th Annual ACM Symposium on User Interface Software and Technology . 1–18. [25] Jinghua Piao, Yuwei Yan, Jun Zhang, Nian Li, Junbo Yan, Xiaochong Lan, Zhihong Lu, Zhiheng Zheng, Jing Yi Wang, Di Zhou, et al . 2025. Agentsociety: Large-scale simulation of llm-driven generative agents advances understanding of human behaviors and society. arXiv preprint arXiv:2502.08691 (2025). [26] Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023. Reflexion: Language agents with verbal reinforcement learn-ing. Advances in Neural Information Processing Systems 36 (2023), 8634–8652. [27] Wenhui Wang, Furu Wei, Li Dong, Hangbo Bao, Nan Yang, and Ming Zhou. 2020. Minilm: Deep self-attention distillation for task-agnostic compression of pre-trained transformers. Advances in neural information processing systems 33 (2020), 5776–5788. [28] Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Beibin Li, Erkang Zhu, Li Jiang, Xiaoyun Zhang, Shaokun Zhang, Jiale Liu, et al . 2024. Autogen: Enabling next-gen LLM applications via multi-agent conversations. In First Conference on Language Modeling .[29] Yiwen Wu, Kevin McAreavey, Hongbo Bo, Weiru Liu, and Ryan McConville. 2025. Multi-agent Deep Reinforcement Learning for Fake News Detection. In 
+
+2025 International Joint Conference on Neural Networks (IJCNN) . IEEE, 1–8. [30] Zelai Xu, Chao Yu, Fei Fang, Yu Wang, and Yi Wu. 2023. Language agents with reinforcement learning for strategic play in the werewolf game. arXiv preprint arXiv:2310.18940 (2023). [31] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al . 2025. Qwen3 technical report. arXiv preprint arXiv:2505.09388 (2025). [32] John Yang, Carlos E Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik Narasimhan, and Ofir Press. 2024. Swe-agent: Agent-computer interfaces enable automated software engineering. Advances in Neural Information Processing Systems 37 (2024), 50528–50652. [33] Changxi Zhu, Mehdi Dastani, and Shihan Wang. 2024. A survey of multi-agent deep reinforcement learning with communication. Autonomous Agents and Multi-Agent Systems 38, 1 (2024), 4. A SUPPLEMENT INFORMATION FOR AGENT EXTERNAL KNOWLEDGE 
+
+The data for the Land scenario were compiled from publicly avail-able materials related to UK land use and farming. Sources include government publications such as the Land Use Futures report 6 and the recent DEFRA Land Use Framework consultation 7, as well as pol-icy documents and reports from farming, conservation, and access organisations (e.g., the National Farmers’ Union 8, Green Alliance 9,and the Woodland Trust 10 ). The data for the education scenario were compiled from publicly available English-language reports and international datasets on education equity, funding, and learning outcomes. Principal sources include the OECD Education at a Glance 2023 11 , the World Bank World Development Indicators: Government Expenditure on Educa-tion (% of GDP) 12 , and the World Bank Open Knowledge Repository on Education Equity and Access 13 . Together, these sources provide empirical evidence on spending levels, teacher distribution, ru-ral–urban disparities, and student performance across education systems worldwide. 
+
+## B ENHANCED INSTRUCTIONS OF WEIGHT 
+
+The detailed instructions for different weight tiers: 
+
+• T
+
+– high: Speak explicitly from the [T] perspective. First state your stance and role-specific priority, then justify with reasons. 
+
+– mid: Reflect the [T] perspective and state your position when appropriate. 
+
+– low: You may keep the [T] perspective implicit; focus on arguments. 
+
+• M: 
+
+– high: Begin with a 1–2 sentence summary of the recent turns in [M] and address unresolved points directly. 
+
+– mid: Consider the recent discussion [M] and avoid repeating earlier content. 
+
+– low: You may respond without summarising [M]; avoid verbatim repetition. 
+
+• D; 
+
+– high: Before concluding, list at least 2 concrete evi-dence points from the retrieved snippets [D]; quote/paraphrase and tie them to your claims. 
+
+– mid: Evidence (Preferred): Use relevant retrieved snip-pets [D] to support key claims when available. ), 
+
+– low Evidence (Optional): You may proceed without citing retrieved snippets [D] if not essential. 
+
+> 6
+
+https://assets.publishing.service.gov.uk/media/5a7c31f740f0b674ed20f740/10-634-land-use-futures-summary.pdf 
+
+> 7
+
+https://consult.defra.gov.uk/land-use-framework/land-use-consultation/ 
+
+> 8
+
+https://www.nfuonline.com/updates-and-information/farming-for-britains-future-our-key-asks-of-government/ 
+
+> 9
+
+https://green-alliance.org.uk/project/the-future-of-uk-land-use/ 
+
+> 10
+
+https://www.woodlandtrust.org.uk/state-of-uk-woods-and-trees/ 
+
+> 11
+
+https://www.oecd.org/education/education-at-a-glance/ 
+
+> 12
+
+https://data.worldbank.org/indicator/SE.XPD.TOTL.GD.ZS 
+
+> 13
+
+https://openknowledge.worldbank.org/ 
+
+## C WEIGHTS SENSITIVITY 
+
+Tables 7,8,9,10,11 and 12 are the result details of the weight sensi-tivity experiments. 
+
+Table 7: 𝑤 𝑇 = 1.0, 𝑤 𝑀 = 1.0, 𝑤 𝐷 = 1.5
+
+Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.90 ±0.30 0.33 ±0.47 0.30 ±0.35 0.37 ±0.48 0.52 ±0.08 
+
+Light 0.83 ±0.37 0.31 ±0.47 0.23 ±0.33 0.49 ±0.50 0.47 ±0.08 
+
+Struct 0.81 ±0.40 0.19 ±0.40 0.54 ±0.40 0.29 ±0.46 0.51 ±0.08 
+
+Q2 None 0.90 ±0.30 0.34 ±0.47 0.32 ±0.36 0.39 ±0.49 0.46 ±0.07 
+
+Light 0.88 ±0.33 0.32 ±0.47 0.35 ±0.33 0.25 ±0.44 0.40 ±0.06 
+
+Struct 0.87 ±0.33 0.14 ±0.35 0.50 ±0.40 0.17 ±0.38 0.46 ±0.06 
+
+Q3 None 0.90 ±0.30 0.03 ±0.16 0.34 ±0.36 0.33 ±0.47 0.47 ±0.09 
+
+Light 0.89 ±0.32 0.05 ±0.21 0.40 ±0.34 0.13 ±0.34 0.42 ±0.12 
+
+Struct 0.89 ±0.31 0.02 ±0.14 0.52 ±0.38 0.11 ±0.32 0.45 ±0.07 
+
+Q4 None 0.73 ±0.45 0.53 ±0.50 0.29 ±0.35 0.15 ±0.35 0.50 ±0.08 
+
+Light 0.71 ±0.46 0.51 ±0.50 0.28 ±0.34 0.23 ±0.42 0.49 ±0.10 
+
+Struct 0.69 ±0.46 0.33 ±0.47 0.40 ±0.40 0.12 ±0.33 0.49 ±0.06 
+
+Q5 None 0.89 ±0.32 0.17 ±0.37 0.27 ±0.34 0.24 ±0.43 0.42 ±0.04 
+
+Light 0.89 ±0.32 0.45 ±0.50 0.29 ±0.34 0.28 ±0.45 0.41 ±0.05 
+
+Struct 0.86 ±0.35 0.15 ±0.35 0.48 ±0.39 0.13 ±0.33 0.46 ±0.07 
+
+Overall None 0.86 ±0.34 0.28 ±0.45 0.30 ±0.35 0.30 ±0.46 0.47 ±0.08 
+
+Light 0.84 ±0.37 0.33 ±0.47 0.31 ±0.34 0.28 ±0.45 0.44 ±0.10 
+
+Struct 0.82 ±0.38 0.17 ±0.37 0.49 ±0.40 0.17 ±0.37 0.48 ±0.07 
+
+Table 8: 𝑤 𝑇 = 1.0, 𝑤 𝑀 = 1.5, 𝑤 𝐷 = 1.0
+
+Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.86 ±0.35 0.27 ±0.45 0.57 ±0.37 0.27 ±0.44 0.56 ±0.08 
+
+Light 0.88 ±0.33 0.44 ±0.50 0.38 ±0.37 0.38 ±0.49 0.49 ±0.07 
+
+Struct 0.83 ±0.37 0.22 ±0.42 0.53 ±0.40 0.35 ±0.48 0.51 ±0.08 
+
+Q2 None 0.87 ±0.33 0.37 ±0.48 0.46 ±0.41 0.05 ±0.23 0.49 ±0.06 
+
+Light 0.88 ±0.33 0.28 ±0.45 0.36 ±0.37 0.23 ±0.42 0.43 ±0.06 
+
+Struct 0.86 ±0.35 0.25 ±0.43 0.47 ±0.41 0.12 ±0.33 0.49 ±0.06 
+
+Q3 None 0.89 ±0.31 0.01 ±0.12 0.52 ±0.38 0.09 ±0.29 0.49 ±0.06 
+
+Light 0.87 ±0.33 0.09 ±0.29 0.45 ±0.36 0.09 ±0.29 0.43 ±0.06 
+
+Struct 0.88 ±0.33 0.01 ±0.08 0.50 ±0.40 0.10 ±0.30 0.47 ±0.06 
+
+Q4 None 0.76 ±0.43 0.45 ±0.50 0.30 ±0.38 0.06 ±0.24 0.51 ±0.08 
+
+Light 0.81 ±0.39 0.56 ±0.50 0.28 ±0.34 0.39 ±0.49 0.50 ±0.09 
+
+Struct 0.70 ±0.46 0.37 ±0.48 0.41 ±0.40 0.29 ±0.45 0.52 ±0.06 
+
+Q5 None 0.89 ±0.31 0.29 ±0.45 0.48 ±0.40 0.12 ±0.33 0.48 ±0.09 
+
+Light 0.87 ±0.34 0.33 ±0.47 0.36 ±0.34 0.17 ±0.38 0.42 ±0.07 
+
+Struct 0.85 ±0.36 0.13 ±0.33 0.56 ±0.36 0.15 ±0.35 0.47 ±0.06 
+
+Overall None 0.86 ±0.35 0.28 ±0.45 0.47 ±0.40 0.12 ±0.32 0.51 ±0.08 
+
+Light 0.86 ±0.34 0.34 ±0.47 0.36 ±0.36 0.26 ±0.44 0.46 ±0.08 
+
+Struct 0.82 ±0.38 0.20 ±0.40 0.49 ±0.40 0.20 ±0.40 0.49 ±0.07 Table 9: 𝑤 𝑇 = 1.5, 𝑤 𝑀 = 1.0, 𝑤 𝐷 = 1.0
+
+Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.88 ±0.33 0.33 ±0.47 0.32 ±0.39 0.08 ±0.27 0.61 ±0.05 
+
+Light 0.83 ±0.38 0.41 ±0.49 0.27 ±0.33 0.34 ±0.47 0.56 ±0.07 
+
+Struct 0.90 ±0.30 0.27 ±0.45 0.37 ±0.38 0.25 ±0.44 0.59 ±0.07 
+
+Q2 None 0.86 ±0.35 0.30 ±0.46 0.21 ±0.34 0.00 ±0.00 0.54 ±0.06 
+
+Light 0.89 ±0.31 0.31 ±0.46 0.26 ±0.33 0.25 ±0.44 0.50 ±0.06 
+
+Struct 0.79 ±0.41 0.48 ±0.50 0.29 ±0.37 0.08 ±0.27 0.51 ±0.05 
+
+Q3 None 0.72 ±0.45 0.41 ±0.49 0.23 ±0.37 0.01 ±0.08 0.55 ±0.07 
+
+Light 0.84 ±0.37 0.31 ±0.47 0.36 ±0.36 0.29 ±0.45 0.53 ±0.09 
+
+Struct 0.63 ±0.48 0.45 ±0.50 0.40 ±0.41 0.14 ±0.35 0.52 ±0.07 
+
+Q4 None 0.75 ±0.44 0.60 ±0.49 0.21 ±0.35 0.15 ±0.35 0.55 ±0.07 
+
+Light 0.75 ±0.44 0.60 ±0.49 0.26 ±0.35 0.31 ±0.46 0.53 ±0.06 
+
+Struct 0.61 ±0.49 0.57 ±0.50 0.33 ±0.38 0.15 ±0.36 0.54 ±0.07 
+
+Q5 None 0.86 ±0.35 0.61 ±0.49 0.32 ±0.37 0.03 ±0.18 0.51 ±0.07 
+
+Light 0.85 ±0.35 0.61 ±0.49 0.35 ±0.35 0.19 ±0.40 0.47 ±0.07 
+
+Struct 0.79 ±0.41 0.56 ±0.50 0.39 ±0.38 0.17 ±0.38 0.53 ±0.06 
+
+Overall None 0.81 ±0.39 0.45 ±0.50 0.26 ±0.37 0.05 ±0.23 0.55 ±0.07 
+
+Light 0.83 ±0.37 0.45 ±0.50 0.30 ±0.34 0.28 ±0.45 0.52 ±0.08 
+
+Struct 0.74 ±0.44 0.47 ±0.50 0.36 ±0.39 0.16 ±0.37 0.54 ±0.07 
+
+Table 10: 𝑤 𝑇 = 1.0, 𝑤 𝑀 = 0.5, 𝑤 𝐷 = 1.0
+
+Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.88 ±0.33 0.31 ±0.46 0.37 ±0.41 0.23 ±0.42 0.56 ±0.05 
+
+Light 0.87 ±0.34 0.35 ±0.48 0.40 ±0.37 0.33 ±0.47 0.51 ±0.08 
+
+Struct 0.75 ±0.43 0.26 ±0.44 0.53 ±0.40 0.35 ±0.48 0.51 ±0.08 
+
+Q2 None 0.89 ±0.31 0.44 ±0.50 0.29 ±0.39 0.08 ±0.27 0.46 ±0.05 
+
+Light 0.90 ±0.30 0.31 ±0.46 0.35 ±0.34 0.21 ±0.41 0.44 ±0.04 
+
+Struct 0.87 ±0.34 0.21 ±0.41 0.52 ±0.39 0.31 ±0.47 0.51 ±0.07 
+
+Q3 None 0.90 ±0.30 0.00 ±0.00 0.38 ±0.42 0.05 ±0.23 0.46 ±0.06 
+
+Light 0.90 ±0.30 0.03 ±0.16 0.36 ±0.37 0.23 ±0.42 0.45 ±0.06 
+
+Struct 0.89 ±0.32 0.01 ±0.12 0.60 ±0.36 0.09 ±0.29 0.46 ±0.07 
+
+Q4 None 0.78 ±0.42 0.55 ±0.50 0.29 ±0.39 0.07 ±0.26 0.50 ±0.05 
+
+Light 0.70 ±0.46 0.57 ±0.50 0.25 ±0.35 0.67 ±0.47 0.49 ±0.09 
+
+Struct 0.67 ±0.47 0.51 ±0.50 0.39 ±0.40 0.22 ±0.42 0.51 ±0.05 
+
+Q5 None 0.89 ±0.31 0.25 ±0.44 0.24 ±0.35 0.03 ±0.16 0.44 ±0.03 
+
+Light 0.89 ±0.31 0.54 ±0.50 0.32 ±0.34 0.15 ±0.35 0.42 ±0.04 
+
+Struct 0.77 ±0.42 0.18 ±0.39 0.54 ±0.40 0.17 ±0.37 0.46 ±0.07 
+
+Overall None 0.87 ±0.34 0.31 ±0.46 0.31 ±0.39 0.09 ±0.29 0.48 ±0.07 
+
+Light 0.85 ±0.35 0.36 ±0.48 0.34 ±0.35 0.32 ±0.47 0.46 ±0.07 
+
+Struct 0.79 ±0.41 0.23 ±0.42 0.52 ±0.39 0.23 ±0.42 0.49 ±0.07 
+
+Table 11: 𝑤 𝑇 = 1.0, 𝑤 𝑀 = 1.0, 𝑤 𝐷 = 0.5
+
+Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.86 ±0.35 0.19 ±0.39 0.42 ±0.41 0.20 ±0.40 0.54 ±0.08 
+
+Light 0.88 ±0.33 0.31 ±0.47 0.33 ±0.35 0.55 ±0.50 0.51 ±0.10 
+
+Struct 0.76 ±0.43 0.31 ±0.46 0.57 ±0.38 0.42 ±0.49 0.52 ±0.07 
+
+Q2 None 0.82 ±0.39 0.50 ±0.50 0.45 ±0.42 0.11 ±0.32 0.49 ±0.08 
+
+Light 0.87 ±0.34 0.33 ±0.47 0.32 ±0.34 0.18 ±0.39 0.44 ±0.05 
+
+Struct 0.79 ±0.41 0.12 ±0.33 0.57 ±0.37 0.05 ±0.23 0.48 ±0.06 
+
+Q3 None 0.89 ±0.32 0.02 ±0.14 0.44 ±0.42 0.06 ±0.24 0.51 ±0.10 
+
+Light 0.89 ±0.32 0.01 ±0.12 0.41 ±0.37 0.15 ±0.36 0.48 ±0.09 
+
+Struct 0.85 ±0.36 0.01 ±0.12 0.60 ±0.36 0.19 ±0.40 0.47 ±0.06 
+
+Q4 None 0.81 ±0.39 0.54 ±0.50 0.28 ±0.36 0.04 ±0.20 0.49 ±0.05 
+
+Light 0.81 ±0.39 0.45 ±0.50 0.28 ±0.35 0.64 ±0.48 0.50 ±0.07 
+
+Struct 0.87 ±0.34 0.22 ±0.42 0.54 ±0.38 0.12 ±0.33 0.49 ±0.05 
+
+Q5 None 0.89 ±0.31 0.37 ±0.48 0.44 ±0.39 0.06 ±0.24 0.47 ±0.07 
+
+Light 0.85 ±0.35 0.42 ±0.49 0.33 ±0.35 0.45 ±0.50 0.44 ±0.06 
+
+Struct 0.83 ±0.38 0.12 ±0.33 0.56 ±0.39 0.17 ±0.38 0.49 ±0.07 
+
+Overall None 0.85 ±0.35 0.32 ±0.47 0.41 ±0.41 0.10 ±0.29 0.50 ±0.08 
+
+Light 0.86 ±0.35 0.31 ±0.46 0.34 ±0.35 0.39 ±0.49 0.47 ±0.08 
+
+Struct 0.82 ±0.39 0.16 ±0.36 0.57 ±0.38 0.19 ±0.39 0.49 ±0.06 
+
+Table 12: 𝑤 𝑇 = 0.5, 𝑤 𝑀 = 1.0, 𝑤 𝐷 = 1.0
+
+Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.89 ±0.31 0.31 ±0.46 0.36 ±0.41 0.18 ±0.39 0.56 ±0.07 
+
+Light 0.90 ±0.30 0.51 ±0.50 0.32 ±0.36 0.27 ±0.44 0.49 ±0.08 
+
+Struct 0.83 ±0.37 0.33 ±0.47 0.55 ±0.38 0.34 ±0.47 0.57 ±0.08 
+
+Q2 None 0.89 ±0.32 0.38 ±0.49 0.29 ±0.39 0.03 ±0.16 0.48 ±0.06 
+
+Light 0.90 ±0.30 0.30 ±0.46 0.22 ±0.33 0.46 ±0.50 0.43 ±0.05 
+
+Struct 0.85 ±0.36 0.20 ±0.40 0.51 ±0.40 0.12 ±0.33 0.49 ±0.06 
+
+Q3 None 0.87 ±0.33 0.01 ±0.08 0.31 ±0.40 0.04 ±0.20 0.50 ±0.07 
+
+Light 0.90 ±0.30 0.02 ±0.14 0.39 ±0.39 0.32 ±0.47 0.48 ±0.09 
+
+Struct 0.87 ±0.33 0.06 ±0.24 0.54 ±0.40 0.25 ±0.44 0.49 ±0.08 
+
+Q4 None 0.79 ±0.41 0.60 ±0.49 0.24 ±0.37 0.13 ±0.34 0.51 ±0.06 
+
+Light 0.83 ±0.37 0.53 ±0.50 0.29 ±0.36 0.58 ±0.49 0.49 ±0.07 
+
+Struct 0.71 ±0.45 0.44 ±0.50 0.39 ±0.39 0.50 ±0.50 0.51 ±0.07 
+
+Q5 None 0.89 ±0.31 0.32 ±0.47 0.29 ±0.37 0.02 ±0.14 0.42 ±0.03 
+
+Light 0.88 ±0.33 0.51 ±0.50 0.27 ±0.34 0.19 ±0.40 0.42 ±0.04 
+
+Struct 0.80 ±0.40 0.32 ±0.47 0.49 ±0.41 0.13 ±0.34 0.49 ±0.07 
+
+Overall None 0.87 ±0.34 0.32 ±0.47 0.30 ±0.39 0.08 ±0.27 0.50 ±0.07 
+
+Light 0.88 ±0.32 0.37 ±0.48 0.30 ±0.36 0.36 ±0.48 0.47 ±0.07 
+
+Struct 0.81 ±0.39 0.27 ±0.44 0.49 ±0.40 0.27 ±0.44 0.51 ±0.08 
+
+## D ABLATION STUDY 
+
+Table 13 provides the details of the ablation study. Table 13: Ablation Study Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+None None 0.90 ±0.30 0.09 ±0.29 0.79 ±0.16 0.00 ±0.00 0.36 ±0.09 
+
+Light 0.89 ±0.31 0.10 ±0.30 0.79 ±0.14 0.03 ±0.16 0.33 ±0.08 
+
+Struct 0.85 ±0.35 0.03 ±0.17 0.86 ±0.11 0.01 ±0.08 0.40 ±0.08 
+
+only T None 0.88 ±0.33 0.34 ±0.47 0.74 ±0.20 0.00 ±0.05 0.49 ±0.09 
+
+Light 0.84 ±0.37 0.35 ±0.48 0.73 ±0.23 0.05 ±0.21 0.45 ±0.09 
+
+Struct 0.87 ±0.33 0.34 ±0.47 0.78 ±0.18 0.03 ±0.17 0.50 ±0.08 
+
+only D None 0.87 ±0.34 0.24 ±0.43 0.80 ±0.15 0.23 ±0.42 0.46 ±0.08 
+
+Light 0.85 ±0.35 0.28 ±0.45 0.78 ±0.14 0.45 ±0.50 0.44 ±0.08 
+
+Struct 0.72 ±0.45 0.16 ±0.36 0.84 ±0.14 0.60 ±0.49 0.51 ±0.06 
+
+only M None 0.89 ±0.31 0.00 ±0.06 0.42 ±0.37 0.00 ±0.06 0.38 ±0.08 
+
+Light 0.90 ±0.30 0.03 ±0.17 0.37 ±0.36 0.01 ±0.12 0.35 ±0.08 
+
+Struct 0.90 ±0.30 0.01 ±0.10 0.48 ±0.38 0.01 ±0.08 0.37 ±0.09 
+
+M+D None 0.90 ±0.31 0.12 ±0.33 0.42 ±0.40 0.20 ±0.40 0.45 ±0.09 
+
+Light 0.90 ±0.30 0.10 ±0.30 0.35 ±0.36 0.37 ±0.48 0.43 ±0.09 
+
+Struct 0.87 ±0.34 0.15 ±0.36 0.48 ±0.39 0.25 ±0.43 0.46 ±0.07 
+
+M+T None 0.89 ±0.32 0.23 ±0.42 0.36 ±0.41 0.02 ±0.14 0.48 ±0.10 
+
+Light 0.86 ±0.35 0.20 ±0.40 0.30 ±0.35 0.05 ±0.22 0.44 ±0.10 
+
+Struct 0.85 ±0.36 0.01 ±0.12 0.69 ±0.31 0.01 ±0.09 0.47 ±0.08 
+
+D+T None 0.86 ±0.34 0.35 ±0.48 0.72 ±0.20 0.05 ±0.21 0.48 ±0.07 
+
+Light 0.85 ±0.36 0.36 ±0.48 0.72 ±0.20 0.30 ±0.46 0.46 ±0.07 
+
+Struct 0.71 ±0.46 0.36 ±0.48 0.83 ±0.17 0.44 ±0.50 0.51 ±0.06 
+
+## E BACKBONE LLMS 
+
+Tables 14 and 15 are the result details of the backbone LLMs varia-tions experiments. 
+
+Table 14: Homogeneous (S1): Overall performance of policies when all backbone LLMs are Qwen3. Report as mean ±std over all agents and all rounds in 𝐿𝑎𝑛𝑑 scenario. Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.81 ±0.40 0.35 ±0.48 0.18 ±0.35 0.13 ±0.33 0.49 ±0.09 
+
+Light 0.68 ±0.47 0.28 ±0.45 0.23 ±0.36 0.28 ±0.45 0.44 ±0.08 
+
+Struct 0.67 ±0.47 0.04 ±0.20 0.37 ±0.42 0.09 ±0.29 0.47 ±0.07 
+
+Q2 None 0.68 ±0.47 0.25 ±0.43 0.21 ±0.37 0.33 ±0.47 0.47 ±0.08 
+
+Light 0.64 ±0.48 0.30 ±0.46 0.22 ±0.34 0.25 ±0.43 0.42 ±0.06 
+
+Struct 0.68 ±0.47 0.00 ±0.00 0.36 ±0.42 0.01 ±0.12 0.46 ±0.07 
+
+Q3 None 0.76 ±0.43 0.00 ±0.00 0.47 ±0.42 0.00 ±0.00 0.49 ±0.08 
+
+Light 0.77 ±0.42 0.01 ±0.12 0.42 ±0.40 0.03 ±0.18 0.46 ±0.06 
+
+Struct 0.85 ±0.36 0.03 ±0.18 0.52 ±0.39 0.22 ±0.42 0.46 ±0.06 
+
+Q4 None 0.53 ±0.50 0.60 ±0.49 0.16 ±0.34 0.15 ±0.36 0.50 ±0.04 
+
+Light 0.12 ±0.33 0.56 ±0.50 0.17 ±0.34 0.21 ±0.41 0.51 ±0.07 
+
+Struct 0.75 ±0.43 0.39 ±0.49 0.28 ±0.40 0.05 ±0.23 0.50 ±0.04 
+
+Q5 None 0.55 ±0.50 0.20 ±0.40 0.25 ±0.38 0.11 ±0.32 0.44 ±0.05 
+
+Light 0.75 ±0.43 0.14 ±0.35 0.26 ±0.35 0.01 ±0.12 0.39 ±0.05 
+
+Struct 0.73 ±0.44 0.14 ±0.35 0.38 ±0.40 0.09 ±0.29 0.45 ±0.07 
+
+Overall None 0.67 ±0.47 0.28 ±0.45 0.25 ±0.39 0.14 ±0.35 0.48 ±0.07 
+
+Light 0.59 ±0.49 0.26 ±0.44 0.26 ±0.37 0.16 ±0.36 0.44 ±0.08 
+
+Struct 0.74 ±0.44 0.12 ±0.33 0.38 ±0.41 0.10 ±0.29 0.47 ±0.07 
+
+Table 15: Heterogeneous: Overall performance of policies with the variant of the backbones. Report as mean ±std over all agents and all rounds in 𝐿𝑎𝑛𝑑 scenario. Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.75 ±0.44 0.35 ±0.48 0.37 ±0.40 0.07 ±0.25 0.50 ±0.10 
+
+Light 0.81 ±0.40 0.31 ±0.46 0.37 ±0.35 0.49 ±0.50 0.44 ±0.10 
+
+Struct 0.79 ±0.41 0.12 ±0.33 0.61 ±0.37 0.23 ±0.42 0.55 ±0.07 
+
+Q2 None 0.70 ±0.46 0.31 ±0.46 0.36 ±0.39 0.07 ±0.26 0.46 ±0.09 
+
+Light 0.69 ±0.47 0.28 ±0.45 0.26 ±0.32 0.33 ±0.47 0.46 ±0.08 
+
+Struct 0.67 ±0.47 0.11 ±0.31 0.61 ±0.34 0.28 ±0.45 0.48 ±0.09 
+
+Q3 None 0.85 ±0.35 0.01 ±0.08 0.46 ±0.40 0.01 ±0.08 0.48 ±0.08 
+
+Light 0.85 ±0.35 0.00 ±0.00 0.37 ±0.37 0.24 ±0.43 0.49 ±0.07 
+
+Struct 0.72 ±0.45 0.05 ±0.21 0.73 ±0.30 0.25 ±0.43 0.47 ±0.09 
+
+Q4 None 0.57 ±0.50 0.47 ±0.50 0.40 ±0.39 0.10 ±0.30 0.51 ±0.08 
+
+Light 0.49 ±0.50 0.47 ±0.50 0.30 ±0.36 0.65 ±0.48 0.51 ±0.07 
+
+Struct 0.59 ±0.49 0.34 ±0.47 0.52 ±0.38 0.19 ±0.40 0.52 ±0.09 
+
+Q5 None 0.69 ±0.47 0.17 ±0.38 0.35 ±0.39 0.04 ±0.20 0.45 ±0.08 
+
+Light 0.77 ±0.42 0.43 ±0.50 0.36 ±0.36 0.40 ±0.49 0.40 ±0.08 
+
+Struct 0.71 ±0.46 0.19 ±0.40 0.58 ±0.37 0.16 ±0.37 0.47 ±0.08 
+
+Overall None 0.71 ±0.45 0.26 ±0.44 0.39 ±0.40 0.06 ±0.23 0.48 ±0.09 
+
+Light 0.72 ±0.45 0.30 ±0.46 0.33 ±0.35 0.42 ±0.49 0.46 ±0.09 
+
+Struct 0.70 ±0.46 0.16 ±0.37 0.61 ±0.36 0.22 ±0.42 0.50 ±0.09 
+
+## F AGENT-LEVEL PERFORMANCE 
+
+To further evaluate the effectiveness of the policy-parameterized framework in a more-agent system, we added two more agents (Farmer 2 and 3) driven by Llama3 and Mistral, respectively. Farmer 1 and Farmer 2 are designed to share similar personas, whereas Farmer 3 is assigned a different behavioural role to introduce di-versity. Three Farmer agents share a knowledge base. The results in Table 16 show that the policy-parameterized prompts remain effective: each agent still shows differences across various metrics under different rules. Table 17 shows the overall performance of policies of each agent under different Backbone LLMs. 
+
+Table 16: Performance of policies of each agent after adding two Farmer agents. Rule Agent Resp. Rebuttal Non-rep. Evid. Stance 
+
+None Comm. 0.90 ± 0.00 0.08 ± 0.04 0.84 ± 0.03 0.28 ± 0.14 0.46 ± 0.05 
+
+Conser. 0.87 ± 0.03 0.24 ± 0.17 0.71 ± 0.06 0.02 ± 0.03 0.49 ± 0.06 
+
+Farmer 1(Qwen3) 0.88 ± 0.02 0.50 ± 0.33 0.52 ± 0.15 0.13 ± 0.13 0.59 ± 0.04 
+
+Farmer 2(Llama) 0.87 ± 0.03 0.63 ± 0.21 0.59 ± 0.16 0.10 ± 0.10 0.68 ± 0.06 
+
+Farmer 3(Mistral) 0.88 ± 0.02 0.26 ± 0.17 0.80 ± 0.08 0.33 ± 0.20 0.51 ± 0.02 
+
+Light Comm. 0.90 ± 0.01 0.09 ± 0.07 0.63 ± 0.03 0.21 ± 0.14 0.40 ± 0.03 
+
+Conser. 0.88 ± 0.02 0.21 ± 0.21 0.71 ± 0.07 0.17 ± 0.04 0.44 ± 0.06 
+
+Farmer 1(Qwen3) 0.86 ± 0.04 0.58 ± 0.28 0.39 ± 0.06 0.58 ± 0.17 0.55 ± 0.05 
+
+Farmer 2(Llama) 0.87 ± 0.05 0.62 ± 0.25 0.49 ± 0.09 0.64 ± 0.17 0.62 ± 0.05 
+
+Farmer 3(Mistral) 0.89 ± 0.02 0.17 ± 0.10 0.65 ± 0.04 0.54 ± 0.08 0.49 ± 0.03 
+
+Struct Comm. 0.90 ± 0.00 0.10 ± 0.04 0.83 ± 0.03 0.11 ± 0.05 0.42 ± 0.02 
+
+Conser. 0.78 ± 0.03 0.19 ± 0.07 0.78 ± 0.02 0.26 ± 0.08 0.48 ± 0.01 
+
+Farmer 1(Qwen3) 0.78 ± 0.06 0.23 ± 0.13 0.74 ± 0.04 0.33 ± 0.14 0.55 ± 0.03 
+
+Farmer 2(Llama) 0.80 ± 0.04 0.25 ± 0.16 0.75 ± 0.05 0.40 ± 0.10 0.61 ± 0.03 
+
+Farmer 3(Mistral) 0.89 ± 0.02 0.27 ± 0.17 0.80 ± 0.05 0.34 ± 0.10 0.48 ± 0.02 
+
+## G ADAPTIVE WEIGHT 
+
+Table 18 shows the experitment details of the effectiveness of adap-tive weights. Table 19: Ablation Study on EDU scenario 
+
+Query Rule Resp. Reb. Non-rep. Evid. Stance M+D None 0.89 ± 0.32 0.02 ± 0.15 0.42 ± 0.39 0.06 ± 0.23 0.46 ± 0.08 
+
+Light 0.89 ± 0.32 0.01 ± 0.12 0.39 ± 0.36 0.14 ± 0.35 0.45 ± 0.09 
+
+Struct 0.89 ± 0.31 0.02 ± 0.15 0.46 ± 0.38 0.05 ± 0.22 0.45 ± 0.08 
+
+T+D None 0.85 ± 0.35 0.46 ± 0.50 0.74 ± 0.24 0.13 ± 0.34 0.50 ± 0.08 
+
+Light 0.85 ± 0.35 0.34 ± 0.47 0.69 ± 0.25 0.55 ± 0.50 0.48 ± 0.09 
+
+Struct 0.80 ± 0.40 0.30 ± 0.46 0.80 ± 0.17 0.31 ± 0.46 0.53 ± 0.08 
+
+T+M None 0.86 ± 0.35 0.17 ± 0.38 0.45 ± 0.39 0.09 ± 0.29 0.46 ± 0.10 
+
+Light 0.89 ± 0.31 0.10 ± 0.30 0.37 ± 0.35 0.08 ± 0.27 0.44 ± 0.09 
+
+Struct 0.88 ± 0.33 0.04 ± 0.20 0.65 ± 0.30 0.01 ± 0.11 0.46 ± 0.08 
+
+Table 17: Overall performance of policies of each agent under different Backbone LLMs Rule Agent Resp. Rebuttal Non-rep. Evid. Stance 
+
+None Comm.(mistral) 0.48 ± 0.20 0.02 ± 0.04 0.22 ± 0.10 0.14 ± 0.13 0.41 ± 0.03 
+
+Conser.(Llama) 0.72 ± 0.28 0.23 ± 0.34 0.30 ± 0.19 0.26 ± 0.26 0.48 ± 0.04 
+
+Farmer(Qwen) 0.80 ± 0.12 0.58 ± 0.35 0.24 ± 0.06 0.04 ± 0.08 0.54 ± 0.03 
+
+Light Comm.(mistral) 0.40 ± 0.16 0.04 ± 0.07 0.22 ± 0.05 0.23 ± 0.21 0.39 ± 0.04 
+
+Conser.(Llama) 0.65 ± 0.31 0.21 ± 0.29 0.31 ± 0.13 0.13 ± 0.14 0.44 ± 0.04 
+
+Farmer(Qwen) 0.73 ± 0.29 0.53 ± 0.38 0.26 ± 0.08 0.11 ± 0.12 0.51 ± 0.05 
+
+Struct Comm.(mistral) 0.57 ± 0.12 0.03 ± 0.06 0.37 ± 0.07 0.17 ± 0.24 0.41 ± 0.04 
+
+Conser.(Llama) 0.78 ± 0.07 0.20 ± 0.28 0.43 ± 0.10 0.11 ± 0.09 0.48 ± 0.02 
+
+Farmer(Qwen) 0.86 ± 0.02 0.13 ± 0.15 0.35 ± 0.09 0.00 ± 0.01 0.51 ± 0.03 
+
+None Comm.(Qwen) 0.52 ± 0.19 0.01 ± 0.02 0.25 ± 0.14 0.03 ± 0.06 0.42 ± 0.03 
+
+Conser.(Mistral) 0.83 ± 0.14 0.19 ± 0.20 0.53 ± 0.06 0.07 ± 0.08 0.45 ± 0.03 
+
+Farmer(Llama) 0.79 ± 0.17 0.58 ± 0.36 0.38 ± 0.08 0.08 ± 0.11 0.57 ± 0.03 
+
+Light Comm.(Qwen) 0.59 ± 0.18 0.02 ± 0.05 0.22 ± 0.09 0.31 ± 0.26 0.41 ± 0.04 
+
+Conser.(Mistral) 0.87 ± 0.05 0.20 ± 0.24 0.45 ± 0.05 0.21 ± 0.14 0.42 ± 0.04 
+
+Farmer(Llama) 0.71 ± 0.30 0.66 ± 0.34 0.33 ± 0.06 0.74 ± 0.06 0.55 ± 0.04 
+
+Struct Comm.(Qwen) 0.61 ± 0.06 0.06 ± 0.07 0.45 ± 0.09 0.24 ± 0.12 0.44 ± 0.04 
+
+Conser.(Mistral) 0.86 ± 0.04 0.22 ± 0.20 0.74 ± 0.10 0.01 ± 0.02 0.48 ± 0.03 
+
+Farmer(Llama) 0.62 ± 0.13 0.21 ± 0.11 0.64 ± 0.06 0.41 ± 0.08 0.58 ± 0.02 
+
+None Comm.(Llama) 0.75 ± 0.12 0.03 ± 0.05 0.38 ± 0.04 0.13 ± 0.08 0.44 ± 0.03 
+
+Conser.(Qwen) 0.76 ± 0.13 0.34 ± 0.35 0.33 ± 0.19 0.10 ± 0.12 0.46 ± 0.06 
+
+Farmer (Mistral) 0.85 ± 0.07 0.31 ± 0.28 0.65 ± 0.08 0.12 ± 0.08 0.52 ± 0.03 
+
+Light Comm.(Llama) 0.89 ± 0.01 0.05 ± 0.09 0.32 ± 0.07 0.25 ± 0.18 0.42 ± 0.02 
+
+Conser.(Qwen) 0.76 ± 0.26 0.37 ± 0.37 0.28 ± 0.12 0.04 ± 0.04 0.44 ± 0.05 
+
+Farmer (Mistral) 0.90 ± 0.01 0.30 ± 0.26 0.46 ± 0.13 0.42 ± 0.23 0.51 ± 0.03 
+
+Struct Comm.(Llama) 0.88 ± 0.02 0.00 ± 0.01 0.63 ± 0.04 0.35 ± 0.20 0.47 ± 0.02 
+
+Conser.(Qwen) 0.78 ± 0.03 0.12 ± 0.09 0.59 ± 0.05 0.08 ± 0.10 0.49 ± 0.01 
+
+Farmer (Mistral) 0.87 ± 0.05 0.12 ± 0.08 0.78 ± 0.06 0.29 ± 0.11 0.53 ± 0.01 
+
+Table 18: Overall performance with adaptive weight setting. Report as mean ±std over all agents and all rounds in 𝐿𝑎𝑛𝑑 
+
+scenario. Query Rule Resp. Rebuttal Non-rep. Evid. Stance 
+
+Q1 None 0.88 ±0.33 0.21 ±0.41 0.50 ±0.38 0.23 ±0.42 0.53 ±0.07 
+
+Light 0.89 ±0.32 0.51 ±0.50 0.36 ±0.35 0.47 ±0.50 0.50 ±0.07 
+
+Struct 0.83 ±0.38 0.17 ±0.38 0.54 ±0.40 0.15 ±0.36 0.51 ±0.07 
+
+Q2 None 0.87 ±0.33 0.38 ±0.49 0.49 ±0.39 0.19 ±0.40 0.48 ±0.07 
+
+Light 0.89 ±0.31 0.39 ±0.49 0.39 ±0.33 0.17 ±0.38 0.44 ±0.05 
+
+Struct 0.81 ±0.40 0.11 ±0.32 0.49 ±0.39 0.17 ±0.38 0.47 ±0.07 
+
+Q3 None 0.90 ±0.30 0.00 ±0.00 0.39 ±0.39 0.12 ±0.33 0.45 ±0.06 
+
+Light 0.90 ±0.30 0.07 ±0.26 0.43 ±0.36 0.27 ±0.44 0.44 ±0.06 
+
+Struct 0.89 ±0.31 0.02 ±0.14 0.54 ±0.40 0.10 ±0.30 0.45 ±0.06 
+
+Q4 None 0.79 ±0.41 0.41 ±0.49 0.35 ±0.37 0.17 ±0.38 0.49 ±0.05 
+
+Light 0.70 ±0.46 0.55 ±0.50 0.33 ±0.35 0.42 ±0.49 0.49 ±0.08 
+
+Struct 0.79 ±0.41 0.18 ±0.39 0.47 ±0.40 0.24 ±0.43 0.51 ±0.07 
+
+Q5 None 0.86 ±0.35 0.31 ±0.47 0.51 ±0.38 0.17 ±0.37 0.46 ±0.06 
+
+Light 0.87 ±0.34 0.45 ±0.50 0.35 ±0.34 0.13 ±0.34 0.41 ±0.05 
+
+Struct 0.79 ±0.41 0.18 ±0.39 0.55 ±0.40 0.15 ±0.35 0.47 ±0.06 
+
+Overall None 0.86 ±0.35 0.26 ±0.44 0.45 ±0.39 0.18 ±0.38 0.48 ±0.07 
+
+Light 0.85 ±0.36 0.39 ±0.49 0.37 ±0.35 0.29 ±0.46 0.45 ±0.07 
+
+Struct 0.82 ±0.38 0.13 ±0.34 0.52 ±0.40 0.16 ±0.37 0.48 ±0.07 
+
+## H ABLATION STUDY ON EDU 
+
+Table 19 shows the ablation study results on EDU scenario.

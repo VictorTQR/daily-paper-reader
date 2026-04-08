@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.28281v1/fig-001.webp",
+      "caption": "Table 1: Summary of our bounds for: (i) NE gap minimization under uniform coverage, (ii) NE gap minimization under unilateral coverage, and (iii) CCE gap minimization under unilateral coverage. Here, Õ hides any poly-logarithmic factors, n denotes the number of agents, H denotes the horizon and d denotes the dimension. Moreover, ξR and ξP denote the uniform coverage coefficients, while CR and CP denote the unilateral coverage coefficients; ϵ denotes the corruption parameter, m is the data size, T1 is the number of gradient steps while T2 is the number of steps for which OptimisticHedge is run. It is worth mentioning that our bounds have optimal dependence on ϵ in the uniform coverage setting, while maintaining the same dependence as the single-agent (and two-player zero-sum Markov game) settings under non-uniform coverage. Moreover, note that the algorithm for CCE approximation is also computationally efficient.",
+      "page": 3,
+      "index": 1,
+      "width": 810,
+      "height": 211
+    }
+  ]
+}

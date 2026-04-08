@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-001.webp",
+      "caption": "Fig. 9: The cumulative regret performance of three social learning agents (OUCB, TUCB, SBL-FE with different levels of noise) along with UCB and TS as baseline methods in societies consisting of one social learner and one non-learner or epsilon-greedy. The experiments were conducted over 200 and 2000 trials for a 10-armed Bernoulli bandit problem with an optimality gap of ∆ = 0.2.",
+      "page": 11,
+      "index": 1,
+      "width": 520,
+      "height": 872
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-002.webp",
+      "caption": "Fig. 3: The cumulative regret performance of three social learning agents (OUCB, TUCB, SBL-FE) along with UCB and TS as baseline methods in societies consisting of one social learner and one non-learner. The experiments were conducted over 200 and 2000 trials for a 10-armed Bernoulli bandit problem with an optimality gap of ∆ = 0.2. In the zoomed-in view, we highlight that the performance of the TS method and our method are similar in some scenarios.",
+      "page": 7,
+      "index": 2,
+      "width": 516,
+      "height": 673
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-003.webp",
+      "caption": "Fig. 8: Cumulative regret performance of social learning agents (OUCB, TUCB, SBL-FE) compared to UCB and TS baselines in societies with one social learner and one nonlearner or epsilon-greedy agent. Experiments were conducted for horizons 200 (left column) and 10000 (right column) in a 2-armed Bernoulli bandit problem, varying optimality gaps from 0 to 0.5.",
+      "page": 10,
+      "index": 3,
+      "width": 512,
+      "height": 851
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-004.webp",
+      "caption": "Fig. 7: The cumulative regret performance of three social learning agents (OUCB, TUCB, SBL-FE) along with UCB and TS as baseline methods and per-trial selection probability of SBL-FE, our social agent, in different societal setups. Conducted over 2000 trials for a 10-armed Bernoulli bandit problem with ∆ = 0.2.",
+      "page": 10,
+      "index": 4,
+      "width": 529,
+      "height": 650
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-005.webp",
+      "caption": "Fig. 4: Cumulative regret performance of three social learning agents (OUCB, TUCB, SBL-FE) along with UCB and TS as baseline methods in societies consisting of one social learner and one individual learner. The experiments were conducted over 200 and 2000 trials for a 10-armed Bernoulli bandit problem with an optimality gap of ∆ = 0.2.",
+      "page": 8,
+      "index": 5,
+      "width": 505,
+      "height": 651
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-006.webp",
+      "caption": "Fig. 5: Per-trial free energy and selection probability of our social agent, SBL-FE, in different societal setups. 2000 trials were conducted for a 10-armed Bernoulli bandit problem with ∆ = 0.2.",
+      "page": 8,
+      "index": 6,
+      "width": 520,
+      "height": 652
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-007.webp",
+      "caption": "Fig. 6: The Per-trial free energy, selection probability, and cumulative regret of three social learning agents (OUCB, TUCB, SBL-FE) along with UCB and TS as baseline methods in a society consisting of one social learner and three epsilongreedy agents. The experiments were conducted over 200 and 2000 trials for a 10-armed Bernoulli bandit problem with an optimality gap of ∆ = 0.2. The action sets of these three epsilon greedy agents are disjoint from each other, and each includes three actions. EPS IL3 and SA share the same optimal action, while the other two individual agents have different optimal decisions.",
+      "page": 9,
+      "index": 7,
+      "width": 529,
+      "height": 356
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-008.webp",
+      "caption": "Fig. 1: Social bandit learning problem setting",
+      "page": 5,
+      "index": 8,
+      "width": 446,
+      "height": 429
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11757v1/fig-009.webp",
+      "caption": "Fig. 2: Informational flow diagram of the proposed method (SBL-FE)",
+      "page": 5,
+      "index": 9,
+      "width": 566,
+      "height": 548
+    }
+  ]
+}

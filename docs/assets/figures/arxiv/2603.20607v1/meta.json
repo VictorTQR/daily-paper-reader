@@ -1,0 +1,126 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-001.webp",
+      "caption": "Table 5. Hyperparameters for RL.",
+      "page": 25,
+      "index": 1,
+      "width": 665,
+      "height": 384
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-002.webp",
+      "caption": "Figure 11. Qualitative comparison of UMM-World prediction against Ground Truth across both simulated (LIBERO) and real-world tasks.",
+      "page": 25,
+      "index": 2,
+      "width": 971,
+      "height": 696
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-003.webp",
+      "caption": "Figure 8. An illustration of real world assets.",
+      "page": 21,
+      "index": 3,
+      "width": 575,
+      "height": 481
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-004.webp",
+      "caption": "Figure 1. The framework illustration of VLA-MBPO, comprising (A) a UMM-based world model with interleaved view decoding for multi-view observation and reward prediction, and (B) a stable and scalable policy update algorithm with chunked-level branch rollout. (C) illustration of both simulated and real-world task designs in our work.",
+      "page": 2,
+      "index": 4,
+      "width": 991,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-005.webp",
+      "caption": "Table 1. Performance comparison of various world models across multiple metrics, including dynamics and reward model evaluations.",
+      "page": 7,
+      "index": 5,
+      "width": 969,
+      "height": 245
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-006.webp",
+      "caption": "Figure 9. An illustration of real world tasks. We test VLA-MBPO on bimanual and whole-body robots.",
+      "page": 22,
+      "index": 6,
+      "width": 968,
+      "height": 990
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-007.webp",
+      "caption": "Figure 6. Results of different sample size for VLA-MBPO.",
+      "page": 10,
+      "index": 7,
+      "width": 704,
+      "height": 385
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-008.webp",
+      "caption": "Figure 2. Frame-skipping scheme in UMM-based World Model.",
+      "page": 3,
+      "index": 8,
+      "width": 704,
+      "height": 445
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-009.webp",
+      "caption": "Figure 4. Qualitative visualization results of UMM-World.",
+      "page": 8,
+      "index": 9,
+      "width": 1010,
+      "height": 332
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-010.webp",
+      "caption": "Table 2. Performance comparison on LIBERO benchmark.",
+      "page": 8,
+      "index": 10,
+      "width": 519,
+      "height": 271
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-011.webp",
+      "caption": "Figure 3. The learning dynamics of value models. The blue lines represent the ground-truth return, while the orange lines represent the return estimated by the value model.",
+      "page": 8,
+      "index": 11,
+      "width": 699,
+      "height": 459
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-012.webp",
+      "caption": "Figure 14. An illustration of failure cases caused by large prediction horizon.",
+      "page": 27,
+      "index": 12,
+      "width": 873,
+      "height": 221
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-013.webp",
+      "caption": "Figure 10. Causal Mask in UMM World Model during training. VAE and ViT denote VAE features and ViT features, respectively. t is the noise timestep and t = 0 means no noise.",
+      "page": 24,
+      "index": 13,
+      "width": 1006,
+      "height": 1004
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-014.webp",
+      "caption": "Figure 5. Performance comparison on real-world tasks.",
+      "page": 9,
+      "index": 14,
+      "width": 713,
+      "height": 425
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20607v1/fig-015.webp",
+      "caption": "Figure 7. An illustration of real-world robots.",
+      "page": 20,
+      "index": 15,
+      "width": 874,
+      "height": 464
+    }
+  ]
+}

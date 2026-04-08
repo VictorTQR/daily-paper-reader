@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.16777v1/fig-001.webp",
+      "caption": "Table 2. Step success rate (%) on AndroidControl-High, GUI-Odyssey, and Multimodal-Mind2Web. Step SR reflects the proportion of correctly executed steps, where both the predicted action and its arguments (e.g., click coordinates) match the ground truth. Results on Multimodal-Mind2Web are averaged over its cross-task, cross-website, and cross-domain evaluation splits.",
+      "page": 6,
+      "index": 1,
+      "width": 1026,
+      "height": 571
+    },
+    {
+      "url": "assets/figures/arxiv/2603.16777v1/fig-002.webp",
+      "caption": "Figure 1. TraceR1 overview: anticipatory planning and grounded execution. The planning model takes a user instruction together with the current screenshot and interaction history, predicts a trajectory of future actions, where only the first predicted step is executed by the tool agent while later steps are unexecuted lookahead predictions, and generates step-level instructions for tool agents to complete tasks across diverse GUI environments and tool-use platforms.",
+      "page": 2,
+      "index": 2,
+      "width": 1009,
+      "height": 336
+    },
+    {
+      "url": "assets/figures/arxiv/2603.16777v1/fig-003.webp",
+      "caption": "Table 3. Results on the GAIA and GTA benchmarks. GAIA assesses AI assistants across three difficulty levels, where final answer accuracy (AnsAcc) reflects overall tool-usage reasoning correctness. GTA further evaluates multimodal tool-use ability using three metrics: AnsAcc for answer correctness, ToolAcc for accurate tool selection and summarization, and CodeExec for the percentage of generated code that executes without errors.",
+      "page": 7,
+      "index": 3,
+      "width": 902,
+      "height": 375
+    },
+    {
+      "url": "assets/figures/arxiv/2603.16777v1/fig-004.webp",
+      "caption": "Table 4. GRPO training hyperparameters used for both Stage 1 and Stage 2. All reinforcement learning stages share the same GRPO and optimization settings.",
+      "page": 13,
+      "index": 4,
+      "width": 618,
+      "height": 737
+    },
+    {
+      "url": "assets/figures/arxiv/2603.16777v1/fig-005.webp",
+      "caption": "Table 1. Success rate (%) on AndroidWorld and OSWorld-Verified. OSWorld-Verified is evaluated under a 100-step maximum setting.",
+      "page": 5,
+      "index": 5,
+      "width": 804,
+      "height": 742
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04894v1/fig-001.webp",
+      "caption": "Figure 3: Adversarial entropy flipping experiments. (a, c) Policy entropy. (b, d) Average validation accuracy.",
+      "page": 6,
+      "index": 1,
+      "width": 937,
+      "height": 182
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04894v1/fig-002.webp",
+      "caption": "Table 1: Main experimental results on mathematical reasoning benchmarks. The best result in each column is shown in bold, and the second-best is underlined.",
+      "page": 7,
+      "index": 2,
+      "width": 904,
+      "height": 433
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04894v1/fig-003.webp",
+      "caption": "Figure 5: Extended Training Dynamics and Performance Metrics. (a) Evolution of the Training Reward. (b)–(f) Validation accuracy trajectories on individual mathematical reasoning benchmarks (MATH-500, AIME24, AIME25, AMC23, and Olympiad). (g) The proportion of prompts yielding exclusively correct responses. (h) The proportion of prompts yielding exclusively incorrect responses.",
+      "page": 14,
+      "index": 3,
+      "width": 939,
+      "height": 382
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04894v1/fig-004.webp",
+      "caption": "Figure 1: (a) Positive rollout advantage w.r.t. group accuracy. (b) Negative rollout advantage w.r.t. group accuracy. (c) Estimated sample covariance w.r.t. group accuracy collected during the first 40 training steps.",
+      "page": 3,
+      "index": 4,
+      "width": 940,
+      "height": 236
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04894v1/fig-005.webp",
+      "caption": "Figure 2: Evolution of training dynamics and mechanism analysis. The top row presents results on Qwen2.5Math-1.5B, while the bottom row corresponds to Qwen3-4B. (a, e) Policy entropy over training steps. (b, f) Average validation accuracy. (c, g) The epoch-wise proportion of prompts categorized as “all-solved” and “none-solved”. (d, h) The average log probability increment of positive samples after each update.",
+      "page": 4,
+      "index": 5,
+      "width": 943,
+      "height": 398
+    }
+  ]
+}

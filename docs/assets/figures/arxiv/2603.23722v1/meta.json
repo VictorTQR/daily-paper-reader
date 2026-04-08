@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.23722v1/fig-001.webp",
+      "caption": "Figure 2: Detailed Neural Architecture depicting exact hidden state preservation boundaries (𝑚𝑡 ).",
+      "page": 6,
+      "index": 1,
+      "width": 815,
+      "height": 222
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23722v1/fig-002.webp",
+      "caption": "Table 1: ETD-MAPPO Architecture and Hyperparameter Specifications",
+      "page": 8,
+      "index": 2,
+      "width": 869,
+      "height": 367
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23722v1/fig-003.webp",
+      "caption": "Figure 1: Algorithmic Logic Flowchart. The environment loop executes exclusively against the strictly sequential evaluations of both Aleatoric inference outputs and True Epistemic variation.",
+      "page": 4,
+      "index": 3,
+      "width": 813,
+      "height": 781
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23722v1/fig-004.webp",
+      "caption": "Figure 5: Mapping explicit continuous allocation ranges mapping MPE environments accurately targeting structural differences across agents.",
+      "page": 12,
+      "index": 4,
+      "width": 869,
+      "height": 458
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23722v1/fig-005.webp",
+      "caption": "Table 2: Level-Based Foraging (LBF) Peak Performance Metrics",
+      "page": 9,
+      "index": 5,
+      "width": 869,
+      "height": 434
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23722v1/fig-006.webp",
+      "caption": "Figure 3: Empirical training progression across Level-Based Foraging. The Dual-Gated ETD model statistically outperforms fixed-parameter models natively driving explicit success logic.",
+      "page": 9,
+      "index": 6,
+      "width": 822,
+      "height": 578
+    }
+  ]
+}

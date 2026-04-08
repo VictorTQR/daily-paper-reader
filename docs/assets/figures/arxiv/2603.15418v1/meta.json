@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15418v1/fig-001.webp",
+      "caption": "TABLE I KEY MA-VLCM HYPERPARAMETERS",
+      "page": 5,
+      "index": 1,
+      "width": 514,
+      "height": 235
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15418v1/fig-002.webp",
+      "caption": "Fig. 2. (a) The Robotic Warehouse (RWARE) 3D environment created in Isaac Sim. (b) A rendering of rware-4ag grid environment with 4 agents and 4 requested boxes (in green) describing the rasterized semantic image, (c) and its equivalent BEV camera image collected from the same environment shown in (a).",
+      "page": 5,
+      "index": 2,
+      "width": 462,
+      "height": 462
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15418v1/fig-003.webp",
+      "caption": "Fig. 4. Value Estimation on IID vs OOD for RWARE environment with 0.5B VLCM",
+      "page": 6,
+      "index": 3,
+      "width": 462,
+      "height": 387
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15418v1/fig-004.webp",
+      "caption": "Fig. 5. Value Estimation on IID vs OOD for Offroad environment with 0.5B VLCM",
+      "page": 6,
+      "index": 4,
+      "width": 462,
+      "height": 390
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15418v1/fig-005.webp",
+      "caption": "Fig. 6. Box plot comparison for all 4 models on Spearman correlations and MSE values across both the environments",
+      "page": 6,
+      "index": 5,
+      "width": 512,
+      "height": 235
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15418v1/fig-006.webp",
+      "caption": "TABLE II VALUE ESTIMATION: IN-DISTRIBUTION VS. OUT-OF-DISTRIBUTION",
+      "page": 6,
+      "index": 6,
+      "width": 512,
+      "height": 635
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15418v1/fig-007.webp",
+      "caption": "Fig. 1. Overall architecture of the MA-VLCM training (- -) and inference (- -) directions. The MA-VLCM dataset (D) contains multi-modal, multi-agent dataset that is used to send trajectories of vision It, textual ℓ and agent observation ot and actions at data to train the VLCM. The main components that are trained are the GAT, Value head and LoRA adaptors on the vision encoder and language model. The output embeddings from the the encoders et and the GAT are concatentated before sending them to the language model. The output of the value head would be the estimated long-term return of the trajectory of data along with the language prompt sent during inference.",
+      "page": 3,
+      "index": 7,
+      "width": 1052,
+      "height": 491
+    }
+  ]
+}

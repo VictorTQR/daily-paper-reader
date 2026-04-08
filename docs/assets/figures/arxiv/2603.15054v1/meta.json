@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-001.webp",
+      "caption": "Figure 6: Total computation counts (blue) and computations per agent (red) for leader election and follower assignment.",
+      "page": 11,
+      "index": 1,
+      "width": 460,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-002.webp",
+      "caption": "Figure 8: Transition cost map computed from the start agent (yellow) after multi-layer map and interference map processing. Blue regions indicate low traversal cost due to high ally density and minimal enemy interference, while yellow regions represent high traversal cost caused by distant locations and strong adversarial agent interference.",
+      "page": 21,
+      "index": 2,
+      "width": 490,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-003.webp",
+      "caption": "Figure 1: Limitations of common neighborhood constraints in MARL communication. (a) Euclidean distance may misrepresent actual accessibility: agents A and B appear close (blue dashed line) but are separated by a long traversable path (yellow arrow); (b) Vision-based constraints capture physical proximity better but miss reachable agents hidden from view; (c) Even with direct visibility, hostile interference (red region) can block cooperation, forcing detours (yellow arrows).",
+      "page": 2,
+      "index": 3,
+      "width": 662,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-004.webp",
+      "caption": "Table 4: Key Hyperparameter Settings",
+      "page": 22,
+      "index": 4,
+      "width": 977,
+      "height": 335
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-005.webp",
+      "caption": "Table 1: Final cumulative win rate (FW), highest cumulative win rate (HW) within 2.0M steps for DenseObstacle and Maze-Structure maps. Additionally, we report final failure rate (FL) corresponding to FW.",
+      "page": 10,
+      "index": 5,
+      "width": 977,
+      "height": 213
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-006.webp",
+      "caption": "Figure 2: Overview of IA-KRC framework for MARL communication. The K-step Reachability Module restricts communication to agents within a physically reachable domain based on shortest transition distance. The Interference Prediction Module evaluates potential conflicts or adversarial effects, selecting low-interference partners. Combined, these modules enable dynamic grouping and robust leader–follower collaboration in complex environments.",
+      "page": 3,
+      "index": 6,
+      "width": 979,
+      "height": 517
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-007.webp",
+      "caption": "Figure 12: Stage 4: IA-KRC achieves complete victory, eliminating all Vision agents at the cost of only 4 agents, demonstrating the effectiveness of interference-aware coordination in multi-agent combat scenarios.",
+      "page": 23,
+      "index": 7,
+      "width": 481,
+      "height": 387
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-008.webp",
+      "caption": "Figure 11: Stage 3: Leveraging the numerical advantage, IA-KRC adopts an aggressive strategy. With superior firepower, they continuously expand the combat capability gap.",
+      "page": 23,
+      "index": 8,
+      "width": 481,
+      "height": 387
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-009.webp",
+      "caption": "Figure 9: Stage 1: Due to vision limitations, the red team (Vision) forms two isolated agents. These isolated agents cannot communicate or coordinate with other teammates, resulting in low collaboration efficiency and becoming surrounded by the green team (IA-KRC).",
+      "page": 23,
+      "index": 9,
+      "width": 481,
+      "height": 387
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-010.webp",
+      "caption": "Figure 10: Stage 2: The isolated Vision agents are eliminated through concentrated fire from IA-KRC (IA-KRC loses 1 agent while Vision loses 3 agents), creating an 11v9 situation. The avalanche effect begins to manifest.",
+      "page": 23,
+      "index": 10,
+      "width": 481,
+      "height": 387
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15054v1/fig-011.webp",
+      "caption": "Figure 5: Learning curves of IA-KRC and baselines over 2.0M steps. (a) Dense-Obstacle. (b) Maze-Structure. (c) Win rate across scales. (d) Standard 8m. (a)-(c): self-play; (d): built-in AI.",
+      "page": 8,
+      "index": 11,
+      "width": 707,
+      "height": 565
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.13853v1/fig-001.webp",
+      "caption": "Table 1: Main results comparison between Qwen2.5-7B-Instruct and Qwen2.5-3B-Instruct across different benchmarks. The highest score for each Benchmark is marked in bold.",
+      "page": 7,
+      "index": 1,
+      "width": 1044,
+      "height": 365
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v1/fig-002.webp",
+      "caption": "Figure 1: Overview of the APEX-Searcher framework. The architecture utilizes RL-driven agentic planning in Stage I to decompose a complex question into a multi-step plan. Subsequently, Stage II employs SFT-guided exploration to solve each sub-question using an iterative retrieval loop that features dynamic continuation decisions and context management for final synthesis. See Figure 2 for an example.",
+      "page": 3,
+      "index": 2,
+      "width": 999,
+      "height": 394
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v1/fig-003.webp",
+      "caption": "Table 2: Ablation study of different components on 7B and 3B models. Plan: Planning module; RL: Planning with RL; SFT: Exploration via Supervised Fine-Tuning.",
+      "page": 8,
+      "index": 3,
+      "width": 886,
+      "height": 363
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v1/fig-004.webp",
+      "caption": "Figure 2: A step-by-step walkthrough of the APEX-Searcher pipeline, demonstrating the process on a sample complex question. Each module in the figure corresponds to the module in Figure 1",
+      "page": 4,
+      "index": 4,
+      "width": 1052,
+      "height": 507
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v1/fig-005.webp",
+      "caption": "Figure 4: Parameter Sensitivity Analysis. The curves illustrate the impact of the number of retrieved documents (Num) and the maximum allowed reasoning hops (Hop) on model accuracy across four benchmarks.",
+      "page": 9,
+      "index": 5,
+      "width": 1042,
+      "height": 234
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v1/fig-006.webp",
+      "caption": "Figure 5: (a) shows the Plan score improvements over base models, (b-c) show the reward score convergence during training for the 3B and 7B variants, and (d) shows the optimization of response length over training steps.",
+      "page": 9,
+      "index": 6,
+      "width": 1044,
+      "height": 279
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v1/fig-007.webp",
+      "caption": "Figure 6: Comparison of question decomposition strategies.",
+      "page": 9,
+      "index": 7,
+      "width": 506,
+      "height": 392
+    }
+  ]
+}

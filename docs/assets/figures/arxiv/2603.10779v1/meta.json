@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.10779v1/fig-001.webp",
+      "caption": "Fig. 2: Closed-loop response of the spring–mass–damper system under adaptive proportional gain. A slow adaptation rate maintains stability.",
+      "page": 12,
+      "index": 1,
+      "width": 529,
+      "height": 396
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10779v1/fig-002.webp",
+      "caption": "Fig. 3: State trajectories fast adaptation rates, destabilizing the time-varying closed-loop system.",
+      "page": 12,
+      "index": 2,
+      "width": 529,
+      "height": 398
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10779v1/fig-003.webp",
+      "caption": "Fig. 1: Five-level hierarchy of agency in AI-enabled control systems. Increasing agency corresponds to increasing decision authority over the control architecture: from reactive rulebased control (Level 1), to adaptive parameter tuning (Level 2), strategic selection among predefined controllers and objectives (Level 3), structural reconfiguration through modular workflow composition (Level 4), and generative synthesis of goals and architectures under governance constraints (Level 5).",
+      "page": 2,
+      "index": 3,
+      "width": 529,
+      "height": 417
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10779v1/fig-004.webp",
+      "caption": "Fig. 5: State trajectories and state norms under short (d = 1) and long (d = 8) dwell-time switching between two control pipelines. Longer activation of the estimator-augmented pipeline leads to significantly larger state growth due to the internal dynamics introduced by the additional modules.",
+      "page": 14,
+      "index": 4,
+      "width": 529,
+      "height": 421
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10779v1/fig-005.webp",
+      "caption": "Fig. 4: Illustration of how fast switchings between control architectures lead to instability.",
+      "page": 13,
+      "index": 5,
+      "width": 529,
+      "height": 421
+    }
+  ]
+}

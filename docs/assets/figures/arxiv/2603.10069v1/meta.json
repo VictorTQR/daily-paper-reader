@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-001.webp",
+      "caption": "Table 1: Accuracy comparison of SAPO-3B against baseline methods using Qwen2.5-3B Qwen et al. (2025) across multiple QA benchmarks. Bold indicates best results, and underline denotes second best results.",
+      "page": 6,
+      "index": 1,
+      "width": 827,
+      "height": 535
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-002.webp",
+      "caption": "Table 5: Scaling trends of Qwen2.5-Instruct with SAPO across different model sizes (1.5B to 14B). We report both EM and F1 scores. The best results are marked in bold.",
+      "page": 15,
+      "index": 2,
+      "width": 826,
+      "height": 367
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-003.webp",
+      "caption": "Table 2: Ablation results on different KL terms in SAPO. The values in parentheses denote the absolute performance change compared to the previous row.",
+      "page": 7,
+      "index": 3,
+      "width": 826,
+      "height": 328
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-004.webp",
+      "caption": "Table 4: Hyperparameters used in SAPO.",
+      "page": 14,
+      "index": 4,
+      "width": 377,
+      "height": 380
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-005.webp",
+      "caption": "Figure 3: Prompt template for SAPO.",
+      "page": 14,
+      "index": 5,
+      "width": 829,
+      "height": 204
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-006.webp",
+      "caption": "Table 7: Case Study illustrating SAPO from the Musique benchmark. Key evidence is extracted from the original searched documents.",
+      "page": 17,
+      "index": 6,
+      "width": 827,
+      "height": 1025
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-007.webp",
+      "caption": "Figure 4: Evolution of EM accuracy over training steps for SAPO across seven benchmarks.",
+      "page": 16,
+      "index": 7,
+      "width": 801,
+      "height": 336
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10069v1/fig-008.webp",
+      "caption": "Table 6: Case Studies illustrating SAPO trajectories from the 2wikimultihopqa benchmark. Key evidence is extracted from the original searched documents.",
+      "page": 16,
+      "index": 8,
+      "width": 827,
+      "height": 754
+    }
+  ]
+}

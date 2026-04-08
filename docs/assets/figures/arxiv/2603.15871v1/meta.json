@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15871v1/fig-001.webp",
+      "caption": "Figure 1: Human normalized scores median and 80th percentile over all games in the Arcade Learning Environment (ALE) 100K benchmark for CoAct TD Learning and the canonical temporal difference learning with ϵ-greedy for QRDQN. Left: Median. Right: 80th Percentile.",
+      "page": 7,
+      "index": 1,
+      "width": 710,
+      "height": 257
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15871v1/fig-002.webp",
+      "caption": "Figure 5: Human normalized scores median and 80th percentile over all games in the Arcade Learning Environment (ALE) 100K benchmark in DDQN for CoAct TD Learning algorithm and the canonical temporal difference learning with ϵ-greedy. Left:Median. Right: 80th Percentile.",
+      "page": 9,
+      "index": 2,
+      "width": 698,
+      "height": 229
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15871v1/fig-003.webp",
+      "caption": "Figure 6: Left and Middle: Normalized temporal difference T D gain median across all games in the Arcade Learning Environment 100K benchmark for CoAct TD Learning and NoisyNetworks. Right: Temporal difference T D when exploring chain MDP with Upper Confidence Bound (UCB) method, ϵ-greedy and our proposed algorithm CoAct TD Learning.",
+      "page": 9,
+      "index": 3,
+      "width": 822,
+      "height": 194
+    }
+  ]
+}

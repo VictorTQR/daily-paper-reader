@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-001.webp",
+      "caption": "Fig. 1. An example step from task 40 illustrating the agent’s decision-making process. The pink section, labeled A represents the previous action, the top gray section, labeled B details the agent’s reasoning process, the bottom gray section, labeled C, contains meta data, which we did not include in our analysis, and the yellow section, labeled D indicates the next action to be performed.",
+      "page": 11,
+      "index": 1,
+      "width": 625,
+      "height": 411
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-002.webp",
+      "caption": "Table 5. Human trajectory for Task 82 alongside the general plan produced by the Full-Plan-in-Advance agent. Differences between the two appear in bold text.",
+      "page": 15,
+      "index": 2,
+      "width": 895,
+      "height": 356
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-003.webp",
+      "caption": "Table 2. Example prompt structure for semantic equivalence.",
+      "page": 10,
+      "index": 3,
+      "width": 895,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-004.webp",
+      "caption": "Fig. 3. Results of the proposed evaluation metrics of Step-by-Step agent and Full-Plan-in-Advance agent on the WebArena benchmark averaged over all domains.",
+      "page": 14,
+      "index": 4,
+      "width": 895,
+      "height": 500
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-005.webp",
+      "caption": "Table 7. Distribution of final-answer types for tasks requiring multiple correct elements, comparing how often each agent produced no answer (N/A), stopped early, or generated a final answer.",
+      "page": 18,
+      "index": 5,
+      "width": 816,
+      "height": 229
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-006.webp",
+      "caption": "Table 8. Comparison of the original and modified prompts. We unify the action delimiter by replacing the inconsistent five-backtick instruction with the three-backtick format used in the example.",
+      "page": 23,
+      "index": 6,
+      "width": 763,
+      "height": 189
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-007.webp",
+      "caption": "Table 1. Human and agent trajectories for the task: Show me all smartphones.",
+      "page": 8,
+      "index": 7,
+      "width": 895,
+      "height": 236
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-008.webp",
+      "caption": "Table 3. Success rates and relative change of the Full-Plan-in-Advance and Webarena agents per domain.",
+      "page": 12,
+      "index": 8,
+      "width": 895,
+      "height": 625
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-009.webp",
+      "caption": "Table 9. Prompt format used in our work, showing the revised ordering of components.",
+      "page": 24,
+      "index": 9,
+      "width": 849,
+      "height": 333
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-010.webp",
+      "caption": "Table 10. Side-by-side comparison of the original WebArena prompt and our modified version. The modified prompt adds previous action information and incorporates structured hints to improve multi step reasoning.",
+      "page": 24,
+      "index": 10,
+      "width": 849,
+      "height": 562
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-011.webp",
+      "caption": "Fig. 4. A step performed by the Full-Plan-in-Advance agent for task number 727, where the reasoning phase suggests scrolling in the correct format of the instruction, but the actual action taken in ‘None’. Task 727: DisLike all submissions created by PatientBuilder499 in subreddit videos.",
+      "page": 16,
+      "index": 11,
+      "width": 581,
+      "height": 411
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12710v1/fig-012.webp",
+      "caption": "Fig. 5. A step performed by the Full-Plan-in-Advance agent for task 392, where the reasoning phase suggests scrolling but does not follow the required action format, causing the actual executed action to be ‘None’. Task 392: Post “Good idea” for the merge request related to color ulitity in a11yproject.com project.",
+      "page": 16,
+      "index": 12,
+      "width": 641,
+      "height": 411
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02869v1/fig-001.webp",
+      "caption": "Table 6: Ablation of reward design variants on Qwen3.5-4B. IRC corrects the discriminative misalignment of V5, recovering and exceeding baseline performance. The gap between V5 (57.3%) and base (63.8%) demonstrates that naïve dense rewards actively harm performance.",
+      "page": 6,
+      "index": 1,
+      "width": 1002,
+      "height": 184
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02869v1/fig-002.webp",
+      "caption": "Table 5: Tau-Bench airline pass rates. Both MT-GRPO and IRC consistently improve both model scales, with IRC providing additional gains over MT-GRPO alone: +2.9pp for 4B and +11.5pp for 30.5B MoE. The trained 4B model exceeds GPT-4.1 and GPT-4o despite being ∼50 times smaller.",
+      "page": 5,
+      "index": 2,
+      "width": 429,
+      "height": 331
+    }
+  ]
+}

@@ -1,0 +1,1573 @@
+Title: Benchmarking Reinforcement Learning via Stochastic Converse Optimality: Generating Systems with Known Optimal Policies
+
+URL Source: https://arxiv.org/pdf/2603.17631v1
+
+Published Time: Thu, 19 Mar 2026 01:17:35 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# Benchmarking Reinforcement Learning via Stochastic Converse Optimality: Generating Systems with Known Optimal Policies 
+
+Sinan Ibrahim 1, Gr´ egoire Ouerdane 1, Hadi Salloum 2, Henni Ouerdane 1, Stefan Streif 3, Pavel Osinenko 1,4,5
+
+Abstract — The objective comparison of Reinforcement Learning (RL) algorithms is notoriously complex as outcomes and benchmarking of performances of different RL approaches are critically sensitive to environmental design, reward struc-tures, and stochasticity inherent in both algorithmic learning and environmental dynamics. To manage this complexity, we introduce a rigorous benchmarking framework by extending converse optimality to discrete-time, control-affine, nonlinear systems with noise. Our framework provides necessary and sufficient conditions, under which a prescribed value function and policy are optimal for constructed systems, enabling the systematic generation of benchmark families via homotopy variations and randomized parameters. We validate it by au-tomatically constructing diverse environments, demonstrating our framework’s capacity for a controlled and comprehensive evaluation across algorithms. By assessing standard methods against a ground-truth optimum, our work delivers a repro-ducible foundation for precise and rigorous RL benchmarking. 
+
+Index Terms — Reinforcement learning, benchmarking, con-verse optimality, stochastic optimal control, Bellman equation, optimality gap, regret, reproducibility. 
+
+I. I NTRODUCTION 
+
+The design of optimal feedback controllers for nonlinear systems is governed by the Hamilton-Jacobi-Bellman (HJB) equation, which is computationally intractable for all but the lowest-dimensional systems due to the curse of dimension-ality [1]. This problem has stimulated the development of alternative, suboptimal methods like reinforcement learning (RL), that trade global optimality for reduced computational complexity. However, without knowledge of true optimal solutions, there is no systematic methodology for testing and evaluating these alternative approaches [2]. The ability to benchmark and verify advanced control algorithms used in RL is complicated by a lack of high-dimensional nonlinear test problems with known optimal solutions. Moreover, the difficulty is increased by the strong dependence of results on reward shaping, the choice of system dynamics, stochasticity, and evaluation protocols [3], [4]. Existing benchmarks aggre-gate scores over heterogeneous suites [5], [6], true optima remaining unavailable for a reliable estimation of optimality gaps, characterization of sample efficiency, and diagnosis of failure modes.      
+
+> 1Skolkovo Institute of Science and Technology, Moscow, Russia. Email:
+> {sinan.ibrahim, gregoire.ouerdane, h.ouerdane, p.osinenko }@skoltech.ru
+> 2Innopolis University, Innopolis, Russia. Email: h.salloum@innopolis.ru
+> 3Technische Universit¨ at Chemnitz, Chemnitz, Germany. Email: stefan.streif@etit.tu-chemnitz.de
+> 4Central University, Moscow, Russia
+> 5Sirius University of Science and Technology, Sotchi, Russia Corresponding author: Pavel Osinenko, p.osinenko@gmail.com.
+
+Converse optimality addresses this need by solving the converse problem instead of the HJB equation: given a target optimal value function and stage costs, what are the system dynamics and feedback laws for which Bellman’s optimality equation holds globally? This approach has been successfully applied to generate RL benchmarks for deterministic systems to test control methods [7]–[9]: converse theorems yield a closed-form characterization of drifts that realize a prescribed value function [10]. However, a significant gap exists for stochastic systems, which remain unaddressed due to the complexity that noise adds to solving the HJB equation. The present work builds a new benchmarking pipeline for RL by extending converse optimality to a widely used class of stochastic, discounted, discrete-time, control-affine, non-linear systems. Our contributions: (i) a discounted stochas-tic converse optimality framework with a theorem for the case of additive Gaussian noise and a Quadratic–Gaussian (QG) corollary; (ii) a constructive benchmark generation via homotopy over control strength; and (iii) a paired evalu-ation protocol (Common Random Numbers) with baseline implementations, reporting absolute metrics (optimality gaps, regret) against certified optima. II. R ELATED WORK 
+
+The need for reproducible evaluation in reinforcement learning has driven the creation of benchmarking tools. Re-producible RL evaluation remains challenging. Henderson et al. [3] showed that the apparent performance of an algorithm is a function of often overlooked experimental conditions, such as hyperparameters and implementation differences [11]. This lack of reproducibility and insufficient statistical rigor hinders progress in RL. In response, newer benchmarks isolate specific facets of this unreliability. The Procgen benchmark confronts the tendency of models to memorize training environments by using procedural generation [5]. The D4RL benchmark provides datasets that realistically represent distributional shifts for offline RL [6]. A more recent contribution, Open RL Benchmark [12], offers acentralized repository of fully tracked RL experiments. It aggregates over 25,000 runs and documents performance re-sults and experimental conditions. Despite its benefits, Open RL Benchmark faces the same fundamental limitation as its predecessors: the true globally optimal policy is unknown. This makes it impossible to calculate the optimality gap, the most direct performance metric. Without this ground truth, evaluation is necessarily relative and can be confounded by high variance and sensitivity to protocol choices [3], [4].     
+
+> arXiv:2603.17631v1 [cs.LG] 18 Mar 2026 Fig. 1: Training dynamics snapshot: stage reward r=−cover learning for representative algorithms on a fixed fixture under CRN evaluation. The core comparisons in this paper use absolute, oracle-referenced metrics (OptGap, regret).
+
+Converse optimality enables absolute evaluation by con-structing problems with certified optimal solutions. Several works have formalized this idea for both discrete-time [10] and continuous-time [13] deterministic settings, establishing conditions under which a given value function can be viewed as the solution to an optimal control problem. This forms the basis for a new benchmarking paradigm that replaces cu-mulative reward curves with rigorous statistical testing. Our work extends this paradigm to the stochastic setting, using benchmarks representative of real-world systems to provide a certified optimum and allow an absolute assessment of the optimality gap. III. P ROBLEM SETUP AND ASSUMPTIONS 
+
+We consider a stochastic, discrete-time, control-affine, nonlinear system subject to an additive Gaussian noise: 
+
+sk+1 = f (sk) + g(sk)ak + wk,
+
+with state s ∈ Rn, action a ∈ Rm, internal dynamic 
+
+f : Rn → Rn, input-coupling matrix g : Rn → Rn×m,and w the independent and identically distributed (i.i.d.), time-independent Gaussian noise process with zero mean and covariance matrix Σ.For a stationary policy π, mapping states to actions through π(sk) = ak, the discounted infinite-horizon cost-to-go is 
+
+V π (s) = E
+
+" ∞X
+
+> k=0
+
+γk c(sk, π (sk)) | s0 = s
+
+#
+
+, γ ∈ (0 , 1) ,
+
+where γ is the discount factor. The function c : Rn × Rm →
+
+R+ is the stage cost, separable into state (positive) and control (positive, strictly convex) components q : Rn → R
+
+and ρ : Rm → R, such that c(s, a ) = q(s) + ρ(a). The optimal value V ∗ satisfies the stochastic Bellman equation 
+
+V ∗(s) = min 
+
+> a∈Rm
+
+q(s) + ρ(a) + γEV ∗(f (s) + g(s)a + w)
+
+(1) and the optimal action a∗ is defined stepwise by: 
+
+a∗ 
+
+> k
+
+= arg min 
+
+> a∈Rm
+
+n
+
+q(sk) + ρ(ak) + V ∗(sk+1 )
+
+o
+
+,
+
+satisfying also the first-order optimality condition: 
+
+∇aρ(a) a=a∗ + γ ∇aE[V ∗(f (s) + g(s)a + w)] a=a∗ = 0 .
+
+(2) The stochastic converse optimality problem can eventually be summarized as follows. Given a chosen optimal value function V ∗ : Rn → R+, an input-coupling function g, a stage cost function c(s, a ) = q(s) + ρ(a), a discount factor 
+
+γ ∈ (0 , 1) , and a noise distribution w ∼ N (0 , Σ) , find a function f : Rn → Rn such that the stochastic Bellman equation (1) holds for all s ∈ Rn.To guarantee that the stochastic Bellman equation is well-posed and that the first-order optimality condition is valid, we make the following set of assumptions. These are extensions of standard assumptions in stochastic optimal control to the converse optimality setting. 
+
+Assumption 1 (Well-posedness and regularity). The following holds on Rn:1) q : Rn → R+ is continuous. 2) ρ : Rm → R+ is C2 and μ-strongly convex: ∇2ρ(a) ⪰
+
+μI for all a.3) f, g are locally Lipschitz with at most polynomial growth. 4) The candidate value function V : Rn → R is C2.
+
+Assumption 2 (Growth and integrability). There exist constants η > 0 and an integer ℓ ≥ 1 such that for all s ∈ Rn,
+
+|V (s)| + ∥∇ V (s)∥ + ∥∇ 2V (s)∥ ≤ η 1 + ∥s∥ℓ,
+
+and, for each fixed (s, a ) ∈ Rn × Rm, the expectations 
+
+E[∥∇ V (f (s)+ g(s)a+w)∥] and E[∥∇ 2V (f (s)+ g(s)a+w)∥]
+
+are finite under w ∼ N (0 , Σ) .IV. S TOCHASTIC CONVERSE OPTIMALITY 
+
+We now state the general converse result in the discounted, stochastic setting; a key technical step is the lemma justifying the interchange of expectation and differentiation in the first-order optimality condition. 
+
+Lemma 1. Under Assumptions 1 and 2, for all s ∈ Rn
+
+and a ∈ Rm,
+
+∇aE[V (f (s) + g(s)a + w)] = = Eg(s)⊤∇V (f (s) + g(s)a + w) . (3) 
+
+Proof. Fix s ∈ Rn and define ϕ(a, w ) = V (f (s)+ g(s)a+
+
+w). By the chain rule, we have 
+
+∇aϕ(a, w ) = g(s)⊤∇V (f (s) + g(s)a + w)
+
+To interchange the derivative and the expectation, we verify the conditions of the dominated convergence theorem. Let 
+
+e1, . . . , e m be the canonical basis vectors of Rm. Without loss of generality, we choose a sequence {tν } converging to 
+
+0, such that we can define sequences {a(i) 
+
+> ν
+
+} through a(i) 
+
+> ν
+
+=
+
+a + tν ei converging to a along each coordinate axis i. By the mean value theorem, for each axis i, there exists ξ(i) 
+
+> ν
+
+on the line segment between a(i) 
+
+> ν
+
+and a such that 
+
+ϕ(a(i) 
+
+> ν
+
+, w ) − ϕ(a, w ) = ∇aϕ(ξ(i) 
+
+> ν
+
+, w ) · (a(i) 
+
+> ν
+
+− a),
+
+and |ϕ(a(i) 
+
+> ν
+
+, w ) − ϕ(a, w )| ≤ ∥∇ aϕ(ξ(i) 
+
+> ν
+
+, w )∥ · ∥ a(i) 
+
+> ν
+
+− a∥.
+
+Now, let us bound ∥∇ aϕ(ξ(i) 
+
+> ν
+
+, w )∥ for each axis i. From Assumption 2, we obtain: 
+
+∥∇ aϕ(ξ(i) 
+
+> ν
+
+, w )∥ ≤ ∥ g(s)∥ · ∥∇ V (f (s) + g(s)ξ(i) 
+
+> ν
+
++ w)∥,
+
+and hence, 
+
+∥∇ aϕ(ξ(i) 
+
+> ν
+
+, w )∥ ≤ ∥ g(s)∥ · η(1 + ∥f (s) + g(s)ξ(i) 
+
+> ν
+
++ w∥ℓ).
+
+Since ξ(i) 
+
+> ν
+
+lies in a bounded neighborhood of a (for ν
+
+sufficiently large), and f, g have at most polynomial growth (Assumption 1.3), there exist constants C1(s) and C2(s) such that 
+
+∥f (s) + g(s)ξ(i) 
+
+> ν
+
++ w∥ ≤ C1(s) + C2(s)∥ξ(i) 
+
+> ν
+
+∥ + ∥w∥≤ C(s, a ) + ∥w∥,
+
+where C(s, a ) is independent of ν and ξ(i) 
+
+> ν
+
+(i.e., uniform over the neighborhood of a). This uniformity ensures the subsequent growth bound 
+
+∥∇ aϕ(ξ(i) 
+
+> ν
+
+, w )∥ ≤ η∥g(s)∥(1 + ( C(s, a ) + ∥w∥)ℓ)
+
+≤ K(s, a )(1 + ∥w∥ℓ),
+
+where K(s, a )(1 + ∥w∥ℓ) is independent of ν. This provides a single bound applicable to the entire sequence. The growth bound β : w 7 → K(s, a )(1 + ∥w∥l) is measurable. Let μΣ be the Gaussian measure. By definition of the expectation, the Lebesgue integral of β weighted by the Gaussian density is 
+
+Z
+
+> Rn
+
+β(w)dμ Σ(w) = E[K(s, a )(1 + ∥w∥l)] .
+
+The linearity of the expectation yields 
+
+E[K(s, a )(1 + ∥w∥l)] = K(s, a )(1 + E[∥w∥l]) ,
+
+and hence, 
+
+Z
+
+> Rn
+
+β(w)dμ Σ(w) = K(s, a )
+
+
+
+1 + 
+
+Z
+
+> Rn
+
+∥w∥ℓdμ Σ(w)
+
+
+
+.
+
+As all Gaussian moments are finite, we have: 
+
+Z
+
+> Rn
+
+∥w∥ℓdμ Σ(w) = E[∥w∥ℓ] < ∞
+
+for all ℓ > 0. Hence, 
+
+Z
+
+> Rn
+
+β(w)dμ Σ(w) < ∞,
+
+and the growth bound β is Lebesgue-integrable with respect to the Gaussian measure. Since ξ(i) 
+
+> ν
+
+→ a, continuity gives 
+
+∇aϕ(ξ(i) 
+
+> ν
+
+, w ) → ∇ aϕ(a, w ) pointwise. Hence, the bound 
+
+∥∇ aϕ(ξ(i) 
+
+> ν
+
+, w )∥ ≤ K(s, a )(1 + ∥w∥ℓ) provides a suitable dominating function, and by the dominated convergence theorem, we eventually obtain 
+
+lim  
+
+> ν→∞
+
+E[∇aϕ(ξ(i) 
+
+> ν
+
+, w )] = E[∇aϕ(a, w )] . (∗)
+
+On the other hand, by definition of the gradient, we have 
+
+∇aE[ϕ(a, w )] = 
+
+ ∂∂a 1
+
+E[ϕ(a, w )] , . . . , ∂∂a m
+
+E[ϕ(a, w )] 
+
+
+
+.
+
+The directional derivative along the i-th axis is 
+
+∂∂a i
+
+E[ϕ(a, w )] = lim  
+
+> ν→∞
+
+E
+
+h ϕ(a + tν ei, w ) − ϕ(a, w )
+
+tν
+
+i
+
+.
+
+Along the i-th axis, we also have 
+
+ϕ(a + tν ei, w ) − ϕ(a, w )
+
+tν
+
+= ∇aϕ(ξ(i) 
+
+> ν
+
+, w ) · ei.
+
+Combining these expressions yields 
+
+lim  
+
+> ν→∞
+
+E
+
+h ϕ(a + tν ei, w ) − ϕ(a, w )
+
+tν
+
+i
+
+== lim  
+
+> ν→∞
+
+E[∇aϕ(ξ(i) 
+
+> ν
+
+, w ) · ei] = E[∇aϕ(a, w ) · ei],
+
+where the last equality follows from the dominated conver-gence argument (∗) above. But, ∇aϕ(a, w )·ei = ∂∂a i ϕ(a, w ).Therefore, ∂∂a i E[ϕ(a, w )] = E[ ∂∂a i ϕ(a, w )] . Finally, we get 
+
+∇aE[ϕ(a, w )] = 
+
+
+
+E[ ∂∂a 1
+
+ϕ(a, w )] , . . . , E[ ∂∂a m
+
+ϕ(a, w )] 
+
+
+
+== E
+
+ ∂ϕ ∂a 1
+
+(a, w ), . . . , ∂ϕ ∂a m
+
+(a, w )
+
+
+
+= E[∇aϕ(a, w )] .
+
+Theorem 1 (Stochastic converse optimality). Fix a stage cost c(s, a ) = q(s) + ρ(a) with q, ρ satisfying Assumption 1, discount factor γ ∈ (0 , 1) , noise covariance Σ ≻ 0, input coupling g : Rn → Rn×m, and a candidate value function 
+
+V ∗ ∈ C2(Rn) satisfying Assumption 2. Then there exists a drift f : Rn → Rn (i.e. a system sk+1 = f (sk) + g(sk)ak +
+
+wk with wk ∼ N (0 , Σ) ) for which V ∗ is the optimal value function if and only if there exists a policy π∗ : Rn → Rm
+
+such that for every s ∈ Rn:
+
+∇a
+
+h
+
+ρ(a) + γ EV ∗ f (s) + g(s)a + w i
+
+> a=a∗
+
+= 0 , (4) 
+
+V ∗(s) = q(s) + ρ(a∗) + γEV ∗ f (s) + g(s)a∗ + w .
+
+(5) When such π∗ exists, it is an optimal policy and V ∗ satisfies the stochastic Bellman equation (1) for all s ∈ Rn.
+
+Proof. Sufficiency. Suppose there exist a policy π∗ : Rn →
+
+Rm and a drift f : Rn → Rn such that for every s ∈ Rn,equations (4) and (5) hold, and π∗(sk) = a∗ 
+
+> k
+
+for all sk ∈ Rn.For a fixed s ∈ Rn we define the Bellman integrand: 
+
+Φs(a) := q(s) + ρ(a) + γEV ∗(f (s) + g(s)a + w)
+
+By Lemma 1, we have: 
+
+∇aΦs(a) = ∇aρ(a) + γEg(s)⊤∇V ∗(f (s) + g(s)a + w).
+
+Equations (4)-(5) give ∇aΦs(a)|a=a∗ = 0 and imply that the Bellman identity holds with action a∗. In particular, 
+
+V ∗(s) = q(s) + ρ(a∗) + γEV ∗(f (s) + g(s)a∗ + w)
+
+= Φ s(a∗).
+
+Since the Bellman equation involves the minimization of 
+
+Φs(a) with respect to a, it follows that this minimum is attained at a∗. Hence: 
+
+min  
+
+> a∈Rm
+
+Φs(a) = Φ s(a∗)= q(s) + ρ(a∗) + γEV ∗(f (s) + g(s)a∗ + w)
+
+= V ∗(s).
+
+Thus, π∗ is an optimal policy and V ∗ is the optimal value function for the drift f .Now fix any stationary policy π and define its Bellman operator: 
+
+(T π V )( s) := q(s)+ ρ(π(s))+ γEV  f (s) + g(s)π(s) + w .
+
+By definition of the minimum, min a Φs(a) ≤ Φs(π(s)) ,hence V ∗(s) ≤ (T π V ∗)( s) for all s. Applying T π to both sides of V ∗ ≤ T π V ∗ and using the monotonicity of 
+
+T π (which follows from the positivity of costs), we obtain 
+
+T π V ∗ ≤ (T π )2V ∗. By induction, V ∗ ≤ (T π )kV ∗ for all k ∈ N. Since T π is a γ-contraction in an appropriate weighted norm (e.g. the sup norm under bounded costs, or a weighted norm under the discounted criterion), then by the Banach fixed-point theorem, (T π )kV ∗ → V π , the value function of policy π. Taking limits preserves the inequality, yielding V ∗ ≤ V π on Rn, proving the optimality of V ∗ and 
+
+π∗.
+
+Necessity. Assume V ∗ optimal, so for each s the minimizer 
+
+π∗(s) in (1) exists. By the measurable selection theorem [14], 
+
+π∗ is chosen to be measurable, and hence admissible as a feedback policy. At a minimum, we have ∇aΦs(π∗(s)) = 0. Lemma 1 justifies interchanging the derivative and the expectation, yielding (4). The Bellman identity (5) holds by the definition of π∗(s) = a∗ as the minimizer in (1). V. Q UADRATIC –G AUSSIAN SPECIALIZATION AND 
+
+CONSTRUCTIVE DRIFTS 
+
+We now examine the Quadratic–Gaussian (QG) setting, where the cost functions and the value function are now quadratic. In this setting, a∗ will be shown to be unique. With explicit V ∗ and a∗, we can generate and validate numerous instances for RL evaluation. Let b be the certainty equivalence offset. We assume the following: 
+
+q(s) = s⊤Qs, ρ(a) = a⊤Ra, V ∗(s) = s⊤P s + b, 
+
+with Q ⪰ 0, R ≻ 0, P ≻ 0, and w ∼ N (0 , Σ) .
+
+Certainty-equivalent optimal policy. We start from the Bellman integrand: 
+
+Φs(a) = q(s) + ρ(a) + γ E[V ∗(f (s) + g(s)a + w)] .
+
+For ease of reading, let z := z(s, a ) = f (s) + g(s)a. As 
+
+V ∗(s) = s⊤P s + b, we have: 
+
+E[V ∗(z + w)] = E[( z + w)⊤P (z + w) + b] = = z⊤P z + 2 z⊤P E[w] + E[w⊤P w ] + b. 
+
+Since w ∼ N (0 , Σ) , we have E[w] = 0 and E[w⊤P w ] = 
+
+tr (P Σ) , and we are left with 
+
+E[V ∗(z + w)] = z⊤P z + tr (P Σ) + b. 
+
+Hence, it follows that: 
+
+Φs(a) = s⊤Qs + a⊤Ra + γ z ⊤P z + γ tr( P Σ) + γb, 
+
+and 
+
+∇aΦs(a) = ∇a
+
+h
+
+a⊤Ra + γz ⊤P z 
+
+i
+
+,
+
+as the others terms do not depend on a. We then have: 
+
+∇aΦs(a) = ∇a
+
+h
+
+a⊤Ra + γ
+
+
+
+f (s)⊤P z + a⊤g⊤P z 
+
+i 
+
+= ∇a
+
+h
+
+a⊤Ra + γ
+
+
+
+f (s)⊤P f (s) + f (s)⊤P g (s)a++ a⊤g(s)⊤P f (s) + a⊤g(s)⊤P g (s)a
+
+i 
+
+= ∇a
+
+h
+
+a⊤B(s)a + 2 γa ⊤g(s)⊤P f (s)+ + γf (s)⊤P f (s)
+
+i
+
+,
+
+where B(s) = R + γg (s)⊤P g (s). Setting ∇aΦs(a) = 0 
+
+yields: 
+
+∇aΦs(a) = 2 B(s)a + 2 γg (s)⊤P f (s) = 0 .
+
+Solving for a leads to the stationary optimal feedback 
+
+a∗ = −γ B (s)−1g(s)⊤P f (s).
+
+As ∇2
+
+> a
+
+Φs(a) = 2 B(s) ≻ 0, Φs is strictly convex and its minimizer a∗ is unique. 
+
+Discounted metric and energy identity. The minimized term min a∈Rm Φs(a) = min a∈Rm
+
+h
+
+a⊤Ra + γz ⊤P z 
+
+i
+
+=
+
+f (s)⊤Hγ (s)f (s) induces a state-dependent metric: 
+
+Hγ (s) = γ
+
+
+
+P − γ P g (s)B(s)−1g(s)⊤P
+
+
+
+= γ
+
+
+
+P −1 + γ g (s)R−1g(s)⊤−1
+
+≻ 0,
+
+(6) where the second equality uses the Woodbury identity. In-serting min a∈Rm Φs(a) into the Bellman equation (1) leads to 
+
+V ∗(s) = s⊤P s + b
+
+= min 
+
+> a∈Rm
+
+q(s) + ρ(a) + γEV ∗(z + w)
+
+= q(s) + min 
+
+> a∈Rm
+
+a⊤Ra + γz ⊤P z + γtr (P Σ) + γb 
+
+= q(s) + f (s)⊤Hγ (s)f (s) + γtr (P Σ) + γb. 
+
+Comparing the state-dependent parts gives 
+
+s⊤P s = q(s) + f (s)⊤Hγ (s)f (s),
+
+and reduces the Bellman identity to the quadratic “energy” equation: 
+
+s⊤(P − Q)s = f (s)⊤Hγ (s) f (s).
+
+In the generator, this energy equation is the design equation: it characterizes the family of drifts that make the prescribed 
+
+V ∗ optimal. 
+
+Noise offset. Comparing the constant parts gives 
+
+b = γtr (P Σ) + γb, 
+
+and hence additive Gaussian noise contributes only a constant shift in value, with 
+
+b = γ
+
+1 − γ tr (P Σ) .
+
+Two constructive parameterizations. All drifts satisfying the energy equation admit explicit equivalent square-root (SR) and metric-normalized (MN) parameterizations that make it easy to inject bounded nonlinear structure. For any nonzero direction field ˜f (s), the square-root parameterization is given by: 
+
+f (s) = 
+
+q
+
+s⊤(P − Q)s Hγ (s)−1/2 ˜f (s)
+
+∥ ˜f (s)∥ , ˜f (s)̸ = 0 .
+
+Equivalently, for any orthogonal field S(s) with 
+
+S(s)⊤S(s) = I,
+
+f (s) = Hγ (s)−1/2S(s)( P − Q)1/2s. 
+
+Our benchmarks primarily use this latter equation: orthog-onality guarantees the energy equation exactly, while the field 
+
+S(·) provides a knob for nonlinear coupling and stiffness. VI. B ENCHMARK GENERATION , F AMILIES , AND 
+
+DATASET 
+
+We now describe the systematic construction of bench-mark instances based on the Quadratic-Gaussian (QG) spe-cialization developed in Section V. The goal is to generate a diverse set of stochastic control problems, each with a certified optimal policy π∗ and an optimal value function 
+
+V ∗, which can be used to evaluate reinforcement learning algorithms. We first define the general problem class and the generator pipeline. We then introduce two benchmark fami-lies: (i) a nonlinear linked-arm system with state-dependent actuation and (ii) a dynamically-extended nonholonomic vehicle model. Finally, we describe how validated instances are assembled into a dataset for algorithm evaluation. 
+
+A. Problem definition and generation of benchmark families 
+
+Each benchmark instance is a discrete-time stochastic control problem of the form: 
+
+sk+1 = f (sk) + g(sk)ak + wk,
+
+with state s ∈ Rn, action a ∈ Rm, internal dynamic 
+
+f : Rn → Rn, input-coupling matrix g : Rn → Rn×m,a discount factor γ ∈ (0 , 1) , and w the independent and identically distributed (i.i.d.), time-independent Gaussian noise process with zero mean and covariance matrix Σ. The corresponding stage cost c : Rn × Rm → R is defined by 
+
+c(s, a ) = q(s) + ρ(a). The functions f , g, q, and ρ satisfy Assumptions 1 and 2. The optimal policy π∗ : Rn → Rm
+
+and the optimal value function V ∗ : Rn → R are analytically known from the converse-optimal construction of Section V. A benchmark family is a parametric collection of control problems: 
+
+Fψ = {Mψ : ψ ∈ Ψ},
+
+where each control problem Mψ is defined by a tuple 
+
+(fψ , g ψ , q ψ , ρ ψ , Σψ ) that satisfies the QG conditions of Sec-tion V, and Ψ is a parameter space. The certified ground truth 
+
+(π∗ 
+
+> ψ
+
+, V ∗ 
+
+> ψ
+
+) follows directly from the construction. We construct two distinct families, FArm and FNVDEx ,which are described below. Each family provides a range of difficulty levels through interpretable parameters; we make the physical structure explicit through governing equa-tions. Depending on the structure of the input matrix, two equivalent QG parameterizations are convenient: a state-dependent formulation used for the Arm family, a constant-input formulation used for the NVDEx family. In addition, the converse-optimal drift is not treated as an abstract matrix field only: its factors are chosen so that they admit arobotics interpretation. In particular, the orthogonal matrix field S(·) is implemented as a product of planar rotations, which preserves the converse-optimal energy identity exactly while producing dynamics that resemble physically mean-ingful transition and coupling operators in robotic systems. The generator supports multiple families; here we focus on two physically grounded, scalable constructions that stress different failure modes of deep RL. The generator (Algorithm 1) produces instances with a validation trace. Each instance undergoes three checks: 1) Symmetric positive-definiteness (SPD) of B(s):
+
+B(s) = R + γg (s)⊤P g (s) ≻ 0, s ∈ Rn.
+
+The SPD of B(s) is required for two reasons: (i) it guarantees strict convexity of the Bellman integrand 
+
+Φs(a), so the first-order condition yields a unique global minimizer a∗; and (ii) it keeps the discounted metric Hγ (s) positive definite, which is necessary for the energy equation s⊤(P − Q)s = f (s)⊤Hγ (s)f (s)
+
+to be well-posed and numerically stable. In practice, numerically verifying B(s) ≻ 0 on a sampling grid over a prescribed bounded test region in the domain 
+
+Rn guarantees the mathematical consistency of the constructed benchmark instance. 2) Bellman residual : this check verifies that the con-structed (f, g, q, ρ ) indeed satisfy the optimality con-ditions numerically. For each test point s on a grid G,we compute: 
+
+δ(s) = V ∗(s) −
+
+
+
+q(s) + ρ(a∗(s))+ + γE[V ∗(f (s) + g(s)a∗(s) + w)] 
+
+
+
+.
+
+If max s∈G δ(s) < ε, where ε is a suitable numeri-cal tolerance threshold, the instance passes validation. This avoids implementation errors and ensures that the benchmark is correctly instantiated. 3) Boundedness : the boundedness check simulates the closed-loop system under the optimal policy π∗ over a fixed horizon and domain. This verifies that nu-merical implementation does not introduce instabilities, that the theoretically optimal behavior translates into practice, and that the benchmark instance is usable for RL evaluation, ensuring trajectories remain well-behaved and do not diverge due to accumulated errors or hidden sensitivities. Instances that fail this test are rejected, guaranteeing that every exported fixture is both mathematically correct and practically stable. Validated instances are exported as YAML fixtures contain-ing parameters, CRN seeds, and reference evaluators for V ∗
+
+and a∗.
+
+Algorithm 1 Converse-Optimal Benchmark Generator (QG case)                                                  
+
+> 1: Input: family type, parameter ranges, number of instances N, param-eterization ( sqrt or metric ), nonlinearity knob α, seeds 2: for each hyperparameter tuple ψdo
+> 3: Sample parameter vector ψifrom family-specific distribution PΨ
+> 4: Extract (n, m, Q, R, P, γ, Σ) and input map gfrom ψi
+> 5: Verify R+γg (s)⊤P g (s)≻0on domain D
+> 6: Choose direction field ˜f(s)or orthogonal field S(s)(bounded via
+> α)7: Construct fvia parameterizations; compute a∗(s)
+> 8: Validate Bellman identity on a grid; test closed-loop boundedness under a∗
+> 9: Export fixture (YAML) with reference (a∗, V ∗)and CRN seeds 10: end for
+> 11: Output: fixture dataset + validator + reference solvers + plotting scripts
+
+B. Serial n-link planar arm systems ( ConverseArm )
+
+The first family, FArm , models a serial n-link planar arm with revolute joints. 
+
+1) State and action spaces: In order to do this, we must express the configuration (joint angles) and the rates of change (angular velocities) of each joint. The natural choice is therefore to include for each joint i: 
+
+> •
+
+θi — the angular position (angle) of the joint i; 
+
+> •
+
+ωi — the angular velocity of the joint i.Stacking these variables for all n joints gives the state vector 
+
+s = [ θ1, ω 1, θ 2, ω 2, . . . , θ n, ω n]⊤ ∈ R2n,
+
+In this ordering, each joint occupies two consecutive com-ponents: position followed by velocity. Thus, for joint i, the angle θi appears at position 2i − 1 (odd index), and the angular velocity ωi appears at position 2i (even index). This convention is convenient when writing the dynamics and the input coupling matrix, as it allows us to refer to the velocity component of the joint i simply as the 2i-th entry of the state vector. The control inputs are the torques applied at each joint: 
+
+a = [ τ1, τ 2, . . . , τ n]⊤ ∈ Rn,
+
+where τi is the torque commanded at the joint i. Positive torques act to increase the corresponding angular velocity. This choice of state and action spaces is standard for robotic manipulators: the state contains the information needed to predict future evolution (positions and velocities), while the actions represent the physical inputs available to the controller (joint torques). The dimension grows linearly with the number of joints, allowing systematic scaling to higher-dimensional problems. 
+
+2) Dynamics: The discrete-time dynamics are obtained by Euler discretization of the continuous-time equations of motion, with sampling step τ > 0. The kinematic update for each joint angle is straightforward: 
+
+θi,k +1 = θi,k + τ ω i,k + wθi,k ,
+
+where wθi,k is the component of the process noise affecting the angle of the joint i.The update in angular velocity is more complex because it depends on both the internal dynamics (torques arising from motion, gravity, and coupling between joints) and the applied control torques. In our converse-optimal construction, the internal dynamics are encoded in the drift fp(s), while the control enters through the input matrix g(s). Specifically, the angular velocity update is: 
+
+ωi,k +1 = [ fp(sk)] 2i + p cos( θi,k ) ai,k + wωi,k ,
+
+where:  
+
+> •
+
+[fp(sk)] 2i denotes the 2i-th component of the drift vector (recall the state ordering [θ1, ω 1, . . . , θ n, ω n],so odd indices correspond to angles, even indices to angular velocities);  
+
+> •
+
+p ∈ (0 , 1] is a control-strength continuation parameter that scales the input. When p = 1 , the system has full control authority; as p → 0, control becomes weaker;  
+
+> •
+
+cos( θi,k ) captures the configuration-dependent mechan-ical advantage: torque applied at joint i is most effective when the joint angle is near zero (torque acts perpendic-ular to the link), and becomes ineffective as θi → ± π
+
+> 2
+
+(torque aligns with the link direction);  
+
+> •
+
+wωi,k is the process noise affecting the angular velocity of joint i.The complete system can be written in the compact control-affine form: 
+
+sk+1 = fp(sk) + p g (sk)ak + wk, wk ∼ N (0 , Σ) ,where the input matrix g(s) has entries 
+
+[g(s)] 2i,i = cos θi, i = 1 , . . . , n, 
+
+with all other entries zero. This structure ensures that each torque ai affects only its corresponding angular velocity channel, scaled by the mechanical advantage cos θi, exactly as in the governing equations above. 
+
+3) Drift construction: The drift fp is not specified apriori ; it is constructed using the converse-optimality frame-work to ensure that the prescribed value function V ∗(s) = 
+
+s⊤P s + b is optimal. Using the MN parameterization, we set 
+
+fp(s) = H(p) 
+
+> γ
+
+(s)−1/2Sp(s)( P − Q)1/2s, 
+
+where H(p) 
+
+> γ
+
+(s) is the discounted metric with control strength 
+
+p:
+
+H(p) 
+
+> γ
+
+(s) = γ P −γp 2P g (s)( R+γp 2g(s)⊤P g (s)) −1g(s)⊤P .
+
+The orthogonal field Sp(s) is implemented as a product of Givens rotations: 
+
+Sp(s) = 
+
+"n−1Y
+
+> i=1
+
+G(ωi, ω i+1 ; βi(s, p )) 
+
+#
+
+××
+
+" nY
+
+> i=1
+
+G(θi, ω i; αi(s, p )) 
+
+#
+
+,
+
+with rotation angles 
+
+αi(s, p ) = α0p tanh( κ1θiωi) + g0p sin θi,βi(s, p ) = β0p tanh( κ2(θi+1 − θi)) .
+
+These angles introduce physically interpretable couplings:  
+
+> •
+
+The tanh( κ1θiωi) term creates a velocity-dependent coupling similar to Coriolis forces in robotic manip-ulators;  
+
+> •
+
+The sin θi term introduces a gravity-like bias that de-pends on joint angle. g0 scales the magnitude of this bias term;  
+
+> •
+
+The tanh( κ2(θi+1 − θi)) term couples neighboring joints, similar to elastic or damping forces in a serial linkage. The constants κ1 and κ2 are gain parameters that control the sensitivity of the coupling terms:  
+
+> •
+
+κ1 scales the argument of the hyperbolic tangent in 
+
+αi, determining how strongly the product θiωi (po-sition–velocity coupling) influences the rotation an-gle. Larger κ1 makes the tanh saturate more quickly, meaning the coupling becomes active even for small deviations from zero;  
+
+> •
+
+κ2 scales the argument of the hyperbolic tangent in βi,controlling the sensitivity of the neighbor-coupling term to the angle difference θi+1 − θi. Higher κ2 makes the coupling more responsive to small misalignments between adjacent joints. In both cases, the hyperbolic tangent ensures that the coupling remains bounded: | tanh( ·)| < 1, so the rotation angles αi and βi are confined to intervals determined by α0p
+
+and β0p respectively. This boundedness guarantees that the orthogonal field Sp(s) remains well-defined and numerically stable across the entire state space. Crucially, because each G
+
+is an orthogonal rotation matrix, the product Sp(s) remains orthogonal ( S⊤ 
+
+> p
+
+Sp = I). This orthogonality guarantees that the energy equation s⊤(P − Q)s = fp(s)⊤H(p) 
+
+> γ
+
+(s)fp(s)
+
+holds exactly, preserving the converse-optimal construction while injecting nonlinear, physically motivated coupling. 
+
+4) Optimal policy and value: With the drift constructed as above, the optimal action derived from the QG specialization is: 
+
+a∗ 
+
+> p
+
+= −γp  R + γp 2g(s)⊤P g (s)−1g(s)⊤P f p(s).
+
+The parameter p ∈ (0 , 1] scales g 7 → pg , resulting in a homotopy family that preserves the analytic structure of the optimal action a∗
+
+> p
+
+. The optimal policy provides the control authority that, together with the drift fp(s), steers the system optimally according to V ∗.
+
+5) Difficulty knobs: The family is parameterized by 
+
+ψ = ( n, p, Q, R, P, Σ, α 0, β 0, κ 1, κ 2, g 0).
+
+To facilitate ordering benchmark instances by expected dif-ficulty, we define a scalar heuristic index: 
+
+D = λ1n + λ2p−2 + λ3tr (Σ) + λ4α0 + λ5κ(P ),
+
+with fixed weights λi > 0. This index combines:  
+
+> •
+
+n: dimensionality (more joints = more complex dynam-ics);  
+
+> •
+
+p−2: penalizes weak control authority (small p), as it makes stabilization harder;  
+
+> •
+
+tr(Σ) : noise power;  
+
+> •
+
+α0: nonlinearity gain of Sp (larger α0 introduces stronger coupling);  
+
+> •
+
+κ(P ): condition number of P , a proxy for metric ill-conditioning; Although D is heuristic, it provides a useful relative ordering of instances for ablation studies and difficulty sweeps. While the ConverseArm family emphasizes serial-chain dynamics with state-dependent actuation, the next family takes a different structural form. The NVDEx system features constant input matrices and includes a controlled open-loop instability mechanism, offering complementary challenges to reinforcement learning algorithms. 
+
+C. Nonholonomic Vehicle with Dynamic Extension (NVDEx) 
+
+The second family, FNVDEx , models a unicycle/differential-drive vehicle module with dynamic extension, allowing unstable open-loop configurations. Fig. 2: Converse-optimal benchmark pipeline: sampling, drift construction, validation, fixture export, paired evaluation, and reporting. 
+
+1) State and action spaces: A standard unicycle model has states (x, y, ϕ ) representing position and heading, with controls for linear velocity v (magnitude of velocity in direction of heading) and angular velocity ω (rate of change of heading). However, such a model is too simple for chal-lenging benchmarks: control inputs directly set velocities, leaving little room for complex dynamics. We therefore introduce the dynamic extension: instead of commanding velocities directly, we command their deriva-tives (accelerations), and the velocities themselves become part of the state. This creates a richer dynamical structure where:  
+
+> •
+
+The system has inertia: the velocity changes only through applied accelerations;  
+
+> •
+
+Multiple modules K can be coupled, increasing the dimensionality. For j > 0, we denote v(j) 
+
+> i
+
+and ω(j) 
+
+> i
+
+the internal states in the dynamic extension chain and the angular velocity chain, respectively. They represent “delayed” or “filtered” versions of the velocity, creating inertia-like effects. The integrator depths rv and rω control how many steps of “memory” appear between the acceleration commands and the actual velocity changes. Integrator depth refers to how many cascaded integrators lie between the control input and the actual physical velocity. For rv = 1 , the chain contains only the linear velocity v(0)  
+
+> i
+
+, which is directly affected by the control; the response is immediate, with low inertia. For rv = 2, the chain contains v(0)  
+
+> i
+
+and v(1)  
+
+> i
+
+; control affects v(1)  
+
+> i
+
+, which then integrates to influence v(0)  
+
+> i
+
+, creating a smoother and more realistic response with inertia. For 
+
+rv = 3 , the chain has three levels, further increasing the smoothing between the command and the actual velocity. Higher integrator depth makes the system more challenging to control because the effect of control actions is delayed and filtered, the state space dimension increases, and the dynamics become more complex, requiring the controller to anticipate future effects of current actions. Thus, rv and rω
+
+serve as difficulty knobs that increase dynamical complexity while preserving the certified optimal policy structure. For a system with K ≥ 1 modules and integrator depths 
+
+rv , r ω ∈ N, the state vector of module i contains:  
+
+> •
+
+Position (xi, y i) and heading ϕi (the core unicycle states);  
+
+> •
+
+A chain of rv velocity variables v(0)  
+
+> i
+
+, . . . , v (rv −1)  
+
+> i
+
+,where v(0)  
+
+> i
+
+is the actual linear velocity, and the higher indices represent intermediate states in the extension;  
+
+> •
+
+A chain of rω angular velocity variables 
+
+ω(0)  
+
+> i
+
+, . . . , ω (rω −1)  
+
+> i
+
+, similarly structured. Thus, the state si ∈ R3+ rv +rω of the module i is: 
+
+si = [ xi, y i, ϕ i, v (0)  
+
+> i
+
+, . . . , v (rv −1)  
+
+> i
+
+, ω (0)  
+
+> i
+
+, . . . , ω (rω −1)  
+
+> i
+
+]⊤.
+
+The action for the module i consists of the accelerations commanded to the velocity chains: 
+
+ai = [ uv,i , u ω,i ]⊤ ∈ R2,
+
+where uv,i accelerates the linear velocity chain and uω,i 
+
+accelerates the angular velocity chain. For multi-module systems ( K > 1), states and actions are simply stacked: 
+
+s = [ s⊤ 
+
+> 1
+
+, s ⊤ 
+
+> 2
+
+, . . . , s ⊤ 
+
+> K
+
+]⊤ ∈ R(3+ rv +rω )K ,a = [ a⊤ 
+
+> 1
+
+, a ⊤ 
+
+> 2
+
+, . . . , a ⊤ 
+
+> K
+
+]⊤ ∈ R2K .
+
+Analogously to the ConverseArm setup, this choice of state and action spaces reflects the structure of a unicycle with dynamic extension: the module’s configuration consists of its position and heading; velocities determine its motion through kinematic equations; inertia by placing integrators between acceleration commands and actual velocities. Dimension scales linearly with the number of modules 
+
+K, allowing systematic progression from single-module to multi-agent benchmarks while maintaining physical interpretability and certified optimality. 2) Dynamics: With the sampling step τ > 0, the discrete-time dynamics reflects the physical relationships between these variables. For each module i, the position and heading evolve according to the actual linear and angular velocities, and are obtained by Euler discretization of continuous-time kinematic equations: 
+
+xi,k +1 = xi,k + τ v (0)  
+
+> i,k
+
+cos ϕi,k + wxi,k ,yi,k +1 = yi,k + τ v (0)  
+
+> i,k
+
+sin ϕi,k + wyi,k ,ϕi,k +1 = ϕi,k + τ ω (0)  
+
+> i,k
+
++ wϕi,k .
+
+The velocity chains propagate their values upward: each level feeds into the next, like a cascade of integrators. For 
+
+j = 0 , . . . , r v − 2:
+
+v(j) 
+
+> i,k +1
+
+= v(j) 
+
+> i,k
+
++ τ v (j+1)  
+
+> i,k
+
++ wv,j i,k ,
+
+and similarly for j = 0 , . . . , r ω − 2:
+
+ω(j) 
+
+> i,k +1
+
+= ω(j) 
+
+> i,k
+
++ τ ω (j+1)  
+
+> i,k
+
++ wω,j i,k .
+
+At the highest level of each velocity chain, the control input directly influences the dynamics. This is where the commanded acceleration enters the system. For the linear velocity chain, the top level is v(rv −1)  
+
+> i
+
+. Its update equation is: 
+
+v(rv −1)  
+
+> i,k +1
+
+= [ f (sk)] v,i + τ u v,i,k + wv,r v −1 
+
+> i,k
+
+.
+
+where we have:  
+
+> •
+
+τ u v,i,k : the direct effect of the control input. The sampling step τ scales the acceleration command uv,i,k 
+
+to produce a change in this top-level state over one discrete time step;  
+
+> •
+
+[f (sk)] v,i : this term comes from the converse-optimal drift construction. It represents the contribution of the system’s internal dynamics, i.e., how the top-level state would evolve even in the absence of control;  
+
+> •
+
+wv,r v −1 
+
+> i,k
+
+: the process noise affecting this state, drawn from the Gaussian distribution with covariance Σ.An analogous equation holds for the angular velocity chain, with uω,i,k the commanded angular acceleration: 
+
+ω(rω −1)  
+
+> i,k +1
+
+= [ f (sk)] ω,i + τ u ω,i,k + wω,r ω −1 
+
+> i,k
+
+.
+
+After stacking all modules, these equations collapse into the compact control-affine form used throughout the paper: 
+
+sk+1 = fp(sk) + pGa k + wk, wk ∼ N (0 , Σ) ,
+
+with control-strength continuation p ∈ (0 , 1] .
+
+3) Input coupling: Each control input ai = [ uv,i , u ω,i ]⊤
+
+influences exactly one state variable (the top of its respective chain), and it does so linearly with coefficient τ . This local, linear influence can be encoded in a matrix G that maps the global action vector a = [ a⊤ 
+
+> 1
+
+, . . . , a ⊤ 
+
+> K
+
+]⊤ to the correct components of the state update. G is a matrix that selects which states receive control inputs and places τ in those positions. This gives G a block-diagonal structure: 
+
+G = blkdiag( Gmod , G mod , . . . , G mod 
+
+| {z } 
+
+> Ktimes
+
+) ∈ Rn×2K .
+
+The per-module matrix Gmod encodes how accelerations 
+
+uv,i and uω,i enter the dynamics. The control inputs uv,i 
+
+and uω,i should affect only the top-level states v(rv −1)  
+
+> i
+
+and 
+
+ω(rω −1)  
+
+> i
+
+, respectively. Therefore, Gmod is a matrix with 3 + 
+
+rv + rω rows and 2 columns, where:  
+
+> •
+
+All rows corresponding to xi, y i, ϕ i, and lower-level velocity states are zero; controls do not directly affect these.  
+
+> •
+
+The row corresponding to v(rv −1)  
+
+> i
+
+(the top of the linear velocity chain) has a 1 in the first column (for uv,i ) and 
+
+0 in the second.  
+
+> •
+
+The row corresponding to ω(rω −1)  
+
+> i
+
+(the top of the angular velocity chain) has a 0 in the first column and a 1 in the second column (for uω,i ). Explicitly, with the sampling step τ factored out, we have: 
+
+Gmod = τ
+
+
+
+0(3+ rv −1) ×2
+
+(1 , 0) 
+
+0(rω −1) ×2
+
+(0 , 1) 
+
+ ∈ R(3+ rv +rω )×2.
+
+4) Drift construction: Following the converse-optimal framework, the drift fp(s) is constructed using the metric-normalized parameterization: 
+
+fp(s) = ( H(p) 
+
+> γ
+
+)−1/2Sν (s)( P − Q)1/2s, 
+
+where the discounted metric with control strength p is: 
+
+H(p) 
+
+> γ
+
+= γ P −1 + γp 2GR −1G⊤−1 ≻ 0.
+
+Note that unlike the ConverseArm family, H(p) 
+
+> γ
+
+is state-independent because G is constant. Here, Sν (s) is an orthogonal field which introduces non-linear coupling while preserving the energy identity. It is constructed as a product of bounded rotations:  
+
+> •
+
+A rotation in the (xi, y i) plane by the local heading ϕi; 
+
+> •
+
+A coupling between (v(0)  
+
+> i
+
+and ω(0)  
+
+> i
+
+) via angle νi(s) = 
+
+α tanh( κv (0)  
+
+> i
+
+ω(0)  
+
+> i
+
+), which creates an interaction be-tween linear and angular velocities;  
+
+> •
+
+Optional cross-couplings (e.g., between (xi, v (0)  
+
+> i
+
+) and 
+
+(yi, ω (0)  
+
+> i
+
+)) can be added to increase nonlinearity. The hyperbolic tangent ensures boundedness: |νi(s)| < α ,so rotations remain within controlled limits. Orthogonality 
+
+(S⊤ 
+
+> ν
+
+Sν = I) guarantees that the energy equation 
+
+s⊤(P − Q)s = fp(s)⊤H(p) 
+
+> γ
+
+fp(s) holds exactly. 
+
+5) Controlled open-loop stability: A feature of the NVDEx 
+
+family is the ability to create systems that are locally open-loop unstable, yet globally stabilizable by the optimal policy. This tests an algorithm’s ability to handle unstable dynamics. This is achieved by tuning the linearization at the origin. Let A0 = H−1/2 
+
+> γ
+
+(P − Q)1/2 denote the linearization matrix at s = 0 (since Sν (0) = I). The drift simplifies to 
+
+fp(s) ≈ H−1/2 
+
+> γ
+
+(P − Q)1/2s =: A0s. The eigenvalues of A0 determine local stability. Choosing 
+
+Q = βP with β ∈ [0 , 1) gives: 
+
+(P −Q)1/2 = ( P −βP )1/2 = ((1 −β)P )1/2 = p1 − βP 1/2.
+
+We substitute this into the expression for A0:
+
+A0 = H−1/2 
+
+> γ
+
+(P − Q)1/2 = p1 − β H−1/2 
+
+> γ
+
+P 1/2.
+
+The spectral radius ϱ(A0) scales with this factor: 
+
+ϱ(A0) = p1 − β ϱ  H−1/2 
+
+> γ
+
+P 1/2.
+
+Let ϱbase := ϱ(H−1/2 
+
+> γ
+
+P 1/2). This is a fixed number deter-mined by Hγ and P . We tune β, reaching desired instability corresponding to a target spectral radius ϱtarget > 1. Then, 
+
+ϱ(A0) = p1 − βϱ base = ϱtarget .
+
+Solving for β yields the following: 
+
+β = 1 −
+
+ ϱtarget 
+
+ϱbase 
+
+2
+
+.
+
+If ϱbase ≤ ϱtarget , then β ≤ 0, which is not allowed ( β must be in [0 , 1) ). In this case, we first need to increase ϱbase . Here, 
+
+ϱbase = ϱ(H−1/2 
+
+> γ
+
+P 1/2) depends on Hγ , which depends on 
+
+R (control cost). We select a cheaper control by scaling R
+
+down with some factor smaller than 1. This scales Hγ up, increasing ϱbase . We scale R down until ϱbase > ϱ target , then compute β as above. Thus, choosing ϱtarget > 1 guarantees local open-loop instability, while the optimal policy π∗ 
+
+> p
+
+stabilizes the system exactly to attain the optimal value V ∗.
+
+6) Optimal policy and value: With the drift constructed as above, the optimal action is: 
+
+a∗ 
+
+> p
+
+= −γp  R + γp 2G⊤P G −1G⊤P f p(s).
+
+As before, the additive Gaussian noise contributes only a constant offset to the value function, leaving the optimal action unchanged. 
+
+7) Difficulty knobs: The family is parameterized by 
+
+ψ = ( K, r v , r ω , p, Q, R, P, Σ, α, κ, ϱ target ).
+
+Key difficulty dimensions include:  
+
+> •
+
+K: number of modules (scales state dimension);  
+
+> •
+
+rv , r ω : integrator depths (increase dynamical complex-ity);  
+
+> •
+
+p: control authority (smaller p makes stabilization harder);  
+
+> •
+
+α, κ : nonlinearity gains in the coupling νi(s); 
+
+> •
+
+ϱtarget : desired open-loop instability margin. By adjusting these parameters, we can generate benchmark instances ranging from nearly linear, easily controllable systems to highly nonlinear, unstable, high-dimensional chal-lenges — all while preserving the certified optimal action a∗
+
+> p
+
+and value function V ∗(s).
+
+D. Dataset construction 
+
+From each family, we generate a dataset of validated in-stances by sampling parameters from specified distributions: 
+
+D(Arm)  
+
+> N
+
+= {Mψi : ψi
+
+> i.i.d.
+
+∼ PΨArm , i = 1 , . . . , N Arm }, (7) and similarly for D(NVDEx)  
+
+> N
+
+. The full benchmark dataset is the union: 
+
+D = D(Arm)  
+
+> NArm
+
+∪ D (NVDEx)  
+
+> NNVDEx
+
+. (8) Each instance includes:  
+
+> •
+
+Full parameter tuple (Q, R, P, γ, Σ) and family meta-data;  
+
+> •
+
+Deterministic seeds for initial-state schedules and noise streams;  
+
+> •
+
+Reference evaluators for V ∗ and a∗; 
+
+> •
+
+Validation logs (SPD checks, Bellman residuals, bound-edness tests). The dataset supports paired evaluation under common random numbers (CRN) and enables ablations that separate algorithmic effects from protocol noise. VII. E XPERIMENTAL SETUP AND PAIRED EVALUATION 
+
+We evaluate PPO, A2C, SAC, TD3, and DDPG (Stable-Baselines3) under identical action bounds and matched en-vironment step budgets. On-policy methods are run on CPU; off-policy methods use GPU if available. Reward is r(s, a ) = 
+
+−c(s, a ). For each fixture, algorithms share identical initial-state schedules (ISS) and noise streams (CRN), and evalu-ation uses the analytic (a∗, V ∗ 
+
+> r
+
+), where V ∗ 
+
+> r
+
+is the optimal reward-to-go (analogous to cost-to-go V ∗). For a start state 
+
+s0, the normalized optimality gap is 
+
+OptGap( π; s0) = V πr (s0) − V ∗ 
+
+> r
+
+(s0)
+
+|V ∗ 
+
+> r
+
+(s0)| + ε , (9) with ε being a small constant to avoid division by 0. Discounted regret along the same CRN trajectory is 
+
+Regret T (π; s0) =  
+
+> T−1
+
+X
+
+> k=0
+
+γk
+
+r(sk, a ∗
+
+> k
+
+) − r(sk, π (sk)) 
+
+
+
+. (10) We report means and 95% confidence intervals via paired bootstrap over CRN trials. VIII. R ESULTS 
+
+We report three regimes: serial random (scheduled initial states), serial fixed (repeated s0), and NVDEx (dynamic extension, longer horizon). These regimes vary occupancy measures and long-horizon conditioning while preserving the oracle (a∗, V ∗). As a result, protocol effects (coverage, distribution shift, estimator variance) and algorithmic effects (approximation error, exploration, bootstrapping bias) can be separated and interpreted in absolute units. 
+
+Initialization protocol effects. The performance divergence between serial random and serial fixed configurations un-derscores the critical role of state-distribution coverage in algorithmic efficacy. Randomized initial conditions facilitate TABLE I: Overall performance per algorithm and experiment. Metrics are mean and 95% CI via paired bootstrap under CRN. 
+
+Experiment Algorithm OptGap (mean) OptGap 95% CI Regret (mean) Regret 95% CI serial random A2C -2.36e+03 [-2.79e+03, -1.93e+03] 8.24e+03 [6.83e+03, 9.58e+03] serial random DDPG -2.29e+03 [-3.83e+03, -9.12e+02] 9.28e+03 [3.50e+03, 1.63e+04] serial random PPO -3.32e+02 [-8.45e+02, -4.92e+01] 1.51e+03 [1.92e+02, 3.93e+03] serial random SAC -1.65e+02 [-3.47e+02, -4.63e+01] 6.90e+02 [1.72e+02, 1.53e+03] serial random TD3 -5.85e+01 [-8.64e+01, -3.57e+01] 2.14e+02 [1.25e+02, 3.35e+02] serial fixed A2C -1.11e+03 [-2.15e+03, -4.58e+02] 5.78e+04 [3.12e+04, 9.23e+04] serial fixed DDPG -6.48e+02 [-1.34e+03, -2.51e+02] 3.06e+04 [1.61e+04, 5.22e+04] serial fixed PPO -6.46e+01 [-9.56e+01, -3.68e+01] 4.08e+03 [2.30e+03, 6.14e+03] serial fixed SAC -1.51e+03 [-2.44e+03, -8.00e+02] 9.03e+04 [5.18e+04, 1.33e+05] serial fixed TD3 -1.53e+03 [-2.69e+03, -7.61e+02] 8.31e+04 [5.05e+04, 1.23e+05] NVDEx A2C -5.60e+03 [-1.33e+04, -1.06e+03] 5.94e+02 [1.34e+02, 1.33e+03] NVDEx DDPG -1.46e+04 [-3.13e+04, -3.37e+03] 3.22e+03 [4.76e+02, 7.39e+03] NVDEx PPO -1.58e+01 [-3.07e+01, -4.57e+00] 2.97e+00 [7.01e-01, 5.82e+00] NVDEx SAC -7.76e+03 [-1.56e+04, -1.15e+03] 1.56e+03 [1.13e+02, 3.13e+03] NVDEx TD3 -1.22e+04 [-2.24e+04, -4.20e+03] 2.78e+03 [6.96e+02, 5.67e+03]             
+
+> (a) Optimality gap.
+> (b) Regret ( log 10 scale). Fig. 3: Serial n-link planar arm (ConverseArm ): absolute oracle-referenced performance (optimality gap and regret) across algorithms (rows) and control authority p(columns), with separate panels for n.
+
+diverse transition sampling in TD3 and SAC experience replay buffers, enhancing target estimate stability and data efficiency. However, it is important to note that in highly nonlinear and unstable dynamical systems, randomizing ini-tial states may introduce substantial challenges, as algorithms must contend with widely varying system behaviors and potential instability regions that complicate policy learning. Conversely, fixed initial states produce narrow occupancy distributions where PPO’s constrained policy updates miti-gate distributional shift, conferring advantages in stationary environments by focusing learning on a consistent opera-tional regime. 
+
+Training budget considerations. Disparate resource al-location across algorithms in the NVDEx domain war-rants careful interpretation. PPO and A2C received sub-stantially greater environmental interaction budgets, while off-policy methods incorporated initial warm-up periods (learning starts ) that reduced their effective update windows. Although this allocation partially explains PPO’s dominance, the magnitude of performance differentials sug-gests additional contributing factors beyond mere step-count disparities.     
+
+> (a) Macro-averaged optimality gaps of algorithms for all experiments (serial n-link planar arm and NVDEx ).
+> (b) Macro-averaged regrets of algorithms for all experiments (serial n-link planar arm and NVDEx ). Fig. 4: Compact result summaries. Macro-averaged optimality gaps and regrets across all experiments.
+
+Dynamics and temporal horizon interactions. The NVDEx 
+
+environment employs dynamic extension with extended tem-Fig. 5: Discounted reward bars ( r = −c) with 95% CIs under CRN. Colors correspond to p ∈ { 0.5, 0.6, 0.8}.
+
+poral horizons (T = 700 ), generating stiff, feedback-sensitive closed-loop dynamics particularly at elevated ( p,
+
+α, κ) parameter values. These conditions amplify boot-strap estimation errors and critic approximation variance. PPO’s on-policy return estimates, regularized through clip-ping mechanisms, suggest superior robustness in such chal-lenging regimes. This pattern recurs in the serial benchmark suite (T = 512 with state-dependent actuation), where off-policy methods excel under diverse state distributions (serial random ) while PPO prevails in narrow, stationary occupancies ( serial fixed ). 
+
+Synthesis. The empirical evidence suggests PPO is preferable for environments with stationary state distributions ( serial fixed ) and complex dynamic systems with extended horizons (NVDEx ), while maintaining competitive performance under diverse initial conditions (serial random ). TD3 and SAC demonstrate particular strength in scenarios with rich replay buffer coverage. A2C and DDPG exhibit consistent underperformance across experimental conditions. These hierarchical performance relationships emerge from complex interactions among initialization protocols, effective training budgets, and environmental characteristics including temporal horizon and dynamic stiffness. Figures 3, 4, and 5 summarize performance. Heatmaps show how optimality gap and regret vary with control author-ity p and dimension n for ConverseArm ; bar graphs ag-gregate between regimes, emphasizing broad trends. Darker shades correspond to higher regret (lower performance). As 
+
+n and p increase, dynamics become more sensitive to con-trol and approximation errors, making it harder for learned policies to match π∗. This visualization efficiently captures emergent patterns. Off-policy methods (TD3, SAC) dominate at high p values and larger dimensions, and DDPG generally struggles due to ineffective exploration strategies, instability in value estimation, and sensitivity to reward scaling. On the other hand, PPO shows strong performance in moderate dimensions ( n ∈ { 7, 9}) and control authority ( p ≤ 0.6), benefiting from its robustness in policy, but struggles with high authority and dimensionality due to constrained trust regions and sample inefficiency. As p increases (see Figs. 3 and 5), regret consistently grows across algorithms may be explained by three related effects:  
+
+> •
+
+Accelerated oracle improvement : The optimal policy π∗
+
+becomes increasingly effective at dissipating energy in the 
+
+P -norm as control authority grows. While the optimal reward R∗ decreases rapidly with increasing p, learned policies Rπ fail to improve at the same rate due to opti-mization and estimation limitations, resulting in widening regret (Rπ − R∗). This paradox arises because while stronger control makes the optimal problem easier, it si-multaneously amplifies sensitivity to policy imperfections, destabilizes learning dynamics, and increases function approximation complexity, making the learning problem significantly harder.  
+
+> •
+
+Amplified sensitivity to imperfections : The Jacobian of the closed-loop dynamics with respect to policy actions scales with p. Consequently, even minor policy errors, ex-ploration noise, or value function estimation inaccuracies become dramatically amplified in the next-state distribu-tion and state cost term s⊤Qs . The high control authority thus penalizes modest misestimation and introduces higher variance in bootstrapping targets.  
+
+> •
+
+Increased approximation complexity : Both the discounted metric H(p) 
+
+> γ
+
+(s) and the drift dynamics fp(s) exhibit a nonlinear dependence on p. The state-dependent actuation 
+
+g(s) = cos θ creates regions of reduced control effec-tiveness, while the system becomes increasingly stiff and reactive at higher p values. These factors collectively desta-bilize gradients through long horizons ( T = 512 ), cause non-stationary replay distributions, and increase noise in GAE/TD targets, thereby slowing policy improvement. IX. D ISCUSSION AND LIMITATIONS 
+
+The central advantage of our benchmarks is calibration: knowing (a∗, V ∗) disentangles algorithmic issues (explo-ration, approximation, bootstrapping) from protocol effects (initial states, noise, termination) – impossible on standard suites. The continuation parameter p varies control authority smoothly while preserving optimality, revealing when im-proved oracle performance coincides with increased learning sensitivity. Bounded nonlinear couplings via S(·) induce stiffness and state-dependent conditioning without sacrificing ground truth. However, our assumptions impose limitations. The control-affine structure excludes general control dependen-cies. Additive i.i.d Gaussian noise misses heavy-tailed distur-bances, heteroscedasticity, or temporal correlations. The QG specialization adds quadratic costs (excluding non-quadratic objectives, constraints) and linear optimal policies (excluding nonlinear controllers), with quadratic value functions restrict-ing drifts via the energy equation. These choices were deliberate, as they enable tractable construction of benchmarks with certified optima, but strong performance on our families does not guarantee robustness when these assumptions break. Extensions to broader noise, control, and cost models remain future work. X. C ONCLUSION 
+
+We presented a framework that extends converse opti-mality to discounted stochastic control-affine systems with additive Gaussian noise and used the resulting construction to generate RL benchmarks with analytically known optimal policies and value functions. This method can also be used to benchmark classical control approaches. This enables reproducible, ground-truth evaluation via optimality gaps and regret under matched stochasticity and common random numbers. We release validated fixtures and code to support standardized comparisons. ARTIFACTS AND REPRODUCIBILITY 
+
+All fixtures, training/evaluation scripts, plotting code, and a dataset of other benchmarking systems are available at: github.com/converseoptimality/RL-Benchmarking. REFERENCES [1] R. Bellman, Dynamic Programming . Princeton, NJ: Princeton University Press, 1957. [2] V. Nevistic and J. A. Primbs, “Constrained nonlinear optimal control: a converse hjb approach,” California Institute of Technology, Pasadena, CA , vol. 91125, pp. 96–021, 1996. [3] P. Henderson, R. Islam, P. Bachman, J. Pineau, D. Precup, and D. Meger, “Deep reinforcement learning that matters,” in Proceedings of the AAAI Conference on Artificial Intelligence , vol. 32, no. 1, 2018. [4] R. Agarwal, M. Schwarzer, P. S. Castro, A. Courville, and M. G. Bellemare, “Deep reinforcement learning at the edge of the statistical precipice,” in Advances in Neural Information Processing Systems (NeurIPS) , vol. 34, 2021. [Online]. Available: https://papers.nips.cc/ paper/2021/hash/f514cec81cb148559cf475e7426eed5e-Paper.pdf [5] K. Cobbe, C. Hesse, J. Hilton, and J. Schulman, “Leveraging procedural generation to benchmark reinforcement learning,” in 
+
+Proceedings of the 37th International Conference on Machine Learning (ICML) , ser. Proceedings of Machine Learning Research, vol. 119. PMLR, 2020, pp. 2048–2056. [Online]. Available: https://proceedings.mlr.press/v119/cobbe20a.html [6] J. Fu, A. Kumar, O. Nachum, G. Tucker, and S. Levine, “D4RL: Datasets for deep data-driven reinforcement learning,” 
+
+arXiv preprint arXiv:2004.07219 , 2020. [Online]. Available: https: //arxiv.org/abs/2004.07219 [7] F. L. Lewis, D. Vrabie, and K. G. Vamvoudakis, “Reinforcement learning and feedback control: Using natural decision methods to design optimal adaptive controllers,” IEEE Control Systems Magazine ,vol. 32, no. 6, pp. 76–105, 2012. [8] D. Vrabie and F. Lewis, “Neural network approach to continuous-time direct adaptive optimal control for partially unknown nonlinear systems,” Neural networks , vol. 22, no. 3, pp. 237–246, 2009. [9] K. G. Vamvoudakis and F. L. Lewis, “Multi-player non-zero-sum games: Online adaptive learning solution of coupled hamilton–jacobi equations,” Automatica , vol. 47, no. 8, pp. 1556–1569, 2011. [10] T. G¨ ohrt, P. Osinenko, and S. Streif, “Converse optimality for discrete-time systems,” IEEE Transactions on Automatic Control , vol. 65, no. 5, pp. 2257–2264, 2019. [11] R. Islam, P. Henderson, M. Gomrokchi, and D. Precup, “Reproducibil-ity of benchmarked deep reinforcement learning tasks for continuous control,” arXiv preprint arXiv:1708.04133 , 2017. [12] S. Huang, Q. Gallou´ edec, F. Felten, A. Raffin, R. F. J. Dossa, Y. Zhao, R. Sullivan, V. Makoviychuk, D. Makoviichuk, M. H. Danesh 
+
+et al. , “Open rl benchmark: Comprehensive tracked experiments for reinforcement learning,” arXiv preprint arXiv:2402.03046 , 2024. [13] G. Yamerenko, S. Ibrahim, F. Moreno-Mora, P. Osinenko, and S. Streif, “Generating informative benchmarks for reinforcement learn-ing,” IEEE Control Systems Letters , 2025. [14] S. E. Shreve and D. P. Bertsekas, “Universally measurable policies in dynamic programming,” Mathematics of Operations Research , vol. 4, no. 1, pp. 15–30, 1979.

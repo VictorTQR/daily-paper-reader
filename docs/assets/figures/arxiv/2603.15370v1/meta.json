@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-001.webp",
+      "caption": "Table 3. Navigation performance on the R2R-CE dataset. †: Methods that apply candidate waypoint predictor to support high-level action space.",
+      "page": 6,
+      "index": 1,
+      "width": 496,
+      "height": 373
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-002.webp",
+      "caption": "Table 2. Comparison with SoTA methods on R2R and REVERIE datasets. †: Methods using reinforcement learning for policy optimization.",
+      "page": 6,
+      "index": 2,
+      "width": 1032,
+      "height": 533
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-003.webp",
+      "caption": "Table 9. Comparison with value-based RL method (HAMT) under standard and perturbed settings on R2R Val Unseen. Both methods build upon ScaleVLN baseline.",
+      "page": 15,
+      "index": 3,
+      "width": 483,
+      "height": 306
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-004.webp",
+      "caption": "Figure 1. Navigation behavior under early-stage perturbations in unfamiliar environments. The baseline IL agent struggles to recover from errors due to limited exposure to failed trajectories, often detouring or failing to reach the goal. Our NavGRPO agent learns from diverse rollouts, enabling robust error correction and successful navigation despite perturbations.",
+      "page": 2,
+      "index": 4,
+      "width": 1034,
+      "height": 492
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-005.webp",
+      "caption": "Figure 3. Qualitative comparison on challenging instructions under normal conditions (top) and initial perturbations (bottom). ScaleVLN fails to recover from errors in both scenarios. Our GRPO-trained agent successfully completes tasks and demonstrates robust error correction under perturbations.",
+      "page": 8,
+      "index": 5,
+      "width": 492,
+      "height": 433
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-006.webp",
+      "caption": "Figure 2. Overview of our NavGRPO training framework for vision-language navigation. For each instruction, we sample K diverse trajectories through policy rollout, compute rewards using trajectory-level and step-level signals, estimate group relative advantages by comparing within instruction groups, and optimize the policy through debiased advantage estimation without value networks.",
+      "page": 4,
+      "index": 6,
+      "width": 1023,
+      "height": 434
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-007.webp",
+      "caption": "Figure 4. Qualitative comparison of navigation trajectories. Purple point indicates the starting location. NavGRPO’s trajectory (green) successfully completes the instruction by navigating through the archway and reaching the target doorway, while ScaleVLN’s trajectory (yellow) fails to execute the complete route, demonstrating NavGRPO’s superior robustness against environmental complexity.",
+      "page": 17,
+      "index": 7,
+      "width": 483,
+      "height": 302
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-008.webp",
+      "caption": "Figure 5. Failure case analysis. NavGRPO incorrectly interprets the spatial reference ”second bedroom to your left” in an instruction with multiple ambiguous directional cues, highlighting challenges in compositional spatial reasoning.",
+      "page": 17,
+      "index": 8,
+      "width": 487,
+      "height": 333
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15370v1/fig-009.webp",
+      "caption": "Table 1. Robustness analysis under stochastic perturbations on R2R Val Unseen. Left: Global perturbation samples from policy distribution with probability p. Right: Early perturbation selects the least probable action for the first N steps. ∆SPL shows SPL degradation from the unperturbed setting (prob=0 or Steps=0) for each method. NavGRPO demonstrates superior robustness across all perturbation levels.",
+      "page": 5,
+      "index": 9,
+      "width": 1014,
+      "height": 281
+    }
+  ]
+}

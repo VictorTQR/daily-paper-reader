@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-001.webp",
+      "caption": "Table 4 | Hyperparameters in RRPS.",
+      "page": 15,
+      "index": 1,
+      "width": 875,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-002.webp",
+      "caption": "Table 5 | Hyperparameter for repeated Leduc hold’em poker.",
+      "page": 15,
+      "index": 2,
+      "width": 848,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-003.webp",
+      "caption": "Table 1 | Performance in Repeated Rock-Paper-Scissors across Population Return, Within Population Exploitability and Aggregate Score. Results are averaged over 5 seeds. (∗ Denotes results reported in Lanctot et al. (2023).)",
+      "page": 7,
+      "index": 3,
+      "width": 700,
+      "height": 362
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-004.webp",
+      "caption": "Figure 2 | Performance of CSRO variants in Repeated Rock-Paper-Scissors",
+      "page": 7,
+      "index": 4,
+      "width": 956,
+      "height": 212
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-005.webp",
+      "caption": "Figure 1 | Example run of CSRO in Repeated Rock-Paper-Scissors.",
+      "page": 3,
+      "index": 5,
+      "width": 981,
+      "height": 276
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-006.webp",
+      "caption": "Table 7 | Performance of CSRO variants in Repeated Rock-Paper-Scissors ranked by PopExpl. Metrics are averaged over 3 seeds for AlphaEvolve and 5 seeds for all other variants.",
+      "page": 17,
+      "index": 6,
+      "width": 968,
+      "height": 336
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-007.webp",
+      "caption": "Table 2 | Performance in repeated Leduc hold’em. Results are averaged over 3 seeds.",
+      "page": 9,
+      "index": 7,
+      "width": 681,
+      "height": 238
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10098v1/fig-008.webp",
+      "caption": "Table 6 | LLM agent performance against Repeated Rock-Paper-Scissors bot population. Returns averaged over 16 games. 16",
+      "page": 16,
+      "index": 8,
+      "width": 568,
+      "height": 1394
+    }
+  ]
+}

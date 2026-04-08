@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.14811v1/fig-001.webp",
+      "caption": "Figure 6: Example of an E2W-2 sample (Case 2). The model receives two views of a table scene and must identify the third item from the left by integrating spatial information across views.",
+      "page": 25,
+      "index": 1,
+      "width": 829,
+      "height": 1227
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14811v1/fig-002.webp",
+      "caption": "Table 4: Left: Where2Place results. Right: Real-world robot evaluation.",
+      "page": 10,
+      "index": 2,
+      "width": 775,
+      "height": 184
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14811v1/fig-003.webp",
+      "caption": "Figure 1: An illustration of collaborative spatial reasoning in embodied systems. Reasoning from a single viewpoint fails due to occlusions or a limited field of view. In contrast, cross-view compositional reasoning integrates multiple perspectives to correctly localize and grasp the target object—the blue block f rthest from the strawberry.",
+      "page": 3,
+      "index": 3,
+      "width": 829,
+      "height": 344
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14811v1/fig-004.webp",
+      "caption": "Table 1: Performance on E2W-Bench. Tasks are grouped into Reasoning (accuracy, %) and Perception (score, %). (S) = simulation, (R) = real-world. Best in bold, second best underlined.",
+      "page": 8,
+      "index": 4,
+      "width": 812,
+      "height": 677
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14811v1/fig-005.webp",
+      "caption": "Figure 7: Example of an E2W-3 sample. The model receives two ego-centric views from different robot perspectives and must localize the target object—in this case, the pizza—and output the precise grasp location. Solving the task requires cross-view object correspondence, reasoning about spatial ordering, identifying the visible target in each view, and determining the final grasp coordinate in the main perspective.",
+      "page": 27,
+      "index": 5,
+      "width": 829,
+      "height": 658
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14811v1/fig-006.webp",
+      "caption": "Figure 5: Example of an E2W-1 sample (Case 1). Two ego-centric views of a kitchen scene are provided, and the model must count the total number of pizzas by resolving cross-view object correspondences.",
+      "page": 24,
+      "index": 6,
+      "width": 660,
+      "height": 205
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14811v1/fig-007.webp",
+      "caption": "Figure 3: CoRL framework. The model is first initialized via supervised fine-tuning (SFT) on Chain-of-Thought annotations, then refined with reinforcement learning (RL). During RL, the policy is optimized with an format reward and the Cross-View Spatial Reward (CVSR), which supplies dense feedback on cross-view fusion and spatial consistency, guiding robust collaborative reasoning.",
+      "page": 5,
+      "index": 7,
+      "width": 1050,
+      "height": 334
+    }
+  ]
+}

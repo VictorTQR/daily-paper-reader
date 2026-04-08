@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.09716v1/fig-001.webp",
+      "caption": "Table 2 Performance comparison on tool-use and embodied agent benchmarks for closed-source models. For each model backbone, the best result in each column is boldfaced. ‘–’ indicates the baseline is not applicable.",
+      "page": 15,
+      "index": 1,
+      "width": 776,
+      "height": 511
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09716v1/fig-002.webp",
+      "caption": "Figure 2 Cognition as the interface between the LLM and the action space. Tool calls, collaboration, and self-driven generations are treated as actions; their descriptions and beliefs are part of cognition and are updated from practice through execution outcomes and memory updates.",
+      "page": 7,
+      "index": 2,
+      "width": 972,
+      "height": 217
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09716v1/fig-003.webp",
+      "caption": "Figure 3 The framework of the proposed Elastic Memory Orchestration (EMO) module. At each step of history, action information will be preserved in the Memory Pool in two forms: the complete and lossless raw data, and the summarized action abstracts. At the beginning of each current step, the EMO module first concatenates the action abstracts from all historical steps as input to the selector. The selector determines whether the actions in each round should use the raw information (False), the summarized information (True), or discard the corresponding step’s information (None). After this round of judgment, the historical action information is reorganized accordingly. Subsequently, the selector further decides whether to fully summarize multiple historical steps by executing MemFold, or proceed with other actions such as web search, and so on.",
+      "page": 10,
+      "index": 3,
+      "width": 381,
+      "height": 867
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09716v1/fig-004.webp",
+      "caption": "Table 1 Performance comparison on multi-hop QA benchmarks. The best result in each column is boldfaced; the second best is underlined. ‘Avg’ denotes the average score across the four datasets.",
+      "page": 14,
+      "index": 4,
+      "width": 960,
+      "height": 394
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09716v1/fig-005.webp",
+      "caption": "Figure 1 The AutoAgent architecture. The Execution Cycle (solid black arrows) handles real-time task progression. The Evolution Cycle (dashed red arrows) drives long-term adaptation. The Elastic Memory Orchestrator couples both cycles by managing experience.",
+      "page": 5,
+      "index": 5,
+      "width": 884,
+      "height": 548
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09716v1/fig-006.webp",
+      "caption": "Table 3 Performance comparison on tool-use and embodied agent benchmarks for open-source models. For each model backbone, the best result in each column is boldfaced. ‘–’ indicates the baseline is not applicable.",
+      "page": 16,
+      "index": 6,
+      "width": 776,
+      "height": 511
+    }
+  ]
+}

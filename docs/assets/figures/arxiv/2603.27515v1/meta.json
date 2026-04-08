@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-001.webp",
+      "caption": "Figure 4: Results show the performance on the 4 Animal-AI Olympics environment (Crosby et al., 2019) binary reward tasks (refer to Figure 9 for results on all tasks). The plots show the learning curves, with episodic rewards (success rate) on the y-axis, evaluated under the current policy. The reported results are the mean across 5 seeds, with shaded regions highlighting the standard deviation. The proposed algorithms outperform PPO by a significant margin.",
+      "page": 11,
+      "index": 1,
+      "width": 968,
+      "height": 216
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-002.webp",
+      "caption": "Figure 3: Results show the performance on 4 PointMaze (de Lazcano et al., 2023) multi-goal sparse reward tasks (refer to Figure 8 for results on all tasks). The plots show the learning curves and the episodic rewards along the y-axis, evaluated under the current policy. The reported results are the mean across seven different seeds. The proposed algorithms outperform all the baselines by a significant margin.",
+      "page": 11,
+      "index": 2,
+      "width": 965,
+      "height": 215
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-003.webp",
+      "caption": "Figure 11: Results show the ablation study on all 5 PointMaze multi-goal sparse reward tasks. The parameter ϵ controls the replay frequency to balance exploration vs exploitation. The plots show the learning curves and the episodic rewards along the y-axis, evaluated under the current policy with different ϵ. The reported results are across five different seeds.",
+      "page": 21,
+      "index": 3,
+      "width": 968,
+      "height": 427
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-004.webp",
+      "caption": "Figure 7: Results show the performance of 10 MuJoCo (Towers et al., 2023) continuous control tasks. The plots are the learning curves and show the episodic rewards along the y-axis, evaluated through the current policy. The reported results are the mean across seven different seeds. The proposed algorithms outperform all baselines across all tasks by being competitive or better than others.",
+      "page": 18,
+      "index": 4,
+      "width": 968,
+      "height": 627
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-005.webp",
+      "caption": "Figure 1: Results show the performance of 8 MuJoCo (Towers et al., 2023) continuous control tasks (refer to Figure 7 for results on all tasks). The plots show the learning curves and the episodic rewards along the y-axis, evaluated under the current policy. The reported results are the mean across seven seeds, with shaded regions indicating the standard deviation. The proposed algorithms outperform all baselines across all tasks, achieving competitive or better performance.",
+      "page": 8,
+      "index": 5,
+      "width": 968,
+      "height": 420
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-006.webp",
+      "caption": "Figure 8: Results show the performance on all 5 PointMaze multi-goal sparse reward tasks. The plots show the learning curves and the episodic rewards along the y-axis, evaluated under the current policy. The reported results are across seven different seeds. The proposed algorithms outperform all the baselines by a significant margin.",
+      "page": 19,
+      "index": 6,
+      "width": 968,
+      "height": 421
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-007.webp",
+      "caption": "Figure 5: Results show the ablation study on 4 MuJoCo (Towers et al., 2023) continuous control tasks (refer to Figure 10 for complete results). The parameter ϵ controls the balance between exploration and exploitation. The plots show the learning curves and the episodic rewards along the y-axis, evaluated under the current policy with different ϵ. The reported results are the mean across 5 seeds, with shaded regions highlighting the standard deviation.",
+      "page": 12,
+      "index": 7,
+      "width": 968,
+      "height": 220
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-008.webp",
+      "caption": "Figure 6: Results show the ablation study on 4 PointMaze (de Lazcano et al., 2023) multi-goal sparse reward tasks (refer to Figure 11 for complete results). The parameter ϵ controls the replay frequency to balance exploration vs exploitation. The plots show the learning curves and the episodic rewards along the y-axis, evaluated under the current policy with different ϵ. The reported results are across 5 different seeds.",
+      "page": 12,
+      "index": 8,
+      "width": 968,
+      "height": 221
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-009.webp",
+      "caption": "Figure 9: Results show the performance on all 5 Animal-AI Olympics environments sparse reward tasks. The plots show the learning curves, with episodic rewards (success rate) on the y-axis, evaluated under the current policy. The reported results are across 5 different seeds. The proposed algorithms outperform all the baselines by a significant margin.",
+      "page": 20,
+      "index": 9,
+      "width": 968,
+      "height": 421
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27515v1/fig-010.webp",
+      "caption": "Figure 10: Results show the ablation study on 8 MuJoCo (Towers et al., 2023) continuous control tasks. The parameter ϵ controls the balance between exploration and exploitation. The plots show the learning curves and the episodic rewards along the y-axis, evaluated under the current policy with different ϵ. The reported results are the mean across five different seeds.",
+      "page": 20,
+      "index": 10,
+      "width": 968,
+      "height": 426
+    }
+  ]
+}

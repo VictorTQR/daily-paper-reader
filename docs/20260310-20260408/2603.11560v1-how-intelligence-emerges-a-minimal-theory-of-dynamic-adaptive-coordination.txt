@@ -1,0 +1,604 @@
+Title: How Intelligence Emerges: A Minimal Theory of Dynamic Adaptive Coordination
+
+URL Source: https://arxiv.org/pdf/2603.11560v1
+
+Published Time: Fri, 13 Mar 2026 00:29:27 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# How Intelligence Emerges: A Minimal Theory of Dynamic Adaptive Coordination 
+
+## Stefano Grassi Bangkok University 
+
+## stefano.g@bu.ac.th 
+
+## March 12, 2026 
+
+Abstract 
+
+This paper develops a dynamical theory of adaptive coordination in multi-agent systems. Rather than analyzing coordination through equilibrium optimization or agent-centric learning alone, the framework models agents, incentives, and environ-ment as a recursively closed feedback architecture. A persistent environment stores accumulated coordination signals, a distributed incentive field transmits those signals locally, and adaptive agents update in response. Coordination is thus treated as a structural property of coupled dynamics rather than as the solution to a centralized objective. The paper establishes three structural results. First, under dissipativity assump-tions, the induced closed-loop system admits a bounded forward-invariant region, en-suring viability without requiring global optimality. Second, when incentive signals de-pend non-trivially on persistent environmental memory, the resulting dynamics gener-ically cannot be reduced to a static global objective defined solely over the agent state space. Third, persistent environmental state induces history sensitivity unless the system is globally contracting. A minimal linear specification illustrates how coupling, persistence, and dissipa-tion govern local stability and oscillatory regimes through spectral conditions on the Jacobian. The results establish structural conditions under which intelligent coordina-tion dynamics emerge from incentive-mediated adaptive interaction within a persistent environment, without presuming welfare maximization, rational expectations, or cen-tralized design. 
+
+Keywords: Multi-agent systems; Adaptive coordination; Incentive dynamics; Persistent environmental memory; Emergent intelligence; Dynamical systems. 
+
+JEL Classification: C73; D83; C63 
+
+# 1 Introduction 
+
+Modern economies increasingly consist of distributed agents interacting through persistent environments and incentive-mediated feedback. Markets, institutions, firms, and multi-agent 1
+
+> arXiv:2603.11560v1 [cs.MA] 12 Mar 2026
+
+learning systems all exhibit recursive coupling between behavior and environmental state: actions reshape the environment, and the environment conditions future actions. Despite extensive study across economics, control theory, and artificial intelligence, coor-dination is often analyzed through either equilibrium-based optimization or agent-centric learning models that treat the environment as exogenous. Comparatively less attention has been given to the structural architecture that couples agents, incentives, and persistent environmental memory into a single closed dynamical system. This paper develops a dynamical theory of adaptive coordination in persistent multi-agent systems. The central object of analysis is a recursively closed architecture composed of three elements: • a persistent environment, • a distributed incentive field, • and adaptive agents. The environment stores accumulated coordination signals. The incentive field transmits those signals back to agents. Agents update their internal states in response. Together, these components generate a closed feedback system in which coordination emerges as a property of structural coupling rather than centralized optimization. The framework is related to, but distinct from, several established traditions. Multi-agent reinforcement learning emphasizes policy optimization under reward structures (Sutton & Barto, 2018). Evolutionary and game-theoretic dynamics analyze stability over strategy spaces (Fudenberg & Levine, 1998). Institutional and political economy stress persistence and path dependence (North, 1990). Control theory formalizes feedback stabilization through state augmentation (Khalil, 2002). The present approach differs by focusing on the recursive architecture itself: persistent memory coupled to incentive-mediated local updates, without presuming global welfare aggregation, fixed objective maximization, or centralized design. In this framework, intelligence is interpreted structurally. It refers to coordination architec-tures that transform accumulated environmental signals into adaptive stabilization over time. The theory does not attempt to provide a complete account of cognition, representation, or reasoning. Rather, it identifies a minimal dynamical substrate within which system-level intelligence can arise as a property of recursive coupling. Intelligence, in this sense, is not an intrinsic attribute of isolated agents and is not reducible to the maximization of a scalar objective. It emerges when adaptive update rules interact non-trivially with persistent environmental memory, producing bounded and history-sensitive trajectories at the system level. This shift in perspective reframes the question. Instead of asking what intelligence is, this work asks: 
+
+Under what structural conditions does adaptive coordination emerge and per-sist? 
+
+Classical manifestations of intelligence—learning, problem solving, adaptation—can then be interpreted as domain-specific realizations of this more general architecture. 2The paper makes three contributions. First, it formalizes adaptive coordination as a re-cursively closed dynamical system over an augmented state space, distinguishing structural viability from objective maximization. Second, it shows that static objective reduction gener-ically fails in the presence of persistent environmental state. Third, it identifies a necessary structural condition for intelligence in coordination systems: non-trivial coupling between adaptive update operators and memory-dependent incentive fields. The next section develops the formal model and introduces the closed-loop dynamical system underlying the theory. 
+
+# 2 The Structural Architecture of Coordination 
+
+Traditional accounts of intelligence are predominantly agent-centric. Intelligence is typically modeled as an internal property of individual agents, acquired through learning or adapta-tion, while the environment is treated as fixed or exogenous. In contrast, intelligence is here modeled as a property of a recursive coordination architec-ture. It is not located within agents but in the dynamical structure linking them with the environment through incentives. In this architecture, memory is externalized in a persistent environment. The joint config-uration (x𝑡 , 𝑆 𝑡 ) is projected into a global coordination signal 𝐿 𝑡 
+
+> global
+
+, which is distributed through an incentive field G𝑡 to agents that update locally, generating (x𝑡+1 , 𝑆 𝑡+1 ).The architecture unfolds as: 
+
+(x𝑡 , 𝑆 𝑡 ) ⟶ 𝐿 𝑡  
+
+> global
+
+⟶ G𝑡 ⟶ ( x𝑡+1 , 𝑆 𝑡+1 ). 
+
+Each component performs a distinct structural role. 
+
+## 2.1 The Environment as Persistent Memory 
+
+Let 
+
+𝑆 𝑡 ∈ 𝒮 
+
+denote the persistent environmental state at time 𝑡 .The environment functions as externalized memory. It accumulates the consequences of prior coordination attempts and stores them in state-dependent form. Institutions, norms, technologies, infrastructures, datasets, and organizational constraints are examples of such persistent structures. Persistence implies: • past interactions constrain future trajectories, • some patterns become structurally viable, • others become unsustainable. 3Formally, the environment evolves according to 
+
+𝑆 𝑡+1 = Ψ(𝑆 𝑡 , x𝑡 ), 
+
+where Ψ is a transformation operator mapping prior environmental structure and aggregate agent activity into the next persistent state. The environment evolves as a function of its prior state and realized agent activity, thereby externalizing interaction history into durable structure. The environment does not optimize, intend, or evaluate. It simply evolves and persists. 
+
+## 2.2 The Global Coordination Signal as Projection 
+
+Let 
+
+x𝑖,𝑡 ∈ 𝒳 𝑖 ⊆ ℝ 𝑑 𝑖 
+
+denote the internal state of agent 𝑖 .Define the joint state vector 
+
+x𝑡 = ( x1,𝑡 , … , x𝑁,𝑡 ) ∈ 𝒳, 
+
+where 
+
+𝒳 = 𝒳 1 × ⋯ × 𝒳 𝑁 ⊆ ℝ 𝑑 , 𝑑 = 
+
+> 𝑁
+
+∑
+
+> 𝑖=1
+
+𝑑 𝑖 .
+
+The joint configuration 
+
+(x𝑡 , 𝑆 𝑡 ) ∈ 𝒳 × 𝒮 
+
+constitutes the full system state. Rather than feeding back this high-dimensional configuration directly, the architecture in-duces a structural projection capturing coordination-relevant features. Now, define the projection functional 
+
+𝒜 ∶ 𝒳 × 𝒮 → ℝ. 
+
+The global coordination signal is 
+
+𝐿 𝑡  
+
+> global
+
+∶= 𝒜( x𝑡 , 𝑆 𝑡 ). 
+
+4This signal satisfies: • It is derived, not primitive. • It is not an objective. • It is not a welfare function. • It is not optimized. • It is not internally represented by agents. Formally: • Axiom 1 (Non-Primitivity) : 𝐿 𝑡  
+
+> global
+
+is induced by the joint configuration. • Axiom 2 (Structural Symmetry) : 𝒜 depends on structural features rather than agent identity labels. • Axiom 3 (Regularity) : 𝒜 is continuous in (x𝑡 , 𝑆 𝑡 ).The global coordination signal is thus a low-dimensional structural projection. It has no independent causal force outside the mappings that distribute it. 
+
+## 2.3 The Incentive Field as Distribution 
+
+The global coordination signal does not act directly on agents. Instead, it is distributed through 
+
+Φ ∶ ℝ × 𝒳 × 𝒮 ⟶ ℝ 𝑁 ,
+
+producing the incentive field 
+
+G𝑡 = Φ(𝐿 𝑡 
+
+> global
+
+, x𝑡 , 𝑆 𝑡 ), G𝑡 = (𝐺 1,𝑡 , … , 𝐺 𝑁,𝑡 ) ∈ ℝ 𝑁 .
+
+The field transforms projected coordination structure into localized directional pressures. Each agent experiences only its own component: 
+
+𝐺 𝑖,𝑡 = [ G𝑡 ]𝑖 .
+
+Agents do not observe 𝐿 𝑡 
+
+> global
+
+.Prices, penalties, norms, gradients, performance signals, and evolutionary pressures are ex-amples of such fields. The field distributes structural pressure without centralized control. 
+
+## 2.4 Agents as Local Update Operators 
+
+Each agent 𝑖 is described by 
+
+x𝑖,𝑡 ∈ 𝒳 𝑖 ⊆ ℝ 𝑑 𝑖 .
+
+5Agents are bounded in memory, computation, and observability. They update locally according to 
+
+x𝑖,𝑡+1 = 𝑓 𝑖 (x𝑖,𝑡 , 𝐺 𝑖,𝑡 , 𝑆 𝑡 ). 
+
+The update operators 𝑓 𝑖 need not minimize any scalar functional. They map local state and localized pressure into incremental change. Agents need not: • know the global signal, • know other agents’ states, • represent any global objective, • forecast long-run consequences. They respond only to structured pressure: Field ⟶ Local Pressure ⟶ Update .
+
+Agents are therefore state-dependent transformation operators embedded in a recursive co-ordination architecture. 
+
+## 2.5 Recursive Closure 
+
+Together, 𝒜 , Φ, 𝑓 𝑖 , and Ψ define a recursive dynamical system on 𝒳 × 𝒮 .At each time step: 1. Projection 𝐿 𝑡  
+
+> global
+
+= 𝒜( x𝑡 , 𝑆 𝑡 ).2. Distribution G𝑡 = Φ(𝐿 𝑡 
+
+> global
+
+, x𝑡 , 𝑆 𝑡 ).3. Local Update x𝑡+1 = 𝐹 ( x𝑡 , G𝑡 , 𝑆 𝑡 ), where 𝐹 aggregates the operators 𝑓 𝑖 .4. Environmental Transformation 𝑆 𝑡+1 = Ψ(𝑆 𝑡 , x𝑡 ).These mappings induce a state transition operator 
+
+𝑇 ∶ 𝒳 × 𝒮 → 𝒳 × 𝒮, 
+
+defined by 
+
+𝑇 ( x𝑡 , 𝑆 𝑡 ) = ( x𝑡+1 , 𝑆 𝑡+1 ). 
+
+The system is dynamically closed: all future states are generated by internal transformations of existing state variables. Coordination is not imposed by external design nor derived from explicit maximization. It is a dynamical property of the trajectories generated by recursive application of this closed system. 6Figure 1 illustrates the recursive coordination architecture implied by the operators described above. 
+
+Figure 1: Recursive coordination architecture linking agents, the incentive field, and the persistent environment through feedback. 
+
+# 3 The Dynamics of Coordination 
+
+The preceding section defined a recursively closed dynamical system on 𝒳 × 𝒮 , induced by the transition operator 
+
+𝑇 ∶ 𝒳 × 𝒮 → 𝒳 × 𝒮, 𝑇 ( x𝑡 , 𝑆 𝑡 ) = ( x𝑡+1 , 𝑆 𝑡+1 ). 
+
+Given an initial condition (x0, 𝑆 0), the coordination architecture generates a trajectory 
+
+(x0, 𝑆 0), ( x1, 𝑆 1), ( x2, 𝑆 2), … 
+
+through repeated application of 𝑇 .No additional primitives are introduced. All dynamics follow from the previously defined mappings. 
+
+## 3.1 Structural Implications of Recursive Closure 
+
+Because the system is dynamically closed, several structural properties follow directly. 1. Path dependence. Since 𝑆 𝑡 persists and evolves through Ψ, future states depend on accumulated interac-tion history. Trajectories are therefore history-dependent. 72. Endogenous constraint formation. Constraints faced by agents arise from prior system states rather than external imposi-tion. Feasible directions of change are shaped by embedded environmental structure. 3. Distributed adaptation. Agents update in response to localized components of the incentive field. Global struc-ture influences behavior indirectly through the field, not through centralized represen-tation. 4. Non-teleological evolution. The transition operator 𝑇 is not defined by the maximization of a global objective. Order, when it emerges, is a property of recursive feedback rather than explicit opti-mization. 
+
+## 3.2 Stabilization and Coordination 
+
+Because the architecture defines a state transition operator on 𝒳 × 𝒮 , coordination can be characterized in dynamical terms. A configuration (x∗, 𝑆 ∗) is invariant if 
+
+𝑇 ( x∗, 𝑆 ∗) = ( x∗, 𝑆 ∗). 
+
+Such configurations correspond to fixed points of the system. However, coordination need not imply convergence to a static equilibrium. More generally, it may correspond to: • recurrent trajectories, • bounded invariant sets, • or dynamically stable patterns that are robust to perturbations. Accordingly, coordination is defined as: A dynamically self-reinforcing configuration of agents and environment under recursive clo-sure. As a result, stability — rather than optimization — serves as the organizing principle of systemic order under this architecture. Dynamically coherent structures sustained through distributed feedback constitute the class of configurations within which intelligence becomes possible. Intelligence emerges in coordination architectures whose update operators transform accumu-lated coordination signals into adaptive, state-dependent structural stabilization over time. 
+
+# 4 A Minimal Linear Coordination System 
+
+This section presents a minimal linear system in which a global coordination signal arises endogenously from the interaction of bounded agents with a persistent but dissipative envi-8ronment. No shared objective is specified, no exogenous welfare aggregation is imposed, and no global optimum is defined. Coordination arises as a property of the closed dynamics. 
+
+## 4.1 Setup 
+
+Consider two agents indexed by 
+
+𝑖 ∈ {1, 2}. 
+
+Each agent chooses a scalar action 
+
+𝑥 𝑖,𝑡 ∈ ℝ, 
+
+and define the joint action vector 
+
+x𝑡 = (𝑥 1,𝑡 , 𝑥 2,𝑡 ). 
+
+The environment is represented by a scalar state variable 
+
+𝑆 𝑡 ∈ ℝ, 
+
+which encodes accumulated coordination imbalance externalized from past interaction. Agents do not observe each other’s actions. They respond only to local incentive signals. 
+
+## 4.2 Environmental Persistence 
+
+The environment evolves according to 
+
+𝑆 𝑡+1 = (1 − 𝛾)𝑆 𝑡 + 𝛽(𝑥 1,𝑡 − 𝑥 2,𝑡 ), 𝛽 > 0, 0 < 𝛾 < 1. 
+
+Interpretation: • Persistent disagreement accumulates coordination signal. • The environment dissipates at rate 𝛾 .• Only sustained disagreement generates lasting pressure. The parameter 𝛾 captures institutional friction or stress dissipation. The environment is persistent but not irreversible. Persistence is primary: state accumulation precedes and structurally determines incentive formation. 
+
+## 4.3 Derived Global Coordination Signal 
+
+Define a global coordination signal as a derived state variable: 9𝐿 𝑡  
+
+> global
+
+∶= 𝑆 2𝑡 .
+
+Crucially: • 𝐿 global is not minimized by any agent, • it is not represented internally, • it is not known or optimized, • it exists only as encoded environmental stress. Thus, 
+
+𝐿 global is a derived state functional, not an objective. 
+
+## 4.4 Incentive Field 
+
+Because 𝑆 𝑡 depends on 𝑥 𝑖,𝑡−1 , the incentive field is defined through the marginal effect of previous agent actions on the current environmental stress: 
+
+𝐺 𝑖,𝑡 ∶= − 𝜕𝐿 𝑡 
+
+> global
+
+𝜕𝑥 𝑖,𝑡−1 
+
+.
+
+Since 
+
+𝐿 𝑡  
+
+> global
+
+= 𝑆 2𝑡 ,
+
+we obtain 
+
+𝐺 𝑖,𝑡 = −2𝑆 𝑡 
+
+𝜕𝑆 𝑡 
+
+𝜕𝑥 𝑖,𝑡−1 
+
+.
+
+From the environmental law, 
+
+𝑆 𝑡 = (1 − 𝛾)𝑆 𝑡−1 + 𝛽(𝑥 1,𝑡−1 − 𝑥 2,𝑡−1 ), 
+
+it follows that 
+
+𝜕𝑆 𝑡 
+
+𝜕𝑥 1,𝑡−1 
+
+= 𝛽, 𝜕𝑆 𝑡 
+
+𝜕𝑥 2,𝑡−1 
+
+= −𝛽. 
+
+Hence, 
+
+𝐺 1,𝑡 = −2𝛽𝑆 𝑡 , 𝐺 2,𝑡 = +2𝛽𝑆 𝑡 .
+
+Properties of the field: 10 • Incentives depend only on accumulated environmental stress. • Agents respond to current state, not forecasts. • No forward-looking expectations are required. • The field is local in time and state. The incentive structure is not engineered toward a target; it follows necessarily from persis-tence. 
+
+## 4.5 Adaptive Update Rule 
+
+Agents update according to 
+
+𝑥 𝑖,𝑡+1 = 𝑥 𝑖,𝑡 + 𝜂𝐺 𝑖,𝑡 , 𝜂 > 0. 
+
+Agents: • do not observe 𝑆 𝑡 directly, only 𝐺 𝑖,𝑡 ,• do not observe the other agent’s action, • do not know any global law, • do not optimize a shared objective. They respond locally to incentive signals induced by environmental persistence. 
+
+## 4.6 Stability of the Closed System 
+
+Define disagreement 
+
+𝑑 𝑡 ∶= 𝑥 1,𝑡 − 𝑥 2,𝑡 .
+
+The joint dynamics in (𝑆 𝑡 , 𝑑 𝑡 ) form a linear discrete-time system. The system is closed: agent updates modify the environment, which in turn generates the next-period incentive field. Local stability requires that all eigenvalues of the Jacobian lie strictly inside the unit disk. Under standard discrete-time stability theory (see Appendix A.6), this implies local asymp-totic stability of the fixed point. This holds if and only if 
+
+4𝜂𝛽 2 < 𝛾. 
+
+This condition characterizes local asymptotic stability of the fixed point (𝑆, 𝑑) = (0, 0) for the linear discrete-time system. Intuitively: • 𝛽 measures coupling strength, • 𝜂 measures responsiveness, • 𝛾 measures dissipation. 11 Environmental dissipation must dominate amplification generated by reactive behavior. When the stability boundary 4𝜂𝛽 2 ≈ 𝛾 is approached from below, the system becomes increasingly sensitive to perturbations and may exhibit slow convergence or oscillatory coor-dination patterns before instability arises. Under the stability condition, 
+
+𝑑 𝑡 → 0, 𝑆 𝑡 → 0, 𝐺 𝑖,𝑡 → 0. 
+
+Equivalently, 
+
+𝑥 1,𝑡 → 𝑥 2,𝑡 .
+
+The implicit global law 
+
+𝑥 1,𝑡 − 𝑥 2,𝑡 → 0 
+
+was never stated or imposed. It follows from persistence and dissipation within a closed dynamical system. The resulting configuration is viable rather than optimal: unstable trajectories are suppressed through feedback-mediated dissipation. In this linear setting, viability coincides with asymptotic stability of the fixed point. The eigenvalue condition ensures local asymptotic stability of the fixed point (𝑆, 𝑑) = (0, 0) ,providing a concrete realization of the abstract viability criterion. 
+
+## 4.7 Structural Implication 
+
+This minimal system demonstrates that: • coordination arises from shared exposure to a persistent environment, • global constraints emerge without preference aggregation, • incentives stabilize behavior through environmental feedback, • dissipation is necessary for stable coordination, • the structural conditions identified in the theory are present at the level of the closed-loop dynamics (x𝑡 , G𝑡 , 𝑆 𝑡 ).The system does not rely on a social welfare function and does not invoke fixed preference aggregation. Coordination is not maximization. It is the stabilization of trajectories within a viable region of the state space. 
+
+# 5 Conclusion 
+
+This paper introduces a dynamical theory of adaptive coordination in persistent multi-agent systems. The central contribution is to identify the structural conditions under which coor-12 dinated, history-sensitive stabilization can arise in a recursively coupled architecture. Formally, agents indexed by 𝑖 evolve according to 
+
+x𝑖,𝑡+1 = 𝐹 𝑖 (x𝑖,𝑡 , 𝐺 𝑖,𝑡 , 𝑆 𝑡 ) , 
+
+where: • x𝑖,𝑡 denotes the internal state of agent 𝑖 ,• 𝐺 𝑖,𝑡 is a locally acting incentive field, • 𝑆 𝑡 is a persistent environment storing accumulated coordination signal. Together, these components define a closed dynamical system over the augmented state space 
+
+(x, 𝑆) ∈ 𝒳×𝒮 . Coordination is not imposed externally through a global objective, but arises through recursive feedback between agents and a memory-bearing environment. Appendix A.4 establishes a necessary structural condition: adaptive update operators must depend non-trivially on incentive signals, and incentives must depend non-trivially on persis-tent environmental state. Absent this dual coupling, accumulated coordination signal cannot influence future trajectories. Stability may still occur, but only through passive dissipation rather than adaptive transformation of agent states. This distinction separates adaptive coordination from mere dynamical boundedness. A dis-sipative system can converge without processing historical signal. By contrast, adaptive coordination requires structurally mediated transformation: update operators must map memory-dependent incentives into state change. It is this transformation layer—not stabil-ity alone—that generates viable, history-sensitive trajectories. Three implications follow. 1. Coordination is relational rather than intrinsic to any iso-lated component. 2. Objectives, incentives, and persistence are individually insufficient; intelligence-relevant behavior arises only through their recursive coupling. 3. Adaptive coor-dination architectures define structural families of update operators that, when coupled to persistent environments, stabilize trajectories without requiring reduction to a static global objective over 𝒳 .Here, intelligence is interpreted as a structural property of such architectures: a system exhibits intelligence insofar as it recursively transforms accumulated environmental signal into stabilized, viable patterns over time. The resulting trajectories need not be optimal, welfare-maximizing, or equilibrium-selecting in the classical sense. They must instead remain dynamically viable under persistent feedback. Biological organisms, institutions, markets, and multi-agent learning systems may be viewed as instances of this structural class when they implement memory-dependent incentive cou-pling. The claim is structural rather than empirical: the paper identifies architectural conditions under which intelligent coordination emerges. 13 6 References 
+
+Abraham, R., & Robbin, J. (1967). Transversal mappings and flows . New York, NY: W. A. Benjamin. Arnold, V. I. (1989). Mathematical methods of classical mechanics (2nd ed.). New York, NY: Springer. https://doi.org/10.1007/978-1-4757-2063-1 Elaydi, S. (2005). An introduction to difference equations (3rd ed.). New York, NY: Springer. https://doi.org/10.1007/0-387-27602-5 Fudenberg, D., & Levine, D. K. (1998). The theory of learning in games . Cambridge, MA: MIT Press. Hirsch, M. W., Smale, S., & Devaney, R. L. (2013). Differential equations, dynamical systems, and an introduction to chaos (3rd ed.). Amsterdam; Boston: Academic Press. Khalil, H. K. (2002). Nonlinear systems (3rd ed.). Upper Saddle River, N.J.: Prentice Hall. Lohmiller, W., & Slotine, J.-J. E. (1998). On contraction analysis for non-linear systems. 
+
+Automatica , 34 (6), 683–696. https://doi.org/10.1016/S0005-1098(98)00019-3 North, D. C. (1990). Institutions, institutional change and economic performance . Cam-bridge, MA: Cambridge University Press. https://doi.org/10.1017/CBO9780511808678 Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction (2nd ed.). Cambridge, MA: MIT Press. Temam, R. (1997). Infinite-dimensional dynamical systems in mechanics and physics (2nd ed.). New York, NY: Springer. 
+
+# 7 Appendix 
+
+## 7.1 Appendix A — Analytical Foundations 
+
+This appendix provides analytical support for the structural claims developed in the main text. The objective is not to derive optimal policies or equilibrium solutions, but to estab-lish that viability, coordination, and history sensitivity arise from the coupled dynamical structure introduced in the paper. No assumption of global optimization, equilibrium selection, rational expectations, or welfare maximization is imposed. We consider the discrete-time closed-loop system: 
+
+x𝑡+1 = 𝐹 ( x𝑡 , G𝑡 , 𝑆 𝑡 ), 𝑆 𝑡+1 = Ψ(𝑆 𝑡 , x𝑡 ), G𝑡 = 𝐺( x𝑡 , 𝑆 𝑡 ), 
+
+where: • x𝑡 ∈ 𝒳 ⊆ ℝ 𝑛 denotes agent states, • 𝑆 𝑡 ∈ 𝒮 ⊆ ℝ 𝑚 denotes persistent environmental memory, • G𝑡 ∈ ℝ 𝑛 denotes incentive signals. Assume 𝒳 and 𝒮 are finite-dimensional. The induced closed-loop system can be written compactly as 14 (x𝑡+1 , 𝑆 𝑡+1 ) = Φ( x𝑡 , 𝑆 𝑡 ), 
+
+with Φ ∶ 𝒳 × 𝒮 → 𝒳 × 𝒮 .All structural results concern this induced dynamical system. 
+
+7.1.1 A.1 Dissipativity and Forward Invariance 
+
+Assumptions We impose: 1. 𝐹 , Ψ, 𝐺 are continuous and locally Lipschitz. 2. The closed-loop map Φ is dissipative: there exists a bounded absorbing set 𝐵 ⊂ 𝒳 × 𝒮 .3. Incentive signals 𝐺( x, 𝑆) are bounded on bounded subsets of 𝒳 × 𝒮 .Dissipativity means that for any initial condition, there exists 𝑇 such that for all 𝑡 ≥ 𝑇 , ( x𝑡 , 𝑆 𝑡 ) ∈ 𝐵 .Under these conditions the system admits a global attractor in the sense of dissipative dynamical systems (see (Temam, 1997)). Dissipativity is treated as a structural admissibility condition on update operators capable of sustaining viable trajectories. 
+
+7.1.1.1 Proposition A.1.1 (Existence of Forward-Invariant Set) 
+
+Under the above assumptions, there exists a non-empty compact set 
+
+𝐾 ⊆ 𝒳 × 𝒮 
+
+that is forward-invariant under Φ (see, e.g., (Temam, 1997)), i.e., 
+
+Φ(𝐾) ⊆ 𝐾. 
+
+Consequently, any continuous aggregate coordination functional 
+
+𝐿 𝑡  
+
+> global
+
+= 𝒜( x𝑡 , 𝑆 𝑡 )
+
+remains bounded along trajectories. 
+
+7.1.1.1.1 Interpretation 
+
+Sustained coordination requires only forward invariance of a bounded region under the in-duced dynamics. No optimal objective, equilibrium condition, or maximization principle is required. Viability is therefore a dynamical property of the closed-loop system. 15 Appendix B evaluates local behavior near equilibrium points contained within such invariant regions, using the minimal linear specification introduced in the main text. 
+
+7.1.2 A.2 Impossibility of Static Objective Reduction 
+
+We formalize the claim that the incentive field generally cannot be reduced to a static global objective defined solely over 𝒳 .
+
+7.1.2.1 Definition A.2.1 (Static Reduction over 𝒳 )
+
+A static reduction exists if there is a time-invariant scalar function 
+
+𝐿 ⋆ ∶ 𝒳 → ℝ 
+
+such that for all admissible trajectories, 
+
+𝐺( x𝑡 , 𝑆 𝑡 ) = −∇ x𝐿 ⋆(x𝑡 ). 
+
+That is, the incentive field coincides with the gradient of a fixed scalar potential defined on 
+
+𝒳 alone. 
+
+7.1.2.2 Proposition A.2.1 (Generic Failure of Static Reduction) 
+
+Assume: 1. 𝜕Ψ/𝜕𝑆 ≠ 0 (memory persistence), 2. 𝜕𝐺/𝜕𝑆 ≠ 0 (incentives depend on memory), 3. 𝑆 𝑡 depends non-trivially on past states {x𝜏 }𝜏≤𝑡 .Then, generically, no static reduction over 𝒳 exists. Here, “generic” refers to robustness under small 𝐶 1 perturbations, holding outside a nowhere-dense subset of admissible parameter configurations (Abraham & Robbin, 1967). 
+
+7.1.2.3 Sketch of Argument 
+
+If a static reduction existed, the induced vector field on 𝒳 would be conservative on any simply connected domain (see (Arnold, 1989)). In particular, it would satisfy the cross-partial symmetry condition: 
+
+𝜕𝐺 𝑖 
+
+𝜕𝑥 𝑗 
+
+= 𝜕𝐺 𝑗 
+
+𝜕𝑥 𝑖 
+
+.
+
+However, because the incentive field is coupled to a persistent environmental state, its value at time t is determined by accumulated system history: 
+
+G𝑡 = 𝐺( x𝑡 , 𝑆 𝑡 ), 𝑆 𝑡 = Ψ (𝑡) (𝑆 0, x0, … , x𝑡−1 ). 
+
+16 Thus the induced field on 𝒳 is not autonomous: it depends on the trajectory through 𝑆 𝑡 .This induces path dependence in the effective vector field over 𝒳 .For fixed 𝑆 treated as a parameter, the field may be locally integrable. The question, how-ever, is not whether the vector field on the augmented space 𝒳 × 𝒮 admits a potential representation, but whether the closed-loop dynamics projected onto 𝒳 can be represented as the gradient of a time-invariant scalar. Because 𝑆 𝑡 evolves endogenously with system history, the effective field on 𝒳 varies along trajectories. Except under special parameter configurations requiring cancellation of memory-induced asymmetries, the cross-partial symmetry condition fails to hold robustly. Hence no time-invariant scalar potential on 𝒳 can represent the induced incentive dynamics. Static reduction therefore fails whenever memory persistence and incentive–memory coupling are structurally active. 
+
+7.1.2.3.1 Boundary Cases 
+
+Static reduction may exist if: • 𝜕Ψ/𝜕𝑆 = 0 (no persistence), or • 𝜕𝐺/𝜕𝑆 = 0 (memory-independent incentives). Reducibility is therefore conditional on structural memory properties. 
+
+7.1.2.3.2 Remark (Augmented-State Lyapunov Functions) 
+
+A Lyapunov function over the augmented state space (x, 𝑆) may exist. Such a function: • Need not be optimized by agents, • Does not imply welfare maximization, • Does not imply equilibrium selection over 𝒳 .Existence of an augmented Lyapunov function does not restore static reduction over 𝒳 .
+
+7.1.3 A.3 History Sensitivity 
+
+Path dependence arises structurally from environmental persistence. 
+
+7.1.3.0.1 Proposition A.3.1 (History Sensitivity) 
+
+Suppose 
+
+𝑆 𝑡+1 = Ψ(𝑆 𝑡 , x𝑡 ) with 𝜕Ψ 𝜕𝑆 ≠ 0. 
+
+Let two initial conditions satisfy 
+
+𝑆 (𝑎) 0 ≠ 𝑆 (𝑏) 0 .
+
+17 If the closed-loop system is not globally contracting to a unique fixed point (in the sense of contraction analysis; see (Lohmiller & Slotine, 1998)), then generically the trajectories do not coincide for all sufficiently large 𝑡 and may converge to distinct asymptotic states. 
+
+x(𝑎) 𝑡 ≠ x(𝑏) 𝑡 
+
+for infinitely many 𝑡 , and asymptotic states may differ. 
+
+7.1.3.0.2 Interpretation 
+
+Persistent environmental memory transmits initial differences forward in time unless global contraction holds. The introduction of persistent environmental state enlarges the phase space and embeds historical information directly into the system’s state representation. History sensitivity arises structurally from state augmentation when 𝑚 > 0 and global contraction does not collapse trajectories. 
+
+7.1.4 A.4 Necessary Structural Condition for Intelligence 7.1.4.1 Definition A.4.1 (Trivial Coupling) 
+
+Consider the closed dynamical system 
+
+(x𝑡+1 , 𝑆 𝑡+1 ) = 𝑇 ( x𝑡 , 𝑆 𝑡 ). 
+
+The system exhibits trivial adaptive coupling if either 
+
+𝜕𝐹 𝑖 
+
+𝜕𝐺 𝑖 
+
+≡ 0 or 𝜕𝐺 𝑖 
+
+𝜕𝑆 ≡ 0. 
+
+That is: • either agent updates do not depend on incentives, or • incentives do not depend on persistent environmental state. In either case, accumulated environmental signal cannot influence future adaptive transfor-mation of agent states. 
+
+7.1.4.2 Definition A.4.2 (Non-Trivial Incentive–Memory Coupling) 
+
+The system exhibits non-trivial incentive–memory coupling if 
+
+𝜕𝐹 𝑖 
+
+𝜕𝐺 𝑖 
+
+≢ 0 and 𝜕𝐺 𝑖 
+
+𝜕𝑆 ≢ 0. 
+
+That is: • agent updates respond to incentives, and 18 • incentives depend non-trivially on persistent environmental state. Both couplings are required for accumulated coordination signal to enter future adaptive up-dates. These conditions are necessary but not sufficient for intelligence; additional regularity and stability conditions are required. 
+
+7.1.4.3 Proposition A.4.1 (Necessary Condition) 
+
+If the system exhibits trivial adaptive coupling, then accumulated coordination signal stored in 𝑆 𝑡 cannot influence future agent trajectories through adaptive transformation. Conse-quently, the system fails to satisfy the structural definition of intelligence given in Section 4. 
+
+7.1.4.4 Proof 
+
+Suppose first that 
+
+𝜕𝐹 𝑖 
+
+𝜕𝐺 𝑖 
+
+≡ 0. 
+
+Then agent updates satisfy 
+
+x𝑖,𝑡+1 = 𝐹 𝑖 (x𝑖,𝑡 , 𝑆 𝑡 ), 
+
+or possibly x𝑖,𝑡+1 = 𝐹 𝑖 (x𝑖,𝑡 ), but in either case they do not respond to incentive signals 𝐺 𝑖,𝑡 .Even if 𝐺 𝑖,𝑡 depends on the persistent state 𝑆 𝑡 , accumulated coordination signal cannot enter adaptive transformation through incentive mediation. Alternatively, suppose that 
+
+𝜕𝐺 𝑖 
+
+𝜕𝑆 ≡ 0. 
+
+Then incentives are independent of environmental memory. Although agents may respond to incentives, those incentives do not encode accumulated coordination signal. In both cases, there is no causal pathway by which accumulated environmental information stored in 𝑆 𝑡 can influence future agent updates through incentive-mediated adaptation. Any resulting stability arises from internal dynamics or passive dissipation rather than incentive-mediated adaptive transformation. Therefore, the system fails to satisfy the structural definition of intelligence given in Section 4. 
+
+7.1.5 A.5 Structural Decomposition 
+
+This subsection clarifies the distinct structural roles of coupling, persistence, and dissipation in the minimal linear specification introduced in the main text. The analysis concerns the closed-loop system in (𝑆 𝑡 , 𝑑 𝑡 ) defined by 19 𝑆 𝑡+1 = (1 − 𝛾)𝑆 𝑡 + 𝛽𝑑 𝑡 , 𝑑 𝑡+1 = 𝑑 𝑡 − 4𝜂𝛽𝑆 𝑡 .
+
+where 𝑑 𝑡 ∶= x1,𝑡 − x2,𝑡 .The parameters 𝛽 , 𝛾 , and 𝜂 govern qualitatively distinct structural properties of the induced dynamics. 
+
+7.1.5.1 A.5.1 Removal of Coupling ( 𝛽 = 0 )
+
+Setting 𝛽 = 0 yields 
+
+𝑆 𝑡+1 = (1 − 𝛾)𝑆 𝑡 , 𝑑 𝑡+1 = 𝑑 𝑡 .
+
+Implications: • The environmental state evolves independently of agent disagreement. • Disagreement becomes dynamically inert. • No feedback loop connects agents through the environment. The system decomposes into independent subsystems. Coordination dynamics disappear, though environmental decay may persist. Thus, 𝛽 governs the existence of collective coordination feedback. 
+
+7.1.5.2 A.5.2 Removal of Persistence ( 𝜕Ψ/𝜕𝑆 = 0 )
+
+Eliminating persistence corresponds to removing state dependence in 𝑆 𝑡 . In the linear spec-ification, this is equivalent to setting 
+
+𝑆 𝑡+1 = 𝛽𝑑 𝑡 ,
+
+with no dependence on 𝑆 𝑡 .Implications: • Environmental state becomes memoryless. • Past coordination imbalances do not accumulate. • The system reduces to a first-order feedback interaction without hysteresis. Local stability may still hold depending on parameter values, but history sensitivity disap-pears. Thus, persistence governs environmental statefulness and path dependence. 
+
+7.1.5.3 A.5.3 Removal of Dissipation ( 𝛾 = 0 )
+
+Setting 𝛾 = 0 yields 
+
+𝑆 𝑡+1 = 𝑆 𝑡 + 𝛽𝑑 𝑡 .
+
+20 In this case, environmental stress accumulates without decay. The characteristic polynomial shows that the spectral radius typically satisfies 
+
+𝜌(𝐽 ) ≥ 1 
+
+for nonzero 𝜂 and 𝛽 , on an open subset of parameter space. Implications: • Feedback amplification is no longer counteracted. • Oscillatory or divergent trajectories emerge. • Local boundedness fails except under degenerate parameter alignment. Thus, 𝛾 governs decay of accumulated environmental signal and is necessary for local bound-edness under reactive feedback. 
+
+7.1.5.4 Structural Summary 
+
+Each parameter controls a distinct structural property of the closed-loop system: Table 1: Structural Components of Agent-Environment Dynamics Component Structural Role 
+
+Coupling ( 𝛽 ) Generates collective feedback between agents and environment 
+
+Persistence Generates environmental memory and history sensitivity 
+
+Dissipation ( 𝛾 ) Ensures decay of accumulated signal and contributes to local boundedness The three mechanisms are analytically separable in the linear specification. Removing any one eliminates a distinct structural feature of the coordination architecture. The decomposition demonstrates that coordination, history sensitivity, and bounded sta-bilization arise from different components of the closed-loop dynamics rather than from a single primitive. 
+
+7.1.6 A.6 Linearization Principle and Local Stability 
+
+Assume that the closed-loop map 
+
+Φ ∶ 𝒳 × 𝒮 → 𝒳 × 𝒮 
+
+is continuously differentiable in a neighborhood of a fixed point ( x∗, 𝑆 ∗). Let 𝐽 = 𝐷Φ( x∗, 𝑆 ∗) denote the Jacobian matrix evaluated at the fixed point. If the spectral radius satisfies 21 𝜌(𝐽 ) < 1, 
+
+then the fixed point is locally asymptotically stable under standard discrete-time linearization results (e.g., Hirsch, Smale, & Devaney (2013)). In the minimal linear specification introduced in the main text and evaluated in Appendix B, local boundedness and convergence in a neighborhood of equilibrium are governed by the spectral condition 𝜌(𝐽 ) < 1 .Consequently, there exists a neighborhood 
+
+𝑈 ⊂ 𝒳 × 𝒮 
+
+such that trajectories starting in 𝑈 remain in 𝑈 and converge to ( x∗, 𝑆 ∗). The minimal linear specification analyzed in Appendix B corresponds to the Jacobian dy-namics of such a system and therefore provides a computational verification of local stability conditions derived from this principle. All stability claims in Appendix B concern local behavior in this sense and do not imply global convergence. 
+
+## 7.2 Appendix B — Computational Demonstration 
+
+The computational component evaluates structural robustness rather than performance op-timization. All stability results concern local behavior around the coordination equilibrium and do not constitute global stability claims. 
+
+7.2.1 B.1 Baseline Linear Stability 
+
+Eigenvalues: 
+
+0.875 ± 0.242𝑖, 0.95 
+
+Spectral radius: 
+
+𝜌(𝐽 ) = 0.95 < 1. 
+
+Implications: • Local asymptotic stability, • Damped oscillations, • Slow geometric convergence mode. 22 7.2.2 B.2 Deterministic Convergence 
+
+From non-trivial initial conditions: • 𝑑 0 = 2 ,• Final disagreement ≈ 10 −11 ,• Log-linear decay confirmed. Numerical trajectories match linear spectral predictions in a neighborhood of equilibrium. 
+
+7.2.3 B.3 Heterogeneity 
+
+With 𝛼 1 ≠ 𝛼 2:• Spectral radius ≈ 0.963 < 1 ,• Convergence preserved. Local stability does not rely on symmetry. 
+
+7.2.4 B.4 Noise Robustness 
+
+With bounded Gaussian incentive noise: • Mean disagreement ≈ 0 ,• Finite stationary variance, • No divergence. Noise induces stochastic stationarity rather than instability. 
+
+## 7.3 Appendix C — Reproducibility and Scope 
+
+Reproducible computational materials for this paper are available at: https://github.com/stevefatz95/dynamic-adaptive-coordination The repository includes: • Full code, • Parameter configurations, • Fixed seeds, • Instability cases, • Replication instructions. The framework assumes: • Bounded adaptive agents, • Persistent environment, • Incentive mediation. It does not assume: • Optimization, • Equilibrium selection, • Rational expectations, • Welfare maximization. 23 7.4 Appendix D — Canonical Representation 
+
+Agent updates take the generic form: 
+
+x𝑖,𝑡+1 = 𝐹 𝑖 (x𝑖,𝑡 , 𝐺 𝑖,𝑡 , 𝑆 𝑡 ). 
+
+Any such system can be represented in this form via state augmentation or an equivalent state-augmented representation (Khalil, 2002). System-level properties therefore arise from the coupled dynamical structure over time. 24

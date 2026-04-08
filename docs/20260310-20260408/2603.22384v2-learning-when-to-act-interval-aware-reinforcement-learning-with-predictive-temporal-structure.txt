@@ -1,0 +1,858 @@
+Title: Learning When to Act: Interval-Aware Reinforcement Learning with Predictive Temporal Structure
+
+URL Source: https://arxiv.org/pdf/2603.22384v2
+
+Published Time: Fri, 27 Mar 2026 01:27:47 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# Learning When to Act: 
+
+# Interval-Aware Reinforcement Learning with Predictive Temporal Structure 
+
+Davide Di Gioia 
+
+University College London 
+
+ucsigi@ucl.ac.uk 
+
+March 2026 
+
+Abstract 
+
+Autonomous agents must decide not only what action to take, but how frequently to deliberate or act . Acting too often wastes computation, while acting too late risks missing critical changes in the environment. We formalise this trade-off as adaptive cognitive pacing and introduce an interval-aware reinforcement learning framework that learns when to act from experience. The policy state is augmented with a predictive uncertainty signal derived from the divergence of imagined future trajectories: the mean pairwise Poincaré distance among n sampled futures embedded in the Poincaré ball Bnc . When predicted futures branch rapidly, the agent learns to act sooner; when futures are predictable, it waits longer. We instantiate this signal using hyperbolic geometry, which provides a natural representation of branching dynamics. In LLM agents, the same mechanism corresponds to learning a deliberation rate (how often to replan or call tools) rather than using fixed reflection schedules. We further propose an interval-aware reward that explicitly penalises inefficiency relative to the chosen wait time, correcting a systematic credit-assignment failure of naive outcome-based rewards in timing problems. We additionally introduce a joint spatio-temporal embedding 
+
+(ATCPG-ST ) that concatenates independently normalised state and position projections in the Poincaré ball; spatial trajectory divergence provides an independent timing signal unavailable to the state-only variant ( ATCPG-SO ). This extension raises mean hyperbolic spread and yields a further +5 .8% efficiency gain over the state-only baseline. Ablation experiments across five random seeds demonstrate that (i) learning is the dominant efficiency factor ( +54 .8% 
+
+over no-learning), (ii) hyperbolic spread provides significant complementary gain ( +26 .2% over geometry-free control), (iii) the combined system achieves +22 .8% efficiency over the fixed-interval baseline, and (iv) adding spatial position information to the spread embedding yields an additional +5 .8% .
+
+1
+
+> arXiv:2603.22384v2 [cs.LG] 26 Mar 2026
+
+# Contents 
+
+1 Introduction 32 Related Work 43 Problem Formulation 6
+
+3.1 Adaptive Cognitive Pacing as a Contextual Bandit . . . . . . . . . . . . . . . . . . . 63.2 State Representation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+
+4 Learned Pacing Policy 7
+
+4.1 Linear Policy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 74.2 Online Weight Update . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 74.3 State-Dependent Exploration . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 74.4 Internal Oscillator . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+
+5 Interval-Aware Reward 8
+
+5.1 The Credit-Assignment Failure of Outcome Reward . . . . . . . . . . . . . . . . . . . 85.2 Proposed Interval-Aware Reward . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+
+6 Predictive Hyperbolic Spread via Hyperbolic Geometry 9
+
+6.1 Poincaré Ball Primer . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 96.2 Future Embedding . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 96.3 Spread Estimator . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 6.4 Integration with the Pacing Policy . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 6.5 Joint Spatio-Temporal Embedding . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 
+
+7 Experiments 12 
+
+7.1 Simulation Environment . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 7.2 Metrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 7.3 Baselines and Ablations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 7.4 Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 7.5 Qualitative Behaviour . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 7.6 Multi-Agent Phase Synchronisation . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 7.7 Head-to-Head: TemporalController vs. SpatioTemporalATCPGAgent . . . . . . . . . 15 7.8 Spatial Ablation: State-Only vs. Spatio-Temporal Embedding . . . . . . . . . . . . . 17 7.9 Real-LLM Pacing Benchmark . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 
+
+8 Discussion 19 9 Conclusion 22 A Proof of Proposition 1 (Extended) 25 B Algorithm Pseudocode 26 
+
+21 Introduction 
+
+The rapid capability expansion of Large Language Models (LLMs) has catalysed the deployment of autonomous agents and multi-agent systems (MAS) in open-ended, continuous environments. In these settings, an agent’s efficacy is bounded not only by what action it takes, but when it chooses to act. As agents transition from isolated chatbots to persistent digital workers, the temporal cadence of their reasoning cycles directly dictates their computational overhead, responsiveness, and ultimate task success. Despite sophisticated advances in task delegation and multi-agent routing, the internal temporal pacing of individual agents remains remarkably primitive. Most contemporary orchestration frameworks rely on either strictly reactive, event-driven triggers (an agent only wakes when messaged) or hand-tuned, fixed-interval polling loops (e.g., sleep(N) calls). Bio-mimetic heuristic formulas (such as hard-coded “fatigue multipliers” or “ultradian rhythms”) offer a veneer of adaptability, but remain brittle: they encode the system designer’s static prior rather than the agent’s lived experience, and they categorically fail to adapt as task complexity and environmental volatility shift. To address this structural blind spot, we propose Adaptive Temporal Control via Predictive Geometry (ATCPG) , a lightweight, fully autonomous pacing system that allows an agent to learn its optimal cognitive interval dynamically. ATCPG shifts temporal control from a fixed network orchestrator to an internal, learned policy driven by the agent’s own epistemic uncertainty. Although we instantiate adaptive cognitive pacing in continuous-control RL, the same principle applies to agentic systems that repeatedly choose when to think, plan, or act. Consider a language-model-based agent that alternates between deliberation, tool invocation, and environment interaction. Fixed reasoning schedules either overthink in predictable states or under-react in volatile ones. Our framework provides a learned signal for when faster cognition is necessary and when slower pacing suffices, based on predicted future branching. The framework is constructed from four interacting components: 1. Learned pacing policy : a linear associative bandit that continuously updates the wait interval after every cognitive tick via reward-weighted regression. 2. Predictive hyperbolic spread (informally, a “curvature signal”). We estimate how rapidly predicted futures diverge. Hyperbolic geometry provides a compact and natural representation of this branching structure. The metric’s natural boundary expansion aggressively amplifies diverging trajectories, signalling the agent to act sooner. 3. Interval-aware shaping reward : a dynamic learning signal that prevents the catastrophic credit-assignment failure common to standard RL timing problems by explicitly pricing the chosen interval. 4. Joint spatio-temporal embedding (ATCPG-ST) : an extension that augments the policy state with Poincaré-projected spatial position vectors. Spatial trajectory divergence is an independent timing signal: branching navigation trees fan out in position space before belief space, and the Poincaré ball’s boundary-expansion property amplifies both signals in a unified geometric language. ATCPG-ST raises mean hyperbolic spread ( κ) by 1.79 × and efficiency by +5 .8% over the state-only baseline ( ATCPG-SO ); it degrades gracefully to ATCPG-SO 
+
+whenever position data are absent. The paper makes the following contributions: 3• We formalise the adaptive cognitive pacing problem as an RL problem over a continuous action space (Section 3). 
+
+• We derive the interval-aware reward and prove it avoids the credit-assignment failure of naive outcome reward in the pacing setting (Section 5). 
+
+• We introduce predictive hyperbolic spread (a “curvature signal” shorthand) as a timing signal, grounded in the Poincaré ball model of hyperbolic geometry (Section 6). 
+
+• We propose ATCPG-ST , a joint spatio-temporal embedding (Section 6.5) that lifts position trajectories into the same Poincaré ball as state embeddings, motivated by the observation that spatial trajectory divergence is an independent leading indicator of decision uncertainty unavailable to the state-only ATCPG-SO. We demonstrate empirically that the combined signal raises mean hyperbolic spread by 1.79 × and efficiency by +5 .8% on a controlled ablation, and that the ordering ηSO < η ST replicates on a live GPT-4.1 deployment (Section 7.9). 
+
+• We provide systematic ablation evidence that each component contributes independently to efficiency (Section 7). 
+
+# 2 Related Work 
+
+To situate ATCPG within the broader landscape of artificial intelligence, we contextualise our frame-work across four distinct domains: multi-agent orchestration, temporal abstraction in reinforcement learning, geometric representation, and autonomous cognitive loops. 
+
+Decentralised orchestration and emergent synchronisation. A growing body of work in multi-agent systems (MAS) shifts temporal coordination away from centralised schedulers toward decentralised, self-organising mechanisms. In contemporary LLM-agent frameworks, execution is increasingly modelled as event-driven computation on structured graphs, where agents are triggered by dependency resolution, message arrivals, or verification outcomes rather than a global clock [Yang et al., 2025, Nalagatla, 2025]. In parallel, control-theoretic and multi-agent reinforcement learning literatures study how global temporal regularities emerge from local interaction rules, including consensus-style coordination and communication-efficient protocols that yield synchronised collective behaviour without explicit central timing [Oh et al., 2025, Stoorvogel et al., 2025, Erofeeva et al., 2025]. Relatedly, uncertainty-aware strategy selection at deployment time has been studied in robotics. UPS [Yuan et al., 2026] uses calibrated uncertainty to choose among executing a candidate action, asking clarifying questions, or requesting corrective intervention, aiming to improve robustness when the verifier or base policy is miscalibrated. Our focus differs: rather than selecting among discrete resolution strategies at a single decision point, ATCPG learns a continuous-time pacing policy that controls the frequency of self-initiated deliberation, explicitly trading off outcome and time. Crucially, these approaches resolve temporal structure primarily at the network layer : they formalise when agents should interact with one another , given topological dependencies and local communication signals. The internal deliberation cadence of an individual agent is often treated as a reactive black box (an agent “runs” when invoked), rather than as a decision variable with its own uncertainty sensitivity, credit assignment, and temporal cost. Golilarz et al. [2025] identify this absence of intrinsic self-monitoring as a core unsolved deficiency in AI autonomy. ATCPG targets this orthogonal gap by formalising intrinsic cognitive pacing at the node level: a continuously running agent learns how long to wait between self-initiated cognitive ticks. This intrinsic pacing is 4complementary to decentralised orchestration rather than a replacement: agents may adapt their own tick intervals while still exhibiting emergent group rhythm via the oscillator and Kuramoto-style phase coupling [Kuramoto, 1984] detailed in Section 4.4. 
+
+Temporal abstraction in RL. Options [Sutton et al., 1999] and macro-actions allow agents to choose the duration of a commitment, but they operate over discrete intervals and do not adapt the base decision frequency. Semi-MDPs [Puterman, 1994] generalise to continuous sojourn times but require a full transition model; ATCPG operates in the model-free, online contextual-bandit setting. Oudeyer and Kaplan [2007] motivate self-paced learning from progress signals. LIDA [Franklin et al., 2007] uses a fixed cognitive cycle; we replace the fixed cycle with a learned one. Circadian and ultradian-inspired architectures [Baars and Franklin, 2003] hard-code period parameters that we instead learn. 
+
+Reward shaping for timing. Ng et al. [1999] study potential-based shaping; we propose a different class of shaping that explicitly accounts for temporal cost. Dewey [2014] addresses utility indifference, but does not consider interval selection as the decision variable. Neither specifically resolves the temporal credit-assignment failure we identify in pacing, necessitating our derivation of an interval-aware reward. 
+
+Hyperbolic representation and uncertainty. Nickel and Kiela [2017] demonstrate that hierar-chical structure embeds more faithfully in Bnc than in Euclidean space due to exponential volume growth near the boundary. Ganea et al. [2018] extend neural networks to hyperbolic space. We use the Poincaré ball not for representation learning but as a geometric divergence measure between predicted futures, quantifying epistemic conflict to drive a temporal control policy. To our knowledge, this is the first use of pairwise Poincaré divergence among predicted futures as an explicit temporal control signal for adaptive cognitive pacing, directly modulating an agent’s deliberation rate. 
+
+Structural blind spots in agent orchestration. Di Gioia [2026] identify a pervasive architec-tural blind spot in modern multi-agent orchestration stacks: their native scheduling layers route execution blindly without geometric perception of how failures propagate through the graph. They demonstrate that geometry-aware sidecars employing dynamic hyperbolic metric switching close this observability gap. ATCPG takes direct inspiration from this critique: where Di Gioia apply hyperbolic geometry to solve the routing (spatial) blind spot in multi-agent execution graphs, we apply it to solve the pacing (temporal) blind spot in continuous autonomous loops. 
+
+Autonomous cognitive loops and self-directed timing. Industry orchestration patterns, such as the Agentic Heartbeat Pattern 1, address who coordinates with whom across an organisational hierarchy but do not formalise when a single agent should self-initiate. The SPOC system [Zhao et al., 2025] interleaves solution generation and verification but remains externally triggered; no runtime pacing adaptation occurs. ATCPG’s daemon loop runs continuously between external requests with no external trigger. Recent work in agentic safety learns discrete gating decisions over tool use, e.g., whether an agent should act or refuse at a given step in a multi-tool trajectory. MOSAIC [Agarwal et al., 2026] frames safety as an explicit and learnable act/refuse decision within a plan–check–act/refuse loop and trains it using preference-based reinforcement learning over trajectory comparisons. ATCPG  
+
+> 1M. Mendonça, "The Agentic Heartbeat Pattern," LinkedIn article, 2025. https://www.linkedin.com/pulse/ agentic-heartbeat-pattern-forget-rigid-workflows-let-ai-mendonca-olfgc
+
+5Observe State Context 
+
+Predict Future Trajectories 
+
+Measure Divergence (Branching) 
+
+Choose Next Deliberation Time 
+
+Act / Wait 
+
+Figure 1: A general adaptive cognitive pacing loop. While instantiated here in reinforcement learning, the same structure applies to agents that dynamically allocate computation, planning, or tool use. is complementary and operates at a different control layer: rather than deciding whether to execute an action, we learn when the next cognitive tick should occur by optimizing a continuous inter-deliberation interval under temporal cost. Golilarz et al. [2025] identify “absence of intrinsic self-monitoring” and “absence of intrinsic agency” as core unsolved deficiencies of current AI systems, explicitly calling for the type of self-directed temporal control we realise here. ATCPG operationalises this largely under-formalised layer of self-directed timing by introducing a lightweight, learnable pacing module that adapts an agent’s deliberation interval online. InSeC [Upadhyaya and Sridharamurthy, 2024] bakes error-correction behaviour into model weights via negative-sample training. The result is a static inference policy activated by an external user query; no runtime pacing adaptation occurs. ATCPG’s policy updates online after every tick and operates independently of external queries. 
+
+# 3 Problem Formulation 
+
+3.1 Adaptive Cognitive Pacing as a Contextual Bandit 
+
+Let an agent operate a cognitive loop with discrete ticks t = 1 , 2, . . . At each tick the agent observes a state st ∈ Rd and selects an interval ∆tt ∈ [∆ tmin , ∆tmax ] before the next tick. After sleeping for 
+
+∆tt seconds the agent acts, observes wellbeing scalar wt ∈ [0 , 1] (a composite health/success signal), and receives true environment reward rt. We optimise a shaping signal ˜rt online (Section 5), but the agent’s ultimate evaluation goal is to maximise the long-run average true efficiency: 
+
+J (π) = lim  
+
+> T→∞
+
+1
+
+T
+
+> T∑
+> t=1
+
+rt
+
+∆tt
+
+. (1) This objective explicitly penalises using more time than necessary to achieve a unit of true reward. In practice, we evaluate this via the empirical efficiency score η (Eq. 18). 63.2 State Representation 
+
+The state vector st ∈ R6 fed to the policy contains: 
+
+st = [ pt
+
+︸︷︷︸ 
+
+> priority
+
+, ft
+
+︸︷︷︸ 
+
+> fatigue
+
+, ∆wt−1
+
+︸ ︷︷ ︸
+
+> recent wellbeing change
+
+, ρt
+
+︸︷︷︸ 
+
+> performance
+
+, sin ϕt
+
+︸ ︷︷ ︸ 
+
+> oscillator phase
+
+, κt
+
+︸︷︷︸ 
+
+> hyperbolic spread
+
+]⊤ (2) where ∆wt−1 is the most recently observed wellbeing change, and ϕt is an internal phase variable that captures emergent rest/activity cycles (Section 4.4). 
+
+# 4 Learned Pacing Policy 
+
+4.1 Linear Policy 
+
+We parameterise the policy as a linear map: 
+
+ˆ∆t(θ, s ) = θbias + θp p + θf f + θw ∆wt−1 + θρ ρ + θϕ sin ϕ + θκ κ, (3) with output clamped to [∆ tmin , ∆tmax ]. The initial weights encode sensible priors: θp < 0
+
+(urgency shortens wait), θf > 0 (fatigue lengthens wait), θκ < 0 (uncertainty shortens wait). 
+
+4.2 Online Weight Update 
+
+After observing the true outcome reward rt, we optimize a shaping learning signal ˜rt (defined in Section 5) online. We update the weight vector via the direct online rule: 
+
+θ ← θ + α ˜rt · st. (4) 
+
+Interpretation of the update rule. The update (4) is not an unbiased policy-gradient estimator for the clipped policy (3) . It is best understood as a lightweight online reward-weighted linear regression (equivalently, a linear associative bandit rule) that increases weights on features co-occurring with a positive learning signal ˜rt. This choice prioritises simplicity and low computational overhead (one vector update per tick) over unbiased gradient estimation. For reference, the exact REINFORCE [Williams, 1992] step for a linear-Gaussian policy π(∆ t | s)
+
+would include the deviation term (∆ tt − ˆ∆tt):
+
+θ ← θ + α ˜rt
+
+∆tt − ˆ∆tt
+
+σ2 · st. (5) We omit that term, treating the post-tick signal ˜rt as an approximately stationary response to the tick context st over the adaptation time-scale of α. Empirically, the simplified rule provides a stable and effective online update for the pacing problem studied here. 
+
+4.3 State-Dependent Exploration 
+
+We inject multiplicative noise with probability εeff :
+
+εeff (st) = ε0 · (1 − | ∆wt−1|), (6) so the agent explores freely when wellbeing is stable ( |∆wt−1| ≈ 0) and exploits its current policy when wellbeing is volatile ( |∆wt−1| ≈ 1). This reverses the conventional uncertainty → explore 7heuristic. It is not contradictory, but contextually adapted: in a continuous autonomous loop, high volatility ( |∆wt−1| ≈ 1) signals acute risk or task failure, demanding immediate exploitation of robust, known intervals to regain stability. Conversely, stable wellbeing indicates the system has the safety margin required to experiment with pacing efficiency. 
+
+4.4 Internal Oscillator 
+
+The internal phase ϕt evolves as: 
+
+ϕt+1 = ( ϕt + ωt) mod 2 π, ωt+1 = clip (ωt + α˜rt · 0.01 , [0 .001 , 0.2] ), (7) where ωt is the phase velocity. Positive rewards accelerate the rhythm; negative rewards slow it. This produces emergent rest/activity cycles whose period is determined endogenously by task structure rather than by a hyperparameter. 
+
+Multi-agent synchronisation. When N clocks operate in parallel, Kuramoto coupling [Ku-ramoto, 1984] nudges phases toward the group mean: 
+
+ϕ(i) 
+
+> t
+
+← ϕ(i) 
+
+> t
+
++ λ 
+
+> (
+
+¯ϕt − ϕ(i)
+
+> t
+> )
+
+, ¯ϕt = 1
+
+N
+
+> ∑
+> j
+
+ϕ(j) 
+
+> t
+
+, (8) producing collective rhythm without central coordination. 
+
+# 5 Interval-Aware Reward 
+
+5.1 The Credit-Assignment Failure of Outcome Reward 
+
+Proposition 1 (Reward-direction failure) . Under the online linear update (4) with naive reward 
+
+˜rt = ∆ wt and feature ft > 0, the update θf += α˜rtft decreases θf when ˜rt < 0 (overload), producing 
+
+shorter intervals when the agent is fatigued, opposite to the desired behaviour. Proof. If the agent is overloaded, ∆wt < 0 ⇒ ˜rt < 0. The update θf + = α · (negative ) · ft decreases 
+
+θf , reducing the positive contribution θf · ft to the interval output (3). This is a fundamental misalignment: the update ascribes the negative outcome to the fatigue feature and reduces the fatigue-correction behaviour. 
+
+5.2 Proposed Interval-Aware Reward 
+
+We decompose the learning signal into three additive components: 
+
+˜rt = 2 ∆wt
+
+∆tt  
+
+> ︸︷︷ ︸
+> efficiency
+
++ 1 .5 ot
+
+∆tt
+
+∆tbase   
+
+> ︸︷︷ ︸
+> spacing bonus
+
++ 1.0 κt
+
+∆tt  
+
+> ︸︷︷ ︸
+> spread brake
+
+, (9) where ot = max(0 , −∆wt) is the overload magnitude. 
+
+Relation to the evaluation objective. Equation (9) is a shaping signal used for the online update (4) ;it is not divided by ∆tt again as in (1) . The 1/∆tt factors in the efficiency and spread-brake terms encourage the agent to favour short intervals, acting as a surrogate for the temporal cost in (1) .This avoids double-counting: we optimise the shaping signal ˜rt directly online, and independently evaluate success over temporal cost on the metric η in Eq. (18). 8Efficiency term. ∆wt/∆tt measures wellbeing gained per second of interval chosen . This correctly penalises long idle periods that produce the same outcome as short ones, driving the agent toward tighter action packing when the environment is cooperative. 
+
+Spacing bonus. ot · (∆ tt/∆tbase ) rewards long intervals when the agent is overloaded . Under update rule (4) this creates a positive gradient on θf , directly fixing the failure in Proposition 1. 
+
+Spread brake. κt/∆tt rewards small intervals when future uncertainty is high. This encodes the intuition that a branching future demands more frequent re-evaluation, formalised in Section 6. 
+
+# 6 Predictive Hyperbolic Spread via Hyperbolic Geometry 
+
+6.1 Poincaré Ball Primer 
+
+The Poincaré ball model (Bnc , g c) is the open unit ball {x ∈ Rn : c∥x∥2 < 1} equipped with the Riemannian metric 
+
+gcx = λc 2 
+
+> x
+
+gE , λcx = 21 − c∥x∥2 , (10) where c > 0 is the curvature parameter and gE is the Euclidean metric. The geodesic distance between x, y ∈ Bnc is: 
+
+dH(x, y ) = 2
+
+√c arctanh 
+
+> (
+
+√c ∥− x ⊕c y∥
+
+> )
+
+, (11) where ⊕c is the Möbius addition: 
+
+x ⊕c y = (1 + 2 c⟨x, y ⟩ + c∥y∥2) x + (1 − c∥x∥2) y
+
+1 + 2 c⟨x, y ⟩ + c2∥x∥2∥y∥2 . (12) A key property used below: equal-Euclidean-step displacements near the boundary of Bnc produce exponentially larger geodesic distances than the same displacements near the origin. This means 
+
+dH amplifies divergence in future predictions, making small differences in predicted outcomes measurable. 
+
+6.2 Future Embedding 
+
+Given a world model W, we sample n future state trajectories {z(i)}ni=1 of horizon h. Each trajectory summary vector z(i) ∈ Rd is embedded into Bmc via: 
+
+φ(z) = proj 
+
+> (
+
+σ · z′
+
+∥z′∥
+
+> )
+
+, z′ = pad/trim (z, m ), (13) where σ ∈ (0 , 1) is a scale factor (default 0.9) and proj (x) = x/ max (1 , ∥x∥/r max ) ensures the result lies inside Bnc . The zero vector is embedded to the origin. 96.3 Spread Estimator 
+
+Definition 1 (Predictive Hyperbolic Spread) . Given n embedded futures {e(i)}ni=1 ⊂ Bnc , the 
+
+predictive hyperbolic spread is defined as: 
+
+κ = μij 
+
+> ︸︷︷︸
+> mean spread
+
++ σ2
+
+> ij
+> ︸︷︷︸
+> variance of spread
+
+, (14) 
+
+where μij and σ2 
+
+> ij
+
+are the mean and variance of {dH(e(i), e (j))}i<j .Terminology note. Although the manifold’s sectional curvature is fixed by the parameter c (constant throughout Bnc ), we use “curvature signal” (κ) as an evocative shorthand for this spread statistic. The name highlights that κ is amplified by the manifold’s expanding geometry near the boundary, not that it measures the manifold curvature itself. 
+
+Remark 1. Adding variance to mean penalises heterogeneous divergence, a mix of near-identical and wildly differing futures, which is more alarming than uniform spreading and deserves a stronger re-evaluation signal. 
+
+Proposition 2 (Zero curvature for identical futures) . If all n predicted futures are identical, κ = 0 .Proof. e(i) = e(j) for all i, j implies dH(e(i), e (j)) = 0 (since ∥ − x ⊕c x∥ = 0 by Möbius addition), so 
+
+μij = σ2 
+
+> ij
+
+= 0 .
+
+Geometric regime characterisation. The Poincaré metric amplifies pairwise distances selec-tively based on two geometric quantities: the radial position r = ∥e∥ of the embeddings and the 
+
+angular divergence between perturbed samples. The conformal factor λ2 
+
+> c
+
+= 4 /(1 − r2)2 grows from 
+
+≈ 4 near the origin to ≈ 111 at r = 0 .9, creating three qualitatively distinct curvature regimes. 
+
+Proposition 3 (Three-regime amplification) . Let u, v ∈ Bnc with ∥u∥ = ∥v∥ = r and angle 
+
+θ = ∠(u, v ) between them. For small angular perturbations δ = 1 − cos θ ≪ 1, the squared Poincaré distance satisfies 
+
+dc(u, v )2 ≈ 8 r2 δ
+
+(1 − r2)2 . (15) 
+
+Thus κ is jointly amplified by radial position through (1 − r2)−2 and by angular spread through δ.Proof. By definition, dc(u, v ) = arccosh (1 + X) where X = 2 ∥u − v∥2/(1 − r2)2 for c = 1 and equal radii. The law of cosines gives ∥u − v∥2 = 2 r2(1 − cos θ) = 2 r2δ, so X = 4 r2δ/ (1 − r2)2. For small 
+
+X, the Taylor expansion arccosh(1 + X) ≈ √2X yields dc(u, v )2 ≈ 2X = 8 r2δ/ (1 − r2)2.
+
+Remark 2. Equation (15) is a small-angle, equal-radius approximation. The implementation uses the exact arccosh formula dc(x, y ) = arccosh (1 + 2 c∥x − y∥2/[(1 − c∥x∥2)(1 − c∥y∥2)] ) [Ungar, 2008], which handles arbitrary radii and is numerically stable. 
+
+We demonstrated this amplification mechanism empirically under controlled construction, using MC-dropout [Gal and Ghahramani, 2016] as a surrogate for future-state spread. Table 1 reports the mean predictive curvature κ for three synthetically constructed state topologies under N = 200 
+
+dropout samples at rate p = 0 .20 .Both discriminability ratios massively exceed the baseline: Conflicted vs. Confident = 10 .4×;Conflicted vs. Noise = 29 .6×. This confirms that κ does not merely measure spread, it measures 
+
+directional conflict amplified by proximity to the ball boundary , a property unique to hyperbolic geometry. 10 Table 1: MC-dropout predictive curvature κ across three geometric regimes ( N = 200 samples, 
+
+p = 0 .20 , d = 6 ). The Poincaré boundary amplification selectively elevates conflicted states.                    
+
+> Regime Construction rκκ/κ confident
+> Conflicted uncertainty Opposing dominant features at boundary ≈0.90 6.22 10 .4×
+> Confident prediction Stable signal, ball interior ≈0.37 0.60 1.0×
+> Uninformative noise Near-zero state, Euclidean limit ≈0.12 0.21 0.35 ×
+
+6.4 Integration with the Pacing Policy 
+
+The spread signal enters the policy (3) with weight θκ < 0, so high spread decreases the predicted interval. In the reward (9) the spread brake term κ/ ∆tt creates a positive gradient on θκ when the interval is short, reinforcing the speed-up under uncertainty behaviour (act sooner when future spread is high). 
+
+6.5 Joint Spatio-Temporal Embedding 
+
+The state-only embedding (13) captures what the future will look like, the uncertainty over predicted 
+
+content , but not where the agent or world will be spatially. Yet spatial location carries independent, timing-relevant information: two predicted futures that are identical in state space can be spatially far apart, implying divergent world trajectories that curvature over state embeddings alone cannot detect. In navigation, multi-step planning, and execution graphs, spatial trajectory divergence is often a stronger leading indicator of decision uncertainty than state spread: a branching navigation tree fans out in position space well before it fans out in belief space. The Poincaré ball is an ideal joint container for both signals: its boundary-expansion property amplifies state uncertainty and spatial trajectory fan-out in the same geometric language, without requiring separate encoders or manual scale matching. We therefore extend ATCPG by augmenting the policy state with Poincaré-projected position vectors; we call the resulting system ATCPG-ST 
+
+(Spatio-Temporal ) to distinguish it from the state-only variant ATCPG-SO . ATCPG-ST is a strict generalisation: when position information is absent it falls back exactly to ATCPG-SO behaviour. Formally, when the world model produces both predicted state vectors and predicted spatial position vectors {p(i)}ni=1 ⊂ Rk, we form a joint spatio-temporal embedding by concatenating independently normalised Poincaré projections: 
+
+ψ(i) = proj 
+
+> ([
+
+φ(z(i); ms) ∥ φ(p(i); mp)])
+
+, (16) where ms and mp are the state and position embedding dimensions (defaults 6 and 3), ∥
+
+denotes concatenation, and the outer proj re-projects the (ms + mp)-dimensional vector into Bms+mp 
+
+> c
+
+.Independent normalisation of each component prevents the higher-dimensional state from dominating the position signal. Predictive curvature is then computed exactly as in (14) but over the joint embeddings {ψ(i)}.When position information is absent the method falls back to state-only embeddings (backward-compatible). 
+
+Spatial divergence amplifies κ. Because the Poincaré metric expands near the ball boundary, trajectories that diverge in position space ( ∥p(i) − p(j)∥ large) produce joint embeddings near the boundary, and their geodesic distances dH(ψ(i), ψ (j)) are substantially larger than those computed from state embeddings alone. The empirical effect is a higher κ and correspondingly shorter intervals 11 whenever the agent’s predicted spatial trajectories fan out, a desirable signal in navigation or multi-step planning tasks where spatial divergence correlates with decision uncertainty (Section 7.8). 
+
+Proposition 4 (Spatial monotonicity, non-saturated regime) . Let z(i) ∈ Rms be fixed and let 
+
+p(i) ∈ Rk be position vectors. Define joint embeddings ψ(i)(ε) by replacing p(i) with εp (i) in (16) .Assume there exists εmax > 0 such that for all ε ∈ [0 , ε max ] the outer proj (·) in (16) does not activate (no clipping). Then κST (ε) is non-decreasing in ε on [0 , ε max ]. In particular, if p(i)̸ = p(j) for some 
+
+i̸ = j, then for sufficiently small ε > 0, κST (ε) > κ SO .Proof sketch. Without clipping, scaling p(i) 7 → εp (i) increases pairwise Euclidean separations of the position components monotonically in ε. For embeddings bounded away from the boundary, the Poincaré distance is monotone in ∥x − y∥ for fixed radii, so each pairwise dH(ψ(i), ψ (j)) is non-decreasing. Their mean and variance are therefore non-decreasing, giving κST (ε) ≥ κSO .
+
+# 7 Experiments 
+
+7.1 Simulation Environment 
+
+We evaluate in a synthetic environment where each tick simulates a cognitive cycle with stochastic outcomes: 
+
+dt ∼ Gaussian (dbase (ot) − 30 pt, 20) ,
+
+∆wt ∼ Gaussian (μw(ot), 0.05) ,
+
+success t = 1[¬ot ∨ pt > 0.7] , (17) where dbase ∈ { 50 , 200 } ms for non-overloaded and overloaded, μw ∈ { +0 .1, −0.2}, ot ∼
+
+Bernoulli (0 .3) . All agents use ∆tmin = 10 s, ∆tmax = 300 s, base interval 60 s. 
+
+7.2 Metrics 
+
+Efficiency (primary). 
+
+η = 1
+
+T
+
+> T∑
+> t=1
+
+success t
+
+∆tt
+
+. (18) 
+
+Performance score. Mean success rate. 
+
+Wellbeing stability. Standard deviation of the wellbeing trajectory (lower is better). 
+
+7.3 Baselines and Ablations 
+
+We compare five configurations, plus a privileged reference baseline and a spatial extension (Table 2): 
+
+Full model (ATCPG) All components enabled; spread inferred geometrically from predicted futures, no privileged information. 
+
+−Learning Weights frozen; fixed interval equals base. 
+
+−Spread Spread feature set to 0; policy learns from remaining features. 12 −Interval reward Simple outcome reward ˜rt = 2∆ wt + 0 .5/d t replaces (9). 
+
+−Exploration ε0 = 0 (deterministic policy). 
+
+ATCPG-ST (positions) Full model extended with joint spatio-temporal embedding (16) ; posi-tions are independently drawn 3-D vectors correlated with overload state. 
+
+TC (privileged) † TemporalController with curvature computed from a Gaussian conditioned on the directly observed overload flag ot. This constitutes an upper bound : the best achievable efficiency when a clean oracle overload signal is available. Results are averaged over three random seeds; the fixed-interval baseline is averaged over five seeds. 
+
+7.4 Results 
+
+Learning dominates. Removing learning halves efficiency ( −54 .8% ). No other component comes close. This confirms that adaptive pacing, learning the right interval from experience, is the primary mechanism of improvement. 
+
+Hyperbolic spread provides significant gain. The −26 .2% drop in the −Spread condition demonstrates that the geometric future-spread signal contributes substantially beyond what the non-geometric features (priority, fatigue, wellbeing, performance) alone can capture. The hyperbolic spread signal provides a prospective signal: it encodes what is about to happen rather than what 
+
+just happened , giving the policy information unavailable to non-geometric policy learners. 
+
+Interval-aware reward corrects credit assignment. The −15 .1% drop in the −Interval reward condition empirically validates Proposition 1: the naive outcome reward produces a systematic bias against slowing down under overload. Replacing it with (9) removes this bias and improves efficiency. 
+
+Exploration stabilises. The modest −3.1% drop in the −Exploration condition suggests that stochasticity prevents premature convergence without being the dominant learning mechanism. 
+
+Comparison to fixed-interval baseline. On the primary metric, the full model achieves +22 .8% 
+
+improvement over the fixed-interval baseline across five seeds ( η = 0 .0162 vs. 0.0132 ), with consistent advantage on performance score ( 0.80 vs. 0.79 ). Average reward is near-equal ( 0.4996 vs. 0.5009 ); we regard efficiency (18) as the correct primary metric since it explicitly accounts for temporal cost. 
+
+Privileged upper bound (TC). TemporalController achieves η = 0 .0275 when granted direct access to the overload flag ot to construct its curvature estimate. This is −5.2% below the full ATCPG model ( 0.0290 ), establishing that the geometric approach matches or exceeds the oracle-privileged baseline even on the ablation environment. Because TC directly observes ot while ATCPG does not, this result constitutes a lower bound on ATCPG’s advantage in realistic partially-observable settings (see the full 500-tick head-to-head analysis in Section 7.7 where the gap widens to +72 .5% ). 13 Table 2: Efficiency scores η (18) for the full ATCPG model, ablated variants (averaged over 3 seeds), the fixed-interval baseline (averaged over 5 seeds), and TemporalController as a privileged upper bound. ∆ is the relative change versus the full model. 
+
+Variant Efficiency η ∆ vs Full Info access 
+
+Full model (ATCPG, blind) 0.0290 — none 
+
+−Learning (fixed interval) 0.0131 −54 .8% none 
+
+−Spread 0.0214 −26 .2% none 
+
+−Interval-aware reward 0.0246 −15 .1% none 
+
+−Exploration 0.0281 −3.1% none ATCPG-ST (+ positions) see §7.8 — positions Fixed-interval baseline (5 seeds) 0.0132 −54 .5% ∗ none 
+
+TC (privileged) † 0.0275 −5.2% ‡ direct ot           
+
+> ∗Relative to the full model (ablation seeds). The fixed-interval baseline equals the −Learning ablation by construction ( −54 .8% , rounding). The 5-seed comparative evaluation in Section 7 gives +22 .8%
+> ATCPG advantage over baseline ( η= 0 .0162 vs. 0.0132 ).
+> †TemporalController :curvature from oracle overload flag ot, privileged upper bound, not a fair comparison to ATCPG.
+> ‡Despite direct otaccess, TC trails ATCPG because TC’s higher discriminability ( 20 ×) is insufficient alone: absolute κmagnitude, not the overload/normal ratio, governs interval selection (see Section 7.7).
+
+7.5 Qualitative Behaviour 
+
+The learned policy exhibits two characteristic behaviours: 1. Interval lengthening under load. Beginning from an average interval of 39 .7 s in the first 
+
+100 ticks, the agent learns to space ticks further apart during sustained overload periods, reaching 57 .4 s average over the final 100 ticks. 2. Urgency-driven acceleration. High-priority states produce intervals ≈ 41 .5 s vs. 59 .5 s for idle states ( pt = 0 .95 vs. pt = 0 .05 ), consistent with the negative initial weight θp = −20 .
+
+7.6 Multi-Agent Phase Synchronisation 
+
+When five independent clocks are coupled with λ = 0 .05 (Kuramoto term (8) ), phase spread reduces from 5.4 rad to 5.1 rad over 100 steps. While the effect is mild in this short horizon, long-horizon 14 coupling produces collective rhythm without central coordination, an emergent property consistent with the Kuramoto model’s known convergence behaviour. Increased coupling ( λ = 0 .1) over a 50-tick horizon produces 0.935 rad spread in the coupled team vs. 3.479 rad uncoupled, at identical efficiency ( 0.0825 ), demonstrating synchronisation without performance cost. 
+
+7.7 Head-to-Head: TemporalController vs. SpatioTemporalATCPGAgent 
+
+To compare geometric vs. scalar spread computation we ran both implementations over an identical pre-generated 500-tick environment trajectory (same random seed), removing all confounding stochasticity. The two agents differ in one critical respect: 
+
+TC (privileged). Computes κTC  
+
+> t
+
+from a Gaussian prior conditioned on the observed overload flag 
+
+ot ∈ { 0, 1}, a direct, low-variance signal: ϵTC (t) = f (ot).
+
+ATCPG (blind). Never observes ot; instead computes κATCPG  
+
+> t
+
+as the mean +variance of pairwise Poincaré distances among n = 4 noisy future-state embeddings, an indirect, higher-variance signal: ϵATCPG (t) = f
+
+> (
+
+κATCPG 
+
+> t
+> )
+
+.This asymmetry creates two opposing forces: (1) TC has cleaner reward-to-state correlation and faster per-tick gradient estimates, predicting ηTC ≳ ηATCPG ; (2) ATCPG’s Poincaré distances are absolutely larger due to the metric’s exponential expansion near the ball boundary, driving shorter intervals across all ticks and higher raw throughput. Empirically, effect (2) dominates. Key results (Table 3): 
+
+• Efficiency. ATCPG achieves 0.0474 vs. TC’s 0.0275 (+72 .5% ) at identical performance scores (0.792 ), despite TC’s privileged information access. This result is therefore a lower bound on ATCPG’s advantage in realistic settings where ot is not directly observable. 
+
+• Interval selection. ATCPG sets shorter average intervals ( 16 .7 s vs. 28 .8 s), reflecting higher absolute κ even under normal (non-overloaded) conditions ( κATCPG normal = 1 .20 vs. 0.10 for TC). 
+
+• Spread discriminability. TC achieves a higher overload/normal κ ratio ( 20 ×) because it directly observes ot, while ATCPG achieves 3.4× from indirect geometric evidence. The sharper TC signal confirms the information advantage; yet absolute spread level, not discriminability ratio, is what governs interval selection and efficiency. This finding supports the use of Poincaré curvature as an uncertainty proxy in realistic settings: even against a privileged baseline with direct overload observation, the geometric signal yields superior task-throughput by calibrating action frequency to the manifold’s local expansion rate. This is not a statement that privileged information is useless; rather, it is an artifact of uncalibrated 
+
+κ scales under a fixed sensitivity weight θκ. The following paragraphs provide a full mathematical treatment of the asymmetry and its practical implications. 
+
+Calibration and fairness. The efficiency advantage demonstrated above depends mechanically on the effective scale of κt, as it enters the interval predictor linearly via (21) . In real-world deployments, 
+
+κ should therefore be treated as an uncalibrated signal requiring either (i) per-estimator tuning of the curvature weight θκ, or (ii) normalisation (e.g. via a running mean/variance) before entering the policy. Our comparison intentionally freezes θκ across both agents to highlight a structural 
+
+advantage: Poincaré boundary amplification yields a naturally larger dynamic range for future divergence without manual scaling. This structural expansion allows the agent to react more aggressively under partial observability, precisely the regime that motivates ATCPG. 15 Table 3: Head-to-head comparison on a shared 500-tick environment. TC directly observes the overload flag ot (privileged, same run as the TC † row in Table 2); ATCPG infers load geometrically from future embeddings (blind). The +72 .5% efficiency advantage for ATCPG is a lower bound: TC’s information advantage is eliminated in partial-observability settings. 
+
+Metric TC (privileged) ATCPG (blind) 
+
+Efficiency (primary) 0.0275 0.0474 (+72.5% )Avg interval (s) 28 .8 16 .7
+
+Performance score 0.792 0.792 
+
+κ overload 2.03 4.06 
+
+κ normal 0.10 1.20 
+
+κ discriminability 20 × 3.4×
+
+Info access to ot direct none 
+
+Information asymmetry in the head-to-head comparison. The head-to-head experiment (Section 7.7) contains a deliberate information asymmetry that must be acknowledged when interpreting the results. TemporalController (TC) directly observes the binary overload flag 
+
+ot ∈ { 0, 1} and uses it to set the noise variance of its scalar spread estimate: 
+
+κTC  
+
+> t
+
+= N
+
+> (
+
+μot , σ 2
+
+> ot
+> )
+
+, μ1 ≫ μ0, (19) so ϵTC (t) = f (ot) is a direct , low-variance signal. By contrast, SpatioTemporalATCPGAgent 
+
+(ATCPG) never observes ot; it infers uncertainty purely from the spread of n = 4 noisy future-state embeddings in the Poincaré ball: 
+
+κATCPG  
+
+> t
+
+= dH + Var[ dH] , ϵATCPG (t) = f
+
+> (
+
+κATCPG 
+
+> t
+> )
+
+, (20) an indirect , higher-variance signal because the Gaussian perturbations in the future vectors do not perfectly encode ot.The asymmetry has two opposing consequences for the online weight update ∆θk = α ˜rt st,k (4) :1. TC has cleaner reward-to-state correlation. Because ot is directly observed, the shaping signal ˜rt and the spread feature st,κ are nearly deterministically linked, producing low-variance gradient estimates and faster convergence per tick. Under this metric one would expect 
+
+ηTC ≳ ηATCPG .2. ATCPG’s absolute κ is larger. The Poincaré metric expands near the ball boundary, so even modest future-state noise yields geodesic distances well above unity ( κATCPG normal ≈ 1.20 vs. 
+
+κTC normal ≈ 0.10 ). The negative curvature weight θκ = −30 then drives ATCPG to select shorter intervals across all ticks, increasing action frequency and, consequently, raw throughput. 16 Empirically, effect (2) dominates: ATCPG achieves +72 .5% efficiency over TC despite TC’s privileged information access. The spread discriminability ratio (overload vs. normal κ) is 20 × for TC but only 3.4× for ATCPG, confirming that TC’s signal is sharper; yet ATCPG’s higher absolute 
+
+spread level proves more consequential for interval selection. 
+
+Practical implication. In real-world deployments the overload flag ot is rarely directly observable; agents must estimate load from partial, noisy context, precisely the regime for which ATCPG’s geometric approach is designed. We therefore expect ATCPG to retain or widen its efficiency advantage as ot becomes only partially observable, while TC’s advantage in signal quality degrades monotonically. Future work should quantify this crossover as a function of the overload observation noise σo.
+
+Mechanics of the asymmetry. To formalise why absolute curvature magnitude governs efficiency independently of discriminability ratio, we isolate the effect of κt on the primary metric η. Let the unclipped predictor (3) be grouped as ˜∆tt = bt + θκκt, where bt contains the bias and all non-geometric features. In the unsaturated regime (before clipping at ∆tmin or ∆tmax ), the interval’s sensitivity to curvature is: 
+
+∂ ˆ∆tt
+
+∂κ t
+
+= ∂ ˜∆tt
+
+∂κ t
+
+= θκ. (21) Because the policy learns θκ < 0, any systematic increase in κt strictly compresses ˆ∆tt.Now let xt ∈ { 0, 1} denote success t. Given two controllers A and B running on an identical tick sequence with identical outcomes ( xAt = xBt = xt), the difference in efficiency (18) is: 
+
+ηA − ηB = 1
+
+T
+
+> T∑
+> t=1
+
+xt 
+
+> (
+
+1∆tAt
+
+− 1∆tBt
+
+> )
+
+. (22) By the strict monotonicity of 1/u for u > 0, if A systematically selects shorter intervals ( ∆tAt < ∆tBt ), the summand is strictly positive on every successful tick. Because ATCPG’s geometric computation naturally produces a higher absolute baseline ( κATCPG normal = 1 .20 ≫ κTC normal = 0 .10 ), Eq. (21) guarantees 
+
+∆tATCPG  
+
+> t
+
+< ∆tTC  
+
+> t
+
+across the full trajectory; substituting into (22) with the observed identical performance scores ( 0.792 ) mechanically yields the +72 .5% efficiency advantage. 2
+
+7.8 Spatial Ablation: State-Only vs. Spatio-Temporal Embedding 
+
+To measure the value added by position information we ran a controlled 500-tick ablation (seed 99) comparing two variants of SpatioTemporalATCPGAgent on a shared environment trajectory: 
+
+ATCPG-SO State-only embedding (current default). 
+
+ATCPG-ST Joint spatio-temporal embedding (16) ; positions are 3-D vectors drawn with noise 
+
+σpos = 3 .0 under overload and 0.2 otherwise, directly encoding spatial trajectory divergence correlated with ot.Table 4 and our ablation experiments indicate three effects: 1. Higher mean hyperbolic spread ( +1 .79 ×). ATCPG-ST mean κ rises from 1.88 to 3.37 ,consistent with Proposition 4: spatial divergence pushes joint embeddings toward the Poincaré boundary where geodesic distances are maximally amplified.       
+
+> 2The argument assumes intervals lie in the unsaturated regime. Clipping at ∆tmin could in principle eliminate the gap; in practice ATCPG’s mean interval ( 16 .7s) is well above ∆tmin = 10 s.
+
+17 Table 4: Spatial ablation: ATCPG state-only vs. joint spatio-temporal embedding on a shared 500-tick trajectory. Position noise is correlated with the overload flag so that spatial spread is a genuine informative signal. 
+
+Variant Efficiency η Mean κ κ disc. (ol/nol) 
+
+ATCPG-SO (state only) 0.0336 1.88 4.65 ×
+
+ATCPG-ST (+ positions) 0.0355 3.37 1.98 ×
+
+Gain (ST vs. SO) +5 .8% +1 .79 × —    
+
+> †Lower ratio reflects positions raising baseline κin normal ticks; the absolute overload κis strictly higher for ATCPG-ST.
+
+2. Strictly higher absolute overload spread. The absolute κoverload for ATCPG-ST exceeds that of ATCPG-SO, confirming that position trajectories carry genuine load-correlated signal. The overload/normal ratio is lower for ATCPG-ST ( 1.98 × vs. 4.65 ×) because positions also raise the baseline κ in normal ticks; the consequential metric is the absolute level, not the ratio (same mechanism as the TC vs. ATCPG analysis in Section 7.7). 3. +5 .8% efficiency gain. ATCPG-ST achieves η = 0 .0355 vs. 0.0336 for ATCPG-SO. The mechanism mirrors the state-only advantage over TC: higher absolute κ drives shorter average intervals ( 21 .3 s vs. 22 .5 s), increasing action frequency and raw throughput without any change to the policy update rule. 
+
+The chain of value. The full efficiency ordering is: 
+
+ηfixed = 0 .0132   
+
+> ︸︷︷ ︸
+> baseline
+
+< ηTC = 0 .0275     
+
+> ︸︷︷ ︸
+> scalar κ, privileged
+
+< ηSO = 0 .0336     
+
+> ︸︷︷ ︸
+> geometric κ, blind
+
+< ηST = 0 .0355   
+
+> ︸︷︷ ︸
+> joint spatio-temporal
+
+Each step in the chain adds a qualitatively new information source: learning, geometric spread, and finally spatial trajectory divergence. The final +5 .8% step requires no labelled data, no extra parameters, and no change to the training loop, only the richer embedding. The improvement is proportional to the correlation between position divergence and task load. When position noise is uncorrelated with ot, ATCPG-ST degrades gracefully to ATCPG-SO behaviour, confirming backward compatibility. 
+
+7.9 Real-LLM Pacing Benchmark 
+
+All preceding experiments use a synthetic environment whose “LLM calls” are simulated with calibrated noise. To verify that the efficiency ordering holds under a genuine commercial language model, we replicated the four-strategy comparison on a live deployment of GPT-4.1 via the OpenAI API ( gpt-4.1 ). 18 Setup. Each of the four strategies, Fixed, Reactive, ATCPG ( TemporalController ), and ATCPG-ST ( SpatioTemporalATCPGAgent ), was evaluated over N = 15 episodes ( 5 episodes × 3 seeds), with up to 5 real LLM calls per episode. The API model string was gpt-4.1 (OpenAI); calls used 
+
+temperature = 0 .7, top_p = 1 .0, max_output_tokens = 120 , no stop sequences. The overload flag was simulated at 30% prevalence; overloaded slots received a noise-injection prompt appending a short passage of contradictory context (approximately 40 tokens), making them costlier in tokens and more likely to produce incoherent responses. An episode call succeeded when the response contained ≥ 12 words and no refusal phrase (“I cannot”, “I’m unable to”). An episode succeeded when ≥ 50% of its calls succeeded. Experiments were run in March 2026. All other hyperparameters matched those of Section 7. 
+
+Results. Table 5 reports the outcome over 15 episodes per strategy. This is not a capability benchmark since task success is intentionally saturated; our primary object of measurement is the token efficiency of temporal cadence under a generic real-world API context. Because full future-simulation would incur an O(n) token penalty per cycle (a cost this test omits to isolate pacing performance), deploying the geometric approach natively on LLMs requires generating embeddings directly from perturbed continuous latent states (cf. Sect 8) rather than true text completions. Table 5: Real-LLM pacing benchmark. GPT-4.1 (OpenAI, gpt-4.1 ). 15 episodes ( 5 × 3 seeds), 5 LLM calls/episode, overload = 30% .
+
+Strategy Success Total tokens η vs. Fixed 
+
+Fixed 1.00 6,924 0.00217 —Reactive 0.27 2,564 0.00156 −28 .1% 
+
+ATCPG 1.00 6,553 0.00229 +5 .7% 
+
+ATCPG-ST 1.00 6,172 0.00243 +12 .2% 
+
+Both adaptive controllers match Fixed’s 100% episode success rate while consuming fewer tokens: ATCPG saves 371 tokens ( −5.4% ) and ATCPG-ST saves 752 tokens ( −10 .9% ) relative to Fixed. Reactive halves the token budget but collapses success to 27% , confirming that naïve skipping is not viable. The efficiency ordering 
+
+ηFixed < η ATCPG < η ATCPG-ST 
+
+holds on live real-cost GPT-4.1 calls, reproducing the simulation chain from Section 7.8. ATCPG-ST’s additional +5 .7% efficiency gain over plain ATCPG is consistent with the joint spatio-temporal embedding providing a richer spread signal, as predicted by Proposition 4. 
+
+# 8 Discussion 
+
+Relation to Adaptive Computation in Agentic Systems. While our technical instantiation operates in an RL continuous-control setting, we are not claiming to solve adaptive reasoning in its entirety. Rather, our core claim is that learning when to act is a missing control dimension in many agent architectures , which typically rely on hard-coded heuristics or simple reactive loops. To clarify the portability of these mechanisms, Table 6 provides a translation from the continuous-time vocabulary of ATCPG to analogous concepts in pure language-model reasoning deployments. 19 Table 6: Cross-domain conceptual mapping for Adaptive Cognitive Pacing. 
+
+Paper Concept (RL) Agent / LLM Analog 
+
+Action interval Reasoning or planning frequency Acting sooner Replanning / tool invocation Acting later Waiting / batching computation Hyperbolic spread Branching of imagined futures Interval-aware reward Compute–quality trade-off 
+
+Limitations and Future Work. We note three boundaries to the current empirical validation. First, the real-world LLM benchmark (Section 7.9) operates at a small scale ( N = 15 episodes) on a task where both the baseline and adaptive controllers achieve a 100% success rate. This saturation indicates that the benchmark does not strongly differentiate policies in terms of capability, and therefore likely underestimates the impact of adaptive pacing in settings where mistimed actions can lead to irreversible errors or degraded outcomes. While this cleanly isolates the system’s efficiency 
+
+gains (reducing token consumption by up to 10 .2% without degrading performance), ATCPG is designed strictly as an orchestration layer; it does not inherently improve the underlying reasoning capability or zero-shot accuracy of the LLM. Second, the current pacing policy is intentionally linear. While agents operating in highly non-convex efficiency landscapes might theoretically benefit from deep neural policies, introducing a heavy neural approximator for the pacing daemon would undermine the framework’s core objective of minimising computational overhead. The O(1) linear update ensures the pacing mechanism remains strictly lightweight. Finally, the world model providing futures in our synthetic experiments is simulated by an oracle. While Section 7.9 partially addresses this by demonstrating the efficiency ordering on a live GPT-4.1 deployment, the future-state vectors in that benchmark remain synthetically constructed. Future implementations must integrate latent perturbation (e.g., MC-dropout over the LLM’s hidden states, as detailed below) to generate geometric futures without autoregressive cost. Additionally, the Poincaré ball implementation clips embeddings at radius 1 − ε to ensure numerical stability; future extensions could employ a Lorentz/hyperboloid formulation [Nickel and Kiela, 2018] to remove this constraint at the cost of a higher-dimensional ambient space. A critical direction for future work is evaluating ATCPG on large-scale, multi-step agentic reasoning benchmarks (e.g., SWE-bench or WebArena) to investigate whether a pacing policy θ
+
+learned on high-volatility search tasks transfers zero-shot to complex coding domains, and whether dynamic pacing can actively increase absolute task success rates by preventing premature halting or context-window exhaustion. 
+
+Approximating the World Model W for LLMs. In our simulation the world model generates the n predicted future trajectories {z(i)}ni=1 via an oracle. For real-world deployment with Large Language Models, executing n full autoregressive rollouts per cognitive tick solely to compute the pacing interval is computationally prohibitive. We propose instantiating W via Latent Perturbation 
+
+[Gal and Ghahramani, 2016]: let ht ∈ Rd be the LLM’s final hidden state before action selection. Rather than decoding n textual futures, we apply n independent stochastic dropout masks to ht,producing perturbed latent states ˜h(i) 
+
+> t
+
+∼ Dropout (ht), which are projected directly 3 into Bnc via 
+
+> 3As in prior work, we treat dropout-induced latent perturbations as an approximate epistemic proxy rather than a calibrated posterior.
+
+20 the embedding map (Eq. (13) ). This Bayesian proxy reduces the O(n) generative cost of future simulation to O(1) inference, allowing the continuous pacing daemon to operate without draining the compute budget reserved for task execution. 
+
+Relation to semi-MDPs. The problem formulation (1) is closely related to the average-reward objective in semi-Markov decision processes [Puterman, 1994], where sojourn times are state-dependent random variables. Our policy explicitly parameterises the sojourn time distribution and optimises it online, but without requiring a full semi-MDP transition model. 
+
+Hyperbolic geometry as uncertainty proxy. The spread signal κ acts as a calibrated un-certainty estimate without requiring a probabilistic model. Unlike entropy-based or ensemble disagreement methods, it is computed geometrically and scales O(n2) in the number of futures, which is manageable for small n (we use n = 4 ). It is also differentiable w.r.t. the embedding, opening a path to end-to-end learning of the embedding jointly with the pacing policy. 
+
+Broader applicability. Autonomous agents that must allocate attention, digital assistants, robotic planners, multi-agent systems with communication costs, face the same decision: when to act next. ATCPG is lightweight (one weight vector, one phase scalar, one spread computation) and can be dropped into any agent loop that already exposes a world model or planning module. 21 9 Conclusion 
+
+In continuous autonomous operation, an agent must decide not only what action to take, but also when to act next. While recent LLM-based and multi-agent systems research has primarily emphasised orchestration and routing, the complementary question of self-directed temporal pacing is less often treated as a learnable decision variable. This work introduces ATCPG, a lightweight, learnable pacing layer that treats the inter-tick interval as a first-class control variable, enabling agents to regulate their own cognitive update frequency. ATCPG combines a simple online linear pacing policy with an interval-aware shaping reward that addresses a directional failure mode in temporal credit assignment that can arise under naïve outcome-based rewards. We show that, in pacing settings, such rewards can be misaligned with the desired “wait-when-needed” behaviour, systematically eroding the incentive to slow down under load. By explicitly pricing the chosen interval, ATCPG mitigates this pathology and yields substantial standalone efficiency gains in ablation. A central component of the framework is a predictive hyperbolic-spread signal κ, computed by embedding sampled candidate futures in the Poincaré ball. The geometry selectively amplifies directional disagreement near the boundary while compressing confident and near-origin states, yielding a practical proxy for prospective uncertainty. Both theoretical analysis and empirical results support the use of this geometric signal as a timing-relevant indicator of epistemic conflict. We further introduce ATCPG-ST, a joint spatio-temporal extension that augments the policy state with embedded position trajectories. This spatial signal provides additional structure for pacing decisions, yielding consistent improvements in efficiency without modifying the learning rule. Across ablations, we observe a monotonic improvement chain, indicating that learning, geometric uncertainty, and spatial context contribute complementary gains. Across evaluated settings, adaptive pacing improves efficiency over fixed-interval baselines at matched success rates, with the full ATCPG-ST variant achieving the strongest gains. These effects also transfer beyond synthetic settings: in a small-scale LLM-agent experiment using a commercial API deployment, ATCPG reduces token consumption while maintaining identical task success rates, indicating that adaptive pacing can translate into practical reductions in runtime cost. ATCPG is intentionally minimal, requiring only a single weight vector, a phase variable, and a spread computation, and can be integrated into any agent loop capable of producing candidate futures. Taken together, these results support adaptive pacing as a distinct layer of agent behaviour that complements decision-making and planning by regulating the frequency of re-evaluation. 22 References 
+
+D. Dewey. Reinforcement learning and the reward engineering princi-ple. In AAAI Spring Symposium: Implementing Selves with Safe Moti-vational Systems and Self-Improvement , 2014. https://aaai.org/papers/ 07704-7704-reinforcement-learning-and-the-reward-engineering-principle/ 
+
+S. Franklin et al. LIDA: A systems-level theory of mind. In Workshop on Cognitive Architectures , 2007. 
+
+https://ccrg.cs.memphis.edu/assets/papers/2007/LIDA-Systems-level-theory.pdf 
+
+O. Ganea, G. Bécigneul, and T. Hofmann. Hyperbolic neural networks. In Advances in Neural Information Processing Systems (NeurIPS) , 2018. https://arxiv.org/abs/1805.09112 
+
+Y. Kuramoto. Chemical Oscillations, Waves, and Turbulence . Springer, 1984. https://link. springer.com/book/10.1007/978-3-642-69689-3 
+
+A. Y. Ng, D. Harada, and S. J. Russell. Policy invariance under reward transformations: Theory and application to reward shaping. In Proceedings of the 16th ICML , pages 278–287, 1999. 
+
+https://dblp.org/rec/conf/icml/NgHR99 
+
+M. Nickel and D. Kiela. Poincaré embeddings for learning hierarchical representations. In Advances in Neural Information Processing Systems (NIPS) , 2017. https://papers.nips.cc/paper/ 7213-poincare-embeddings-for-learning-hierarchical-representations 
+
+P.-Y. Oudeyer and F. Kaplan. What is intrinsic motivation? A typology of computational approaches. 
+
+Frontiers in Neurorobotics , 1:6, 2007. M. L. Puterman. Markov Decision Processes: Discrete Stochastic Dynamic Programming . Wi-ley, 1994. https://books.google.com/books/about/Markov_Decision_Processes.html?id= tsiiQgAACAAJ 
+
+R. S. Sutton, D. Precup, and S. Singh. Between MDPs and semi-MDPs: A framework for temporal abstraction in reinforcement learning. Artificial Intelligence , 112(1–2):181–211, 1999. 
+
+http://all.cs.umass.edu/pubs/1999/sutton_ps_AI99.pdf 
+
+B. J. Baars and S. Franklin. How conscious experience and working memory interact. Trends in Cognitive Sciences , 7(4):166–172, 2003. R. J. Williams. Simple statistical gradient-following algorithms for connectionist reinforcement learning. Machine Learning , 8(3–4):229–256, 1992. https://link.springer.com/article/10. 1007/BF00992696 
+
+X. Zhao, T. Xu, X. Wang, Z. Chen, D. Jin, L. Tan, et al. Boosting LLM reasoning via spontaneous self-correction. arXiv preprint arXiv:2506.06923 , 2025. https://arxiv.org/abs/2506.06923 
+
+N. A. Golilarz, S. Penchala, and S. Rahimi. Bridging the gap: Toward cognitive autonomy in artificial intelligence. arXiv preprint arXiv:2512.02280 , 2025. https://arxiv.org/abs/2512.02280 
+
+D. Di Gioia. Cascade-aware multi-agent routing: Spatio-temporal sidecars and geometry-switching. 
+
+arXiv preprint arXiv:2603.17112v1 , 2026. https://arxiv.org/abs/2603.17112 
+
+N. Upadhyaya and R. Sridharamurthy. Internalized self-correction for large language models. arXiv preprint arXiv:2412.16653 , 2024. 23 Y. Gal and Z. Ghahramani. Dropout as a Bayesian approximation: Representing model uncertainty in deep learning. In Proceedings of the 33rd International Conference on Machine Learning (ICML) , pages 1050–1059, 2016. https://proceedings.mlr.press/v48/gal16.html 
+
+M. Nickel and D. Kiela. Learning continuous hierarchies in the Lorentz model of hyperbolic geometry. In Proceedings of the 35th International Conference on Machine Learning (ICML) ,pages 3779–3788, 2018. A. A. Ungar. Analytic Hyperbolic Geometry and Albert Einstein’s Special Theory of Relativity . World Scientific, 2008. https://books.google.com/books/about/Analytic_Hyperbolic_Geometry_ And_Albert.html?id=b07ICgAAQBAJ 
+
+Y. Yang, H. Chai, S. Shao, Y. Song, S. Qi, R. Rui, and W. Zhang. AgentNet: Decentralized evolutionary coordination for LLM-based multi-agent systems. arXiv preprint arXiv:2504.00587 ,2025. https://arxiv.org/abs/2504.00587 .G. Nalagatla. Hierarchical decentralized multi-agent coordination with privacy-preserving knowledge sharing: Extending AgentNet for scalable autonomous systems. arXiv preprint arXiv:2512.00614 ,2025. https://arxiv.org/abs/2512.00614 .M. S. Oh, Z. Zhang, F. Hairi, A. Velasquez, and J. Liu. Consensus-based decentralized multi-agent reinforcement learning for random access network optimization. In Proceedings of ACM MobiHoc 2025 , 2025. https://arxiv.org/abs/2508.07001 .A. A. Stoorvogel, A. Saberi, Z. Liu, and Q. Wen. Scale-free weak output synchronization of multi-agent systems with adaptive protocols. arXiv preprint arXiv:2512.06278 , 2025. https: //arxiv.org/abs/2512.06278 .V. Erofeeva, O. Granichin, V. Pankov, and Z. Volkovich. Communication-efficient decentralized clustering for dynamical multi-agent systems. PLOS ONE , 20(7):e0327396, 2025. https://doi. org/10.1371/journal.pone.0327396 .A. Agarwal, G. Siyan, Y. Pandya, J. Singh, A. Nambi, and A. Awadallah. Learning when to act or refuse: Guarding agentic reasoning models for safe multi-step tool use. arXiv preprint arXiv:2603.03205 , 2026. https://arxiv.org/abs/2603.03205 
+
+J. Yuan, Y. Wu, and A. Bajcsy. When to act, ask, or learn: Uncertainty-aware policy steering. 
+
+arXiv preprint arXiv:2602.22474 , 2026. https://arxiv.org/abs/2602.22474 
+
+24 A Proof of Proposition 1 (Extended) 
+
+We provide a full worked example. Suppose: θ = [ θbias , θ f ] = [60 , 30] , ft = 5 (heavy fatigue), 
+
+∆wt = −0.3 (overload), α = 0 .1.
+
+Naive outcome reward: ˜rt = 2∆ wt = −0.6.
+
+Update: θf ← 30 + 0 .1 · (−0.6) · 5 = 30 − 0.3 = 29 .7.Interval output: ˆ∆t = 60 + 29 .7 · 5 = 208 .5 s (decreased by 1.5 s). Repeated across 100 similar ticks, the fatigue weight erodes to ≈ 0, and the overloaded agent ticks as fast as an idle one. 
+
+Interval-aware reward: Take ∆tt = 60 (base interval), ∆tbase = 60 :efficiency = 2 · (−0.3/60) = −0.010 ,
+
+spacing = 1 .5 · 0.3 · (60 /60) = +0 .450 ,
+
+spread brake = 0 (κt = 0) ,
+
+˜rt = −0.010 + 0 .450 = +0 .440 .
+
+Update: θf ← 30 + 0 .1 · (+0 .440) · 5 = 30 .22 . The fatigue weight increases , lengthening the interval under overload as desired. 25 B Algorithm Pseudocode 
+
+Algorithm 1 gives the complete ATCPG control loop. 
+
+Algorithm 1 ATCPG: Adaptive Temporal Control via Predictive Geometry 1: Require Initial weights θ, world model W, base interval ∆tbase , initial ∆w0 ← 0
+
+2: ϕ ← Uniform (0 , 2π); ω ← 0.05 
+
+3: for t = 1 , 2, . . . do 
+
+4: Observe context ct: priority pt, fatigue ft, wellbeing wt, performance ρt
+
+5: κt ← ComputeSpread (W, c t) (Def. 1; Eq. (14)) 6: st ← [pt, f t, ∆wt−1, ρ t, sin ϕ, κ t]
+
+7: ˆ∆tt ← clip (θ⊤st, ∆tmin , ∆tmax ) (Eq. (3)) 8: With prob. εeff (st): ˆ∆tt ×= Uniform (0 .5, 1.5) (Eq. (6)) 9: Sleep ˆ∆tt seconds; execute cognitive tick 10: Observe wt+1 ; ∆wt ← wt+1 − wt
+
+11: ˜rt ← IntervalAwareReward (∆ wt, κ t, ˆ∆tt) (Eq. (9)) 12: θ ← clip (θ + α˜rtst, [−100 , 100] 7) (Eq. (4)) 13: ϕ ← (ϕ + ω) mod 2 π; ω ← clip (ω + α˜rt · 0.01 , [0 .001 , 0.2]) 
+
+14: end for Implementation notes. All experiments were implemented in Python using standard numerical and scientific-computing libraries (e.g., NumPy) and were executed under a controlled set of random seeds to enable consistent comparisons across ablations. Due to proprietary constraints, the current implementation is not publicly released; we intend to open-source a reference implementation pending internal legal and compliance clearance. In the interim, the controller, reward, and spread estimator are specified fully in closed form (Sections 4–6.5), and all environmental and algorithmic hyperparameters required to replicate the reported experimental protocol are provided in Section 7. 26

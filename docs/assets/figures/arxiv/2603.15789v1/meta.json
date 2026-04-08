@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15789v1/fig-001.webp",
+      "caption": "Figure 4: Additional tasks. Visualizations of the new manipulation tasks solved with OmniReset. From left to right: Four-Leg Table Assembly, Cube Stacking, Cupcake on Plate, Block Reorientation on Wall",
+      "page": 7,
+      "index": 1,
+      "width": 748,
+      "height": 208
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15789v1/fig-002.webp",
+      "caption": "Figure 9: Success states of RL policy. For the screwing task, we plot the xy configurations from which RL polices trained with Demo Curriculum and OmniResetsucceed when trained on the full reset distribution and on a narrow reset distribution. We find that OmniResetsucceeds from a much broader range of initial conditions.",
+      "page": 10,
+      "index": 2,
+      "width": 748,
+      "height": 217
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15789v1/fig-003.webp",
+      "caption": "Figure 10: Success rate over perturbations. We plot the decline in success rate (measured by ratio of success rate between no perturbations and current level of perturbations). We find that OmniResetis robust to perturbations while performance of baselines drops significantly.",
+      "page": 10,
+      "index": 3,
+      "width": 748,
+      "height": 183
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15789v1/fig-004.webp",
+      "caption": "Figure 5: Success Rates on Different Stages of Task. We plot the success rates for the Leg Twisting task when starting from states that are in the Near-Goal region and also the Reaching Region of the state space. When evaluating these success rates, we sample resets from the demonstrations used by the baseline algorithms to ensure the resulting policies start from in-distribution states. We see that the baselines can achieve moderate success rates when starting close to the goal (Near Goal), but struggle to make meaningful progress on the full long-horizon task (captured by the reaching resets).",
+      "page": 8,
+      "index": 4,
+      "width": 570,
+      "height": 225
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15789v1/fig-005.webp",
+      "caption": "Figure 2: Sim-to-Real Pipeline with OmniReset (1) After generating partial assemblies and grasps from the simulator, (2) we collect reset states: reaching, near object, grasped, and near goal. (3) We then train a state-based RL policy initialized from these reset states, which is used to (4) train student-teacher distillation to get a RGB policy. (5) By finetuning this RGB policy on a mix of simulation data and small set of real demonstrations, (6) we deploy the RGB-based policy in the real world.",
+      "page": 4,
+      "index": 5,
+      "width": 826,
+      "height": 215
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15789v1/fig-006.webp",
+      "caption": "Figure 8: Success rates during RL training. We plot success rates over learning process for tasks described in Sec.4. We see that OmniResetscales to task where baselines struggle to make meaningful progress, especially with the wide range of initial conditions specified in the Hard variants of tasks.",
+      "page": 9,
+      "index": 6,
+      "width": 818,
+      "height": 619
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15789v1/fig-007.webp",
+      "caption": "Figure 7: Ablation on number of environments. We plot the success rates over course of RL training using different number of environments. We find that the number of environments significantly impacts training performance.",
+      "page": 9,
+      "index": 7,
+      "width": 826,
+      "height": 284
+    }
+  ]
+}

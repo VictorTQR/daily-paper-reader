@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.28971v1/fig-001.webp",
+      "caption": "Fig. 2: Learning Curves Comparison (Offline RL). We compare our HAC with IQL, SAC-Off and MOPO on LQR, Pendulum, and MountainCar, Swimmer. For MOPO and HAC which require multi-step imaginary rollouts, rollout horizon is to K = 10 for LQR and Pendulum to cover all control horizon, K = 5 for MountainCar and Swimmer. Results are averaged over 5 random seeds.",
+      "page": 7,
+      "index": 1,
+      "width": 512,
+      "height": 437
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28971v1/fig-002.webp",
+      "caption": "Fig. 4: Critic Estimation Comparison: Plots comparing normalized estimated Q-values (in MVE-DDPG) and Hamiltonian (in our HAC) against ground-truth sampled from 10 random test episodes in LQR. An ideal critic should concentrates on the red unity line.",
+      "page": 18,
+      "index": 2,
+      "width": 1054,
+      "height": 455
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28971v1/fig-003.webp",
+      "caption": "Fig. 1: Learning Curves Comparison (Online RL): We compare our HAC with DDPG, SAC and MVE-DDPG on Pendulum, MountainCar, Swimmer and Hopper. For MVEDDPG and HAC which require multi-step imaginary rollouts, we set the rollout horizon to K = 10 for Pendulum to cover all control horizon, K = 5 for MountainCar and Swimmer, and K = 3 for Hopper. All results are averaged over 5 random seeds.",
+      "page": 6,
+      "index": 3,
+      "width": 512,
+      "height": 422
+    }
+  ]
+}

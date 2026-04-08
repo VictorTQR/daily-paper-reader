@@ -1,0 +1,973 @@
+Title: FusionAgent: A Multimodal Agent with Dynamic Model Selection for Human Recognition
+
+URL Source: https://arxiv.org/pdf/2603.26908v1
+
+Published Time: Tue, 31 Mar 2026 00:10:45 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# FusionAgent: A Multimodal Agent with Dynamic Model Selection for Human Recognition 
+
+## Jie Zhu 1 Xiao Guo 1 Yiyang Su 1 Anil Jain 1 Xiaoming Liu 1,2 1Michigan State University 2University of North Carolina at Chapel Hill 
+
+{zhujie4, guoxia11, suyiyan1, jain }@msu.edu liuxm@cs.unc.edu 
+
+## Abstract 
+
+Model fusion is a key strategy for robust recognition in unconstrained scenarios, as different models provide complementary strengths. This is especially important for whole-body human recognition, where biometric cues such as face, gait, and body shape vary across samples and are typically integrated via score-fusion. However, exist-ing score-fusion strategies are usually static, invoking all models for every test sample regardless of sample quality or modality reliability. To overcome these limitations, we pro-pose FusionAgent , a novel agentic framework that lever-ages a Multimodal Large Language Model (MLLM) to per-form dynamic, sample-specific model selection. Each expert model is treated as a tool, and through Reinforcement Fine-Tuning (RFT) with a metric-based reward, the agent learns to adaptively determine the optimal model combination for each test input. To address the model score misalignment and embedding heterogeneity, we introduce Anchor-based Confidence Top-k (ACT) score-fusion, which anchors on the most confident model and integrates complementary predic-tions in a confidence-aware manner. Extensive experiments on multiple whole-body biometric benchmarks demonstrate that FusionAgent significantly outperforms SoTA methods while achieving higher efficiency through fewer model invo-cations, underscoring the critical role of dynamic, explain-able, and robust model fusion in real-world recognition sys-tems. Project page: FusionAgent. 
+
+## 1. Introduction 
+
+Computer vision has made remarkable progress through state-of-the-art models for tasks such as object detection, segmentation, face recognition, and image classification [4, 12, 14, 18, 25, 26, 66, 67]. Yet existing research has largely focused on single-model performance, paying far less atten-tion to how complementary models can be effectively com-bined. Since different models often excel under different conditions, selective fusion offers a promising path toward Rule -based score -fusion methods  Learning -based score -fusion methods   
+
+> Proposed
+> score -fusion
+> Model
+> #𝑖
+> Model
+> #𝑗
+> Multi -turn
+> think &selection
+> Model
+> #1
+> Model
+> #2
+> Model
+> #𝑛
+> …
+> Model
+
+Ours 
+
+> MLLM
+> agent
+> Model
+> #1
+> Model
+> #2
+> Model
+> #𝑛
+
+…  
+
+> Turn 1
+> Turn 2
+> Turn 𝑛
+> Model
+> #1
+> Model
+> #2
+> Model
+> #𝑛
+> … Fused
+> score matrix
+> Transfor
+> mation
+
+Figure 1. Comparison of score-fusion methods. Top: Rule-based methods apply predefined transformations to fuse all model scores, while learning-based methods infer a fusion model from data but still assume that every model contributes to all test sam-ples. Bottom: our framework leverages an MLLM agent to dy-namically select a subset of models, followed by the proposed score-fusion strategy, enabling adaptive and robust integration. 
+
+stronger and more robust performance. Model fusion is widely used with applications ranging from feature fusion to score fusion [47, 64, 65]. Among these, score fusion is particularly representative and prac-tical, especially in biometric recognition [19, 35, 68]. As shown in Fig. 1, existing methods are mainly rule-based or learning-based. The former combine scores with predefined rules [19, 47], while the latter learn fusion strategies from data [35, 51, 68]. Despite their differences, both typically rely on a fixed combination of models for all inputs, assum-ing universal complementarity. This assumption is often vi-olated in practice: for example, face recognition scores are unreliable when only a person’s back view is visible. Even methods such as QME [68], which account for input qual-ity, still allow low-content inputs to affect the final output. These limitations motivate a more selective fusion paradigm that first determines which models are suitable for each in-put, and then how to combine their outputs effectively. To systematically study this problem, we pose the central re-search question of this paper: 1
+
+> arXiv:2603.26908v1 [cs.CV] 27 Mar 2026
+
+How can we adaptively choose the optimal model com-bination for each test sample while rigorously testing whether such selection improves performance even with an ad hoc score-fusion algorithm ?
+
+This raises the question of how to perform sample-wise model selection in a principled and interpretable man-ner. Recent advances in multimodal large language models (MLLMs) suggest a promising direction for adaptive model fusion [3, 13, 33, 56, 70]. By reasoning over complex in-puts and orchestrating external tools in a context-dependent manner, an agent can treat each specialized model as a tool and decide which ones to invoke for each sample. This makes agentic fusion particularly suitable for selective fu-sion, where model reliability varies across inputs and deci-sions must be made adaptively for each sample. This motivation is especially compelling in systematic whole-body recognition [68], which integrates multimodal traits ( e.g ., face, gait, and body shape) and multiple spe-cialized models. Unlike unimodal systems based on face recognition (FR) [8, 22, 24], gait recognition (GR) [57, 62], or person re-identification (ReID) [11, 29, 49], whole-body recognition depends on complementary modalities whose reliability varies with input conditions. For example, face cues may fail under occlusion or extreme viewpoints, while gait or body appearance remains informative [28]. This makes whole-body recognition a representative testbed for agentic model selection and fusion. Inspired by these, we introduce a unified framework cen-tered around two core components, each designed to sys-tematically respond to model selections and score-fusion methods. In response to model selections, we propose 
+
+FusionAgent , an MLLM-based agent that performs dy-namic model selection per sample. Each biometric model is wrapped as a tool, providing the agent with a score vector and predicted label. Through Reinforcement Fine-Tuning (RFT) guided by the proposed metric-based reward , the agent learns to identify sample-specific model combinations by analyzing query patterns, effectively answering how op-timal ensembles can be found for each input. To explore score-fusion methods, we design a lightweight Anchor-based Confidence Top-k score-fusion method (ACT) .This method leverages the most confident model selected by the agent, then integrates only the top-matching scores scaled by confidence weights. By doing so, ACT mitigates misalignment from sample-wise model selection and em-bedding heterogeneity, demonstrating that even a simple fusion rule can yield strong performance when guided by adaptive model selection. Our main contributions are: • We propose FusionAgent, an agentic framework that leverages an MLLM to perform explainable, sample-wise dynamic model selection. • We introduce an Anchor-based Confidence Top-k score-fusion method (ACT) to mitigate score misalignment aris-ing from dynamic model selection, ensuring robust inte-gration of heterogeneous score outputs. • We design a metric-based reward function, central to our optimization, which directly aligns the agent’s selection strategy with final performance metrics. • Extensive experiments on multiple whole-body biomet-ric benchmarks demonstrate the superiority of our ap-proach over state-of-the-art methods, even using conven-tional score-fusion methods. 
+
+## 2. Related Work 
+
+2.1. Whole-body Biometric Recognition 
+
+Whole-body biometric recognition systems combine detec-tors ( e.g ., for whole body and face), embedding models, and fusion modules to leverage multi-modal cues such as face and body features [7, 28, 30, 50]. The key challenge is to effectively integrate the complementary strengths of different modalities and their dedicated models to maxi-mize overall performance. For example, FR models ex-cel with high-quality frontal faces but struggle under ad-verse conditions like oblique angles [9, 22–24]. In con-trast, GR models focus on clothing-invariant dynamic body attributes [18, 57, 58, 62, 63], while ReID models take a holistic approach to extract comprehensive appearance fea-tures [11, 27, 29, 53, 55]. Prior fusion methods typically use all available models for every query [5, 21, 28, 30, 35, 51, 68], ignoring the sample-dependent nature of optimal model combinations. A clear case is a low-resolution im-age with a side-view of a person: FR models may be un-reliable, making GR or ReID models more critical for that specific sample. Therefore, we propose FusionAgent to dy-namically select an optimal model combination for each test sample through explainable analysis, thereby tailoring the fusion process to individual inputs. 
+
+2.2. Score-fusion 
+
+Unlike feature-level fusion [1, 25, 36, 37, 49, 64], score-level fusion integrates similarity scores from multiple modalities to improve recognition performance [46]. This approach is broadly categorized into two paradigms: rule-based and learning-based methods. Rule-based methods employ fixed rules such as Z-score, Min-max normaliza-tion, max/min fusion [19, 20, 40, 59], and likelihood ratio-based fusion [15, 34, 37, 38, 52], offering simplicity and efficiency. In contrast, learning-based methods optimize fusion during training [5, 35, 51]. These include the re-cent quality-aware approach QME [68], which performs weighted score-fusion based on input quality. In contrast, we introduce a simple score-fusion algorithm with an an-chor. This design, combined with selective model inputs, significantly outperforms existing fusion strategies. 2<tool_call >  
+
+> {“name”: “ FR model2 ”…}
+> </tool_ call >
+> Predict identity:
+> ‘ccvid_2 ’
+> <tool_ call >{“name”:
+> “ReID model2 ”…}
+> </tool_ call >
+> Predict identity:
+> ‘ccvid_2 ’
+
+G𝑓1 
+
+Gallery Features 
+
+G𝑓2  … Gb2     
+
+> Finalize
+> Identify the person in the
+> video from the dataset.
+> <think> Now, let‘s evaluate the body
+> data to see if we can improve the
+> identification confidence. </think>
+> MLLM
+> Agent
+> <think> Both models have
+> provided the same identity
+> ID, indicating a high
+> confidence in the prediction.
+> We can now finalize the
+> identity prediction. </think>
+> <answer>ccvid_2</answer>
+
+Conversation 
+
+> Previous turns
+> Update
+> 𝑜 1
+> 𝑜 2
+> 𝑜 𝑁
+> …
+> 𝑟 1
+> 𝑟 2
+> 𝑟 𝑁
+> …
+> Group
+> Norm.
+> 𝐴 1
+> 𝐴 2
+> 𝐴 𝑁
+> …
+> Format
+> Reward
+> Accuracy
+> Reward
+> Tool Success
+> Reward
+> Metric -based
+> Reward
+> Rule -based rewards
+
+GRPO   
+
+> GR model1 FR model1 FR model2 ReID model 1
+
+# … ReID model 2
+
+Tool Combination 
+
+ACT    
+
+> <think> The person is clearly
+> visible , and the face seems to
+> be moderate quality ... </ think>
+> Prompt
+
+Figure 2. Overview of the FusionAgent framework. Recognition models are wrapped as tools to generate score vectors and predicted identities based on gallery features. The MLLM agent receives multimodal biometric inputs and performs a reasoning-action step through multi-turn, selectively invokes tools, and integrates predictions into a final identity decision and fused score vector. The agent is optimized with reinforcement fine-tuning using rule-based rewards, including the proposed metric-based reward. 
+
+2.3. Agents and Reinforcement Learning 
+
+The advent of tool-augmented MLLMs has spurred the de-velopment of agentic systems: models capable of plan-ning, reasoning, and interacting with external tools to solve complex tasks. Recent studies [3, 13, 33, 56, 70] have equipped MLLMs with tools to address diverse challenges such as visual grounding, image super-resolution, and ad-vanced visual understanding. Furthermore, subsequent re-search has employed RFT with rule-based rewards, such as Group Relative Policy Optimization (GRPO) [42], which offers improved generalizability with lower data depen-dency [32, 43, 54, 60, 69]. Building upon these advance-ments, we further propose a metric-based reward to opti-mize model selections of FusionAgent, effectively captur-ing data-dependent patterns. 
+
+## 3. Proposed Method 
+
+Problem Formulation. In biometric recognition, a query (or probe) is a sample sequence that is to be identified (1:N comparisons) or verified by comparison (1:1 comparison) with a gallery of previously enrolled subjects in the sys-tem. Let Q denote the set of query videos and G be the gallery. M is a predefined model set {m1, m 2, . . . , m Z }
+
+that is used for feature extraction. For a query q ∈ Q and a model m ∈ M (from a predefined model set M ), m ex-tracts features from q and produces a similarity score vec-tor sm,q ∈ R|G| with respect to each gallery entry g ∈ G.The human recognition pipeline comprises two stages: (i) 
+
+sample-level model subset selection and (ii) query-based score fusion of selected models . For each q, we seek an optimal subset of models Mq ⊆ M that maximizes per-formance. Given Mq , we stack the per-model scores into a score matrix Sq ∈ R|Mq |×| G| whose i-th row is smi,q . A score-fusion function f then maps Sq to a fused score vector 
+
+s′q = f (Sq ) ∈ R|G|. We detail the model-selection proce-dure using an agent in Sec. 3.1, the supervision signals (re-ward functions) in Sec. 3.2, and the proposed score-fusion method in Sec. 3.3. 
+
+3.1. Agentic Training Framework 
+
+Training the agent presents two challenges: (i) the lack of ground-truth dialogue data for Supervised Fine-tuning (SFT), since grid searching optimal model combinations per sample is infeasible; and (ii) the intractability of dataset-level grid search for the best model combination per sample due to exponential growth in the search space with mod-els and samples. We thus employ GRPO, which enables trial-based learning without pre-labeled data. Additionally, we design a metric-based reward function that promotes ex-ploration of diverse model combinations and facilitates im-plicit learning of the relationship between input characteris-tics and model performance, as detailed in Sec. 3.2. The overall framework is depicted in Fig. 2. For a given query q, the agent first analyzes its content and selects an initial model aq ∈ Mq . For example, FR model 2 is selected because a clearly visible face is detected. Upon a success-ful function call, the tool returns saq (q) and the predicted label. Since score vectors are not directly interpretable by the agent, the predicted identity label is returned explic-itly, while saq (q) is retained internally. The agent then de-cides whether to invoke another model or output its deci-sion. This sequential decision-making process enables the flexible maximization of a long-term objective. [45, 56]. If 3the agent decides to output its decision, it also provides a reasoning summary that justifies the model selections. Rea-soning at each step is necessary to enhance transparency and decision traceability. The whole conversation oi, including the successful model selections, is then used to measure the overall rewards. In GRPO, we sample N rollouts ( i.e ., re-sponses) for each query and jointly compute their advan-tages {A1, A 2, . . . , A N } from the corresponding rewards 
+
+{r1, r 2, . . . , r N } to update the agent. Details of GRPO are provided in the supplementary. 
+
+Multi-turn Design. We adopt a ReAct-style (reason-before-act) multi-turn controller for tool use, rather than a single-shot plan generator [56]. This design is motivated by the need to decompose the complex task of multi-tool usage into a sequence of simpler, more manageable decisions. A single-turn approach would require the agent to generate a complete and static execution plan at once, a task plagued by a combinatorial action space and an inability to handle unexpected outcomes. This interleaving of reasoning with actions decomposes multi-tool execution into atomic steps and yields the following benefits: 
+
+i) Simplified Learning: Reduces the vast action space of generating a full plan to a single decision at each step, mak-ing the policy significantly more tractable to learn. 
+
+ii) Dynamic Adaptation: Allows the agent to observe tool outputs and adjust its strategy in real time, enabling error correction and flexible reasoning. These sequential actions also support effective credit assignment during inference. 
+
+3.2. Reward Functions 
+
+Reward functions play a central role in RFT-based agent training. We design four reward functions: format reward 
+
+Rf , tool success reward Rtool , answer accuracy reward 
+
+Racc , and metric-based reward Rmat .
+
+Format Reward. The agent is trained to produce struc-tured responses that separate reasoning, tool calls, and final answers [32, 33, 42, 69]. We adapt this to a multi-turn set-ting where each turn must be a structured format, such as 
+
+<think >... </think > < answer >... </answer >. The reward is computed per turn, and the overall reward is averaged across all turns. 
+
+Tool Success Reward. This reward assesses whether the agent’s tool calls are executable and yield valid results. Each tool call receives a binary success/failure score, and the reward is defined as the success rate across all tool calls in a trajectory. This incentivizes the agent to produce syn-tactically correct tool inputs. 
+
+Answer Accuracy Reward. This reward measures the cor-rectness of the agent’s final prediction ai extracted from the answer tag <answer >... </answer > of the response oi
+
+against the ground truth label y. Its primary objective is to prioritize factual accuracy over procedural correctness, which enables the agent to implicitly assess model reliabil-ity, especially when model predictions are inconsistent: 
+
+Racc (ai, y ) = 
+
+(
+
+1, if ai = y, 
+
+0, otherwise . (1) 
+
+Metric-based Reward. The metric-based reward guides the agent toward effective and dynamic model selection. A key challenge is to encourage sufficient exploration of di-verse model combinations without prior knowledge of their optimality. To address this, the reward is computed based on the performance of the agent-selected model combina-tion on the training set, using the score-fusion method from Sec. 3.3. The combination is derived from successfully ex-ecuted conversations per sample. However, exhaustively searching for the ground-truth optimal model combination for each sample is computa-tionally infeasible. To promote exploration, we construct an augmented model selection MQ ∈ R|Q|×| M | based on the model combination Moi of the response oi, since TAR and FNIR are determined by thresholds selected from dataset-level scores. Specifically, a fraction γ ∈ [0 , 1] of samples in MQ retain the same model combination as Moi . For the remaining (1 − γ), the mask entries are sampled from a Bernoulli distribution to diversify the model combinations explored. The column corresponding to the anchor model is always set to true, ensuring its consistent inclusion. We apply the ACT (Anchor-based Confidence Top-k) (details in Sec. 3.3) based on MQ. The performance of the resulting fused scores matrix S′ 
+
+> oi
+
+is then evaluated across the entire training set using four key metrics: True Accept Rate at a False Acceptance Rate (TAR@FAR), mean Av-erage Precision (mAP), Rank-1 accuracy, and False Non-Identity Rate at a specified False Positive Identification Rate (FNIR@FPIR). The final metric-based reward Rmat is a composite score formulated to provide a holistic perfor-mance signal: 
+
+S′ 
+
+> oi
+
+= ACT (MQ, k ), (2) 
+
+Rmat (oi) = Rank (S′ 
+
+> oi
+
+) + mAP (S′ 
+
+> oi
+
+)+TAR (S′ 
+
+> oi
+
+) − FNIR (S′ 
+
+> oi
+
+). (3) This formulation naturally aligns with both our optimiza-tion objective and real-world deployment needs. It rewards the agent for achieving higher accuracy and retrieval perfor-mance (TAR, mAP, Rank) while penalizing missed identifi-cations (FNIR), thereby capturing operational performance requirements in a comprehensive manner. The final reward is the sum of Rf , Rtool , Racc , and Rmat .
+
+3.3. Anchor-based Confidence Top-k Score-fusion 
+
+The proposed ACT score-fusion approach aims to dynam-ically and effectively combine scores from multiple mod-els for a given query. The overview is shown in Fig. 3. 4ACT 
+
+> score -fusion
+> Add
+> Confidence weights
+> Selected
+> Model s
+> Anchor
+> Score vector
+> Avg.
+> Normalize
+> Top -k
+
+Figure 3. Overview of the ACT score-fusion. Based on tool exe-cution results ( i.e ., score vectors) and selected model combination, the first selected model serves as the anchor, and ACT produces the final score vector via confidence weighting and top-k filtering. 
+
+Our approach is built on the principle of leveraging a sta-ble and powerful “anchor model” ma ∈ Mq to provide a robust score vector, while selectively incorporating normal-ized, high-confidence scores from the set of models. Let 
+
+ma be the first selected model in Mq , and sm,q,g denotes the similarity score between q and g for model m.We begin by computing a contribution score cm,q,g . This score is designed to leverage the most confident predictions while filtering out potential noise from low-scoring candi-dates, which is achieved through a Top-k selection process. Formally, for a score cm,q,g in cm,q ∈ R|G|, the contribu-tion score is defined as: 
+
+cm,q,g =
+
+(
+
+zm,q,g · sm,q,g if g ∈ T m,q ,
+
+0 otherwise . (4) where Tm,q is the set of indices of the k highest-scoring gallery entries for query q from model m. The term zm,q,g 
+
+represents the Z-score normalized score between q and g by model m. This standardization makes the scores from dif-ferent models with potentially different scales comparable. It is calculated as: 
+
+zm,q,g = sm,q,g − μm,q 
+
+σm,q 
+
+, (5) where μm,q and σm,q are the mean and standard deviation of sm,q . The final fused score vector s′ 
+
+> q
+
+is computed via: 
+
+s′ 
+
+> q
+
+= 11 + |Mq |
+
+sma,q + X
+
+> m∈Mq
+
+cm,q 
+
+ . (6) The term (1 + |Mq |) serves as the normalization factor, en-suring a balanced contribution from all models. This strat-egy balances robust, general performance with specialized, high-confidence insights. The anchor model provides a more substantial contribution by establishing a global rank-ing structure, as its scores are applied unconditionally to all candidates. In contrast, the selected models provide sparse, localized refinements only for their top-k predictions. Fig. 4 provides a toy example of ACT score-fusion. Score vector                                                     
+
+> G1 G2 G3
+> 0.70 0.20 0.10
+> 0.35 0.25 0.50
+> 0.50 0.35 0.20
+> 0.35 0.25 0.50
+> Normalized confidence
+> Top -𝑘
+> 0.70 0.20 0.10 0.70 000.98 001.40 -0.51 -0.89
+> -0.16 -1.14 1.30 000.50 000.65
+> 0.50 0.35 0.20 1.22 -4.53 -1.22 0.50 000.61 00
+> Anchor Match Non -match
+> Anchor Output score
+> 0.61 00000.65 0.98 000.70 0.20 0.10 0.57 0.05 0.19 Avg.
+
+Figure 4. A toy example of the proposed ACT score-fusion. 
+
+Three models are used with the FR model as the anchor and k =1. ACT amplifies the gap between match and non-match scores through confidence-based top-k and anchor weighting, improving verification and open-set search performance. 
+
+## 4. Experiments 
+
+Datasets and Evaluation Protocol. We evaluate on popu-lar human recognition datasets: CCVID [11], MEVID [6], and LTCC [39]. They comprise multi-view captures and cross-modal biometric data with diverse resolutions and temporal dynamics. Our evaluation protocol follows [68] for fair comparison. Performance is measured via standard metrics in general settings, i.e ., Rank-1 accuracy, mean Av-erage Precision (mAP), verification rate (TAR@1.0%FAR), and open-set search metric (FNIR@1.0%FPIR), which col-lectively reflect real-world deployment requirements. For open-set search evaluation, we follow the protocol of [48, 68] to construct 10 random subsets of gallery subjects. Each subset, containing ∼20% of the subjects in the test set, serves as a non-mated list. We report the mean and stan-dard deviation for the 10 trials. 
+
+Baselines. Our baselines include the following methods: Min/Max score-fusion [19], Z-score and min-max normal-ization [47], RHE [15], FarSight [28], and learning-based methods like BSSF [51], Weighted-sum [35], AsymA-O1 [16], and QME [68]. We follow [68] to construct the biometric model pool (details provided in the Supp.). We also compare with the SoTA multimodal human recognition model SapiensID [25]. 
+
+Implementation Details. Following [68], we extract the center embeddings of subjects for training and gallery em-beddings for testing by applying average pooling. Con-sidering runtime efficiency in practical scenarios, Fusion-Agent is based on Qwen2.5-VL-3B [2] and fine-tuned via GRPO [42]. For efficiency, we set a turn limit of 4 and train for 200 steps. All biometric models are frozen in training. For GRPO, we set N = 6 and a KL coefficient β = 0 .04 .LoRA [17] is applied with rank r = 64 and scaling factor 
+
+α = 128 . The learning rate follows a linear decay sched-ule starting from 2 × 10 −5. The metric-based reward uses 
+
+γ = 0 .8. Based on training-set performance, we set k = 10 
+
+5Method Comb. Rank1 ↑ mAP ↑ TAR ↑ FNIR ↓
+
+AdaFace ∗ [22] ♦ 94 .0 87 .9 75 .7 13 .0 ± 3.5
+
+CAL [11] ♠ 81 .4 74 .7 66 .3 52 .8 ± 13 .3
+
+BigGait ∗ [57] ♣ 76 .7 61 .0 49 .7 71 .1 ± 6.1
+
+SapiensID [25] ● 92 .6 77 .8 - -
+
+Min-Fusion [19] 
+
+♦ ♠ ♣ 
+
+87 .1 79 .2 62 .4 48 .5 ± 8.7
+
+Max-Fusion [19] 89 .9 89 .3 73 .4 23 .0 ± 10 .1
+
+Z-score [47] 92 .2 90 .6 73 .9 15 .1 ± 1.5
+
+Min-max [47] 91 .8 90 .9 73 .9 15 .4 ± 2.5
+
+Weighted-sum [35] 91 .7 90 .6 73 .6 15 .4 ± 1.8
+
+Asym-AO1 [16] 92 .3 90 .0 74 .0 15 .9 ± 1.7
+
+BSSF [51] 91 .8 91 .1 73 .9 14 .1 ± 1.3
+
+FarSight [28] 92 .0 91 .2 73 .9 13 .9 ± 1.1
+
+QME [68] 94 .1 90 .8 76 .2 12 .3 ± 1.4
+
+FusionAgent (DA) 92 .8 92 .2 85 .8 10 .5 ± 1.5
+
+FusionAgent (CoT) 93 .4 92 .6 85 .9 10 .1 ± 1.5
+
+Table 1. Performance on CCVID. [Keys: Best and second best performance; Comb. : model combination; ∗: zero-shot perfor-mance; ♦: AdaFace for face modality; ♣: BigGait for gait modal-ity; ♠: CAL of body modality; ●: SapiensID for face and body modalities; TAR: TAR@1%FAR; FNIR: FNIR@1%FPIR.]                                                                                                                
+
+> Method Comb. Rank1 ↑mAP ↑TAR ↑FNIR ↓
+> AdaFace ∗[22] ♦18 .55.92.499 .8±0.2
+> CAL [11] ♠74 .440 .636 .759 .7±7.3
+> AIM [55] ■74 .840 .937 .066 .2±7.5
+> SapiensID [25] ●72 .034 .6--
+> Min-Fusion [19]
+> ♦♠■
+> 38 .113 .512 .481 .9±6.0
+> Max-Fusion [19] 62 .533 .316 .894 .8±4.7
+> Z-score [47] 73 .037 .530 .468 .7±9.2
+> Min-max [47] 73 .238 .131 .975 .1±9.2
+> Weighted-sum [35] 73 .237 .831 .372 .4±8.6
+> Asym-AO1 [16] 71 .232 .919 .176 .3±8.9
+> BSSF [51] 73 .539 .134 .268 .9±8.5
+> FarSight [28] 73 .237 .831 .372 .4±8.6
+> QME [68] 73 .839 .635 .064 .3±8.0
+> FusionAgent (DA) 75 .541 .036 .550 .3±9.0
+> FusionAgent (CoT) 75 .541 .037 .050 .0±8.5
+
+Table 2. Performance on LTCC. [Keys: Best and second best performance; Comb. : model combination; ∗: zero-shot perfor-mance; ♦: AdaFace for face modality; ♠: CAL of body modal-ity; ■: AIM for body modality; ●: SapiensID for face and body modalities; TAR: TAR@1%FAR; FNIR: FNIR@1%FPIR.] 
+
+for CCVID and k = 40 for MEVID and LTCC. During training, we sample a continuous 4-frame clip from each video for CCVID and MEVID, and 1 frame for LTCC, as it is an image-based dataset. Training is conducted on 4 H100 GPUs with an effective batch size of 4, and takes nearly 4 hours. During evaluation, we disable sampling in FusionA-gent to ensure results are reproducible. 
+
+4.1. Experimental Results 
+
+In-domain Evaluation. As shown in Tab. 1, 2, and 3, the upper section of each table lists the unimodal models, 
+
+Method Comb. Rank1 ↑ mAP ↑ TAR ↑ FNIR ↓
+
+AdaFace ∗ [22] ♦ 25 .0 8.1 5.4 98 .8 ± 1.2
+
+CAL [11] ♠ 52 .5 27 .1 34 .7 67 .8 ± 7.3
+
+AGRL [53] ■ 51 .9 25 .5 30 .7 69 .4 ± 8.9
+
+Min-Fusion [19] 
+
+♦ ♠ ■
+
+46 .8 21 .2 28 .0 70 .4 ± 8.0
+
+Max-Fusion [19] 33 .2 14 .9 8.3 97 .4 ± 1.6
+
+Z-score [47] 54 .1 27 .4 30 .7 66 .5 ± 7.0
+
+Min-max [47] 52 .8 24 .7 25 .0 71 .3 ± 6.1
+
+Weighted-sum [35] 54 .1 27 .3 30 .3 66 .3 ± 7.0
+
+Asym-AO1 [16] 52 .5 22 .9 23 .6 71 .7 ± 5.8
+
+BSSF [51] 53 .5 27 .4 30 .5 65 .9 ± 7.2
+
+FarSight [28] 53 .8 25 .4 26 .6 69 .8 ± 6.4
+
+QME [68] 55 .7 28 .2 32 .9 64 .6 ± 8.2
+
+FusionAgent (DA) 52 .5 28 .7 34 .8 60 .8 ± 7.3
+
+FusionAgent (CoT) 54 .7 28 .7 34 .9 58 .6 ± 7.4
+
+Table 3. Performance on MEVID. [Keys: Best and second best performance; Comb. : model combination; ∗: zero-shot perfor-mance; ♦: AdaFace for face modality; ♠: CAL of body modal-ity; ■: AGRL for body modality; TAR: TAR@1%FAR; FNIR: FNIR@1%FPIR.] 
+
+Method Rank1 ↑ mAP ↑ TAR ↑ FNIR ↓
+
+CCVID → LTCC (Zero-shot) FusionAgent (ACT) 60 .4 11 .9 7.7 60 .3 ± 8.6
+
+FusionAgent (FarSight) 68 .2 31 .7 17 .0 81 .8 ± 9.6
+
+CCVID → LTCC (10-shot) FusionAgent (ACT) 73 .6 39 .8 34 .8 53 .5 ± 8.5
+
+MEVID → LTCC (Zero-shot) FusionAgent (FarSight) 75 .3 42 .3 37 .7 59 .3 ± 9.5
+
+FusionAgent (ACT) 75 .3 41 .1 36 .1 50 .1 ± 8.4
+
+Table 4. Cross-domain Performance on LTCC. FusionAgent is trained on CCVID with its model combination (Tab. 1) and evalu-ated on LTCC using LTCC’s model combination (Tab. 2). [Keys: TAR: TAR@1%FAR; FNIR: FNIR@1%FPIR.] 
+
+while the lower section reports the performance of fusion methods. Statistical baselines ( e.g ., Z-score, FarSight) of-ten fail to surpass the strongest single model across all met-rics, while learning-based methods ( e.g ., QME) achieve bet-ter gains and occasionally outperform the best unimodal model, but remain limited when fused models are not com-plementary ( e.g ., LTCC). By contrast, FusionAgent consis-tently achieves superior performance on all three datasets, outperforming both unimodal and fusion baselines on most metrics. Across the tables, FNIR benefits the most from fusion, while Rank-1 improves the least. This is because FNIR is particularly sensitive to outliers, whereas Rank-1 is largely determined by the strongest modality and only marginally affected by fusion. Through top-k selection and confidence weighting, our method effectively bounds the in-crease in non-match scores. On CCVID, the largest TAR gain arises because FusionAgent identifies high-quality fa-cial inputs and primarily anchors on the FR model, which 61 2 5 10 20 30 40 50 all                             
+
+> Top-k Value
+> 0.64
+> 0.66
+> 0.68
+> 0.70
+> 0.72
+> 0.74
+> 0.76
+> Value
+> Rank-1 ( )
+> Agent
+> Hard Selection
+> QME
+> Farsight
+> 12510 20 30 40 50 all
+> Top-k Value
+> 0.37
+> 0.38
+> 0.39
+> 0.40
+> 0.41
+> 0.42
+> Value
+> mAP ( )
+> 12510 20 30 40 50 all
+> Top-k Value
+> 0.30
+> 0.31
+> 0.32
+> 0.33
+> 0.34
+> 0.35
+> 0.36
+> 0.37
+> Value
+> TAR@1.00%FAR ( )
+> 12510 20 30 40 50 all
+> Top-k Value
+> 0.45
+> 0.50
+> 0.55
+> 0.60
+> 0.65
+> 0.70
+> Value
+> FNIR@1.00%FPIR ( )
+
+Figure 5. Performance comparison on LTCC in four met-rics. FusionAgent consistently outperforms baselines, including the hard selection ( i.e ., using all models), which highlights the ef-fectiveness of dynamic model selection. 
+
+excels at distinguishing matches from non-matches. On LTCC, FNIR reduction is most pronounced due to the pro-posed ACT score-fusion strategy (see ablation in Tab. 5). 
+
+Efficiency in Real-world Scenarios. We introduce two inference modes: Direct Answering (DA) and Chain-of-Thought (CoT). DA avoids explicit reasoning, reducing average inference time from 2.81s to 1.03s on an H100 GPU, while maintaining competitive performance relative to QME (0.67s). CoT offers interpretable results, but at the cost of higher latency. Users can flexibly choose between the two to balance efficiency, interpretability, and accuracy. 
+
+Cross-domain Evaluation. In real-world deployments, agents may encounter unseen environments with different tool combinations, making cross-domain evaluation criti-cal for assessing transferability. We evaluate FusionAgent by training on CCVID and testing on LTCC (Tab. 4). In the zero-shot setting, despite the changed tool pool, Fu-sionAgent generalizes well and successfully executes tool calls without additional training. However, in CCVID →
+
+LTCC, where face quality degrades, FusionAgent experi-ences a performance drop due to (1) the unknown robust-ness of newly introduced models or weights on the target dataset. Inappropriate anchor selection may amplify errors and degrade overall performance. (2) the domain gap in data distribution. With only 10 samples per subject ( i.e ., 
+
+8% of the training data) and 50 training steps, FusionAgent quickly adapts and achieves performance comparable to full in-domain training. Under MEVID → LTCC, the zero-shot setting attains similar performance, further demonstrating the robustness of FusionAgent. 
+
+4.2. Ablation Studies 
+
+Agent Selection vs . Hard Selection. We compare dynamic model selection by the agent (red line in Fig. 5) with hard Method Rank1 mAP TAR@1%FAR FNIR@1%FPIR 
+
+QME [68] 73 .8 39 .6 35 .0 64 .3 ± 8.0
+
+Z-score 74 .8 41 .7 37 .1 63 .7 ± 9.5
+
+FarSight 74 .8 41 .7 37 .2 62 .5 ± 9.7
+
+ACT (Ours) 75 .5 41 .4 36 .5 51 .0 ± 9.4
+
+Table 5. Comparison of score-fusion methods with agent selec-tion on LTCC. All fusion methods combined with agent-based se-lection outperform QME, confirming the value of dynamic model selection. The proposed ACT yields the best overall performance, particularly in open-set search. 
+
+selection (orange line), which uses all available models. Since hard selection lacks anchor information, we use the averaged scores as a surrogate anchor, whereas in the agent setting, the first selected model serves as the anchor. Our method yields notable improvements across all metrics over previous SoTA approaches, underscoring the efficacy of the proposed agent and the ACT algorithm. It also consistently outperforms hard selection in Rank-1, mAP, and TAR, high-lighting the critical role of adaptive model selection. The significantly lower performance of hard selection relative to prior SoTA confirms that dynamic model selection is the key driver of performance gains. 
+
+Top-K Values. We investigate the impact of top-k values in ACT. Fig. 5 indicates that the choice of k affects dif-ferent metrics distinctively: larger k values generally im-prove Rank-1, mAP, and TAR@FAR, while FNIR remains relatively stable. Compared with hard selection, which ex-hibits large fluctuations, especially at small k, the proposed agent maintains both higher performance and greater sta-bility across a wide range of k values. This shows that the agent not only adapts to sample-level variations by selec-tively exploiting complementary models but also avoids the noise introduced by averaging redundant scores. The ro-bustness of ACT under varying k highlights its effectiveness in supporting adaptive model selection, ensuring consistent improvements across diverse evaluation settings. 
+
+Alternative Score-fusion Methods. Tab. 5 compares the proposed ACT against alternative statistical score-fusion methods using the same agent-selected model combina-tions. Even with standard fusion techniques such as Z-score and FarSight, our approach already surpasses the QME, highlighting the decisive role of dynamic model se-lection. Interestingly, Z-score and FarSight achieve nearly identical results, suggesting that the choice of statistical fusion has a limited impact once adaptive selection is ap-plied. In contrast, the proposed ACT yields further consis-tent gains, with a substantial reduction in FNIR (down to 51.0). This demonstrates that beyond dynamic selection, robust score integration is crucial for handling challenging open-set search scenarios, making ACT more reliable and generalizable across diverse evaluation metrics. 7Model Combination Frequencies     
+
+> AIM+CAL
+> AIM+AdaFace
+> +CAL
+> CAL+AIM
+> CCVID MEVID LTCC
+> Frequency
+> 794
+> 31
+> 302
+> 13 1
+> 459
+> 30 4
+> CAL+AGRL
+> CAL+AGRL+
+> AdaFace
+> CAL
+> AdaFace+CAL
+> AdaFace +CAL
+> +BigGait
+> CAL+AdaFace
+> 0
+> 800
+> 400
+> 0
+> 300
+> 15 0
+> 0
+> 400
+> 200
+> 9
+
+Figure 6. Statistics of model selection. The first model is the anchor model for each category. The combination distribution re-veals the characteristics of each dataset and which model combi-nation provides robust performance. 
+
+Comb. Rank1 mAP TAR@1%FAR FNIR@1%FPIR 
+
+AIM+CAL 74 .8 41 .0 36 .1 53 .4 ± 9.2
+
+FusionAgent 75 .5 41 .4 36 .5 51 .0 ± 9.4
+
+Table 6. Ablation on model combination and anchor model selection on LTCC. The results show that FusionAgent closely aligns with the grid-searched results but achieves slightly better performance due to sample-level diversity. 0.0 0.2 0.4 0.6 0.8 1.0      
+
+> 0
+> 3
+> 6
+> a) QME
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0
+> 3
+> 6
+> b) ACT (Ours)
+> non-match scores
+> match scores
+> far@1.0% threshold
+> nm_mean
+> mat_mean
+> Density
+> Score
+
+Figure 7. Comparison of score distribution on CCVID. [Keys: nm mean = mean value of non-match scores; mat mean = mean value of match scores.] 
+
+Statistics of Dynamic Model Selection. Fig. 6 presents the frequency of model and anchor selections per dataset. On CCVID, where faces are often clearly visible, the agent frequently selects AdaFace as the anchor and consistently combines it with CAL, while BigGait is selected less of-ten, suggesting limited complementary value for combi-nation. In contrast, LTCC and MEVID—collected un-der surveillance conditions with multi-view and low-quality faces—lead the agent to rely on ReID models. 
+
+Dataset-level Model Selection. Since exhaustive sample-level grid search is computationally prohibitive, we con-duct grid search at the dataset level to determine the op-timal model combination and anchor model. As shown in Tab. 6, AIM+CAL is the best model combination using ACT for the grid search, which is highly consistent with the combination chosen by our agent. Nevertheless, the agent achieves superior performance, attributed to its ability to ex-ploit sample-level diversity during model selection. 
+
+4.3. Qualitative Results 
+
+Score Distribution. Fig. 7 plots the distribution of non-match (imposter) scores, match (genuine) scores, and the threshold for FAR=1% for QME and FusionAgent. For Identify the person in the video from the dataset.          
+
+> <think> Let's analyze the video to determine the best biometric
+> models to use. The person is wearing a dark -colored shirt and blue je
+> ans, standing outdoors. The face is partially visible, and the resolutio
+> nseems to be high. </think>
+> <thi nk >Now that we have the prediction from the ' cal ' model, let's se
+> e if we can improve the result by using the ' agrl ' model, which is desi
+> gned for body data. </think>
+> <think> Another model, ‘ agrl ’, is also suitable for this task. It is design
+> ed to work with body data, which is visible in the video. </think>
+> <answer> mevid_2 96 </answer>
+> {' pred_identity_id ': ‘ me vid_296 ', ' model_name ’: ‘ agrl '}
+> Tool Output: AGRL
+> {' pred_identity_id ': ‘ mevid_296 ', ' model_name ': ‘ cal '}
+> Tool Output: CAL
+
+Figure 8. CoT of FusionAgent on MEVID. FusionAgent per-forms interpretable reasoning and dynamically selects the suitable tool combination for each test sample. 
+
+clarity, we align the y-axis and normalize the scores. Our method demonstrates a markedly larger margin between the match scores and the FAR threshold, while effectively sup-pressing non-match scores near zero. This improvement stems from two key mechanisms: (1) by summing only the top-k confident scores, we amplify the contribution of true matches and widen the separation from non-matches, which are predominantly excluded; and (2) our dynamic model selection provides a more robust set of models per query, leading to higher-quality scores for fusion. 
+
+CoT for Model Selection. Fig. 8 illustrates the CoT mode of FusionAgent, where the agent interprets the input and dynamically selects suitable models for each query sample. By leveraging the learned reliability and complementarity of different models, FusionAgent reasons over the query’s characteristics to determine the optimal model combination. This CoT process enhances interpretability by explicitly re-vealing the agent’s decision path and selection rationale. 
+
+## 5. Conclusion 
+
+We propose FusionAgent, a novel agentic framework for human recognition with dynamic model selection. We in-troduce an Anchor-based Confidence Top-k score-fusion method (ACT) for sample-dependent and adaptive model integration. Multiple reward functions are designed to guide the agent’s tool usage and exploration of diverse model combinations. Extensive experiments and analyses validate the effectiveness of FusionAgent and ACT, highlighting the benefit of query-wise model selection and fusion. Our ap-proach provides a scalable and extensible solution for multi-modal and multi-model tasks, with potential applicability to broader vision tasks [10, 12, 26, 31, 44, 61, 66, 67]. We hope this work inspires further research on agentic AI. 8Acknowledgments 
+
+This research is based upon work supported in part by the Office of the Director of National Intelligence (ODNI), In-telligence Advanced Research Projects Activity (IARPA), via 2022-21102100004. The views and conclusions con-tained herein are those of the authors and should not be interpreted as necessarily representing the official policies, either expressed or implied, of ODNI, IARPA, or the U.S. Government. The U.S. Government is authorized to re-produce and distribute reprints for governmental purposes notwithstanding any copyright annotation therein. 
+
+## References 
+
+[1] John Arevalo, Thamar Solorio, Manuel Montes-y G´ omez, and Fabio A Gonz´ alez. Gated multimodal units for infor-mation fusion. arXiv preprint arXiv:1702.01992 , 2017. 2 [2] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, et al. Qwen2.5-vl technical report. arXiv preprint arXiv:2502.13923 , 2025. 5 [3] Boyu Chen, Zhengrong Yue, Siran Chen, Zikang Wang, Yang Liu, Peng Li, and Yali Wang. Lvagent: Long video un-derstanding by multi-round dynamical collaboration of mllm agents. arXiv preprint arXiv:2503.10200 , 2025. 2, 3 [4] Junwen Chen, Jie Zhu, and Yu Kong. Atm: Action tempo-rality modeling for video question answering. In ACM MM ,2023. 1 [5] Mohamed Cheniti, Zahid Akhtar, Chandranath Adak, and Kamran Siddique. An approach for full reinforcement-based biometric score fusion. IEEE Access , 2024. 2 [6] Daniel Davila, Dawei Du, Bryon Lewis, Christopher Funk, Joseph Van Pelt, Roderic Collins, Kellie Corona, Matt Brown, Scott McCloskey, Anthony Hoogs, et al. Mevid: Multi-view extended videos with identities for video person re-identification. In WACV , 2023. 5 [7] Maria De Marsico, Michele Nappi, and Daniel Riccio. Ca-bala—collaborative architectures based on biometric adapt-able layers and activities. PR , 2012. 2 [8] Jiankang Deng, Jia Guo, Niannan Xue, and Stefanos Zafeiriou. Arcface: Additive angular margin loss for deep face recognition. In CVPR , 2019. 2 [9] Jiankang Deng, Jia Guo, Tongliang Liu, Mingming Gong, and Stefanos Zafeiriou. Sub-center arcface: Boosting face recognition by large-scale noisy web faces. In ECCV , 2020. 2[10] Xingyu Fu, Siyi Liu, Yinuo Xu, Pan Lu, Guangqiuse Hu, Tianbo Yang, Taran Anantasagar, Christopher Shen, Yikai Mao, Yuanzhe Liu, et al. Learning human-perceived fak-eness in ai-generated videos via multimodal llms. arXiv preprint arXiv:2509.22646 , 2025. 8 [11] Xinqian Gu, Hong Chang, Bingpeng Ma, Shutao Bai, Shiguang Shan, and Xilin Chen. Clothes-changing person re-identification with rgb modality only. In CVPR , 2022. 2, 5, 6, 3 [12] Xiao Guo, Xiufeng Song, Yue Zhang, Xiaohong Liu, and Xiaoming Liu. Rethinking vision-language model in face forensics: Multi-modal interpretable forged face detector. In 
+
+CVPR , 2025. 1, 8 [13] Xiao Guo, Yue Zhang, Mohit Bansal, and Xiaoming Liu. Deepfake-agent: Aggregating semantic forgery clues for generalizable detection. In In Proceeding of Findings of IEEE Computer Vision and Pattern Recognition , 2026. 2, 3[14] Xiao Guo, Jie Zhu, Anil Jain, and Xiaoming Liu. On the holistic approach for detecting human image forgery. arXiv preprint arXiv:2601.04715 , 2026. 1 [15] Mingxing He, Shi-Jinn Horng, Pingzhi Fan, Ray-Shine Run, Rong-Jian Chen, Jui-Lin Lai, Muhammad Khurram Khan, and Kevin Octavius Sentosa. Performance evaluation of score level fusion in multimodal biometric systems. PR ,2010. 2, 5 [16] Abderrahmane Herbadji, Zahid Akhtar, Kamran Siddique, Noubeil Guermat, Lahcene Ziet, Mohamed Cheniti, and Khan Muhammad. Combining multiple biometric traits us-ing asymmetric aggregation operators for improved person recognition. Symmetry . 5, 6 [17] Edward J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al. Lora: Low-rank adaptation of large language models. ICLR ,2022. 5 [18] Zhanbo Huang, Dingqiang Ye, Xiaoming Liu, and Yu Kong. Unlocking motion from large vision models with a semantic and kinematic duality for gait recognition. In CVPR , 2026. 1, 2 [19] Anil Jain, Karthik Nandakumar, and Arun Ross. Score nor-malization in multimodal biometric systems. PR , 2005. 1, 2, 5, 6 [20] Anil Jain, Ruud Bolle, and Sharath Pankanti. Introduction to biometrics. In Biometrics: personal identification in net-worked society . Springer, 2011. 2 [21] Yuyang Ji, Yixuan Shen, Kien Nguyen, Lifeng Zhou, and Feng Liu. Idselect: A rl-based cost-aware selection agent for video-based multi-modal person recognition. arXiv preprint arXiv:2602.18990 , 2026. 2 [22] Minchul Kim, Anil K Jain, and Xiaoming Liu. Adaface: Quality adaptive margin for face recognition. In CVPR ,2022. 2, 6, 3 [23] Minchul Kim, Feng Liu, Anil K Jain, and Xiaoming Liu. Cluster and aggregate: Face recognition with large probe set. In NeurIPS , 2022. [24] Minchul Kim, Yiyang Su, Feng Liu, Anil Jain, and Xiaoming Liu. KeyPoint Relative Position Encoding for Face Recog-nition. In CVPR , 2024. 2 [25] Minchul Kim, Dingqiang Ye, Yiyang Su, Feng Liu, and Xi-aoming Liu. Sapiensid: Foundation for human recognition. In CVPR , 2025. 1, 2, 5, 6 [26] Abhinav Kumar, Yuliang Guo, Zhihao Zhang, Xinyu Huang, Liu Ren, and Xiaoming Liu. Charm3r: Towards unseen cam-era height robust monocular 3d detector. In CVPR , 2025. 1, 8[27] Feng Liu, Minchul Kim, ZiAng Gu, Anil Jain, and Xiaoming Liu. Learning clothing and pose invariant 3d shape represen-tation for long-term person re-identification. In ICCV , 2023. 2
+
+9[28] Feng Liu, Ryan Ashbaugh, Nicholas Chimitt, Najmul Has-san, Ali Hassani, Ajay Jaiswal, Minchul Kim, Zhiyuan Mao, Christopher Perry, Zhiyuan Ren, et al. Farsight: A physics-driven whole-body biometric system at large distance and al-titude. In WACV , 2024. 2, 5, 6 [29] Feng Liu, Minchul Kim, Zhiyuan Ren, and Xiaoming Liu. Distilling CLIP with Dual Guidance for Learning Discrimi-native Human Body Shape Representation. In CVPR , 2024. 2, 3 [30] Feng Liu, Nicholas Chimitt, Lanqing Guo, Jitesh Jain, Aditya Kane, Minchul Kim, Wes Robbins, Yiyang Su, Dingqiang Ye, Xingguang Zhang, et al. Person recognition at altitude and range: Fusion of face, body shape and gait. 
+
+arXiv preprint arXiv:2505.04616 , 2025. 2 [31] Yuanzhe Liu, Jingyuan Zhu, Yuchen Mo, Gen Li, Xu Cao, Jin Jin, Yifan Shen, Zhengyuan Li, Tianjiao Yu, Wenzhen Yuan, et al. Palm: Progress-aware policy learning via af-fordance reasoning for long-horizon robotic manipulation. 
+
+arXiv preprint arXiv:2601.07060 , 2026. 8 [32] Ziyu Liu, Zeyi Sun, Yuhang Zang, Xiaoyi Dong, Yuhang Cao, Haodong Duan, Dahua Lin, and Jiaqi Wang. Visual-rft: Visual reinforcement fine-tuning. arXiv preprint arXiv:2503.01785 , 2025. 3, 4 [33] Ziyu Liu, Yuhang Zang, Yushan Zou, Zijian Liang, Xiaoyi Dong, Yuhang Cao, Haodong Duan, Dahua Lin, and Ji-aqi Wang. Visual agentic reinforcement fine-tuning. arXiv preprint arXiv:2505.14246 , 2025. 2, 3, 4 [34] Karthik Nandakumar, Yi Chen, Sarat C Dass, and Anil Jain. Likelihood ratio-based biometric score fusion. TPAMI , 2007. 2[35] Tae Jin Park, Manoj Kumar, and Shrikanth Narayanan. Multi-scale speaker diarization with neural affinity score fu-sion. In ICASSP , 2021. 1, 2, 5, 6 [36] Juan-Manuel P´ erez-R´ ua, Valentin Vielzeuf, St´ ephane Pa-teux, Moez Baccouche, and Fr´ ed´ eric Jurie. Mfas: Multi-modal fusion architecture search. In CVPR , 2019. 2 [37] Norman Poh and Josef Kittler. A unified framework for bio-metric expert fusion incorporating quality measures. TPAMI ,2011. 2 [38] Norman Poh, Josef Kittler, and Thirimachos Bourlai. Im-proving biometric device interoperability by likelihood ratio-based quality dependent score normalization. In BTAS , 2007. 2[39] Xuelin Qian, Wenxuan Wang, Li Zhang, Fangrui Zhu, Yanwei Fu, Tao Xiang, Yu-Gang Jiang, and Xiangyang Xue. Long-term cloth-changing person re-identification. In 
+
+ACCV , 2020. 5 [40] Arun Ross and Anil Jain. Information fusion in biometrics. 
+
+PR letters , 2003. 2 [41] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Rad-ford, and Oleg Klimov. Proximal policy optimization algo-rithms. arXiv preprint arXiv:1707.06347 , 2017. 1 [42] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Yang Wu, et al. Deepseekmath: Pushing the limits of math-ematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. 3, 4, 5 [43] Haozhan Shen, Peng Liu, Jingcheng Li, Chunxin Fang, Yibo Ma, Jiajia Liao, Qiaoli Shen, Zilun Zhang, Kangjia Zhao, Qianqian Zhang, et al. Vlm-r1: A stable and generaliz-able r1-style large vision-language model. arXiv preprint arXiv:2504.07615 , 2025. 3 [44] Yifan Shen, Yuanzhe Liu, Jingyuan Zhu, Xu Cao, Xiaofeng Zhang, Yixiao He, Wenming Ye, James Matthew Rehg, and Ismini Lourentzou. Fine-grained preference optimiza-tion improves spatial reasoning in vlms. arXiv preprint arXiv:2506.21656 , 2025. 8 [45] Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. Reflexion: Language agents with verbal reinforcement learning. NeurIPS , 2023. 3 [46] Maneet Singh, Richa Singh, and Arun Ross. A comprehen-sive overview of biometric fusion. Information Fusion , 52, 2019. 2 [47] Robert Snelick, Mike Indovina, James Yen, and Alan Mink. Multimodal biometrics: issues in design and testing. In 
+
+ICMI , 2003. 1, 5, 6 [48] Yiyang Su, Minchul Kim, Feng Liu, Anil Jain, and Xiaoming Liu. Open-set biometrics: Beyond good closed-set models. In ECCV , 2024. 5 [49] Yiyang Su, Yunping Shi, Feng Liu, and Xiaoming Liu. Hamobe: Hierarchical and adaptive mixture of biometric ex-perts for video-based person reid. In ICCV , 2025. 2 [50] Yiyang Su, Minchul Kim, Jie Zhu, Christopher Perry, Feng Liu, Anil Jain, and Xiaoming Liu. Localscore: Lo-cal density-aware similarity scoring for biometrics. arXiv preprint arXiv:2602.01012 , 2026. 2 [51] Jackson Horlick Teng, Thian Song Ong, Tee Connie, Kala-iarasi Sonai Muthu Anbananthen, and Pa Pa Min. Optimized score level fusion for multi-instance finger vein recognition. 
+
+Algorithms , 2022. 1, 2, 5, 6 [52] Mayank Vatsa, Richa Singh, and Afzel Noore. Integrating image quality in 2 ν-svm biometric match score fusion. In-ternational Journal of Neural Systems , 2007. 2 [53] Yiming Wu, Omar El Farouk Bourahla, Xi Li, Fei Wu, Qi Tian, and Xue Zhou. Adaptive graph representation learning for video person re-identification. TIP , 2020. 2, 6, 3 [54] Feng Xu, Guangyao Zhai, Xin Kong, Tingzhong Fu, Daniel FN Gordon, Xueli An, and Benjamin Busam. Stare-vla: Progressive stage-aware reinforcement for fine-tuning vision-language-action models. arXiv preprint arXiv:2512.05107 , 2025. 3 [55] Zhengwei Yang, Meng Lin, Xian Zhong, Yu Wu, and Zheng Wang. Good is bad: Causality inspired cloth-debiasing for cloth-changing person re-identification. In CVPR , 2023. 2, 6, 3 [56] Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. React: Synergizing rea-soning and acting in language models. In ICLR , 2023. 2, 3, 4[57] Dingqiang Ye, Chao Fan, Jingzhe Ma, Xiaoming Liu, and Shiqi Yu. BigGait: Learning Gait Representation You Want by Large Vision Models. In CVPR , 2024. 2, 6, 3 [58] Dingqiang Ye, Chao Fan, Zhanbo Huang, Chengwen Luo, Jianqiang Li, Shiqi Yu, and Xiaoming Liu. Biggergait: Un-
+
+10 locking gait recognition with layer-wise representations from large vision models. In NeurIPS , 2025. 2 [59] Mustafa Berkay Yılmaz and Berrin Yanıko˘ glu. Score level fusion of classifiers in off-line signature verification. Infor-mation Fusion , 2016. 2 [60] En Yu, Kangheng Lin, Liang Zhao, Jisheng Yin, Yana Wei, Yuang Peng, Haoran Wei, Jianjian Sun, Chunrui Han, Zheng Ge, et al. Perception-r1: Pioneering perception policy with reinforcement learning. arXiv preprint arXiv:2504.07954 ,2025. 3 [61] Yuan Yuan, Zhaojian Li, and Bin Zhao. A survey of mul-timodal learning: Methods, applications, and future. ACM Computing Surveys , 57(7):1–34, 2025. 8 [62] Ziyuan Zhang, Luan Tran, Xi Yin, Yousef Atoum, Xiaom-ing Liu, Jian Wan, and Nanxin Wang. Gait recognition via disentangled representation learning. In CVPR , 2019. 2 [63] Ziyuan Zhang, Luan Tran, Feng Liu, and Xiaoming Liu. On learning disentangled representations for gait recognition. 
+
+TPAMI , 2020. 2 [64] Zhiahao Zhang, Yiwei Chen, Weizhan Zhang, Caixia Yan, Qinghua Zheng, Qi Wang, and Wangdu Chen. Tile classi-fication based viewport prediction with multi-modal fusion transformer. In ACM MM , 2023. 1, 2 [65] Zhihao Zhang, Shengcao Cao, and Yu-Xiong Wang. Tamm: Triadapter multi-modal learning for 3d shape understanding. In CVPR , 2024. 1 [66] Zhihao Zhang, Abhinav Kumar, Girish Chandar Ganesan, and Xiaoming Liu. Unleashing the power of chain-of-prediction for monocular 3d object detection. In CVPR ,2026. 1, 8 [67] Zhihao Zhang, Abhinav Kumar, and Xiaoming Liu. Towards intrinsic-aware monocular 3d object detection. In CVPR ,2026. 1, 8 [68] Jie Zhu, Yiyang Su, Minchul Kim, Anil Jain, and Xiaoming Liu. A quality-guided mixture of score-fusion experts frame-work for human recognition. In ICCV , 2025. 1, 2, 5, 6, 7, 3[69] Jie Zhu, Yiyang Su, and Xiaoming Liu. Can textual reason-ing improve the performance of mllms on fine-grained visual classification? arXiv preprint arXiv:2601.06993 , 2026. 3, 4 [70] Yushen Zuo, Qi Zheng, Mingyang Wu, Xinrui Jiang, Renjie Li, Jian Wang, Yide Zhang, Gengchen Mai, Lihong V Wang, James Zou, et al. 4kagent: agentic any image to 4k super-resolution. arXiv preprint arXiv:2507.07105 , 2025. 2, 3 
+
+11 FusionAgent: A Multimodal Agent with Dynamic Model Selection for Human Recognition 
+
+# Supplementary Material 
+
+## 6. Additional Methodology 
+
+6.1. Group Relative Policy Optimization (GRPO) 
+
+In contrast to RL algorithms such as Proximal Policy Op-timization (PPO) [41]— which rely on a critic model to assess policy performance, GRPO eliminates the need for the critic model by directly comparing groups of candi-date responses. As shown in Fig. 2, for a given input x,GRPO requires the model to sample N diverse responses 
+
+{o1, o 2, . . . , o N } from the curren t model πθ and obtains overall rewards {r1, r 2, . . . , r N } for oi based on the reward function R(x, o i). In our case, it can be formatted as: 
+
+R(x, o i) = wf Rf (oi) + wtool Rtool (oi)+wacc Racc (ai, y ) + wmat Rmat (oi), (7) where wf , wtool , wacc , and wmat are the reward weights for format reward Rf , tool success reward Rtool , answer accuracy reward Racc , and metric-based reward Rmat , re-spectively. GRPO assesses the relative quality by normaliz-ing ri using the mean and standard deviation of the group reward: 
+
+Ai = ri − mean( {r1, . . . , r G})std( {r1, . . . , r G}) , (8) where Ai denotes the advantage of the i-th response. With the group normalization, GRPO encourages the model to sample preferred answers with a higher reward. The model is updated via: 
+
+JGRPO (θ) = Eq∼P (Q),{oi}Gi=1 ∼πθold (O|q)
+
+"
+
+1
+
+G
+
+> G
+
+X
+
+> i=1
+
+min πθ (oi | q)
+
+πθold (oi | q) Ai,
+
+clip 
+
+ πθ (oi | q)
+
+πθold (oi | q) , 1 − ε, 1 + ε
+
+
+
+Ai
+
+!
+
+−βD KL 
+
+ πθ ∥ πref 
+
+#
+
+,
+
+(9) where ε and β are the GRPO clipping hyperparame-ters and the coefficient weight for controlling the Kull-back–Leibler (KL) penalty [41], respectively. πref is the reference model. 
+
+11 + Euc (q, g ) . (10) 
+
+Prompts. We provide the system prompt used in the agent training and inference in Fig. 9. The tool schema is the function documentation with input and output formats and meaning. Model type dict is the modality type of each bio-metric model. 
+
+6.2. Additional Reward Details 
+
+Format Reward. Let C be the number of assis-tant turns in a conversation, ci denote the ith turn re-sponse. Let match( ci, P )=1 if ci matches JSON tag 
+
+<P>... </P >exactly (0 otherwise). We compute the multi-turn format reward by: Rfmt (C)= 1
+
+> C
+
+PCi=1 cot (ci) (CoT), where cot (ci)= match( ci, think ) ×  match( ci, answer ) ⊕
+
+match( ci, tool call ). ⊕ denotes exclusive-or. For DA, the formulation is: Rfmt (C)= 1
+
+> C
+
+PCi=1 da (ci)
+
+(DA), where da (ci)= match( ci, answer ) ⊕
+
+match( ci, tool call ), without the need of < think > tag. 
+
+Clarification of augmented model selection on Rmat . We set most rows in MQ to Moi because TAR and FNIR depend on operating thresholds that are selected from dataset-level 
+
+scores, rather than being determined by a single query. If we set γ = 1 .0 (set all rows of MQ to Moi ), then each model combination yields exactly one metric-based reward value, which significantly reduces exploration. In contrast, the Rank-1 outcome for a given q can be assessed query-wise, whereas TAR/FNIR are much more sensitive to the global threshold selection. Therefore, we introduce γ to control this augmentation and balance stable threshold esti-mation with sufficient exploration. 
+
+6.3. Tool Design. 
+
+Tool design should be in an efficient way for agent learn-ing. If the number of tools or the number of parameters of tools is large, it will become more difficult for the agent to execute the tools. In our scenario, the goal of the agent is to call different biometric recognition models to extract features based on the input. Therefore, we design a uni-versal tool that is suitable for every biometric model. The tool takes sequential images, the biometric model name as the input, and returns the similarity matrix and the predicted label of the images. 
+
+Tool Results. FusionAgent only receives the predicted identity label from the tool execution, while the score vec-tors and selected models are stored within the system. We do not return the similarity scores or confidence weights of the predicted identity, as doing so was found to prematurely 1Judge Prompt 
+
+# Role & Objective You are an expert-level biometric analysis agent. Your primary mission is to achieve the highest possible identification performance by strategically analyzing input images/videos and selecting the optimal combination of biometric models. Prioritize the model you think is the most suitable. Do not select the same model more than once. Your final answer should be a fused identity prediction based on the evidence from your chosen models. # Loop Work step-by-step. Each turn you must output exactly TWO blocks—first <think >, then ONE action: <tool call > or 
+
+<answer >. Wait for <tool result > before the next turn. # Strict Output Format (no extra text, no markdown) 1) <think >... </think >< tool call >{JSON }</tool call >
+
+2) <think >... </think >< answer >... </answer >
+
+# Tag Rules - <think > (required, first): Briefly describe what you get, and explain the current decision. • If calling a tool: you MUST first analyze the input video’s characteristics. Consider factors like: Is the face clearly visible? Is the subject close to the camera with high resolution, or far away and low-resolution? etc. • If answering: summarize tools results, key evidence, and your final prediction. - <tool call >: JSON with exactly two keys, ”name” and ”parameters”. You can call ONLY ONE tool per turn. - <answer >: Identity: The ID of the recognized person. # Tools You may call one or more functions to assist with the user query. You are provided with function signatures within <tools >< /tools > XML tags: <tools > {TOOL SCHEMA } </tools >
+
+For each function call, return a json format object with function name and arguments within <tool call >< /tool call >
+
+XML tags: <tool call > {{ ”name”: <function-name >, ”parameters”: <args-json-object >}} </tool call >. Only call declared tools. # Model Type You have access to a suite of specialized models. Your key challenge is to understand when to use them for maximum impact: {MODEL TYPE DICT }
+
+# Stopping Condition End with <answer > when evidence is sufficient. Never invent tool outputs or identities. 
+
+> Figure 9. System prompt for FusionAgent.
+
+halt the exploration of model combinations during training. This design choice is justified because a high confidence or similarity score from one model does not preclude further performance gains through fusion with other models, given that each model contributes independently. 
+
+Error Handling. When the tool calling fails, for example, calling a wrong model name or an invalid JSON format. It is important to let the agent know the reason for the failure during training. We design error handling for unexpected behaviors and enable the agent to identify the reason for the failures. 
+
+## 7. Additional Implementation Details 
+
+Datasets. The dataset statistics are summarized in Tab. 7. They comprise multi-view captures and cross-modal bio-metric data, enabling rigorous evaluation of generalization across diverse resolutions, viewpoints, and temporal dy-namics. This comprehensive benchmarking setup ensures Dataset Type #Subjects (Train/Test/Non-mated) #Query #Gallery CCVID Video 75 / 151 / 31 834 1074 MEVID Video 104 / 54 / 11 316 1438 LTCC Image 77 / 75 / 15 493 7050  
+
+> Table 7. Statistics of the evaluation set of human recognition benchmarks. The number of query and gallery indicate the num-ber of images/sequences for image/video datasets.
+
+robustness against real-world challenges such as occlusion, motion blur, and sensor heterogeneity, thereby validating the practicality of the proposed approach in unconstrained environments. During training, we only use 2, 000 samples (or medias) maximum for each dataset to perform training set score matrices. 
+
+Model Pools. We follow [68] to construct the same model pools: AdaFace [22] (ViT-Base, WebFace4M), CAL [11] (ResNet50, CCVID/MEVID/LTCC), Big-2Dataset #Media (Full) #Media (10-shot) Percentage (%) LTCC 9576 768 8.0 
+
+> Table 8. Comparison of the full dataset size and the few-shot (10-shot) subset used for training. The percentage indicates the propor-tion of data used in the few-shot setting relative to the full dataset.
+
+Gait [57] (DINOv2-Small, CCPG), AIM [55] (ResNet50, LTCC), and AGRL [53] (ResNet50, MEVID), where the former denotes the model architecture and the latter indi-cates the training dataset. We use {model } { dataset } to de-note the difference of checkpoints ( i.e ., CAL CCVID and CAL LTCC) during training and inference. 
+
+Center Features of Training Set. We follow QME [68] to extract center features as the gallery features for the training set. We compute the center features based on the subject ID, camera ID, and clothing ID. Therefore, each subject may have multiple center features. 
+
+Similarity Distances of Each Model. We follow QME [68] to measure the distances between features. AdaFace [22], CAL [11], AIM [55], AGRL [53], and CLIP3DReID [29] use cosine-similarity to measure the distance, while Big-Gait [57] uses Euclidean distance. We use Eq. 10 to trans-form Euclidean distance into similarity scores. 
+
+Cross-domain Training. We conduct cross-domain evalu-ation through zero-shot testing and few-shot training. For the few-shot setting, we adopt a 10-shot protocol ( i.e ., each training subject provides 10 images/videos). The same pro-cedure is applied to extract center features and score ma-trices from the training set, and only the 10-shot dataset is used for FusionAgent training. Few-shot data size for each dataset is shown in Tab. 8 
+
+Additional In-Domain Evaluation. Accuracy From Agent Answer. As shown in Table 9, the Agent predictions are derived by selecting identity la-bels from the outputs of different tools, rather than di-rectly relying on the score fusion results. Despite this discrete decision process, the agent achieves performance comparable to the score-based fusion method (ACT). We attribute this performance improvement primarily to the use of the answer accuracy reward. However, ACT consistently yields higher accuracy across all datasets, demonstrating that score-level fusion effectively integrates complemen-tary information from multiple models and provides more reliable identity estimation than selection based solely on predicted labels. However, since the agent’s answer can only reflect label prediction accuracy—and not other met-rics such as ranking quality or calibration—different eval-uation criteria may be adopted depending on application requirements. This result also provides a future direction on whether MLLMs or agents can even have a better per-Method CCVID MEVID LTCC ACT 93.4 79.4 98.9 Agent 81.8 76.9 96.8                  
+
+> Table 9. Answer accuracy (Rank 1) performance on CCVID, MEVID, and LTCC. ACT is the Rank 1 result evaluated from the score matrix. Agent is the accuracy evaluated from the agent re-sponses.
+> Method Time/sample (s)
+> CCVID MEVID LTCC Avg
+> QME [68] 0.72 0.66 0.64 0.67 FusionAgent (DA) 1.20 0.98 0.91 1.03 FusionAgent (CoT) 2.80 2.43 3.19 2.81
+> Table 10. Time-consuming Comparison of FusionAgent on Dif-ferent Datasets. [Keys: DA=Direct answering.]
+
+formance w.r.t. metric results like verification (TAR) and open-set search (FNIR). However, we do not observe the performance gain on CCVID. We hypothesize this is due to the performance gap between the training set and the test set. CAL is trained on CCVID, but AdaFace is not. CAL has a better Rank1 result on the training set, which makes the agent more reliant on the decision on CAL. 
+
+Time-consuming. Since the agent only decides the model combination, the task itself is relatively simple. Consid-ering the demand for faster responses in practical applica-tions, we adopt a lightweight 3B model for efficiency. As shown in Tab. 10, the CoT inference of FusionAgent, in-cluding tool executions and score-fusion, takes 2.81s per sample on a H100 device, while Direct Answering takes 1.03s. For comparison, QME [68] takes 0.67s per sample on average, including tool executions, quality estimating, and score-fusion. 
+
+Tool-call Efficiency. On CCVID, MEVID, and LTCC, Fu-sionAgent reduces tool uses by 32.1%, 32.1%, and 31.3% compared to run-all baselines, respectively. 
+
+Advantage of ACT. Tab. 4 and 5 reveal two regimes. With a small domain gap, ACT pairs well with FusionAgent as the anchor prior is reliable. When the prior is miscalibrated, FarSight without anchor selection is more robust. Over-all, ACT can reach higher performance, whereas FarSight is more robust under uncertainty. 
+
+7.1. Additional Ablation Experiments 
+
+Confidence Weights. Tab. 11 ablates the effect of con-fidence weights in ACT. Compared to Z-score, Min–max normalization underperforms by 0.9% points in mAP and 
+
+0.4% in Rank-1, with an even larger drop observed in FNIR 3Norm. Rank1 mAP TAR@1%FAR FNIR@1%FPIR 
+
+None 75 .0 40 .8 36 .5 62 .4 ± 9.2
+
+Min-max 75 .1 40 .5 36 .6 60 .8 ± 10 .7
+
+Z-score 75 .5 41 .4 36 .5 51 .0 ± 9.4
+
+Table 11. Ablation on confidence weighting strategies in ACT on LTCC. Both Min-max and Z-score normalization improve over no weighting, with Z-score achieving the best overall performance and substantially reducing FNIR. [Keys: Norm.= the method for confidence weights.] 
+
+(9.8% ). Omitting confidence weighting leads to the largest FNIR degradation (62.4), confirming that confidence-aware scaling is essential in open-set search. Among the strate-gies, Z-score consistently yields the best overall results, reducing FNIR by more than 10% over other variants. This advantage likely stems from its robustness to outliers, which allows for more stable calibration across heteroge-neous models. These findings indicate that while confi-dence weighting has a limited effect on closed-set metrics (Rank-1, TAR), it plays a critical role in improving reliabil-ity under stricter false-positive constraints. 
+
+Effects of Top-k Selection. As shown in Tab. 12, the effect of Top-k selection is consistent across all three datasets. The overall score is computed as the sum of Rank-1, mAP, and TAR, minus FNIR. On CCVID, apply-ing Top-k selection brings clear improvements in Rank-1 accuracy (92.3 →93.4), TAR (83.3 →85.8), and the overall score (64.6 →65.5), while maintaining comparable FNIR. For MEVID, the performance remains relatively stable, with a slight increase in Rank-1 (54.1 →54.7) but minor fluctuations in other metrics. Similarly, on LTCC, Top-k se-lection provides marginal gains in Rank-1 (75.1 →75.5) and overall score (25.5 →25.6), with negligible changes in TAR and FNIR. Overall, Top-k selection consistently achieves a more favorable trade-off and leads to a better aggregated performance across datasets, confirming its robustness and general effectiveness. 
+
+Effects of Top-k Values on Training Set. We visualize the performance comparison on the LTCC training set in Fig. 10. The results show that the overall performance gradually improves as k increases and reaches its peak at 
+
+k = 40 , after which further growth of k does not yield addi-tional benefits. Therefore, we adopt k = 40 for the testing stage to achieve a good balance between effectiveness and stability. We follow the same strategy when selecting Top-k values for the other datasets as well. 
+
+Anchor Sensitivity in ACT. Performance of ACT is more sensitive to anchor selection when single-model perfor-mance varies widely (Tab. 13). Top-k Rank1 mAP TAR FNIR Overall 
+
+CCVID 
+
+✗ 92 .3 92 .5 83 .3 9.7 ± 1.3 64.6 
+
+✓ 93 .4 92 .7 85 .8 9.9 ± 1.5 65.5 
+
+MEVID 
+
+✗ 54 .1 29 .1 35 .6 58 .2 ± 8.5 15.2 
+
+✓ 54 .7 28 .7 34 .9 58 .6 ± 7.4 14.9 
+
+LTCC 
+
+✗ 75 .1 41 .8 37 .2 51 .9 ± 9.4 25.5 
+
+✓ 75 .5 41 .4 36 .5 51 .0 ± 9.4 25.6 
+
+Table 12. Effects of Top-k selection. Top-k selection gains a better overall performance on three datasets. 1 2 5 10 20 30 40 50 all                             
+
+> Top-k Value
+> 0.977
+> 0.980
+> 0.982
+> 0.985
+> 0.987
+> 0.990
+> Value
+> Rank-1 ( )
+> All Models
+> 12510 20 30 40 50 all
+> Top-k Value
+> 0.940
+> 0.950
+> 0.960
+> Value
+> mAP ( )
+> All Models
+> 12510 20 30 40 50 all
+> Top-k Value
+> 0.950
+> 0.960
+> 0.970
+> 0.980
+> Value
+> TAR@1.00%FAR ( )
+> All Models
+> 12510 20 30 40 50 all
+> Top-k Value
+> 0.000
+> 0.000
+> 0.001
+> 0.001
+> 0.001
+> 0.001
+> Value
+> FNIR@1.00%FPIR ( )
+> All Models
+
+Figure 10. Effects of Top-k Values on LTCC Training Set. The overall performance reaches the peak when k = 40 .
+
+Anchor Overall (CCVID) AdaFace 260 BigGait 259 CAL 257 Overall (LTCC) AdaFace 77 AIM 95 CAL 102 Overall (MEVID) AdaFace 59 AGRL 65 CAL 65 
+
+Table 13. Anchor sensitivity. 
+
+4<think> Let's analyze the image. The person is standing i 
+
+n front of a door, and the lighting is sufficient. The face is 
+
+clearly visible, and the resolution is high. This suggests we s 
+
+hould use a face recognition model. </think> 
+
+<think> Now, let's see if we can get a better prediction by u 
+
+sing a different model. The body data model might provide 
+
+more robust results. </think> 
+
+<think> Both models are predicting the same identity. This s 
+
+uggests that the person in the video is likely the same indivi 
+
+dual as the one in the dataset. </think> 
+
+<answer> ltcc _6</answer> 
+
+{' pred_identity_id ': ‘ ltcc_6 ', ' model_name ’: ‘ cal '} 
+
+Tool Output: CAL 
+
+{' pred_identity_id ': ‘ ltcc_6 ', ' model_name ’: ‘aim'} 
+
+Tool Output: AIM 
+
+Identify the person in the 
+
+video from the dataset. Figure 11. CoT example of FusionAgent on LTCC. 
+
+7.2. Additional Qualitative Results 
+
+Additional Conversations. Fig. 11 and 12 present addi-tional CoT examples from FusionAgent. Depending on the input query pattern, FusionAgent dynamically selects the most suitable models. Fig. 13 illustrates the DA (direct an-swering) mode of FusionAgent, which bypasses reasoning generation to accelerate inference while maintaining com-parable performance. 
+
+## 8. Limitations 
+
+Reasoning Collapse. RFT may lead to unstable or degen-erate reasoning behaviors during training. For instance, the agent’s reasoning content can become repetitive, disregard-ing the actual differences in model-predicted identities as training progresses. This phenomenon likely arises from re-ward hacking , since no explicit supervision is provided on the quality of reasoning. Stabilizing the reasoning process and ensuring consistent answer quality remains an impor-tant direction for future research. 
+
+Model Combination Estimation. In our setting, each sam-ple can be associated with multiple possible model combi-nations. As the number of samples increases, the search space grows exponentially, making grid search for the ground-truth optimal combination computationally infeasi-ble. Consequently, we adopt the proposed metric-based re-ward to estimate the overall performance without exhaus-tively enumerating all combinations. In the future, explor-<think> I will analyze the image to determine the most suitable biometric               
+
+> model to use for identification. The person in the image is wearing a black shir
+> t and jeans, and the background suggests an outdoor setting. Given this inform
+> ation, I will consider models that can effectively capture and analyze facial fe
+> atures, such as Adaface , and body data, such as Cal -CCVID or Biggait .</think>
+> <think> Now that I have the initial prediction from Adaface , I will use Cal -CCVI
+> D to cross -verify the identity. This will help confirm the accuracy of the initia
+> l prediction. </think>
+> <think> Both Adaface and Cal -CCVID have predicted the same identity ID, conf
+> irming the initial prediction. Now, I will use Biggait to further validate the ide
+> ntity. This model will help ensure the person's body data is consistent with th
+> e facial data. </think>
+> <think> Biggait has also predicted the same identity ID, confirming the identity
+> prediction across all three models. The evidence is now sufficient to identify t
+> he person in the video .</think>
+> <answer> cc vid_2 00 </answer>
+> {' pred_identity_id ': ‘ ccvid_200 ', ' model_name ’: ‘ cal '}
+> Tool Output: CAL
+> {' pred_identity_id ': ‘ ccvid_200 ', ' model_name ’: ‘ adaface '}
+> Tool Output: AdaFace
+> Identify the person in the video from the dataset.
+> {' pred_identity_id ': ‘ ccvid_200 ', ' model_name ’: ‘ biggait '}
+> Tool Output: BigGait
+
+Figure 12. CoT example of FusionAgent on CCVID. <answer> mevid_234 </answer> 
+
+{' pred_identity_id ': ‘ me vid_234 ', ' model_name ’: ‘ agrl '} 
+
+Tool Output: AGRL 
+
+{' pred_identity_id ': ‘ mevid_234 ', ' model_name ': ‘ cal '} 
+
+Tool Output: CAL 
+
+Identify the person in the video from the dataset. 
+
+Tool Output: AdaFace 
+
+{' pred_identity_id ': ‘ me vid_211 ', ' model_name ’: ‘ adaface '} 
+
+Figure 13. DA example of FusionAgent on LTCC. FusionAgent directly outputs the tool-use code and answer without think-ing. 
+
+ing more efficient or learning-based strategies for model combination estimation could further enhance scalability and accuracy. 
+
+## 9. Potential Societal Impacts 
+
+Our paper leverages multiple public biometric datasets for research purposes, with a focus on the similarity score do-5main, which is less directly tied to sensitive biometric data. As biometric recognition tasks grow increasingly complex, integrating multiple models has become a key trend to en-hance system performance. It is essential to ensure that the use of biometric datasets and recognition systems adheres to ethical standards and complies with privacy regulations. 6

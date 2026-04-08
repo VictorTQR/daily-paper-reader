@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-001.webp",
+      "caption": "Figure 2: Illustration of the six discrete communication actions in the Agent Q-Mix action space (Section 4.1). Each panel depicts the induced graph structure for a representative multi-agent team. Arrows indicate the direction of information flow. From left to right: (a) solo process—the agent works independently with no outgoing edges; (b) broadcast all—the agent sends its message to all other agents; (c) selective query—the agent sends a targeted query to one specific neighbor; (d) aggregate refine—the agent collects responses from all others through incoming edges; (e) execute verify—the agent forwards its output to the next agent for verification with minimal communication overhead; (f) debate check—two agents engage in mutual exchange via bidirectional edges. These six primitives span a range of connectivity levels from isolated nodes to dense cliques, enabling the QMIX policy to compose task-adaptive topologies.",
+      "page": 6,
+      "index": 1,
+      "width": 829,
+      "height": 461
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-002.webp",
+      "caption": "Table 3: Token usage comparison on GPT-OSS:120B (total tokens across all samples). Lower is better at comparable accuracy.",
+      "page": 10,
+      "index": 2,
+      "width": 826,
+      "height": 246
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-003.webp",
+      "caption": "Table 2: Robustness on MMLU-Pro (GPT-OSS:120B). One adversarial agent is injected. ∆: accuracy drop.",
+      "page": 10,
+      "index": 3,
+      "width": 829,
+      "height": 298
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-004.webp",
+      "caption": "Table 4: Dataset statistics.",
+      "page": 14,
+      "index": 4,
+      "width": 477,
+      "height": 265
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-005.webp",
+      "caption": "Figure 4: Humanity’s Last Exam (HLE). Accuracy (%) on the first 250 MCQ items of HLE using Gemini-3.1-Flash-Lite. Agent Q-Mix (20.8%) outperforms Microsoft Agent Framework (19.2%), LangGraph (19.2%), AutoGen, and Lobster, while using significantly lower tokens.",
+      "page": 8,
+      "index": 5,
+      "width": 417,
+      "height": 429
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-006.webp",
+      "caption": "Figure 3: Case study of Agent Q-Mix showing a representative communication and reasoning trajectory across rounds. In practice, mathematics tasks typically converge in T = 3 communication rounds, while coding and reasoning tasks require T = 2 rounds (see the ablation on communication rounds in Figure 5d and Appendix D).",
+      "page": 8,
+      "index": 6,
+      "width": 826,
+      "height": 538
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-007.webp",
+      "caption": "Figure 1: Overview of Agent Q-Mix. Agents select communication actions, induce a round-wise communication graph, exchange messages over that graph, and produce a final team output under centralized training with decentralized execution.",
+      "page": 4,
+      "index": 7,
+      "width": 829,
+      "height": 492
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-008.webp",
+      "caption": "Table 1: Accuracy (%) on seven benchmarks compared to base (single-agent). Bold: best overall per model. Underline: best among prior methods.",
+      "page": 9,
+      "index": 8,
+      "width": 823,
+      "height": 867
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00344v1/fig-009.webp",
+      "caption": "Table 5: Hyperparameter settings.",
+      "page": 16,
+      "index": 9,
+      "width": 506,
+      "height": 547
+    }
+  ]
+}

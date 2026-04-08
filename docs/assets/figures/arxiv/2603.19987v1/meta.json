@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-001.webp",
+      "caption": "Table 6: Performance comparison of πA∗ mkv, πA∗ act-seq, and πA∗ st-act-seq to show the difference of their generalization.",
+      "page": 25,
+      "index": 1,
+      "width": 979,
+      "height": 879
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-002.webp",
+      "caption": "Figure 7: Pass@k accuracy for Qwen3-4B-based models. While action-sequence models rarely improve SFT Pass@k, Markov models consistently surpass their base models’ limits.",
+      "page": 21,
+      "index": 2,
+      "width": 968,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-003.webp",
+      "caption": "Table 2: Performance comparison of different approaches. We sample 128 solutions per question and report Avg@128 and Pass@128.",
+      "page": 7,
+      "index": 3,
+      "width": 968,
+      "height": 627
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-004.webp",
+      "caption": "Figure 8: Training-time success rate during RL post-training.",
+      "page": 22,
+      "index": 4,
+      "width": 954,
+      "height": 571
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-005.webp",
+      "caption": "Figure 9: Training-time success rate during RL post-training for models with access to A⋆ in Section 4.3.",
+      "page": 22,
+      "index": 5,
+      "width": 954,
+      "height": 571
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-006.webp",
+      "caption": "Table 3: Performance comparison of πA⋆ mkv, πA⋆ act-seq, and πA⋆ st-act-seq on in-distribution benchmarks.",
+      "page": 10,
+      "index": 6,
+      "width": 498,
+      "height": 270
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-007.webp",
+      "caption": "Figure 10: Ablation on the degree of SFT warm-up dataset. Experiments are conducted with Qwen2.5-3B-It on Sudoku.",
+      "page": 23,
+      "index": 7,
+      "width": 967,
+      "height": 335
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-008.webp",
+      "caption": "Table 5: Performance comparison of different approaches for SFT.",
+      "page": 24,
+      "index": 8,
+      "width": 977,
+      "height": 358
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-009.webp",
+      "caption": "Figure 6: Visual comparison of the state space complexity for the Combination Lock problem.",
+      "page": 20,
+      "index": 9,
+      "width": 803,
+      "height": 326
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19987v1/fig-010.webp",
+      "caption": "Figure 3: Comparison of action-sequence-based models and our Markovian Models. For action-sequence models, the new action (ah) is appended to the existing action history and fed back into the model as the input for the subsequent prediction. For Markov models, the next action ah is combined with the current state sh and passed through a state transition function P to obtain the next state sh+1, which is the input for the subsequent prediction.",
+      "page": 5,
+      "index": 10,
+      "width": 976,
+      "height": 246
+    }
+  ]
+}

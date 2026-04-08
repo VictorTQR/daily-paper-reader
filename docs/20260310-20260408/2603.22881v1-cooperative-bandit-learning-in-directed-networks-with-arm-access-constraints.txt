@@ -1,0 +1,1032 @@
+Title: Cooperative Bandit Learning in Directed Networks with Arm-Access Constraints
+
+URL Source: https://arxiv.org/pdf/2603.22881v1
+
+Published Time: Wed, 25 Mar 2026 00:53:46 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# COOPERATIVE BANDIT LEARNING IN DIRECTED NETWORKS WITH 
+
+# ARM -A CCESS CONSTRAINTS 
+
+PREPRINT , COMPILED MARCH 25, 2026 
+
+Evagoras Makridis 
+
+Department of Electrical and Computer Engineering University of Cyprus Nicosia, Cyprus 
+
+makridis.evagoras@ucy.ac.cy 
+
+Themistoklis Charalambous *
+
+Department of Electrical and Computer Engineering University of Cyprus Nicosia, Cyprus 
+
+charalambous.themistoklis@ucy.ac.cy 
+
+# ABSTRACT 
+
+Sequential decision-making under uncertainty often in-volves multiple agents learning which actions (arms) yield the highest rewards through repeated interaction with a stochastic environment. This setting is commonly modeled by cooperative multi-agent multi-armed bandit problems, where agents explore and share information without cen-tralized coordination. In many realistic systems, agents have heterogeneous capabilities that limit their access to subsets of arms and communicate over asymmetric net-works represented by directed graphs. In this work, we study multi-agent multi-armed bandit problems with par-tial arm access, where agents explore and exploit only the arms available to them while exchanging information with neighbors. We propose a distributed consensus-based up-per confidence bound (UCB) algorithm that accounts for both the arm accessibility structure and network asymme-try. Our approach employs a mass-preserving informa-tion mixing mechanism, ensuring that reward estimates re-main unbiased across the network despite accessibility con-straints and asymmetric information flow. Under standard stochastic assumptions, we establish logarithmic regret for every agent, with explicit dependence on network mixing properties and arm accessibility constraints. These results quantify how heterogeneous arm access and directed com-munication shape cooperative learning performance. 
+
+Keywords multi-armed bandits, distributed, multi-agent, directed graphs, arm-access constraints 
+
+# 1 INTRODUCTION 
+
+Multi-armed bandit (MAB) problems constitute a fundamental framework for sequential decision-making under uncertainty. In this setting, a learner (often referred to as agent ) repeatedly selects one option from a finite set of alternatives, called arms ,where each arm corresponds to an action associated with an unknown reward distribution. At every time step, the learner chooses an arm, observes a stochastic reward drawn from its distribution, and aims to maximize the total accumulated re-ward over time, or equivalently, to minimize cumulative regret with respect to the best arm in hindsight. A central challenge in MAB problems is the exploration–exploitation trade-off. This 
+
+> *Themistoklis Charalambous is also a visiting professor at the De-partment of Electrical Engineering and Automation, School of Electri-cal Engineering, Aalto University, Espoo, Finland.
+
+1 2 3 4
+
+1 2 3 4 5
+
+Figure 1: Example of the cooperative multi-agent multi-armed bandit framework with arm-accessibility constraints. Blue cir-cular nodes represent agents and beige rectangular nodes repre-sent arms. Directed solid edges indicate communication links among agents, while dashed edges denote arm-accessibility re-lations between agents and arms. trade-off suggests that the learner must explore different arms to estimate their expected rewards while exploiting the currently best-performing arm to collect reward. For a nice introduction and review on MAB problems, the reader is recommended [1] and [2]. Classical formulations consider a single decision maker with full access to all arms [3, 4]. However, many modern appli-cations, including sensor networks, multi-robot systems, and collaborative recommendation systems, involve multiple agents that learn in a cooperative way while communicating over a network. In such cooperative settings, information is inher-ently distributed and must be aggregated through local inter-actions, often via consensus-based mechanisms [5, 6], while agents share the same reward distribution for each arm, here-inafter referred to as homogeneous reward setting .Early works on cooperative bandits typically assume that the communication network is undirected and connected, allowing agents to asymptotically agree on global statistics via symmet-ric averaging dynamics [7–9]. Under these conditions, consen-sus mechanisms enable each agent to approximate centralized empirical means and pull counts, thereby achieving regret guar-antees comparable to a single centralized learner. In more general scenarios, however, communication networks are directed and possibly unbalanced, reflecting asymmetric in-formation flow and heterogeneous influence among agents. The works in [10, 11], considered the cooperative MAB problem in directed graphs, where consensus dynamics no longer preserve averages, and the asymptotic network estimate depends on the stationary distribution of the underlying stochastic matrix. As a result, agents may contribute unequally to the global learning process, and additional compensation mechanisms are required 1
+
+> arXiv:2603.22881v1 [eess.SY] 24 Mar 2026
+
+PREPRINT – 2to ensure that distributed learning algorithms remain stable and achieve sublinear regret. While the aforementioned existing works address communica-tion asymmetry, they assume that every agent has access to all arms. In many practical distributed systems, however, this as-sumption is restrictive. Agents may be geographically sepa-rated, equipped with heterogeneous sensors, or subject to re-source constraints, so that each agent can sample only a sub-set of the global arm set, as shown in the example of Fig. 1. Introducing arm-accessibility constraints fundamentally alters the cooperative learning problem. First, no single agent may have direct access to the globally optimal arm. Second, the rate at which an arm can be learned is influenced by the diversity of agents’ observations, i.e., the more agents contributing inde-pendent samples, the faster the empirical mean converges. In directed and unbalanced graphs, this interaction becomes par-ticularly apparent. For example, if an arm is observable only by agents with low network influence, information about that arm propagates slowly through the network, creating structural learning bottlenecks. This paper studies cooperative multi-agent multi-armed bandits where each agent has access only to a subset of arms and must rely on information sharing to learn about the others. Unlike classical cooperative bandits in which every agent can observe all arms, the learning capability here is fundamentally shaped by which agents can access which arms. This coupling in-troduces new structural bottlenecks that fundamentally affect identifiability and learning speed. In fact, agents in our pro-posed distributed framework with arm-accessibility constraints cooperate only to reduce learning regret, not to change feasi-bility constraints. The main contributions of this work are as follows: 
+
+• We consider a cooperative bandit framework with hetero-geneous arm accessibility across agents. This is captured by an agent–arm incidence matrix, which encodes the set of arms available to each agent. The resulting accessibil-ity constraints introduce a structural performance limita-tion that is independent of the learning dynamics. We for-mally characterize the interplay between accessibility and network topology, and distinguish between intrinsic struc-tural loss and the regret due to learning. 
+
+• We employ a running sum-preserving ratio consensus algo-rithm, which allows each agent to track the true network-wide empirical mean reward of every arm, even if it can-not directly pull that arm. This property distinguishes our approach from other cooperative bandit algorithms, where information mixing may bias the estimated arm means. 
+
+• We design a distributed UCB learning policy based on running ratio consensus and network-aware confidence bounds. Despite asymmetric communication and hetero-geneous arm accessibility, we prove logarithmic regret for every agent with explicit dependence on structural accessi-bility and network mixing properties. 
+
+# 2 PRELIMINARIES 
+
+2.1 Mathematical Notation 
+
+The sets of real, integer, and natural numbers are denoted as 
+
+R, Z, and N, respectively. The set of nonnegative real (integer) numbers is denoted as R≥0 (Z≥0). The nonnegative orthant of the n-dimensional real space Rn is denoted as Rn
+
+> ≥0
+
+. Ma-trices are denoted by capital letters, and vectors by small let-ters. The transpose of a matrix A and a vector x are denoted as A⊤, x⊤, respectively. The all-ones and all-zeros vectors are denoted by 1 and 0, respectively, with their dimensions being inferred from the context. Throughout the paper, xki (t) denotes a quantity associated with arm k at agent i and time t, unless otherwise stated. When a variable does not depend on a partic-ular index, that index is omitted. For example, xk(t) denotes a network-level quantity for arm k at time t, xi(t) denotes an agent-specific quantity at agent i at time t, and xk denotes a time-invariant quantity associated with arm k.
+
+2.2 Network Model 
+
+Consider a network composed of N ≥ 2 agents, for which we denote the set of agents by V := {1, 2, . . . , N }, with N = |V| .Each agent can distinguish the set of its neighboring agents with which it can interact by means of local communication. The agent interconnection topology can be represented by a digraph 
+
+G = ( V, E), where E ⊆ V × V describes the communication interaction between agents, i.e., the information flow between the agents in V. More specifically, if εij := ( j, i ) ∈ E , then agent i can receive information from agent j, and thus agent j
+
+can be considered as in-neighbor of agent i. Formally, agents that can directly transmit information to agent j are called in-neighbors of agent j, and belong to the set 
+
+N in  
+
+> j
+
+= {i ∈ V | εji ∈ E} .
+
+The number of agents in the in-neighborhood set is called in-degree and is denoted by din  
+
+> j
+
+= N in  
+
+> j
+
+. The agents that can di-rectly receive information from agent j are called out-neighbors of agent j, and belong to the set 
+
+N out  
+
+> j
+
+= {l ∈ V | εlj ∈ E} .
+
+The number of agents in the out-neighborhood set is called out-degree and is denoted by dout  
+
+> j
+
+= N out  
+
+> j
+
+. Here, it is natural to assume that each agent j ∈ V has immediate access to its own information, and thus we assume that the corresponding self-loop is available εjj ∈ E , and it is not included in the agents’ out-neighborhood and in-neighborhood sets. A directed path from i to l with a length of t exists if a se-quence of nodes i ≡ l0, l 1, . . . , l t ≡ l can be found, satisfying 
+
+(lτ +1 , l τ ) ∈ E for τ = 0 , 1, . . . , t − 1. In G an agent i is reach-able from an agent j if there exists a path from j to i which respects the direction of the edges. The digraph G is said to be strongly connected if every agent is reachable from every other agent. 
+
+2.3 Problem Formulation 
+
+Consider a network of N agents modeled by a directed graph 
+
+G = ( V, E), where V = {1, . . . , N } denotes the set of agents PREPRINT – 3and E ⊆ V × V denotes the set of directed communication links. An edge (j, i ) ∈ E indicates that agent i can receive information from agent j.Let K = {1, . . . , K } denote the set of arms available in the stochastic environment. We consider the case where each agent can only access arms (select which to pull) from a nonempty subset Ki ⊆ K . We assume that all arms are collectively acces-sible, i.e., ∪Ni=1 Ki = K.When agent i ∈ V selects arm k ∈ K i at time t, it observes a random reward ri(t) := Xki (t). For each arm k, the re-ward distributions are identical across agents and stationary over time, with mean μk := E[Xki (t)] , for all i ∈ V and for all 
+
+t ∈ N. Rewards are assumed to be mutually independent across agents, arms, and time, and have bounded support in [0 , 1] . At each time t = 1 , 2, . . . , T , each agent selects exactly one arm 
+
+ai(t) ∈ K i and observes the corresponding reward Xai(t) 
+
+> i
+
+(t).Note that, we allow multiple agents to select the same arm si-multaneously without assuming any interference. Furthermore, we define the globally optimal mean by 
+
+μ⋆ := max  
+
+> k∈K
+
+μk, (1) and let k⋆ ∈ arg max k∈K μk denote the globally optimal arm. Since agents may not have access to k⋆, we further define the best accessible mean for agent i as 
+
+μ⋆i := max 
+
+> k∈K i
+
+μk. (2) In this setting, the globally optimal arm may not be accessible to all agents i ∈ V . Hence, the objective of each agent is to minimize the cumulative pseudo-regret with respect to its best accessible arm. For agent i, this is defined as 
+
+Ri(T ) = 
+
+> T
+
+X
+
+> t=1
+
+
+
+μ⋆i − μai(t)
+
+, (3) where ai(t) ∈ K i is the arm selected at time t. The total net-work feasible regret is 
+
+R(T ) = 
+
+> N
+
+X
+
+> i=1
+
+Ri(T ) = 
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> t=1
+
+
+
+μ⋆i − μai(t)
+
+. (4) 
+
+Remark 1. Since some agents may not have access to the glob-ally optimal arm with mean μ⋆ := max k∈K μk, the cumulative regret with respect to μ⋆ is generally unavoidable and grows at least linearly in T under heterogeneous arm-access con-straints. Indeed, one obtains the decomposition 
+
+> N
+
+X
+
+> i=1
+> T
+
+X
+
+> t=1
+
+
+
+μ⋆ − μai(t)
+
+=
+
+> N
+
+X
+
+> i=1
+
+T (μ⋆ − μ⋆i )
+
+| {z }
+
+> constraint-induced loss
+
++ R(T )
+
+| {z } 
+
+> learnable regret
+
+,
+
+where the first term captures the unavoidable performance loss caused solely by arm accessibility constraints, while R(T ) rep-resents the regret due to learning under these constraints. 
+
+Accordingly, we focus on minimizing the expected network constrained regret defined in (4), which constitutes the appro-priate performance metric for cooperative multi-armed bandits with arm accessibility constraints. Achieving sublinear regret, implies that each agent learns to identify and exploit its best accessible arm over time. Cooperation through information ex-change is essential, as no single agent may be able to explore all arms independently. 
+
+2.4 Cooperative MAB under Arm-Accessibility 
+
+In cooperative multi-agent multi-armed bandits (MAMABs), learning performance depends not only on the reward structure, but also on which agents are able to generate information for each arm. Under heterogeneous arm-access constraints, this in-formation generation pattern becomes a structural property of the networked learning system. In this subsection, we formalize this structure and characterize how it interacts with the directed communication topology. An example of the proposed frame-work is depicted in Fig.1. The information generation structure captures which agents can generate observations for each arm, and it plays a cru-cial role in cooperative multi-armed bandits, as it directly af-fects the effective learning speed. We formalize this struc-ture via the arm-access matrix , defined as the binary matrix 
+
+C = [ Cik ] ∈ { 0, 1}N ×K , with entries 
+
+Cik =
+
+1, if agent i can pull arm k, 
+
+0, otherwise . (5) Each row of C corresponds to an agent, and each column cor-responds to an arm. The support of the k-th column, i.e., Vk := 
+
+{i ∈ V : Cik = 1 }, represents the set of agents that can gen-erate samples for arm k. For each arm k ∈ K , we define the 
+
+generation mass as 
+
+gk := |V k| ≡ X
+
+> i∈V
+
+Cik , ∀ k ∈ K . (6) This quantity measures how many agents are able to generate information for arm k. Therefore, for the cooperative MAB problem to be well-defined, the arm-access matrix must satisfy the following property. 
+
+Assumption 1. Each arm is accessible by at least one agent, i.e., P 
+
+> i∈V
+
+Cik ≥ 1, ∀ k ∈ K .
+
+This assumption guarantees that all arms can potentially be sampled and learned through the network. Without this con-dition, arms that are inaccessible to all agents would remain permanently unobserved, making the identification of the glob-ally optimal arm impossible. Here it is important to note that, in the distributed setting considered here, agents are not aware of the arm-access capabilities of their neighbors. Hence, the gen-eration mass gk is unknown to all agents and must be accounted for via information exchange and consensus. Before introducing mechanisms to address this interaction be-tween network influence and arm-accessibility constraints, we state the following assumptions. 
+
+Assumption 2. All agents know the size of the network N = |V| 
+
+and the total number of arms K = |K| .
+
+Assumption 3. The communication digraph G = (V, E) is strongly connected. 
+
+Assumption 2 enables the design of consensus-based mech-anisms that propagate information about all arms, including those not locally accessible to a given agent. If agents do not know the network size N a priori , they can employ distributed network size estimation algorithms, which converge asymptot-ically [12], or in finite-time [13]. Assumption 3 ensures that information generated by any agent is preserved and can prop-agate throughout the network. PREPRINT – 4
+
+Assumption 4. For each agent i ∈ V , the observed rewards 
+
+ri(t) are bounded in [0 , 1] , independent across agents and arms, and identically distributed over time with mean μk for each arm k ∈ K . Each agent’s action at time t is represented by the pull indicator γki (t) := 1{ai(t) = k}, which equals 1 if agent i selects arm k ∈ K i at time t, and 0 otherwise. 
+
+Assumption 4 is standard in the multi-armed bandit literature. Bounded rewards ensure that empirical averages converge to the true means. Independence across agents and arms guaran-tees that each local observation provides unbiased information for the network, enabling accurate aggregation of rewards in cooperative learning. 
+
+# 3 ALGORITHM DEVELOPMENT 
+
+In what follows we design a distributed cooperative algorithm, hereinafter referred to as A2C-UCB (Arm Access Constrained Cooperative Upper Confidence Bound), for solving the multi-agent multi-armed bandits problem with arm-pull constraints with directional communication. We start by formally defining some local variables that each agent maintains to estimate the mean reward which will drive its action towards learning its locally optimal arm. Throughout the algorithm description, we adopt the pull indicator γki (t) as defined in Assumption 4 for notational convenience. 
+
+3.1 Local sampling (pull) counter and cumulative rewards 
+
+For each agent i ∈ V and each arm k ∈ K i, we define the local sampling counter (i.e., the number of times agent i has pulled arm k) up to time t ∈ N as 
+
+nki (t) = nki (t − 1) + γki (t), t ≥ 1, (7) with initial condition nki (0) = 0 . Similarly, the local cumu-lative reward collected by agent i from arm k up to time t is defined as 
+
+ski (t) = ski (t − 1) + γki (t) ri(t), t ≥ 1, (8) with ski (0) = 0 , and where ri(t) := Xai(t) 
+
+> i
+
+(t) denotes the ran-dom reward obtained by agent i at time t after pulling arm ai(t).These definitions provide the fundamental building blocks for computing local estimates and confidence bounds in distributed UCB algorithms, allowing each agent to track both its own ex-perience, as well as network-wide statistics via consensus. 
+
+3.2 Distributed empirical mean estimation 
+
+Here, we study a cooperative consensus-based estimation method for network-wide statistics. This method is used by the agents to make sequential actions among arms to maximize their own individual rewards. Prior introducing the cooperative consensus-based estimation scheme, it is important to empha-size that, although agents do not necessarily have access to all arms due to arm-pull constraints, they do have the knowledge of their presence and thus they can also estimate the mean re-wards for arms they cannot even pull. In particular, each agent 
+
+i ∈ V maintains an estimate for the total global sample count per arm, denoted by ˆnki (t), and the total global reward collected per arm, denoted by ˆski (t). These local statistics are exchanged within the network respecting the direction of the communica-tion channels and the topology of the network. At each iteration 
+
+t ≥ 0, agent i sends its local estimates ˆski (t) and ˆnki (t) to its out-neighboring agents l ∈ N out  
+
+> i
+
+, using pre-scaled weights. In particular, each agent i ∈ V applies a weight on the values to be sent to its out-neighbors according to its out-degree dout  
+
+> i
+
+. These weights are assigned by each i ∈ V for all j ∈ N out  
+
+> i
+
+as: 
+
+pji =
+
+( 11+ dout 
+
+> i
+
+, if j ∈ N out  
+
+> i
+
+∪ { i}
+
+0, otherwise . (9) Note that, the assignment of the column-stochastic weights above require each agent to know its out-degree. Upon the reception of pij ˆskj (t) and pij ˆnkj (t) from its in-neighbors j ∈ N in  
+
+> i
+
+, it updates its estimates for each arm (acces-sible or not) k ∈ K using two independent running consensus iterations as follows 
+
+ˆski (t + 1) = X 
+
+> j∈N in
+> i
+
+pij ˆskj (t) + γki (t)ri(t), (10a) 
+
+ˆnki (t + 1) = X 
+
+> j∈N in
+> i
+
+pij ˆnkj (t) + γki (t), (10b) where ˆski (0) = 0 and ˆnki (0) = 0 for all i ∈ V and all k ∈ K .Inspired by the ratio consensus algorithm and its variants (see [14] for a nice overview), each agent i ∈ V can take the ratio of the estimates ˆski (t) over ˆnki (t) to obtain an estimate on the empirical mean of arm k ∈ K at time t defined by 
+
+ˆμki (t) = ˆski (t)max(ˆ nki (t), 1) . (11) This running ratio consensus variant ensures that the distributed updates preserve the correct network-wide totals and asymptot-ically recover the true arm reward means. In particular, it guar-antees that each agent’s contribution is naturally weighted ac-cording to its number of pulls for each arm. As a result, agents that sample an arm more frequently have a proportionally larger influence on the estimated mean, ensuring consistency with the centralized empirical average. This property establishes the correct mixing behavior required for convergence of the ratio-consensus updates. Consequently, the network-wide sums, i.e., 
+
+X
+
+> i∈V
+
+ˆski (t) = 
+
+> t
+
+X 
+
+> τ=1
+
+X
+
+> i∈V
+
+γki (τ )ri(τ ), (12a) 
+
+X
+
+> i∈V
+
+ˆnki (t) = 
+
+> t
+
+X 
+
+> τ=1
+
+X
+
+> i∈V
+
+γki (τ ), (12b) exactly match the true cumulative rewards and sample counts for each arm k, so that ˆμki (t) provides an unbiased estimate of the network-wide arm’s empirical mean. Here, it is important to mention that, if some agent i ∈ V cannot access an arm k, i.e., k / ∈ K i, then, the agent’s mean reward for that arm will be entirely based only on the received information from its in-neighboring agents. 
+
+3.3 Distributed arm pull count and accessibility estimation 
+
+Building on the distributed empirical mean estimates, we de-sign a cooperative variant of the upper confidence bound (UCB) PREPRINT – 5algorithm for agents with arm-access constraints. Each agent selects arms it can access using local empirical means com-bined with confidence bounds to balance exploration and ex-ploitation. The algorithm relies on the network-wide unbiased estimates from ratio-consensus (11). To properly account for exploration in the UCB function, it is necessary to track the ef-fective sample size, that is the total number of pulls contributing to each arm’s mean estimate, across the network in a distributed manner. Specifically, to estimate this, each agent uses its local estimate regarding the total number of pull counts for each arm 
+
+ˆnki (t) as updated in (10b), and an auxiliary local variable ˆyi(t),that is updated as: 
+
+ˆyi(t + 1) = X 
+
+> j∈N in
+> i
+
+pij ˆyj (t), (13) with initial conditions ˆyi(0) = 1. Computing the ratio 
+
+ˆnki (t)/ˆyi(t), agent i implements a running ratio consensus cor-rection to obtain an estimate of the average pull count for arm 
+
+k over all agents in V. Since both ˆnki (t) and ˆyi(t) are mixed through the same primitive column-stochastic matrix P , the ra-tio compensates for the stationary distribution bias induced by the imbalanced information flow due to the directed commu-nication. Note that, however, the pull counts introduce per-sistent innovations at each time step t. Therefore, the ratio does not converge to a fixed value, but instead, it performs a dynamic average tracking of the time-varying network average 
+
+> 1
+> N
+
+P 
+
+> i∈V
+
+nki (t), where nki (t) denotes the actual local pull count of arm k at agent i. Hence, each agent can track the actual network-wide pull count nk(t) = P 
+
+> i∈V
+
+nki (t) for each arm 
+
+k ∈ K , by computing ˆνki (t) = N ˆnki (t)/ˆyi(t).To properly normalize exploration effort under heterogeneous accessibility, each agent must estimate, for every arm k, the number of agents capable of sampling it. Recall that the number of agents that can access arm k is given by the generation mass of the arm, defined as gk := P 
+
+> i∈V
+
+Cik , where Cik ∈ { 0, 1}
+
+is the agent–arm incidence matrix. Since accessibility informa-tion is local, no agent directly knows gk. However, unlike pull counts, the accessibility structure is static. Therefore, the prob-lem reduces to distributed computation of a fixed network-wide sum. To this end, each agent i ∈ V maintains a local variable 
+
+ˆuki (t) which is updated as 
+
+ˆuki (t + 1) = X 
+
+> j∈N in
+> i
+
+pij ˆukj (t), ∀k ∈ K , (14) with ˆuki (0) = Cik ∈ {0, 1}, along with the iteration in (13). With these values at time t, each agent can take the ra-tio ˆuki (t)/ˆyi(t) to obtain the average number of agents that can pull arm k. Since both sequences evolve under the same primitive column-stochastic matrix P , their ratio eliminates the stationary-distribution bias induced by directed communi-cation. Consequently, under Assumption 2 and from [15], the ratio ˆuki (t)/ˆyi(t) converges to 1 
+
+> N
+
+gk as t → ∞ , for every agent 
+
+i ∈ V and arm k ∈ K . Therefore, each agent can asymptoti-cally obtain the exact generation mass of each arm k by com-puting ˆgki (t) = N ˆuki (t)/ˆyi(t). Since gk ≥ 1 for all arms by Assumption 2, the normalization is well-defined. Note that, be-cause the accessibility structure is assumed time-invariant, the above ratio consensus mechanism converges exponentially fast and does not suffer from persistent innovation, in contrast to the pull-count tracking mechanism. 
+
+3.4 Distributed UCB in the Arm-Restricted Setting 
+
+Using the distributed estimates of network-wide pull counts 
+
+ˆνki (t) and generation masses ˆgki (t), each agent can construct UCB indices that account for both exploration uncertainty and heterogeneous arm access. Recall that in classical single-agent UCB1 [4], the empirical mean ¯μk(t) = sk(t)/n k(t) satisfies Hoeffding’s inequality 
+
+P|¯μk(t) − μk| ≥ ϵ ≤ 2 exp( −2nk(t)ϵ2), (15) with which having ϵ(t) = p(α log t)/n k(t) gives the standard UCB1 index ¯μk(t) + 
+
+q α log tnk (t) . In the cooperative, arm-access constrained setting, each agent i replaces the empirical mean and pull count by the network-weighted estimate ˆμki (t), the pull counts of each arm is replaced by the distributed estimate of pull counts ˆνki (t), and further, it accounts for the arm’s genera-tion mass using the distributed estimate ˆgki (t). This yields the A2C-UCB index 
+
+Qki (t) := ˆ μki (t) + 
+
+s
+
+α log  tˆgki (t)
+
+ˆνki (t)
+
+| {z } 
+
+> Bki(t)
+
+, (16) which balances exploration and exploitation under network asymmetry and arm-access constraints. 
+
+Remark 2. The denominator ˆνki (t) reflects the effective global sample size accumulated through cooperation, while the factor 
+
+ˆgki (t) enlarges exploration for arms accessible to fewer agents, compensating for slower information propagation. 
+
+Now we are in place to summarize the proposed A2C-UCB al-gorithm from the perspective of a agent i ∈ V , as shown in Algorithm 1. Each agent maintains local estimates of global pull counts and arm generation mass using running ratio con-sensus, and uses these estimates to compute a UCB index that accounts for both network asymmetry and heterogeneous arm accessibility. 
+
+Remark 3. A fundamental property of Algorithm 1 is that the estimates ˆski (t) and ˆnki (t) track the exact network-wide cu-mulative reward and number of pulls of arm k. This follows from the sum-preserving running ratio consensus algorithm with column-stochastic weights in (10) . Consequently, despite the continuous injection of innovations γki (t)ri(t) and γki (t),the network maintains the exact cumulative statistics of each arm, and the empirical means ˆμki (t) provide unbiased estimates of the true network-wide mean reward. In contrast, several distributed bandit algorithms relying on row-stochastic mix-ing [5–8] or consensus updates that do not preserve the global sums under dynamic innovations [9–11] generally introduce bias in the reward estimates. 
+
+# 4 ANALYSIS 
+
+In this section, we analyze the tracking properties of the coop-erative estimation mechanism employed by each agent for all 
+
+k ∈ K . Recall that, each agent i maintains an estimate ˆski (t)
+
+for the cumulative reward up to time t provided by arm k, and an estimate ˆnki (t) for the total number of pulls of arm k across PREPRINT – 6
+
+Algorithm 1: A2C-UCB: Arm Access Constrained Coop-erative UCB (Agent i perspective) 
+
+Input: Number of arms K, size of the network N ,horizon T , accessible arms Ki, α > 1
+
+Initialization: nki (0) = 0 , ∀k ∈ K i;
+
+ˆski (0) = 0 , ˆnki (0) = 0 , ˆμki (0) = 0 ∀k ∈ K ;
+
+ˆuki (0) = 1 if k ∈ K i, else 0;
+
+ˆyi(0) = 1 ; 
+
+> 1
+
+for t = 1 to T do  
+
+> 2
+
+foreach k ∈ K i do  
+
+> 3
+
+Qki (t) ← ˆμki (t) + 
+
+r α log 
+
+ tˆgki (t)
+
+  
+
+> ˆνki(t)
+> 4
+
+ai(t) ← arg max k∈K i Qki (t) 
+
+> 5
+
+Obtain reward ri(t) from arm ai(t) 
+
+> 6
+
+Update local variables  
+
+> 7
+
+γki (t) = 1{ai(t) = k} 
+
+> 8
+
+nki (t) = nki (t−1) + γki (t) 
+
+> 9
+
+Broadcast pℓi ˆyi(t) to all ℓ ∈ N out  
+
+> i
+> 10
+
+Receive pij ˆyj (t) from all j ∈ N in  
+
+> i
+> 11
+
+Update ˆyi(t + 1) = P 
+
+> j∈N in
+> i
+
+pij ˆyj (t) 
+
+> 12
+
+foreach k ∈ K do  
+
+> 13
+
+Broadcast pℓi 
+
+ ˆski (t), ˆnki (t), ˆuki (t), ˆyi(t) to all 
+
+ℓ ∈ N out  
+
+> i
+> 14
+
+Receive pij ˆskj (t), p ij ˆnkj (t), p ij ˆukj (t), p ij ˆyj (t) from all j ∈ N in  
+
+> i
+> 15
+
+Update local estimates  
+
+> 16
+
+ˆski (t + 1) = P 
+
+> j∈N in
+> i
+
+pij ˆskj (t) + γki (t)ri(t) 
+
+> 17
+
+ˆnki (t + 1) = P 
+
+> j∈N in
+> i
+
+pij ˆnkj (t) + γki (t) 
+
+> 18
+
+ˆuki (t + 1) = P 
+
+> j∈N in
+> i
+
+pij ˆukj (t) 
+
+> 19
+
+ˆμki (t) = ˆ ski (t)/ max(ˆ nki (t), 1)  
+
+> 20
+
+ˆgki (t) = N ˆuki (t)/ˆyi(t) 
+
+> 21
+
+ˆνki (t) = N ˆnki (t)/ˆyi(t)
+
+Output: Estimated means ˆμki (t) and selected arm ai(t)
+
+all agents that can access it. Stacking the agents’ estimates into the vectors: 
+
+ˆsk(t) := [ˆ sk 
+
+> 1
+
+(t), . . . , ˆskN (t)] ⊤, (17a) 
+
+ˆnk(t) := [ˆ nk 
+
+> 1
+
+(t), . . . , ˆnkN (t)] ⊤, (17b) the running consensus updates can be expressed in compact ma-trix form as 
+
+ˆsk(t + 1) = P ˆsk(t) + rk(t), (18a) 
+
+ˆnk(t + 1) = P ˆnk(t) + γk(t), (18b) where P ∈ RN ×N is the column-stochastic consensus matrix, 
+
+rk(t) := rk 
+
+> 1
+
+(t), . . . , r kN (t)⊤ is the vector of instantaneous re-wards, and γk(t) := γk 
+
+> 1
+
+(t), . . . , γ kN (t)⊤ is the pull-indicator vector for arm k.
+
+4.1 Running Ratio Consensus Tracking 
+
+To analyze the cooperative estimation mechanism, we first study the running consensus dynamics. Intuitively, each agent updates its cumulative reward estimate using local observations and information received from its neighbors. Lemma 1 estab-lishes that, even in a directed and unbalanced network, the col-lective estimate contracts toward a Perron-weighted aggregate in the absence of rewards and remains uniformly bounded when the rewards are bounded. Let ϕ ∈ RN>0 denote the Perron-Frobenius eigenvector of the column-stochastic primitive ma-trix P , satisfying P ϕ = ϕ and 1⊤ϕ = 1 [16]. 
+
+Lemma 1 (Dynamic tracking of running ratio consensus) . Con-sider the recursion of the estimates of the cumulative rewards in 
+
+(18a) for some arm k ∈ K , with ˆs(0) = 0N . Suppose the com-munication graph G = ( V, E) satisfies Assumption 3, associ-ated with the weight matrix P , and the rewards satisfy Assump-tion 4. Let e(t) := ˆ s(t) − ϕ1⊤s(t), where s(t) := Pt−1  
+
+> τ=0
+
+r(τ ),with r(τ ) := [ r1(τ ), . . . , r N (τ )] ⊤. Then, the disagreement e(t)
+
+is uniformly bounded for all t ≥ 0. Furthermore, in the absence of innovations, i.e., if there exists t0 such that r(t) = 0 for all 
+
+t ≥ t0, the disagreement decays exponentially to zero. Proof. Consider the evolution of the disagreement, i.e., 
+
+e(t + 1) = ˆ s(t + 1) − ϕ1⊤s(t + 1) = P ˆs(t) + r(t) − ϕ1⊤ s(t) + r(t)
+
+= P e (t) +  I − ϕ1⊤r(t). (19) Note that ϕ is the right Perron-Frobenius eigenvector of P sat-isfying P ϕ = ϕ and normalized such that 1⊤ϕ = 1 . Thus, 
+
+1⊤e(t) = 0 for all t, and therefore the error vector always lies in the disagreement subspace {x ∈ RN : 1⊤x = 0 }. More-over, since P is primitive and column-stochastic, its spectral radius on this subspace is strictly smaller than one. Conse-quently, there exist constants σ > 0 and ρ ∈ (0 , 1) such that 
+
+∥P tx∥∞ ≤ σρ t∥x∥∞ for any vector x satisfying 1⊤x = 0 .Now, iterating (19) gives 
+
+e(t) = P te(0) + 
+
+> t−1
+
+X 
+
+> τ=0
+
+P t−1−τ (I − ϕ1⊤)r(τ ). (20) Taking the infinity norm and using submultiplicativity yields 
+
+∥e(t)∥∞ ≤ ∥ P te(0) ∥∞
+
++
+
+> t−1
+
+X 
+
+> τ=0
+
+∥P t−1−τ ∥∞∥(I − ϕ1⊤)r(τ )∥∞. (21) Recall that from Assumption 4 we know that 0 ≤ ri(τ ) ≤ 1,thus ∥(I − ϕ1⊤)r(τ )∥∞ ≤ ∥ I − ϕ1⊤∥∞. Since (I − ϕ1⊤)r(τ )
+
+lies in the disagreement subspace, the above contraction prop-erty of matrix P implies 
+
+∥e(t)∥∞ ≤ σρ t∥e(0) ∥∞ + σ∥I − ϕ1⊤∥∞
+
+> t−1
+
+X 
+
+> τ=0
+
+ρτ
+
+= σρ t∥e(0) ∥∞ + σ∥I − ϕ1⊤∥∞
+
+1 − ρt
+
+1 − ρ , (22) which shows that e(t) is uniformly bounded. Further, defining 
+
+cP := σ∥e(0) ∥∞ + σ∥I − ϕ1⊤∥∞
+
+1 − ρ , (23) we obtain ∥e(t)∥∞ ≤ cP for all t ≥ 0. The same proof applies for the pull-count estimates ˆnki (t).PREPRINT – 7
+
+4.2 Network Empirical Mean and Local Tracking Error 
+
+Next, we quantify how well each agent’s local estimate tracks the network empirical mean. Since agents contribute un-equally to the network, each local estimate may differ from the true network empirical mean which is defined by ¯μk(t) := ¯sk(t)/¯nk(t), where 
+
+¯sk(t) := X
+
+> i∈V
+
+ϕiski (t), ¯nk(t) := X
+
+> i∈V
+
+ϕinki (t). (24) 
+
+Lemma 2 (Consensus tracking error) . Under Assumption 3, let 
+
+ˆski (t) and ˆnki (t) be agent i’s estimates for arm k. Then, there exists a constant cP > 0, depending only on the network con-nectivity and topology, such that 
+
+ˆμki (t) − ¯μk(t) ≤ 2cP
+
+¯nk(t) − cP
+
+, (25) 
+
+where the network-weighted empirical mean is defined by 
+
+¯μk(t) := ¯ sk(t)/¯nk(t) with ¯sk(t) := P 
+
+> i∈V
+
+ϕiski (t), ¯nk(t) := 
+
+P 
+
+> i∈V
+
+ϕinki (t).Proof. We begin by defining the local errors for agent i as 
+
+δki (t) := ˆ ski (t) − ¯sk(t) and ˘δki (t) := ˆ nki (t) − ¯nk(t). From Lemma 1, the running consensus dynamics guarantee that 
+
+|δki (t)| ≤ cP and |˘δkn(t)| ≤ cP , for all t, where cP > 0 de-pends only on the network topology and the weight matrix P .Now consider the difference between the local empirical mean and the network-weighted mean: 
+
+ˆμki (t) − ¯μk(t) = ˆski (t)ˆnki (t) − ¯sk(t)¯nk(t)
+
+= δki (t)¯ nk(t) − ¯sk(t)˘δki (t)¯nk(t)(¯ nk(t) + ˘δki (t)) . (26) Under Assumption 4 we have 0 ≤ ¯sk(t) ≤ ¯nk(t) since rewards are bounded in [0 , 1] . Thus, using |δki (t)| ≤ cP and |˘δki (t)| ≤ 
+
+cP , we obtain 
+
+ˆμki (t) − ¯μk(t) ≤ |δki (t)|¯nk(t) + |¯sk(t)|| ˘δki (t)|
+
+¯nk(t)(¯ nk(t) − cP )
+
+≤ 2cP ¯nk(t)¯nk(t)(¯ nk(t) − cP ) = 2cP
+
+¯nk(t) − cP
+
+, (27) where we have used that ¯nk(t) + ˘δki (t) ≥ ¯nk(t) − cP > 0. This completes the proof. 
+
+Remark 4. Lemma 2 shows that the error due to distributed consensus decreases as more samples are collected. In partic-ular, the network influence, captured by cP , becomes negligible over time, and thus the mean reward estimate of each agent approaches the centralized empirical mean. 4.3 Derivation of the A2C-UCB Confidence Radius 
+
+Combining the consensus tracking error with classical concen-tration inequalities allows us to derive high-probability confi-dence intervals for each agent’s estimate. 
+
+Lemma 3 (A2C-UCB confidence bound) . Let ˆμki (t) be the mean reward estimate of agent i for arm k at time t. Then, for any α > 1 and horizon T , with probability at least 1 − 2T 1−α
+
+(uniformly for all 0 ≤ t ≤ T ), 
+
+|ˆμki (t) − μk| ≤ Bki (t) + 2cP
+
+¯nk(t) − cP
+
+, (28) 
+
+where Bki (t) = 
+
+r α log( tˆgki (t)) ˆνki (t) .Proof. Recall that, by Lemma 2, the local estimate satisfies 
+
+|ˆμki (t) − ¯μk(t)| ≤ 2cP
+
+¯nk(t) − cP
+
+. (29) The network-weighted mean ¯μk(t) is a convex combination of bounded i.i.d. rewards, so applying Hoeffding’s inequality gives, for any ϵ > 0,
+
+P
+
+h
+
+|¯μk(t) − μk| ≥ ϵ
+
+i
+
+≤ 2 exp   − 2¯ nk(t)ϵ2. (30) Now, we choose ϵ to guarantee a failure probability at time t of at most 2( tˆgki (t)) −α. Solving 
+
+2 exp( −2¯ nk(t)ϵ2) = 2( t ˆgki (t)) −α (31) yields 
+
+ϵ =
+
+s
+
+α log( t ˆgki (t)) 2¯ nk(t) . (32) Replacing ¯nk(t) with the local estimate ˆνki (t), which tracks it up to a bounded consensus error (Lemma 2), gives the statistical exploration bonus 
+
+Bki (t) := 
+
+s
+
+α log( t ˆgki (t)) ˆνki (t) . (33) Finally, by the triangle inequality we obtain 
+
+ˆμki (t) − μk ≤ ˆμki (t) − ¯μk(t) + ¯μk(t) − μk
+
+≤ 2cP
+
+¯nk(t) − cP
+
++ Bki (t), (34) which holds with probability at least 1 − 2( t ˆgki (t)) −α for each 
+
+t ≤ T . Applying a union bound over t = 1 , . . . , T , we obtain 
+
+|ˆμki (t) − μk| ≤ Bki (t) + 2cP
+
+¯nk(t) − cP
+
+(35) with probability at least 1 − 2T 1−α, for all t ≤ T .Lemma 3 follows the classical UCB analysis used in the stochastic MAB literature, which combines concentration in-equalities with a high-probability bound on the deviation of empirical means from true rewards [4]. In the centralized set-ting, Hoeffding’s inequality is used to show that, for any arm, the sample mean stays within an O p (log t)/n k(t) neighbor-hood of the true mean with high probability. Our result extends this approach to the distributed cooperative case with arm ac-cessibility constraints by incorporating an additional tracking error due to consensus estimation (Lemma 2), yielding confi-dence intervals that hold uniformly over time. Consequently, each agent’s estimate ˆμki (t) remains close to the true mean μk
+
+up to an exploration radius Bki (t) and a bounded network esti-mation error. PREPRINT – 8
+
+4.4 Regret analysis of A2C-UCB 
+
+For the subsequent results, we further define for each agent i ∈V and arm k ∈ K i, the suboptimality gap by ∆ki := μk⋆i − μk,where k⋆i := arg max k∈K i μk is the locally optimal arm for agent i.
+
+Lemma 4 (Upper bound on suboptimal pulls) . Fix agent i and a suboptimal arm k ∈ K i \ { k⋆i }. On the event where the confi-dence bounds hold for all t ≤ T , the number of pulls of arm k
+
+satisfies 
+
+N ki (T ) ≤ 16 α log  T ˆgki (T )
+
+(∆ ki )2 + 4cP
+
+∆ki
+
++ 1 . (36) 
+
+Proof. From the definition of arm selection in A2C-UCB, if arm k is selected at time t, then 
+
+ˆμki (t) + Bki (t) ≥ ˆμk⋆i 
+
+> i
+
+(t) + Bk⋆i 
+
+> i
+
+(t), (37) Next, using the confidence bounds for both arms from Lemma 3, we have 
+
+∆ki = μk⋆i − μk ≤ Bki (t) + Bk⋆i 
+
+> i
+
+(t)+ 2cP
+
+ˆνki (t) − cP
+
++ 2cP
+
+ˆνk⋆i 
+
+> i
+
+(t) − cP
+
+. (38) Since the network-weighted pull count of the optimal arm is at least that of any suboptimal arm, ˆνk⋆i 
+
+> i
+
+(t) ≥ ˆνki (t), we can absorb its consensus error term: 
+
+2cP
+
+ˆνki (t) − cP
+
++ 2cP
+
+ˆνk⋆i 
+
+> i
+
+(t) − cP
+
+≤ 4cP
+
+ˆνki (t) − cP
+
+. (39) Now, for sufficiently large ˆνki (t) such that the statistical bonus dominates the consensus term, a sufficient condition to stop pulling arm k is 2Bki (t) ≤ ∆ki 
+
+> 2
+
+, which, after substituting Bki (t)
+
+from (16), yields 
+
+ˆνki (t) ≥ 16 α log( t ˆgki (t)) (∆ ki )2 . (40) Finally, including the consensus error additive term 4cP /∆ki
+
+gives the stated bound in (36), where we also add the +1 term to account for the initial pull of the arm, ensuring that the bound holds for all suboptimal arms. Finally, we analyze the cumulative regret of A2C-UCB. The regret decomposes into the classical logarithmic UCB term and an additive network-induced error term. 
+
+Theorem 1. Consider each agent i ∈ V in a directed network 
+
+G = ( V, E) executing the distributed A2C-UCB algorithm, over a MAMAB framework with arm-accessibility constraints, for a horizon T . Then, the individual expected regret of each agent i
+
+is bounded as 
+
+E[Ri(T )] ≤ X 
+
+> k∈K i\{ k⋆i}
+
+16 α log  T ˆgki (T )
+
+∆ki
+
++ 4 cP + ∆ ki
+
+!
+
++ 2 T 1−α,
+
+and for any α > 1, the regret grows sublinearly as O(log T ).Proof. Let ST denote the event that the confidence bounds hold for all arms and all times t ≤ T . By a union bound over arms and time, and using Lemma 3, we have 
+
+P(ScT ) ≤ 2T 1−α. (41) On the event ST , Lemma 4 implies that for each suboptimal arm k̸ = k⋆i ,
+
+N ki (T ) ≤ 16 α log  T ˆgki (T )
+
+(∆ ki )2 + 4cP
+
+∆ki
+
++ 1 . (42) Multiplying by ∆ki and summing over k̸ = k⋆i gives 
+
+Ri(T ) = X 
+
+> k̸=k⋆i
+
+∆ki N ki (T )
+
+≤ X 
+
+> k̸=k⋆i
+
+16 α log  T ˆgki (T )
+
+∆ki
+
++ 4 cP + ∆ ki
+
+!
+
+. (43) Now, on the complement event ScT , the regret can be trivially bounded by Ri(T ) ≤ T . Therefore, taking expectations and decomposing over the two events yields 
+
+E[Ri(T )] ≤ X 
+
+> k̸=k⋆i
+
+16 α log  T ˆgki (T )
+
+∆ki
+
++ 4 cP + ∆ ki
+
+!
+
++ T P(ScT ),
+
+which gives the result. This completes the proof. 
+
+Remark 5. The regret bound reflects heterogeneous arm ac-cessibility in the sense that, arms reachable by fewer or low-influence agents take longer to explore. The algorithm relies solely on local communication, and cooperation through con-sensus ensures that information propagates despite network asymmetries. 
+
+# 5 SIMULATION RESULTS 
+
+In this section, we evaluate the performance of the proposed cooperative multi-agent bandit framework under fixed arm-accessibility constraints. The objective is to illustrate the im-pact of cooperation and information sharing on cumulative re-gret. Consider an edge computing task offloading problem, where a small network of edge devices ( e.g., sensors, IoT devices) can offload computational tasks to nearby servers dedicated for a specific task. Each task type ( e.g., video processing, image recognition, data compression, etc) corresponds to an “arm” in a multi-armed bandit setup. In particular, we consider N = 6 
+
+devices (agents) indexed as V = {1, 2, . . . , 6}, each having lim-ited access (due to connectivity, battery, or computation lim-its) to some of a total of K = 7 servers (arms) indexed as 
+
+K = {1, 2, . . . , 7}. Each arm k ∈ K is associated with an un-known mean reward μk. The true arm means are unknown to the agents, yet, they are given here for ease of presentation: 
+
+μ = [0 .9, 0.8, 0.6, 0.5, 0.3, 0.2, 0.1] . (44) The globally optimal arm is arm 1 with mean μ1 = 0 .9. Each agent i can only select arms from a fixed accessibility set Ki ⊆PREPRINT – 91 2 3 
+
+> 456
+> 12
+> 3
+> 4
+> 5
+> 67
+
+C =
+
+
+
+1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 
+
+
+
+Figure 2: The distributed multi-agent multi-armed bandits setup with arm-accessibility constraints. Blue circular nodes represent agents; beige rectangular nodes represent arms. Com-munication among the agents is shown in black directional ar-rows, while arm-accessibility per arm (also given in matrix C)is depicted with gray dashed lines. 
+
+K. The arm-access structure of the agents is given by the arm-access matrix C ∈ { 0, 1}N ×K shown in Fig. 2. This structure induces heterogeneous learning capabilities and partial overlap across agent groups. At each time t, each agent i selects an arm k ∈ K i, receives the instantaneous reward ri(t) = Xki (t), and updates the pull count of the selected arm. Note that, agents that can only access a single arm cannot explore other arms, but they still contribute to the network-wide estimation of the arms they can access, improving learning for other agents through consensus. In gen-eral, agents exchange the local estimates of their cumulative reward and pull counts for each arm in the network (even if the arm is not accessible to them), over the network. For each agent 
+
+i, its optimal accessible arm is denoted by μ⋆i . In the results that follow, we depict the network cumulative regret, defined as R(T ) = PNi=1 Ri(T ), where Ri(T ) is the cumulative regret of agent i up to time T as defined in (3), and ai(t) denotes the arm selected at time t. All results are averaged over 50 inde-pendent Monte Carlo simulations with the time horizon set to 
+
+T = 10000 .In Fig.3, we compare the proposed cooperative algorithm A2C-UCB with a non-cooperative baseline, where each agent in-dependently runs UCB1 without any information exchange, herein referred to as UCB1 (no comm.). We report the cumula-tive sum of individual regrets across all agents over time. The proposed cooperative strategy significantly reduces cumulative regret compared to independent learning, since reward obser-vations are shared across the network. This allows agents to update their estimates more efficiently, accelerating the iden-tification of the globally optimal arm and reducing redundant exploration, ultimately leading to substantially lower cumula-tive regret than the non-cooperative baseline. To further evaluate the benefits of our proposed algorithm A2C-UCB, we compare it with the cooperative algorithm of Zhu 
+
+et al. [17]. Since their method does not account for partial arm-access constraints, we consider a full-arm-access setting in which every agent can sample any arm, using the same mean rewards as in (44) for a fair comparison. In this experiment, we use a larger directed communication network with N = 30 
+
+agents. As shown in Fig. 4, A2C-UCB achieves significantly lower cumulative regret than the algorithm in [17], demon-strating strong performance even when all arms are accessible. 0 0.2 0.4 0.6 0.8 1
+
+> ·10 4
+> 0
+> 100
+> 200
+> iterations ( t)
+> cumulative regret  R(t)
+> UCB1 (no comm.)
+> A2C–UCB
+
+Figure 3: Sum of individual agents’ cumulative regret for UCB1 (no comm.) and A2C-UCB, under arm-access con-straints. 0 0.2 0.4 0.6 0.8 1  
+
+> ·10 4
+> 0
+> 2,000
+> 4,000
+> 6,000
+> iterations ( t)
+> cumulative regret  R(t) Zhu et al. [17]
+> A2C–UCB
+> UCB1 (no comm.)
+
+Figure 4: Sum of individual agents’ cumulative regret for A2C-UCB, UCB1 (no comm.), and [17] under full arm accessibility. Moreover, in more realistic scenarios with restricted arm ac-cess, A2C-UCB naturally accommodates heterogeneous acces-sibility, whereas the method in [17] cannot operate under such constraints. 
+
+# 6 CONCLUSIONS AND FUTURE WORK 
+
+In this work, we studied cooperative multi-agent multi-armed bandits with heterogeneous arm access over directed networks. We proposed a distributed consensus-based UCB algorithm that accounts for both accessibility constraints and asymmet-ric information exchange, ensuring unbiased reward estima-tion through mass-preserving information mixing. By combin-ing this consensus mechanism with network-aware confidence bounds, we proved logarithmic regret for every agent. Future work includes extending the framework to unreliable or asyn-chronous communication [18–20], dynamic networks [21], and time-varying arm availability, that could capture the interplay between accessibility and network topology in a more dynamic environment. 
+
+# REFERENCES 
+
+[1] A. Slivkins, “Introduction to multi-armed bandits,” Foun-dations and Trends® in Machine Learning , vol. 12, no. 1-2, pp. 1–286, 2019. PREPRINT – 10 [2] R. S. Sutton, A. G. Barto et al. , Reinforcement learning: An introduction . MIT press Cambridge, 1998, vol. 1, no. 1. [3] T. L. Lai and H. Robbins, “Asymptotically efficient adap-tive allocation rules,” Advances in applied mathematics ,vol. 6, no. 1, pp. 4–22, 1985. [4] P. Auer, N. Cesa-Bianchi, and P. Fischer, “Finite-time analysis of the multiarmed bandit problem,” Machine learning , vol. 47, no. 2, pp. 235–256, 2002. [5] P. Landgren, V. Srivastava, and N. E. Leonard, “On dis-tributed cooperative decision-making in multiarmed ban-dits,” in European Control Conference (ECC) , 2016, pp. 243–248. [6] D. Martínez-Rubio, V. Kanade, and P. Rebeschini, “De-centralized cooperative stochastic bandits,” Advances in Neural Information Processing Systems , vol. 32, 2019. [7] P. Landgren, V. Srivastava, and N. E. Leonard, “Dis-tributed cooperative decision-making in multiarmed ban-dits: Frequentist and bayesian algorithms,” in IEEE 55th Conference on Decision and Control (CDC) , 2016, pp. 167–172. [8] ——, “Distributed cooperative decision making in multi-agent multi-armed bandits,” Automatica , vol. 125, p. 109445, 2021. [9] J. Zhu and J. Liu, “Distributed multi-armed bandit over arbitrary undirected graphs,” in IEEE 60th Conference on Decision and Control (CDC) , 2021, pp. 6976–6981. [10] ——, “Distributed multiarmed bandits,” IEEE Transac-tions on Automatic Control , vol. 68, no. 5, pp. 3025–3040, 2023. [11] ——, “Decentralized multi-armed bandit can outperform classic upper confidence bound: A homogeneous case over strongly connected graphs,” in IEEE 63rd Confer-ence on Decision and Control (CDC) , 2024, pp. 3133– 3139. [12] I. Shames, T. Charalambous, C. N. Hadjicostis, and M. Jo-hansson, “Distributed network size estimation and aver-age degree estimation and control in networks isomorphic to directed graphs,” in 50th Annual Allerton Conference on Communication, Control, and Computing (Allerton) ,2012, pp. 1885–1892. [13] A. I. Rikos, T. Charalambous, C. N. Hadjicostis, and K. H. Johansson, “Distributed computation of exact average de-gree and network size in finite time under quantized com-munication,” European Journal of Control , vol. 74, p. 100848, 2023. [14] C. N. Hadjicostis, A. D. Domínguez-García, and T. Char-alambous, “Distributed averaging and balancing in net-work systems,” Foundations and Trends in Networking ,vol. 5, no. 2-3, pp. 99–292, 2018. [15] A. D. Dominguez-Garcia and C. N. Hadjicostis, “Dis-tributed algorithms for control of demand response and distributed energy resources,” in IEEE 50th Conference on Decision and Control and European Control Confer-ence , 2011, pp. 27–32. [16] R. A. Horn and C. R. Johnson, Matrix analysis . Cam-bridge University Press, 2012. [17] J. Zhu, E. Mulle, C. S. Smith, A. Koppel, and J. Liu, “De-centralized upper confidence bound algorithms for homo-geneous multi-agent multi-armed bandits,” IEEE Trans-actions on Automatic Control , vol. 70, no. 7, pp. 4360– 4375, 2025. [18] C. N. Hadjicostis and T. Charalambous, “Average consen-sus in the presence of delays in directed graph topologies,” 
+
+IEEE Transactions on Automatic Control , vol. 59, no. 3, pp. 763–768, 2013. [19] C. N. Hadjicostis, N. H. Vaidya, and A. D. Domínguez-García, “Robust distributed average consensus via ex-change of running sums,” IEEE Transactions on Auto-matic Control , vol. 61, no. 6, pp. 1492–1507, 2015. [20] E. Makridis, T. Charalambous, and C. N. Hadjicostis, “Harnessing HARQ retransmissions for fast average con-sensus over unreliable communication channels,” in IEEE 62nd Conference on Decision and Control (CDC) , 2023, pp. 5437–5443. [21] E. Makridis, A. Grammenos, G. Oliva, E. Kalyvianaki, C. N. Hadjicostis, and T. Charalambous, “Average con-sensus over directed networks in open multi-agent sys-tems with acknowledgement feedback,” in IEEE 63rd Conference on Decision and Control (CDC) , 2024, pp. 3051–3056.

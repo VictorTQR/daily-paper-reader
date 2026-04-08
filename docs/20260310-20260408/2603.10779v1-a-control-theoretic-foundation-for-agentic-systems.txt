@@ -1,0 +1,1028 @@
+Title: A Control-Theoretic Foundation for Agentic Systems
+
+URL Source: https://arxiv.org/pdf/2603.10779v1
+
+Published Time: Thu, 12 Mar 2026 01:02:02 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# A Control-Theoretic Foundation for Agentic Systems 
+
+Ali Eslami 1 and Jiangbo Yu 1
+
+Abstract —This paper develops a control-theoretic framework for analyzing agentic systems embedded within feedback control loops. In such systems, an AI agent may adapt controller parameters, select among control strategies, invoke tools, recon-figure decision architectures, or modify control objectives during operation. We formalize these capabilities by interpreting agency as hierarchical decision authority over the control architecture. A unified dynamical representation is introduced that incorporates memory, learning, tool activation, interaction signals, and goal descriptors within a single closed-loop structure. Based on this representation, we define a five-level hierarchy of agency ranging from reactive rule-based control to the synthesis of control ob-jectives and controller architectures. The framework is presented in both nonlinear and linear settings, allowing agentic behaviors to be interpreted using standard control-theoretic constructs such as feedback gains, switching signals, parameter adaptation laws, and quadratic cost functions. The analysis shows that increasing agency introduces dynamical mechanisms including time-varying adaptation, endogenous switching, decision-induced delays, and structural reconfiguration of the control pipeline. This perspective provides a mathematical foundation for analyzing stability, safety, and performance of AI-enabled control systems. 
+
+I. INTRODUCTION Modern AI systems are increasingly deployed within feed-back control loops, where they can adapt controller parame-ters, select among control strategies, invoke external compu-tational tools, and modify task objectives based on contextual information. This raises a fundamental question for the control community: when an AI system gains authority not only to compute control inputs but also to adapt parameters, select strategies, invoke tools, reconfigure architectures, or modify objectives during operation, what type of dynamical system must be analyzed? 
+
+Traditional control theory provides well-established tools for analyzing fixed controllers [1], adaptive systems [2], [3], switched systems [4], and hybrid dynamical systems [5]. How-ever, agentic AI architectures may combine several of these mechanisms simultaneously within a single feedback loop. An AI agent may adapt controller gains online, switch among multiple control policies based on learned context, query external prediction or optimization modules, and revise control objectives in response to changing mission requirements or in-teraction signals. When such capabilities are embedded within a closed-loop system, the resulting dynamics can no longer be represented as a conventional fixed, adaptive, or switched controller. The decision-making process itself becomes part of the feedback loop, and the authority granted to the AI over different elements of the control architecture directly   
+
+> 1Ali Eslami (
+
+ali.eslami@mcgill.ca ) and Jiangbo Yu (jiangbo.yu@mcgill.ca ) are with the Department of Civil Engineering, Mcgill University, Montreal, Quebec H3A 0G4, Canada. 
+
+determines the type of dynamical system that must be analyzed for stability, safety, and performance. This challenge is becoming increasingly urgent across multi-ple application domains. In robotics, recent work demonstrates that language-model-based agents can reason about tasks, select skills, and orchestrate multiple controllers to execute complex behaviors [6]. In transportation systems, the emerg-ing concept of agentic vehicles describes vehicles equipped with AI agents capable of reasoning, planning, and adapting behavior within complex environments [7]. Broader analyses of human–machine transportation systems have emphasized that increasing levels of agency introduce not only new ca-pabilities but also operational, societal, and policy challenges [8]. Security analyses of agentic vehicles reveal that decision-making agents can introduce new classes of vulnerabilities that propagate across cognitive, software, and physical layers [9]. These examples illustrate that AI systems are transitioning from design-time assistants to runtime decision-makers across safety-critical cyber-physical systems, yet the control-theoretic implications of this transition remain largely unexplored. Existing literature on AI-enabled control has made substan-tial progress in integrating AI into specific control tasks. Inter-active design tools now allow LLM agents to assist engineers in controller tuning, such as PID parameter selection through natural language dialogue [10]. Multi-agent frameworks have been proposed where LLM agents collaborate to generate and refine candidate control strategies [11], and LLM-assisted toolboxes enable interactive design of adaptive controllers such as model reference adaptive control (MRAC) systems [12]. More recent work has explored deeper integrations: translating natural-language specifications into certified controllers using 
+
+H∞ control and linear matrix inequalities [13], generating adaptive compensators that augment feedback controllers un-der uncertainty [14], incorporating LLM reasoning into model predictive control [15], and combining language models with safety-aware optimal control using control barrier functions [16]. Early demonstrations have shown that natural language instructions can be translated into closed-loop control actions in physical systems [17], and agent frameworks have been developed to assist with control-loop implementation through interfaces with digital twins and hardware [18]. While these contributions demonstrate the practical utility of AI-assisted control design, most remain application-specific and treat the AI module as a tuning assistant, supervisory optimizer, or natural-language interface layered on top of a classical controller. They do not provide a unified control-theoretic framework for understanding what agency means in feedback systems or how increasing AI decision author-ity affects the closed-loop dynamics that must be analyzed. In particular, when an AI system can simultaneously adapt parameters, switch among strategies, invoke tools, reconfigure 1
+
+> arXiv:2603.10779v1 [eess.SY] 11 Mar 2026
+
+workflows, and modify objectives, the resulting system is not adequately captured by existing models of adaptive control, switched systems, or hybrid systems alone. The key missing element is a mathematical representation of decision authority, the degree of control the AI has over different layers of the control architecture, and how this authority influences system stability, safety, and performance. These observations highlight a fundamental gap in the current literature. Although recent work has explored the integration of AI and control in specific applications, a unified control-theoretic framework for analyzing agentic AI systems embedded in feedback loops is still missing. To the best of our knowledge, this paper presents the first systematic attempt to formulate agentic AI systems within a control-theoretic framework. Motivated by this gap, this paper develops a control-theoretic framework for agentic AI systems by interpreting agency as hierarchical decision authority over the control architecture. Rather than treating memory, learning, tool use, interaction, and goal formulation as disconnected capabilities, we embed them into a unified dynamical representation. In this view, increasing agency corresponds to granting the AI authority over progressively deeper elements of the control stack: controller parameters, controller families, tool activa-tion, workflow composition, and goal descriptors. This per-spective enables abstract agentic capabilities to be interpreted using familiar control-theoretic constructs such as state-space models, feedback gains, switching signals, parameter adapta-tion laws, and optimization objectives. The main contributions of this paper are summarized as follows:  
+
+> •
+
+We propose a unified nonlinear dynamical formulation of agentic AI control systems that explicitly incorporates memory, learning, tool invocation, interaction signals, and goal representations within a single closed-loop architec-ture.  
+
+> •
+
+We introduce a five-level hierarchy of agency that formal-izes increasing decision authority over the control stack, ranging from reactive rule-based control to generative synthesis of control objectives and workflows under gov-ernance constraints.  
+
+> •
+
+We specialize the framework to linear dynamical systems and provide concrete interpretations of agency in terms of feedback gains, admissible objectives, controller families, and modular control architectures.  
+
+> •
+
+We analyze how increasing levels of agency intro-duce mechanisms associated with time-varying systems, switched systems, hybrid dynamics, and objective-driven policy variation, providing insight into the stability im-plications of agentic decision-making. By casting agentic AI systems in control-theoretic terms, this work provides a mathematical foundation for analyzing how AI-driven decision authority affects stability, safety, and performance in feedback systems. The proposed framework bridges the gap between emerging agentic AI architectures and rigorous dynamical systems analysis, enabling systematic study of AI-enabled control systems across domains including robotics, mobility systems, and cyber-physical infrastructures. 
+
+Fig. 1: Five-level hierarchy of agency in AI-enabled control systems. Increasing agency corresponds to increasing decision authority over the control architecture: from reactive rule-based control (Level 1), to adaptive parameter tuning (Level 2), strategic selection among predefined controllers and objectives (Level 3), structural reconfiguration through modular workflow composition (Level 4), and generative synthesis of goals and architectures under governance constraints (Level 5). The remainder of the paper is organized as follows. Sec-tion II presents the unified agentic control architecture. Sec-tion III introduces the agency hierarchy in the general non-linear setting. Section IV specializes the framework to linear dynamical systems. Section V interprets the agency hierarchy in the linear case. Section VI discusses the stability implica-tions of increasing agency. Finally, Section VII concludes the paper and outlines directions for future research. II. P ROBLEM FORMULATION AND UNIFIED AGENTIC 
+
+CONTROL ARCHITECTURE 
+
+Consider a physical system governed by 
+
+˙x(t) = f  x(t), u (t), w (t), y(t) = h x(t), w (t), (1) where x(t) ∈ Rn denotes the plant state, u(t) ∈ Rm is the control input, y(t) ∈ Rp is the available observation, and w(t) collects exogenous signals such as disturbances, environmental variations, and contextual effects. In general, the true state x(t) is not assumed to be directly available to the AI controller. Instead, the controller acts on an information set formed from available observations, internal memory, tool outputs, and interaction signals. The objective of this section is to provide a unified dy-namical formulation for agentic AI control systems. Rather than modeling goal formulation, tool use, learning, memory, and interaction as unrelated capabilities, these components are embedded into a single controller architecture. The agency level is then interpreted as the degree of decision authority granted to the AI over different parts of this architecture. 2A. Information Set and Internal Variables 
+
+Let 
+
+I(t) = 
+
+n
+
+y(t), m (t), z (t), r (t)
+
+o
+
+(2) denote the information available to the AI controller, where:  
+
+> •
+
+m(t) ∈ Rnm is the internal memory state of the AI agent;  
+
+> •
+
+z(t) ∈ Rnz is the collection of outputs returned by external tools;  
+
+> •
+
+r(t) ∈ Rnr is the interaction signal, which may include human instructions, user feedback, negotiation messages, or information received from other AI agents. Interaction signals may originate from either human opera-tors or other AI agents. When interaction is mediated through language-based models, the interpretation of exchanged mes-sages may introduce semantic ambiguity. A command gener-ated by a human operator may be interpreted differently by the AI controller depending on context or internal representations. This can be modeled as an uncertainty in the interaction signal, 
+
+r(t) = ¯ r(t) + ∆( t), (3) where ∆( t) represents interpretation error. Such ambiguity may influence goal selection, controller switching, or tool invocation in agentic systems. The memory state evolves according to 
+
+˙m(t) = Φ m
+
+ m(t), y (t), z (t), r (t), (4) where Φm(·) captures internal belief updates, contextual accu-mulation, state-estimation-like processing, or latent represen-tation updates. This abstraction is intentionally broad. Depending on the application, m(t) may include short-term context, long-term summaries, latent beliefs, estimated environment descriptors, or compressed histories of previous interactions. In particular, if state estimation is required, it may be embedded in the memory state rather than modeled separately. 
+
+B. Tool-Augmented Decision Architecture 
+
+Assume that the AI controller has access to a library of M
+
+tools, 
+
+T = {T1, . . . , T M }. (5) Each tool is modeled as an operator 
+
+zk(t) = Tk
+
+ ξk(t − τk), (6) where ξk(t) is the input provided to the kth tool and τk ≥ 0
+
+denotes the associated delay due to computation, communica-tion, or query latency. Let 
+
+z(t) = col  z1(t), . . . , z M (t) (7) collect the outputs of all tools made available to the controller. Tool usage itself is not necessarily fixed. Let σk(t) ∈ { 0, 1}
+
+indicate whether tool k is invoked, and let c(t) denote a tool-composition or workflow variable specifying how multiple tools are orchestrated. Then the effective tool output can be represented abstractly as 
+
+z(t) = Z y(t), m (t), r (t); σ(t), c (t), (8) where 
+
+σ(t) = col  σ1(t), . . . , σ M (t).
+
+This representation captures several qualitatively different modes of tool use:  
+
+> •
+
+fixed preprocessing pipelines;  
+
+> •
+
+conditional invocation of approved tools;  
+
+> •
+
+strategic selection among multiple tools;  
+
+> •
+
+sequential or parallel composition of several tools;  
+
+> •
+
+architecture-level orchestration of tool workflows. Hence, tool use is not treated as an isolated capability, but as a structured information-generation mechanism embedded within the controller. 
+
+C. Goal Representation 
+
+The control objective is parameterized by a goal descriptor 
+
+ζ(t) ∈ Rnζ that determines the stage cost 
+
+ℓ x(t), u (t), ζ (t). (9) The corresponding performance index is 
+
+J =
+
+Z ∞
+
+> 0
+
+ℓ x(t), u (t), ζ (t) dt. (10) The variable ζ(t) may encode task priorities, mission phase, safety margins, comfort-efficiency trade-offs, risk sensitivity, coordination preferences, or any other descriptor specifying 
+
+what the controller is trying to optimize. We model goal selection or generation as 
+
+ζ(t) = Γ  y(t), m (t), z (t), r (t); g(t), (11) where g(t) is a goal-selection or goal-generation variable. Thus, the flow of decision making is 
+
+g(t) → ζ(t) → ℓ x(t), u (t), ζ (t).
+
+This avoids the notational ambiguity that would arise if the symbol ℓ were used both for the stage cost and for a goal-selection index. In low-agency systems, ζ(t) is fixed by the designer. In higher-agency systems, g(t) may allow the AI to select among predefined goal templates or even generate new admissible objectives subject to governance constraints. 
+
+D. Learning and Adaptation 
+
+Let θ(t) ∈ Rnθ denote the adaptable parameters of the AI controller. These parameters may correspond to policy weights, tuning gains, thresholds, latent embeddings, internal model coefficients, or confidence-related quantities. Their evo-lution is modeled as 
+
+˙θ(t) = Φ θ
+
+ θ(t), y (t), m (t), z (t), r (t). (12) Equation (12) captures learning or adaptation during system operation. Depending on the application, this may represent online parameter tuning, policy adaptation, belief updating, uncertainty-aware adjustment, or meta-level updating of inter-nal decision variables. 3E. Unified Agentic Controller 
+
+The AI-enabled controller is written in the general form 
+
+u(t) = πα(t)
+
+
+
+I(t); θ(t), ζ (t)
+
+
+
+, (13) where α(t) indexes the active controller architecture or policy family. Substituting (2) into (13) yields 
+
+u(t) = πα(t)
+
+
+
+y(t), m (t), z (t), r (t); θ(t), ζ (t)
+
+
+
+. (14) The variable α(t) may represent, for example, a rule-based policy, an adaptive controller, a switching supervisor, an MPC law, a learned policy, a fallback controller, or a safety-shielded architecture. Accordingly, the unified controller (14) incorporates the main agentic capabilities as follows:  
+
+> •
+
+Goal formulation enters through ζ(t); 
+
+> •
+
+Tool use enters through z(t); 
+
+> •
+
+Learning enters through θ(t); 
+
+> •
+
+Memory enters through m(t); 
+
+> •
+
+Interaction and engagement enter through r(t); 
+
+> •
+
+Controller/architecture selection enters through α(t).Therefore, the agency level of the AI system is characterized by which of the variables 
+
+θ(t), g (t), ζ (t), σ (t), c (t), α (t) (15) are fixed by design, which are selectable from predefined sets, and which may be synthesized online by the AI. 
+
+F. Interpretation 
+
+The formulation above unifies the main agentic functions into a single dynamical architecture. The controller is no longer viewed as a static policy acting only on measurements. Instead, it is a structured decision system whose behavior depends on internal memory, learning variables, external tool outputs, interaction signals, and goal descriptors. Increasing agency corresponds to increasing authority over these ele-ments. This viewpoint is especially useful because it avoids a fragmented description of agentic AI in terms of disconnected capabilities. Instead, all capabilities appear as coordinated components of a single closed-loop decision architecture. The remainder of this section formalizes this increasing authority through a hierarchy of agency levels. III. A GENCY LEVELS AS HIERARCHICAL CONTROL 
+
+AUTHORITY 
+
+In the proposed framework, higher agency does not sim-ply mean improved task performance or more sophisticated computation. Rather, it means that the AI is granted authority over progressively deeper layers of the control architecture. At low agency, the AI reacts within a fixed policy structure. At higher levels, it may adapt parameters, select strategies, compose tools, and eventually formulate new goals under external constraints. To make this explicit, each agency level below is described in terms of:  
+
+> •
+
+the resulting controller form;  
+
+> •
+
+the level of goal formulation;  
+
+> •
+
+the level of tool use;  
+
+> •
+
+the level of learning;  
+
+> •
+
+the level of memory;  
+
+> •
+
+the level of interaction and engagement. 
+
+A. Level 1: Reactive Rule-Based Agency 
+
+At Level 1, the AI has minimal authority. The controller op-erates according to predefined if–then rules or fixed switching logic among predesigned options. A representative form is 
+
+u(t) = πσr (t)
+
+ y(t), σr (t) = R y(t), r (t), (16) where R(·) is a designer-specified rule and σr (t) selects one among a finite number of fixed control actions or control laws. In this case, the AI does not meaningfully design or adapt the policy. It merely executes predefined reactions to observed situations. 
+
+Goal Formulation at Level 1: Goal formulation is effec-tively absent. The objective is fixed offline: 
+
+ζ(t) ≡ ¯ζ. (17) The AI cannot alter priorities, choose among objective tem-plates, or generate new goals. At most, it reacts to conditions according to rules designed by a human. 
+
+Tool Use at Level 1: Tool use is either absent or completely predetermined. If tools are present, they appear only as fixed components of the control pipeline: 
+
+z(t) = ¯Z y(t). (18) The AI has no authority over which tools are invoked, when they are invoked, or how they are composed. 
+
+Learning at Level 1: There is no online learning in the agentic sense. The parameter vector is fixed: 
+
+θ(t) ≡ ¯θ. (19) Hence, any apparent adaptation is simply an artifact of prede-fined switching rules rather than genuine learning. 
+
+Memory at Level 1: Memory is minimal and operational only. The controller may retain a mode flag, timer, or small finite-state variable, but there is no semantic, persistent, or learned memory. Any such state is preprogrammed and serves only to implement reactive logic. 
+
+Interaction and Engagement at Level 1: Interaction is passive. The AI may receive commands or signals from a human operator, but only through a fixed interface and with-out dialogue, negotiation, or contextual interpretation beyond preset rules. In a multi-agent extension, this corresponds to hard-coded message handling rather than adaptive interaction. Thus, Level 1 should be interpreted as reactive automation with very limited agentic authority .
+
+B. Level 2: Adaptive Agency Within a Fixed Structure 
+
+At Level 2, the AI remains within a fixed controller family, objective template, and approved tool library, but it is allowed to adapt internal parameters and memory states online. A representative controller is 
+
+u(t) = π¯α
+
+
+
+y(t), m (t), z (t), r (t); θ(t), ζ (t)
+
+
+
+, (20) 4with 
+
+˙θ(t) = Φ θ
+
+ θ(t), y (t), m (t), z (t), r (t), (21) 
+
+˙m(t) = Φ m
+
+ m(t), y (t), z (t), r (t). (22) The key feature is that the structure is fixed, while the 
+
+internal realization may adapt online. 
+
+Goal Formulation at Level 2: Goal formulation is limited to local adaptation within a fixed template. For example, 
+
+ζ(t) = Γ temp 
+
+ ρ(t), (23) where ρ(t) tunes objective weights or priorities within designer-prescribed bounds. Thus, the AI cannot choose fun-damentally different goals, but it may adjust how a fixed goal is parameterized, such as safety versus efficiency weighting within a predefined range. 
+
+Tool Use at Level 2: Tool use becomes conditional but not strategic. The AI may decide whether to invoke specific approved tools: 
+
+zk(t) = 
+
+(
+
+Tk
+
+ ξk(t − τk), σk(t) = 1 ,
+
+0, σk(t) = 0 , (24) where the set of admissible tools is fixed in advance. However, the AI does not yet redesign workflows, choose among quali-tatively different architectures, or synthesize new tool chains. 
+
+Learning at Level 2: Learning is a defining feature of this level. The AI may adapt gains, thresholds, policy parameters, internal embeddings, or model coefficients through θ(t). This corresponds to online adaptation, self-tuning behavior, or bounded updating within a fixed controller family. 
+
+Memory at Level 2: Memory becomes persistent and func-tional. The AI may maintain contextual summaries, estimated latent states, recent task history, short-horizon predictions, or user-preference traces. This memory directly influences the control law, but remains subordinate to a fixed architecture. 
+
+Interaction and Engagement at Level 2: Interaction be-comes adaptive but not strategic. The AI may interpret re-peated commands, remember recent operator inputs, or adjust internal behavior based on past interactions. In a multi-agent setting, this corresponds to adaptive reception of messages without higher-level negotiation over goals or architectures. Therefore, Level 2 represents adaptive agency under fixed structural authority .
+
+C. Level 3: Strategic Agency Through Selection Among Pre-defined Alternatives 
+
+At Level 3, the AI may select among predefined goals, controller families, and tool choices according to context. A representative form is 
+
+u(t) = πα(t)
+
+
+
+y(t), m (t), z (t), r (t); θα(t)(t), ζ g(t)(t)
+
+
+
+, (25) where 
+
+α(t) ∈ A , g(t) ∈ G , (26) and A, G are designer-defined admissible sets of controller architectures and goal templates. The variables may be selected jointly: 
+
+ α(t), g (t), k (t) = Σ  y(t), m (t), z (t), r (t), (27) where k(t) may denote the selected tool or tool mode. 
+
+Goal Formulation at Level 3: Goal formulation becomes strategic selection. The AI may choose among predefined objective families such as safety-first, efficiency-first, comfort-oriented, energy-saving, or risk-sensitive modes: 
+
+ζ(t) ∈ { ζ1, . . . , ζ N }. (28) However, all admissible goal structures are still specified by the designer. 
+
+Tool Use at Level 3: Tool use becomes strategic selection rather than mere conditional invocation. The AI may choose which tool to use based on context: 
+
+z(t) = Tk(t)
+
+ ξk(t)(t − τk(t)), k(t) ∈ { 1, . . . , M }. (29) For example, the AI may switch between a planner, an esti-mator, a prediction module, or a fallback controller depending on conditions. 
+
+Learning at Level 3: Learning remains active, but now supports strategic selection. The AI may use learned beliefs, uncertainty estimates, performance histories, or contextual embeddings to choose an appropriate controller, objective, or tool. Learning therefore influences not only how the controller behaves, but also which controller or objective is selected. 
+
+Memory at Level 3: Memory becomes contextual and decision-relevant. It may encode recent performance, mission phase, interaction history, environmental trends, or confidence measures that influence strategic switching. In contrast to Level 2, memory is no longer only supportive of adaptation; it actively shapes the selected control problem. 
+
+Interaction and Engagement at Level 3: Interaction be-comes selective and strategic. The AI may request clarification, respond differently to different users, or interpret human and agent messages according to context. In a multi-agent setting, this level naturally supports context-aware coordination and bounded negotiation over predefined modes and objectives. Hence, Level 3 represents strategic agency through bounded selection over goals, tools, and controller families .
+
+D. Level 4: Structural Agency Through Tool Composition and Architecture Reconfiguration 
+
+At Level 4, the AI can configure how the control policy itself is assembled from multiple modules. This introduces structural authority. A representative expression is 
+
+u(t) = Π 
+
+
+
+y(t), m (t), r (t); θ(t), ζ (t), C(t)
+
+
+
+, (30) where C(t) denotes an architecture or workflow-composition variable. For example, C(t) may specify a sequence such as perception → estimation → planning → safety filter → control .
+
+Equivalently, the tool outputs may be generated by com-posed tools: 
+
+z(t) = Tc(t)
+
+ y(t), m (t), r (t), (31) where c(t) determines a multi-stage workflow rather than a single tool choice. 5Goal Formulation at Level 4: Goal formulation remains constrained, but the AI may jointly coordinate goals with architecture. Rather than selecting only one isolated goal from a list, the AI may configure a structured objective stack, such as safety constraints with secondary comfort objectives and tertiary efficiency terms, all within an approved design space. However, it still does not enjoy unconstrained open-ended goal synthesis. 
+
+Tool Use at Level 4: Tool use reaches the level of com-position and orchestration. The AI may invoke several tools jointly or sequentially, fuse their outputs, route information across modules, and reconfigure the ordering of components according to context. The issue is no longer simply whether to call a tool, but how to organize a set of tools into a closed-loop decision architecture. 
+
+Learning at Level 4: Learning can now occur at both parameter and structural levels. The AI may learn which workflow is more effective, update architecture-selection logic, or refine the conditions under which certain pipelines are activated. This is qualitatively richer than Level 2 tuning and Level 3 switching because the learned object may influence the topology of the decision loop itself. 
+
+Memory at Level 4: Memory becomes richer and more persistent. It may include summaries of prior workflows, long-horizon task context, past interaction outcomes, and model-confidence information across multiple modules. Such memory may support architecture reconfiguration, escalation, fallback behavior, or tool routing. 
+
+Interaction and Engagement at Level 4: Interaction be-comes collaborative. In a single-agent setting, the AI may engage in iterative clarification with a human, incorporate feedback into workflow selection, or coordinate across mul-tiple interfaces. In a multi-agent setting, this level supports explicit coordination protocols, role assignment, and structured collaboration among agents while remaining within approved architecture sets. Therefore, Level 4 is best interpreted as structural agency ,in which the AI can configure and orchestrate the internal decision architecture. 
+
+E. Level 5: Generative Agency Under Governance Constraints 
+
+At Level 5, the AI may generate new goals, new tool workflows, or new controller structures, subject to external governance, verification, and safety constraints. Let Gc denote the set of admissible goal/controller/tool designs consistent with governance constraints c. Then the AI may generate 
+
+ ζ(t), C(t), α (t) ∈ G c (32) online as a function of available information. Governance constraints refer to external rules that restrict the set of admissible goals, controller structures, and work-flows that the AI may generate. They define the safe and per-mitted design space within which generative agency operates. The resulting controller may be written abstractly as 
+
+u(t) = πα(t)
+
+
+
+y(t), m (t), z (t), r (t); θ(t), ζ (t)
+
+
+
+, (33) with 
+
+ ζ(t), α (t), c (t), σ (t), g (t) = Ω  y(t), m (t), z (t), r (t); c,
+
+(34) where Ω( ·) is a governance-constrained generative mechanism. 
+
+Goal Formulation at Level 5: Goal formulation becomes generative. The AI may synthesize new objectives or new multi-objective trade-offs that were not explicitly enumerated offline, provided they satisfy higher-level constraints imposed by governance, human oversight, safety policies, or mission rules. This is the first level at which the AI can meaningfully redefine what problem is to be solved .
+
+Tool Use at Level 5: Tool use also becomes generative. The AI may create new workflows, instantiate new combinations of modules, or organize new tool chains from available prim-itives, again subject to approval and verification requirements. Thus, tool use is no longer limited to selecting or composing preapproved configurations; it may involve constrained syn-thesis of new ones. 
+
+Learning at Level 5: Learning becomes open-ended and meta-level. The AI may update not only parameters and structures, but also the rules by which goals, workflows, and architectures are generated. This is the richest form of learning in the hierarchy and also the one that raises the strongest safety and stability concerns. 
+
+Memory at Level 5: Memory becomes long-horizon and mission-level. It may include historical abstractions, accu-mulated interaction models, inferred stakeholder preferences, summaries of prior operating phases, and internal records that support self-generated objective design. 
+
+Interaction and Engagement at Level 5: Interaction be-comes proactive and autonomous, though still constrained by governance. The AI may initiate clarification, negotiate task reformulations, coordinate with peer AI systems, and engage with humans to construct new collaborative goals. In a multi-agent setting, this naturally corresponds to distributed goal formation and emergent coordination under system-level rules. Hence, Level 5 represents generative agency , where the AI is no longer restricted to selecting among predefined alter-natives but may synthesize elements of the decision problem itself. 
+
+F. Summary of the Hierarchy 
+
+The hierarchy above is a hierarchy of decision authority over the unified control architecture. The distinction among the levels can be summarized as follows:  
+
+> •
+
+Level 1: the AI reacts within fixed designer-specified rules;  
+
+> •
+
+Level 2: the AI adapts internal parameters and memory within a fixed structure;  
+
+> •
+
+Level 3: the AI selects among predefined goals, tools, and controller families;  
+
+> •
+
+Level 4: the AI reconfigures and composes the decision architecture;  
+
+> •
+
+Level 5: the AI generates new goals and workflows under governance constraints. 6IV. L INEAR AGENTIC CONTROL FORMULATION 
+
+To complement the general nonlinear formulation, we now specialize the proposed framework to linear dynamical sys-tems. The linear case is useful for two reasons. First, it provides a more explicit interpretation of agency in terms of concrete control objects such as feedback gains, quadratic objectives, and controller architectures. Second, it offers a mathematically transparent setting in which the effect of increasing agency can later be related to switching, adaptation, modular interconnection, and objective variation. At the same time, the linear setting has important limitations, especially at high levels of agency, and these limitations are discussed at the end of this section. 
+
+A. Linear Plant Model 
+
+Consider the linear system 
+
+˙x(t) = Ax (t) + Bu (t) + Ew (t), y(t) = Cx (t) + Dw (t),
+
+(35) where x(t) ∈ Rn is the state, u(t) ∈ Rm is the control input, 
+
+y(t) ∈ Rp is the measured output, and w(t) ∈ Rq denotes exogenous disturbances, environmental effects, or contextual inputs. As in the general formulation, the controller is not assumed to have direct access to the true state x(t). Instead, it acts on available information constructed from measurements, internal memory, tool outputs, and interaction signals. 
+
+B. Information Set, Memory, and Augmented Decision Vari-able 
+
+Let the information set available to the AI controller be 
+
+I(t) = {y(t), m (t), z (t), r (t)}, (36) where:  
+
+> •
+
+m(t) ∈ Rnm denotes the internal memory state;  
+
+> •
+
+z(t) ∈ Rnz denotes the outputs of external tools or auxiliary modules;  
+
+> •
+
+r(t) ∈ Rnr denotes interaction signals, such as human inputs, supervisory commands, or messages from other AI agents. In the linear setting, the memory state is modeled as an auxiliary dynamical subsystem: 
+
+˙m(t) = Amm(t) + Bmy(t) + Gmz(t) + Hmr(t), (37) where Am is typically chosen to be Hurwitz so that memory has bounded persistence and a forgetting or decay mechanism. Equation (37) allows m(t) to represent filtered histories, belief-like variables, compressed context, state-estimation-related quantities, or persistent summaries of prior observa-tions and interactions. Define the augmented decision variable 
+
+χ(t) = 
+
+
+
+y(t)
+
+m(t)
+
+z(t)
+
+r(t)
+
+ ∈ Rp+nm+nz +nr . (38) More generally, one may write 
+
+χ(t) = Ψ  y(t), m (t), z (t), r (t), (39) where Ψ( ·) is an information-aggregation map. In the present linear setting, (38) provides a natural and transparent choice. 
+
+C. Tool-Augmented Linear Architecture 
+
+Assume the AI controller has access to a library of tools 
+
+T = {T1, . . . , T M }. (40) In the linear setting, a tool may be interpreted as an auxiliary estimator, predictor, monitor, compensator, filter, anomaly de-tector, or other computational module that transforms available information into additional decision-relevant signals. At an abstract level, the tool outputs are written as 
+
+z(t) = Z y(t), m (t), r (t); σ(t), c (t), (41) where σ(t) denotes the tool-activation variables and c(t)
+
+denotes a tool-composition or workflow variable. If a more explicit linear form is desired, one may write 
+
+z(t) = Lσ(t),c (t)
+
+ y(t)
+
+m(t)
+
+r(t)
+
+ , (42) where Lσ(t),c (t) is a matrix determined by the active tool set and tool workflow. This representation captures fixed preprocessing, condi-tional invocation of approved tools, strategic selection among tools, and composition of multiple linear modules within a unified framework. 
+
+D. Quadratic Goal Representation 
+
+In the linear setting, the control objective can be represented explicitly through a quadratic performance index. Let 
+
+J =
+
+Z ∞
+
+> 0
+
+ x(t)⊤Qζ(t)x(t) + u(t)⊤Rζ(t)u(t) dt, (43) where Qζ(t) ⪰ 0 and Rζ(t) ≻ 0 are state and control weighting matrices parameterized by the goal descriptor ζ(t).Equation (43) provides a concrete interpretation of goal formulation in the linear setting: different goals correspond to different choices of admissible weighting matrices. Thus, the AI may be viewed as influencing the objective through the selection, adaptation, or synthesis of (Q, R ).If a richer formulation is desired, one may consider the more general quadratic cost 
+
+J =
+
+Z ∞
+
+> 0
+
+(x(t)⊤Qζ(t)x(t) + u(t)⊤Rζ(t)u(t)+ 2 x(t)⊤Sζ(t)u(t) + χ(t)⊤Mζ(t)χ(t)) dt, 
+
+(44) where Sζ(t) is a state-input cross-weighting term and Mζ(t) pe-nalizes augmented decision variables related to memory, tools, or interaction. However, for clarity, the primary development below is centered on (43), while (44) may be viewed as an extension. Goal selection or generation is modeled abstractly as 
+
+ζ(t) = Γ  y(t), m (t), z (t), r (t); g(t), (45) where g(t) is a goal-selection or goal-generation variable. Accordingly, the decision flow is 
+
+g(t) → ζ(t) → (Qζ(t), R ζ(t)) → J. 
+
+7E. Learning and Adaptation 
+
+Let θ(t) ∈ Rnθ denote the adaptable controller parameters. In the linear setting, these parameters may represent gain coef-ficients, switching thresholds, observer parameters, weighting coefficients, or other internal variables influencing the control law. Their evolution is written as 
+
+˙θ(t) = Φ θ
+
+ θ(t), χ (t). (46) This formulation captures parameter adaptation and online learning while remaining agnostic about the particular update law. In subsequent developments, θ(t) may influence either the feedback gain itself or the rule by which the controller architecture is selected. 
+
+F. Unified Linear Agentic Controller 
+
+The control law is modeled in the form 
+
+u(t) = Kα(t)
+
+ θ(t), ζ (t)χ(t), (47) where α(t) indexes the active controller architecture or policy family. The matrix Kα(t)(θ(t), ζ (t)) may correspond to a fixed linear gain, an adaptive gain, a gain associated with a particular objective, or a gain resulting from a structured interconnection of linear modules. Equation (47) is the linear counterpart of the general unified agentic controller. It captures the main agentic functions in a compact way:  
+
+> •
+
+goal formulation enters through ζ(t) and the correspond-ing objective matrices;  
+
+> •
+
+tool use enters through the augmented signal z(t); 
+
+> •
+
+learning enters through θ(t); 
+
+> •
+
+memory enters through m(t); 
+
+> •
+
+interaction and engagement enter through r(t); 
+
+> •
+
+controller selection or architecture choice enters through 
+
+α(t).Therefore, agency in the linear setting is characterized by the level of authority granted to the AI over the variables 
+
+θ(t), g (t), ζ (t), σ (t), c (t), α (t) . (48) As in the general case, some of these variables may be fixed by design, some may be selected from predefined sets, and some may be generated online subject to constraints. 
+
+G. Interpretation of the Linear Formulation 
+
+The linear formulation is especially useful because it makes the agency hierarchy concrete in terms of familiar control objects. In particular:  
+
+> •
+
+changing the control law corresponds to modifying the gain K; 
+
+> •
+
+changing the objective corresponds to modifying the admissible matrices (Q, R ); 
+
+> •
+
+changing the tool structure corresponds to modifying the augmented information channel z(t); 
+
+> •
+
+changing the architecture corresponds to modifying the controller index α(t) or the workflow variable c(t).This allows the hierarchy of agency levels to be expressed directly in terms of increasing control authority over the ingredients of a linear closed-loop system. V. A GENCY LEVELS FOR LINEAR SYSTEMS 
+
+In the linear setting, the proposed hierarchy can be ex-pressed particularly clearly. Rather than forcing every capa-bility into a separate linear model at every level, the focus is placed on the overall authority granted to the AI over the control architecture. Each level below is therefore tied to the most natural linear object associated with that degree of agency: a fixed feedback law, adaptive gains, switching among predefined objectives, modular composition of linear subsys-tems, or synthesis of admissible objectives and architectures. 
+
+A. Level 1: Reactive Linear Agency 
+
+At Level 1, the AI has minimal authority. The controller is essentially a fixed linear law, or a fixed collection of linear laws selected by a designer-specified rule. A representative form is 
+
+u(t) = Kσr (t)χ(t), σr (t) = R y(t), r (t), (49) where R(·) is a predefined rule. In the simplest case, (49) reduces to 
+
+u(t) = Kχ (t). (50) 
+
+Agency Interpretation: At this level, the AI does not mean-ingfully design or adapt the controller. It merely executes fixed reactions within a designer-prescribed linear structure. 
+
+Goal Formulation: Goal formulation is fixed offline: 
+
+Qζ(t) = ¯Q, Rζ(t) = ¯R. (51) The AI neither selects nor adapts the objective. 
+
+Tool Use: Tool use is absent or fixed as part of the pipeline. Any estimator, filter, or monitor is predefined and not under agentic control. 
+
+Learning: There is no online learning: 
+
+θ(t) ≡ ¯θ. (52) 
+
+Memory and Interaction: Memory is minimal and op-erational only, for example a simple mode flag or timer. Interaction is passive and handled through fixed logic without strategic interpretation. Accordingly, Level 1 corresponds to reactive linear automa-tion with negligible agentic authority .
+
+B. Level 2: Adaptive Linear Agency 
+
+At Level 2, the controller structure remains fixed, but inter-nal parameters are allowed to adapt online. A representative form is 
+
+u(t) = K θ(t)χ(t), (53) together with the adaptation law 
+
+˙θ(t) = Φ θ
+
+ θ(t), χ (t). (54) 
+
+Agency Interpretation: The AI may tune the realization of the controller, but it does not redesign the controller family itself. The architecture remains fixed, while gains or internal parameters are adjusted online. 8Goal Formulation: Goal formulation remains within a fixed template. For example, the AI may tune scalar or low-dimensional weights within a prescribed family: 
+
+Qζ(t) = Q ρ(t), Rζ(t) = R ρ(t), (55) where ρ(t) varies only within designer-defined bounds. Thus, the AI does not choose a new class of objectives; it only adjusts emphasis within an approved objective family. 
+
+Tool Use: Tool use becomes conditional but still bounded. The AI may activate or deactivate approved modules, such as a disturbance observer, anomaly monitor, or prediction block, but cannot strategically redesign workflows. 
+
+Learning: Learning is central at this level. The AI may adapt gain coefficients, thresholds, weighting parameters, or internal model parameters. 
+
+Memory and Interaction: Memory is persistent and func-tional, as modeled by (37). Interaction is adaptive but not strategic; the AI may remember recent commands or contex-tual information, but it does not yet negotiate or choose among high-level alternatives. Therefore, Level 2 corresponds to adaptive linear agency within a fixed control structure .
+
+C. Level 3: Strategic Linear Agency 
+
+At Level 3, the AI may select among predefined controllers or predefined quadratic objectives according to context. A representative form is 
+
+u(t) = Kα(t)χ(t), α(t) ∈ A , (56) where A is a finite set of admissible controller architectures or gain matrices. Equivalently, one may represent goal selection through 
+
+(Q, R ) =  Qg(t), R g(t)
+
+, g(t) ∈ G , (57) where G is a finite set of predefined objective families. More generally, the controller, goal, and tool mode may be chosen jointly: 
+
+ α(t), g (t), k (t) = Σ  χ(t), (58) where k(t) denotes the active tool or module. 
+
+Agency Interpretation: The AI is now granted strategic au-thority: it may select which admissible controller or objective is appropriate, but it remains confined to a finite designer-specified set. 
+
+Goal Formulation: Goal formulation takes the form of 
+
+selection among predefined quadratic objectives . For example, the AI may choose among safety-oriented, efficiency-oriented, or comfort-oriented (Q, R ) pairs. 
+
+Tool Use: Tool use becomes strategic. The AI may select which approved linear module or auxiliary estimator to rely on in different contexts. 
+
+Learning: Learning supports strategic selection. The AI may use learned context, uncertainty estimates, or performance history to determine which controller or objective should be active. 
+
+Memory and Interaction: Memory becomes decision-relevant, encoding context that affects switching and mode selection. Interaction becomes strategic in the sense that hu-man or multi-agent signals may influence which admissible mode is chosen. Hence, Level 3 corresponds to strategic linear agency through bounded selection among predefined gains, objectives, and modules .
+
+D. Level 4: Structural Linear Agency 
+
+At Level 4, the AI is allowed to configure the linear control architecture itself through composition of linear modules. Instead of merely selecting one gain from a fixed set, the AI may configure a structured controller composed of several interconnected linear blocks. A representative form is 
+
+u(t) = Π  χ(t); θ(t), ζ (t), C(t), (59) where C(t) specifies the active architecture or workflow com-position. Examples of such structures include:  
+
+> •
+
+observer-based state feedback;  
+
+> •
+
+predictor plus feedback compensator;  
+
+> •
+
+anomaly detector plus fallback controller;  
+
+> •
+
+cascaded estimation, filtering, and control modules;  
+
+> •
+
+supervisory compositions of multiple linear subsystems. 
+
+Agency Interpretation: The AI now has authority not only over parameter values or mode selection, but also over the structured interconnection of linear decision modules. 
+
+Goal Formulation: Goal formulation remains constrained, but the AI may coordinate structured objectives with the architecture. For example, safety may be enforced through one module while performance optimization is handled by another. The AI can therefore organize layered objective structures within an approved design space. 
+
+Tool Use: Tool use reaches the level of composition and orchestration. The AI may combine multiple linear modules sequentially or in parallel, choose routing logic among them, and reconfigure the information-processing pipeline. 
+
+Learning: Learning may affect not only gains but also the structural logic by which modules are interconnected or switched. 
+
+Memory and Interaction: Memory becomes richer and architecture-aware, supporting escalation, fallback, or multi-stage decision logic. Interaction becomes collaborative in the sense that supervisory inputs or peer signals may influence architecture selection. Accordingly, Level 4 corresponds to structural linear agency through composition and reconfiguration of linear control modules .
+
+E. Level 5: Generative Linear Agency Under Constraints 
+
+At Level 5, the AI is granted the highest degree of authority available within the linear setting: it may synthesize admissible quadratic objectives or admissible linear control architectures online, subject to governance and safety constraints. Let 
+
+(Q(t), R (t)) ∈ Q c × R c (60) 9denote a governed set of admissible weighting matrices. Then the AI may generate a new objective online and synthesize a corresponding admissible controller. For example, in an LQR-type interpretation, the generated objective may determine a Riccati equation of the form 
+
+A⊤P (t) + P (t)A − P (t)BR (t)−1B⊤P (t) + Q(t) = 0 , (61) with the resulting gain 
+
+K(t) = R(t)−1B⊤P (t). (62) More generally, one may write 
+
+ ζ(t), α (t), c (t), g (t) = Ω  χ(t); c, (63) where Ω( ·) is a governance-constrained generative mechanism and c denotes external constraints. 
+
+Agency Interpretation: The AI is no longer restricted to choosing from a fixed menu of objectives or architectures. Instead, it may generate admissible objectives or admissible linear architectures online, provided they remain within an approved design set. 
+
+Goal Formulation: Goal formulation becomes generative in a restricted linear sense: the AI may synthesize new admissible (Q, R ) pairs rather than merely selecting one from a predefined library. 
+
+Tool Use: Tool use may also become generative in the sense of synthesizing new admissible workflows or new modular interconnections within a constrained linear architecture space. 
+
+Learning: Learning becomes meta-level, because the AI may adapt not only gains and switching rules, but also the mechanism by which admissible objectives and architectures are synthesized. 
+
+Memory and Interaction: Memory becomes long-horizon and mission-level, while interaction may become proactive or negotiation-oriented, still subject to governance constraints. Therefore, Level 5 corresponds to generative linear agency under a governed admissible design space .
+
+F. Discussion and Limitations of the Linear Setting 
+
+The linear hierarchy above is useful because it provides a precise and interpretable surrogate for agency in terms of familiar control objects such as gain matrices, quadratic objectives, and modular interconnections. In particular:  
+
+> •
+
+Level 1 is naturally represented by fixed linear feedback;  
+
+> •
+
+Level 2 is naturally represented by adaptive gains or bounded parameter tuning;  
+
+> •
+
+Level 3 is naturally represented by switching among predefined controllers or quadratic objectives;  
+
+> •
+
+Level 4 can be represented through composition and reconfiguration of linear modules;  
+
+> •
+
+Level 5 can be represented only in a restricted sense through governed synthesis of admissible linear objec-tives and architectures. However, the linear formulation also has clear limitations. Levels 1–3 are represented naturally and with relatively little ambiguity. Level 4 can still be captured meaningfully when interpreted as structured interconnection or supervisory com-position of linear subsystems. In contrast, Level 5 is only partially represented in a linear framework. Truly open-ended goal generation, symbolic planning, combinatorial workflow synthesis, or unconstrained architecture invention are not nat-urally linear phenomena. Hence, the linear model should be interpreted as a restricted but useful approximation of high-agency behavior, rather than a full description of all possible forms of agentic AI. This limitation is not a weakness of the framework; rather, it clarifies the scope of the linear analysis. The linear sec-tion provides a mathematically transparent specialization of the general theory, while the broader nonlinear formulation remains necessary for capturing the full richness of structural and generative agency. 
+
+G. Summary of Linear Agency Levels 
+
+The agency hierarchy for linear systems may therefore be summarized as follows:  
+
+> •
+
+Level 1: fixed linear feedback or rule-based switching among fixed gains;  
+
+> •
+
+Level 2: adaptive gains or bounded tuning within a fixed structure;  
+
+> •
+
+Level 3: switching among predefined controller structures or predefined objectives;  
+
+> •
+
+Level 4: structured composition and reconfiguration of linear control modules;  
+
+> •
+
+Level 5: governed synthesis of admissible linear objec-tives and controller architectures. This linear hierarchy provides a concrete bridge between the abstract notion of agency and standard control-theoretic constructs. It also sets the stage for a later stability discussion, in which the effect of adaptation, switching, modular reconfig-uration, and objective synthesis on the closed-loop dynamics can be analyzed explicitly. VI. S TABILITY IMPLICATIONS OF INCREASING AGENCY 
+
+In the proposed architecture, the level of agency determines how much authority the AI has over the control system. As this authority increases, the controller can modify parameters, select strategies, invoke tools, or change the control architec-ture. These capabilities introduce new dynamical mechanisms in the closed-loop system. The goal of this section is not to claim that agentic control systems are necessarily unstable. Instead, the purpose is to highlight how increasing agency introduces mechanisms that may affect stability. These mechanisms correspond to well-known classes of dynamical systems such as time-varying systems, switched systems, delay systems, and hybrid systems. 
+
+A. Adaptation-Induced Time Variation (Level 2) 
+
+At Level 2, the AI is allowed to adapt controller parameters online. The control law may be written as 
+
+u(t) = K(θ(t)) χ(t), (64) where θ(t) represents parameters updated through learning or adaptation. 10 As a result, the closed-loop system becomes time-varying: 
+
+˙x(t) = Acl (θ(t)) x(t). (65) Even if the matrix Acl (θ) is stable for each fixed value of θ,stability of the overall system is not automatically guaranteed when the parameters vary with time. In classical adaptive control, stability is typically ensured by restricting the update law or by enforcing a separation between the adaptation time scale and the plant dynamics. If parameter updates occur too rapidly, the resulting time variation may degrade stability or performance. Thus, adaptive agency introduces a time-varying control law whose stability properties depend on the dynamics of the parameter updates. 
+
+B. Endogenous Switching (Level 3) 
+
+At Level 3, the AI can choose among multiple control strategies, goals, or tools. In this case the control law may take the form 
+
+u(t) = Kσ(t)χ(t), (66) where σ(t) denotes the selected control mode. A key difference from classical switched systems is that the switching signal is generated internally by the AI decision process, 
+
+σ(t) = Σ( χ(t)) , (67) where the decision depends on measurements, memory states, tool outputs, or interaction signals. Interaction signals may also contain semantic ambiguity due to language-based interpretation mechanisms. Such ambiguity affects the information available to the decision process and may influence goal selection, controller switching, or tool invocation. This means that even if the plant and nominal controller are not switched systems, the introduction of agentic decision-making can transform the closed-loop system into a switched system. 
+
+C. Decision-Induced Delays (Level 3–5) 
+
+Higher levels of agency require the AI to perform additional reasoning steps, such as querying tools, evaluating strategies, or communicating with other agents. These processes may introduce delays in the feedback loop. For example, the control input may depend on delayed information: 
+
+u(t) = Kx (t − τ (t)) . (68) Similarly, switching decisions may depend on delayed tool outputs or communication signals. Delays are well known to affect stability in control systems. When delays become large or highly variable, they can reduce stability margins and lead to oscillatory behavior. In agentic control architectures, these delays arise naturally from the decision-making process and therefore must be considered when analyzing closed-loop stability. 
+
+D. Structural Changes in the Control Architecture (Level 4) 
+
+At Level 4, the AI can modify how the controller itself is organized. Instead of selecting only parameter values or control modes, the AI may configure different control ar-chitectures. For example, the system may switch between different pipelines such as direct feedback control, observer-based control, or planner-based control with a safety filter. This can be represented abstractly as 
+
+u = Π( χ(t); C(t)) , (69) where C(t) denotes the selected architecture. When the architecture changes, the structure of the closed-loop system may also change. Different architectures may introduce different internal states or processing steps. As a result, the closed-loop dynamics may change across modes, producing a hybrid system whose behavior depends on the selected architecture. 
+
+E. Objective-Induced Policy Variation (Level 5) 
+
+At the highest level of agency, the AI may modify or generate new control objectives during operation. Because the control policy typically depends on the chosen objective, changes in the objective lead to changes in the synthesized controller. For example, in an optimal control setting the control law may be written as 
+
+u(t) = K(Q(t), R (t)) x(t), (70) where the matrices Q(t) and R(t) are determined by the goal descriptor selected or generated by the AI. Note that the control gain can be dependent not just on R(t) and Q(t), but on other parameters and cost function weights as well. Substituting into the plant dynamics yields 
+
+˙x(t) =  A − BK (Q(t), R (t)) x(t). (71) Thus, changes in the objective induce changes in the closed-loop dynamics through the synthesized controller. If the ob-jective varies over time, the resulting system may behave as a time-varying or switched system whose stability depends on how frequently and how drastically the objectives are modified. VII. D ISCUSSION 
+
+This paper proposes a control-theoretic view of agency in AI-based control systems. In the proposed framework, increasing agency means that the AI gains authority over different parts of the control stack. At low levels, the AI mainly computes the control input. At higher levels, it may adapt parameters, choose among control strategies, invoke tools, or modify the controller structure. This perspective helps interpret agentic AI using concepts that are familiar in control theory. An important observation is that increasing agency changes the type of dynamical system that must be analyzed. When the controller can adapt parameters, the closed loop becomes time-varying. When it can select among strategies, the system may behave as a switched system. Tool use and reasoning steps 11 may introduce delays in the loop. Finally, if the controller can modify its architecture, the resulting system becomes hybrid. These mechanisms are well known in control theory, but they appear naturally in agentic systems because the decision process itself becomes part of the feedback loop. This viewpoint also has implications for control design and verification. If the AI has authority over parameters, switching decisions, or controller structures, then mechanisms such as limits on adaptation rates, dwell-time constraints for switching, and delay-aware analysis may become important tools for regulating agentic controllers. In this sense, agency can be interpreted as a form of decision authority that must be managed to preserve desired closed-loop properties. Interaction signals also play an important role in agentic ar-chitectures. In many applications, the interaction variable r(t)
+
+may represent commands or feedback from a human operator. When interaction is mediated through language-based inter-faces, semantic ambiguity may arise in the interpretation of the received message. In this paper, such ambiguity is treated only at a conceptual level, as a possible source of imperfect information for the decision process. A deeper analysis of interaction-driven uncertainty and semantic ambiguity is left for future work. Finally, several limitations should be noted. The present work focuses on modeling and conceptual analysis rather than on deriving complete stability guarantees for all agency levels. The linear formulation used in the paper provides a clear interpretation of agency, but it cannot fully represent open-ended reasoning or goal generation. In addition, the analysis mainly considers single-agent decision architectures. Multi-agent settings may introduce additional challenges related to communication, coordination, and interaction uncertainty. Despite these limitations, the proposed framework provides a useful starting point for studying agentic AI systems from a control perspective. It shows how concepts such as memory, tool use, interaction, and goal selection can be interpreted within a dynamical systems framework, and it highlights how increasing agency affects the structure and analysis of the closed-loop system. VIII. S IMULATIONS 
+
+A. Stability Demo for Agency Level 2 
+
+A simple examples illustrates how the adaptation rate can lead to instability when agentic AI is controlling the system. Consider the spring-mass-damper system 
+
+m¨x(t) + c ˙x(t) + kx (t) = u(t), (72) with m = 1 , c = 0 .2, and k = 1 . Defining the state x =[x1 x2]⊤ = [ x ˙x]⊤, the system becomes 
+
+˙x =
+
+ 0 1
+
+−1 −0.2
+
+
+
+x +
+
+01
+
+
+
+u. (73) A fixed-structure controller is used, 
+
+u(t) = −Kp(t)x1(t) − Kdx2(t), Kd = 0 .3, (74) where the proportional gain adapts according to 
+
+˙Kp(t) = −γx 1(t)2. (75) 
+
+Fig. 2: Closed-loop response of the spring–mass–damper sys-tem under adaptive proportional gain. A slow adaptation rate maintains stability. 
+
+Fig. 3: State trajectories fast adaptation rates, destabilizing the time-varying closed-loop system. Two adaptation rates are considered: γ = 0.5 (slow) and 
+
+γ = 10 (fast). As shown in Fig. 2 and 3, slow adaptation preserves stability, while aggressive adaptation destabilizes the time-varying closed loop. 
+
+B. Simulation Example: Instability Induced by Rapid Objec-tive Switching 
+
+To illustrate how Level-3 agency can influence closed-loop stability, we consider a simple example where the agent peri-odically switches between two competing control objectives. In this example, each objective individually yields a stabiliz-ing controller. However, sufficiently rapid switching between the two objectives destabilizes the closed-loop system. This demonstrates that instability can arise purely from the decision process that selects among otherwise admissible controllers. Consider the discrete-time linear system 
+
+xk+1 = Ax k + Bu k, yk = Cx k, (76) 12 with 
+
+A =
+
+ 0.9 0.4
+
+−0.3 0.8
+
+
+
+, B =
+
+ 10.5
+
+
+
+, C = 1 −1.2 . (77) The agent switches between two infinite-horizon quadratic objectives. 
+
+State-regulation objective. This objective drives the state toward the origin: 
+
+Jreg =
+
+> ∞
+
+X
+
+> k=0
+
+
+
+x⊤ 
+
+> k
+
+Qr xk + u⊤ 
+
+> k
+
+Rr uk
+
+
+
+,Qr =
+
+4 00 4
+
+
+
+, Rr = 0 .8.
+
+(78) 
+
+Output-tracking objective. This objective encourages tracking of the constant reference r = 1 :
+
+Jtrk =
+
+> ∞
+
+X
+
+> k=0
+
+
+
+(yk − 1) 2 + u⊤ 
+
+> k
+
+Rtuk
+
+
+
+, Rt = 0 .2. (79) Solving the corresponding optimal control problems yields two stabilizing linear feedback controllers 
+
+uk = −Kreg xk, uk = −Ktrk xk,
+
+with gains 
+
+Kreg = 2.9158 −2.3655  ,Ktrk = 1.7910 −1.4829 
+
+The resulting closed-loop dynamics are 
+
+xk+1 = Areg xk (regulation mode) , (80a) 
+
+Areg = A − BK reg , (80b) and 
+
+xk+1 = Atrk xk (tracking mode) , (81a) 
+
+Atrk = A − BK trk . (81b) Both closed-loop matrices are Schur stable: 
+
+ρ(Areg ) ≈ 0.93 , ρ(Atrk ) ≈ 0.94 .
+
+Thus, if either controller is applied continuously, the state converges to the equilibrium. The agent’s decision process is modeled as a periodic switching signal 
+
+σ(k) ∈ { reg , trk }
+
+with dwell time d:
+
+σ(k) = 
+
+(
+
+reg if ⌊k/d ⌋ is even ,
+
+trk if ⌊k/d ⌋ is odd . (82) Two switching regimes are examined:  
+
+> •
+
+Slow switching: d = 8 , meaning the controller remains in each objective mode for eight time steps.  
+
+> •
+
+Fast switching: d = 1 , meaning the objective alternates at every time step. Simulations are performed from the initial condition 
+
+x0 = [2 .0, −1.2] ⊤
+
+Fig. 4: Illustration of how fast switchings between control architectures lead to instability. over k = 0, . . . , 120 . Figure 4 shows the resulting state trajectories and Euclidean norms (log scale). The results highlight a key mechanism associated with Level-3 agency: objective-driven controller switching . Even though both controllers are stabilizing when applied individu-ally, rapid alternation between objectives produces a switched linear system whose composite dynamics become unstable. In particular, when switching occurs at every step, the effective two-step evolution is governed by the product matrix 
+
+Areg Atrk ,
+
+whose spectral radius satisfies 
+
+ρ(Areg Atrk ) ≈ 1.02 > 1.
+
+Consequently, the state norm grows exponentially despite the stabilizing nature of each individual controller. Figure 4 demonstrates the instability in case of fast switching. This example demonstrates that, in agentic control architectures, instability can arise purely from the decision process that se-lects among otherwise safe control objectives when switching occurs too frequently. 
+
+C. Simulation Example: Instability Induced by Pipeline Re-configuration 
+
+To illustrate the effects of Level-4 agency , we consider an example in which the agent can reconfigure the control 
+
+pipeline by inserting additional computational modules into the feedback loop. Unlike Level-3 agency, where the agent switches among predefined controllers or objectives, Level-4 agency allows the agent to modify the structure of the control architecture itself. Such structural changes introduce additional internal states that can influence the closed-loop dynamics. Consider the discrete-time linear system 
+
+xk+1 = Ax k + Bu k, yk = Cx k, (83) 13 with 
+
+A =
+
+1.20 0.30 0 1.05 
+
+
+
+, B =
+
+ 10.5
+
+
+
+, C = 1 0 . (84) The agent can choose between two different control pipelines. 
+
+Architecture 1: Direct state feedback. The controller directly uses the plant state: 
+
+uk = −Kx k. (85) 
+
+Architecture 2: Estimator-augmented control pipeline. In this architecture, the agent inserts an estimator and an auxiliary reference generator into the control loop: 
+
+ˆxk+1 = Aˆxk + Bu k + L(yk − C ˆxk), (86) 
+
+zk+1 = ar zk + br yk, (87) where ˆxk denotes the estimator state and zk is an internal state generated by a tool module. The control input is then computed as 
+
+uk = −K(ˆ xk − [zk, 0] ⊤). (88) Unlike Architecture 1, the second pipeline introduces ad-ditional internal states (ˆ xk, z k) that evolve dynamically. The augmented closed-loop system therefore has a higher effective order. The agent’s decision process switches between the two architectures according to the periodic rule 
+
+σ(k) = 
+
+(
+
+Architecture 1 if ⌊k/d ⌋ is even ,
+
+Architecture 2 if ⌊k/d ⌋ is odd . (89) Two dwell-time regimes are examined:  
+
+> •
+
+Short dwell time: d = 1, meaning the architecture switches at every time step.  
+
+> •
+
+Long dwell time: d = 8 , meaning each architecture remains active for eight time steps. Simulations are performed from the initial condition x0 =[2 .0, −1.2] ⊤ over k = 0 , . . . , 120 . Figure 5 shows the resulting state trajectories and state norms. The results highlight a key phenomenon associated with Level-4 agency: pipeline reconfiguration . When the agent inserts additional computational modules into the control loop, the resulting closed-loop system includes extra internal states whose dynamics influence overall stability. Consequently, the behavior of the system depends not only on the controller gains but also on how long each pipeline remains active. This example illustrates that architectural decisions made by an agent can significantly affect closed-loop performance and may introduce destabilizing dynamics when the pipeline is activated for extended periods. IX. C ONCLUSION AND FUTURE WORKS 
+
+This paper proposed a control-theoretic framework for mod-eling agentic AI systems as hierarchical decision architectures embedded within feedback control loops. In the proposed formulation, agency is interpreted as decision authority over different elements of the control architecture, including con-troller parameters, goal selection, tool invocation, and con-troller structure. By embedding capabilities such as memory, 
+
+Fig. 5: State trajectories and state norms under short ( d = 1 )and long ( d = 8 ) dwell-time switching between two con-trol pipelines. Longer activation of the estimator-augmented pipeline leads to significantly larger state growth due to the internal dynamics introduced by the additional modules. learning, interaction, and tool use into a unified dynamical representation, the framework provides a systematic way to interpret agentic AI behavior through familiar control-theoretic constructs. The analysis highlights that increasing agency does not inherently imply instability, but it introduces additional dynamical mechanisms that must be considered in stability analysis. In particular, adaptive agency leads to time-varying systems, strategic selection introduces switching behavior, rea-soning and tool usage may introduce delays, and architecture reconfiguration produces hybrid dynamics. This perspective helps bridge the conceptual gap between emerging agentic AI capabilities and established dynamical systems analysis in control theory. Several directions remain for future research. First, the present work focuses primarily on modeling and conceptual analysis; a natural next step is to derive formal stability guaran-tees for agentic control architectures, including conditions un-der which adaptation, switching, architectural reconfiguration, or objective updates preserve closed-loop stability and perfor-mance. Second, the framework should be extended to multi-agent settings, where multiple agentic controllers interact with each other and with shared environments. Such systems may exhibit coordination dynamics, communication delays, and emergent behaviors that require new analysis tools from multi-agent systems and distributed control. Third, practical design guidelines are needed for incorporating agentic AI into control systems, particularly in safety-critical applications. Examples include limiting adaptation rates, imposing dwell-time con-straints on controller switching, bounding delays introduced by reasoning processes, and enforcing constraints on objective or architecture synthesis. Additional directions include studying robustness to model uncertainty in agentic controllers, analyz-ing the effects of semantic ambiguity in interaction signals, 14 and developing verification and certification methods for AI-driven control architectures. REFERENCES [1] H. K. Khalil and J. W. Grizzle, Nonlinear systems . Prentice hall Upper Saddle River, NJ, 2002, vol. 3. [2] P. A. Ioannou and J. Sun, Robust adaptive control . PTR Prentice-Hall Upper Saddle River, NJ, 1996, vol. 1. [3] K. J. ˚ Astr¨ om and B. Wittenmark, Computer-controlled systems: theory and design . Courier Corporation, 2013. [4] D. Liberzon, Switching in systems and control . Springer, 2003, vol. 190. [5] R. Goebel, R. G. Sanfelice, and A. R. Teel, “Hybrid dynamical systems,” 
+
+IEEE control systems magazine , vol. 29, no. 2, pp. 28–93, 2009. [6] O. Lima, M. Vinci, M. G¨ unther, M. Renz, A. Sung, S. Stock, J. Brust, L. Niecksch, Z. Yi, F. Igelbrink et al. , “Agentic ai for robot control: Flexible but still fragile,” arXiv preprint arXiv:2602.13081 , 2026. [7] J. Yu, R. Frank, L. Miranda-Moreno, S. Jafarnejad, and J. A. Man-zolli, “Agentic vehicles for human-centered mobility,” arXiv preprint arXiv:2507.04996 , 2025. [8] J. Yu, “Preparing for an agentic era of human-machine transporta-tion systems: Opportunities, challenges, and policy recommendations,” 
+
+Transport Policy , vol. 171, pp. 78–97, 2025. [9] A. Eslami and J. Yu, “Security risks of agentic vehicles: A sys-tematic analysis of cognitive and cross-layer threats,” arXiv preprint arXiv:2512.17041 , 2025. [10] K. Tohma, H. ˙ I. Okur, H. G¨ ursoy-Demir, M. N. Aydın, and C. Yero˘ glu, “Smartcontrol: Interactive pid controller design powered by llm agents and control system expertise,” SoftwareX , vol. 31, p. 102194, 2025. [11] M. Narimani and S. A. Emami, “Agenticcontrol: An automated con-trol design framework using large language models,” arXiv preprint arXiv:2506.19160 , 2025. [12] M. N. Aydın, H. I. Okur, H. G¨ ursoy-Demir, K. Tohma, and C. Yero˘ glu, “Mrac-llm toolbox: An interactive model reference adaptive control enhanced with large language models,” SoftwareX , vol. 34, p. 102556, 2026. [13] S. Li, J. Li, J. Xu, and D. Chen, “From natural language to certified h-infinity controllers: Integrating llm agents with lmi-based synthesis,” 
+
+arXiv preprint arXiv:2511.07894 , 2025. [14] Z. Zhou, Y. Lu, Y. Zhu, Y. Zhao, B. He, L. He, W. Yu, and Y. Iwasawa, “Llms-guided adaptive compensator: Bringing adaptivity to automatic control systems with large language models,” arXiv preprint arXiv:2507.20509 , 2025. [15] R. Wu, J. Ai, T. S. Bartels, and T. Li, “Instructmpc: A human-llm-in-the-loop framework for context-aware power grid control,” arXiv preprint arXiv:2512.05876 , 2025. [16] G. Maher, “Llmpc: Large language model predictive control,” Comput-ers , vol. 14, no. 3, p. 104, 2025. [17] S. Rojas-Ordo˜ nez, M. Segura, V. Mendoza, U. Fernandez, and E. Zu-lueta, “Natural-language relay control for a siso thermal plant: A proof-of-concept with validation against a conventional hysteresis controller,” 
+
+Applied Sciences , vol. 15, no. 24, p. 12986, 2025. [18] V. Raval, M. Zeid, and P. Enjeti, “Circuit-ai: A self-hosted ai-agent language model framework for control loop implementation and simu-lation,” in 2025 IEEE International Communications Energy Conference (INTELEC) . IEEE, 2025, pp. 91–96. 
+
+15

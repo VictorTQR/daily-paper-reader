@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02791v1/fig-001.webp",
+      "caption": "Fig. 3. Performance comparison of our algorithm against the optimal Qvalues from the Oracle [6] (no attack) and the Baseline [22] under a 1-total Byzantine edge attack.",
+      "page": 7,
+      "index": 1,
+      "width": 512,
+      "height": 447
+    }
+  ]
+}

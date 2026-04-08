@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-001.webp",
+      "caption": "Figure 8: Actor prompt template for ALFWorld. Admissible actions and the self-guidance are injected at each step.",
+      "page": 15,
+      "index": 1,
+      "width": 790,
+      "height": 479
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-002.webp",
+      "caption": "Figure 1: Sparse environment reward alone may fail to distinguish trajectories with different intermediate quality, leaving GRPO with weakly separated training signals. Our method interleaves self-guided steps with action steps during trajectory generation, so that the same signal can guide action selection at inference time and be aggregated as internal reward at training time. This yields denser and more discriminative trajectory-level supervision for policy optimization.",
+      "page": 2,
+      "index": 2,
+      "width": 820,
+      "height": 336
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-003.webp",
+      "caption": "Figure 6: Offline self-guidance distillation versus online co-evolution. Although the student improves under offline distillation (a), the distilled model does not transfer reliably to downstream RL: using it as guidance reward (b) or for inference-time guidance only (c) yields unstable or unsustained gains, supporting the need for online co-evolution.",
+      "page": 10,
+      "index": 3,
+      "width": 821,
+      "height": 194
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-004.webp",
+      "caption": "Figure 7: Self-guidance prompt template, applied identically across ALFWorld, SciWorld, and WebShop.",
+      "page": 14,
+      "index": 4,
+      "width": 790,
+      "height": 588
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-005.webp",
+      "caption": "Figure 12: Training curves of DAPO and DAPO w/ SG & GR. Our method achieves a final success rate of 78.1% vs. 72.2% for the DAPO baseline.",
+      "page": 18,
+      "index": 5,
+      "width": 561,
+      "height": 334
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-006.webp",
+      "caption": "Figure 11: Error distribution among failed episodes across three benchmarks and three base models. Each bar shows the percentage of failed episodes exhibiting the corresponding error type; episodes may be counted in multiple categories.",
+      "page": 18,
+      "index": 6,
+      "width": 826,
+      "height": 573
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-007.webp",
+      "caption": "Figure 3: Self-guidance without training already improves performance in structured environments (ALFWorld) but yields inconsistent gains in more complex ones (WebShop), indicating that self-guidance quality depends on task familiarity.",
+      "page": 8,
+      "index": 7,
+      "width": 814,
+      "height": 247
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-008.webp",
+      "caption": "Figure 13: Prompt template used for offline self-guidance model distillation.",
+      "page": 19,
+      "index": 8,
+      "width": 790,
+      "height": 731
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-009.webp",
+      "caption": "Figure 10: Actor prompt template for WebShop, adapted from GiGPO (Feng et al., 2025b). Admissible actions and the self-guidance score are injected at each step.",
+      "page": 17,
+      "index": 9,
+      "width": 790,
+      "height": 521
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-010.webp",
+      "caption": "Figure 4: Training curves on the three environments with Qwen3-1.7B as base model.",
+      "page": 9,
+      "index": 10,
+      "width": 816,
+      "height": 216
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-011.webp",
+      "caption": "Figure 5: Ablation on stage-wise guidance-reward scheduling. Left: Training curves under different reward schedules. Right: Final validation success rates.",
+      "page": 9,
+      "index": 11,
+      "width": 771,
+      "height": 235
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-012.webp",
+      "caption": "Figure 2: Comparison between baseline GRPO and GRPO with Self-Guide. Baseline GRPO optimizes a policy using sparse trajectory-level environment rewards. Our method augments each step with a verbal self-guidance signal zt: the model first generates zt to assess the current trajectory, and then produces action at conditioned on zt. The same selfguidance signals are mapped to step-level internal rewards, aggregated into Rsg(τ), and combined with Renv(τ) via a stage-dependent coefficient λ(u) for joint policy optimization.",
+      "page": 5,
+      "index": 12,
+      "width": 822,
+      "height": 430
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03098v1/fig-013.webp",
+      "caption": "Figure 9: Actor prompt template for SciWorld. Because the number of admissible actions can exceed 100 per step, the prompt enumerates only the action format grammar rather than the full per-step action list.",
+      "page": 16,
+      "index": 13,
+      "width": 790,
+      "height": 1011
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-001.webp",
+      "caption": "Figure 3: The taxonomy of multi-dimensional spectrum of reinforcement learning task types",
+      "page": 11,
+      "index": 1,
+      "width": 736,
+      "height": 364
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-002.webp",
+      "caption": "Figure 18: Evolutionary Trajectory of Agent Capabilities. This citation-weighted alluvial plot illustrates the shifting cognitive and physical requirements of RL environments across four major algorithmic epochs: Classic DRL & Physics, Scalable Games & MARL, Offline & Pre-training, and LLM Agents & Reasoning. The overarching macro-trend demonstrates a definitive migration from low-level continuous control in physical simulations to semantic deduction and reasoning in language-grounded sandboxes.",
+      "page": 29,
+      "index": 2,
+      "width": 882,
+      "height": 1023
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-003.webp",
+      "caption": "Figure 1: The Evolution of Reinforcement Learning Environments: A chronological visual timeline illustrating the paradigm shifts from classic continuous control and multi-agent coordination, to data-driven embodied AI, and ultimately to semantic reasoning via autonomous LLM agents.",
+      "page": 3,
+      "index": 3,
+      "width": 882,
+      "height": 496
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-004.webp",
+      "caption": "Figure 12: A retrospective analysis of the temporal distribution of RL environments by primary application domain. The evolution from the 2015–2020 era to the post-2020 period illustrates the impact of LLM engagements, characterized by a significant expansion in Language, Dialogue, and Digital Agent domains at the expense of traditional simulated robotics and gaming environments. The dividing line: 2020, the release of GPT-3, the first large language model.",
+      "page": 23,
+      "index": 4,
+      "width": 979,
+      "height": 258
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-005.webp",
+      "caption": "Figure 13: The paradigm shift in modality distribution. The figure illustrates the breakdown of single-modality dominance and the resurgence of structured and non-standard inputs in recent eras. The dividing line: March 2023, the release of GPT-4, the first multimodal large language model.",
+      "page": 23,
+      "index": 5,
+      "width": 882,
+      "height": 225
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-006.webp",
+      "caption": "Figure 17: Cognitive Fingerprints of LLMs engaged RL Application Subdomains. This row-normalized clustered heatmap illustrates the proportional distribution of required agent capabilities across various domains. Rows (application subdomains) are ordered via hierarchical clustering to reveal structural similarities in cognitive demands. Color intensity denotes the percentage of environments within a subdomain that require a specific capability.",
+      "page": 28,
+      "index": 6,
+      "width": 882,
+      "height": 1023
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-007.webp",
+      "caption": "Figure 2: The Evolutionary Tree of Reinforcement Learning Environments: The Ascent of Cognitive Abstraction.",
+      "page": 4,
+      "index": 7,
+      "width": 914,
+      "height": 1285
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-008.webp",
+      "caption": "Figure 8: RoboBallet: Planning for Multirobot Reaching with GNN and RL. A breakthrough in Multirobot Coordination, RoboBallet enables up to eight arms to perform 40 tasks in a shared workspace. Its graph neural network (GNN) policy, trained via RL, jointly solves task allocation, scheduling, and collision-free motion planning. By representing robots, tasks, and obstacles as a graph, the GNN scales effectively, outputting coordinated joint velocities every 100ms. Trained in simulation, it generalizes zero-shot to new layouts and unlocks capabilities like layout optimization, improving execution times by up to 33%. Source: Science Robotics",
+      "page": 19,
+      "index": 8,
+      "width": 484,
+      "height": 273
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-009.webp",
+      "caption": "Figure 6: A taxonomic overview of diverse reinforcement learning application domains. The progression illustrates RL’s expansion from simulated spatial environments (Navigation, Games) to abstract cognitive and structural systems (Language, Optimization, Science).",
+      "page": 19,
+      "index": 9,
+      "width": 736,
+      "height": 372
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-010.webp",
+      "caption": "Figure 7: The CARLA Autonomous Driving Simulator. Illustrating the pinnacle of the Autonomous Systems & Navigation domain, CARLA forces agents to process multimodal, heterogeneous sensor streams (including RGB-D, LiDAR point clouds, and GPS). Operating under severe partial observability (POMDP) and stochastic weather conditions, agents must execute high-frequency continuous control while adhering to strict safety and traffic constraints.Source: carla.org",
+      "page": 19,
+      "index": 10,
+      "width": 481,
+      "height": 269
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-011.webp",
+      "caption": "Figure 15: The evolution of primary application domains in a broader field. The trajectory illustrates a shift from isolated simulated environments (e.g., games and robotics) toward language-based systems, dialogue tasks, and complex digital agents.",
+      "page": 27,
+      "index": 11,
+      "width": 976,
+      "height": 246
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-012.webp",
+      "caption": "Figure 16: Evolutionary Trajectory of Agent Capabilities Across Four RL Eras. This citation-weighted alluvial plot illustrates the longitudinal shift in cognitive and physical requirements of RL environments from 2013 to the present. The temporal axis spans four major algorithmic epochs: (1) Classic DRL & Physics, (2) Scalable Games & MARL, (3) Offline & Pre-training, and (4) LLM Agents & Reasoning. The overarching trend reveals a definitive migration from isolated physical simulations to generalized, language-grounded cognitive sandboxes.",
+      "page": 27,
+      "index": 12,
+      "width": 976,
+      "height": 594
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-013.webp",
+      "caption": "Figure 14: Temporal Evolution of Capability Requirements in LLM Environments. This alluvial plot tracks the shifting cognitive demands of environments utilizing LLMs as active agents, based on their inception dates. The data illustrates a rapid escalation from foundational language understanding in early sandboxes to higher-order faculties— such as deduction, long-horizon planning, and tool utilization—in the post-2023 era. This highlights the transition of LLM testbeds from passive linguistic evaluators to complex reasoning benchmarks.",
+      "page": 24,
+      "index": 13,
+      "width": 882,
+      "height": 512
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-014.webp",
+      "caption": "Figure 11: Insilico Medicine’s Fully Automated Robotics Laboratory. Representing the frontier of AIdriven drug discovery, this system automates complex wet-lab processes. It integrates reinforcement learning to autonomously optimize experimental strategies and process control using massive biological datasets, ensuring strict reproducibility. Source: EurekAlert",
+      "page": 20,
+      "index": 14,
+      "width": 481,
+      "height": 316
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-015.webp",
+      "caption": "Figure 9: AlphaStar Mastering StarCraft II. A landmark achievement in Real-Time Strategy, AlphaStar masters the immense complexity of StarCraft II. By integrating deep neural networks with a multi-agent reinforcement learning league, it overcomes imperfect information and a massive combinatorial action space (≈ 1026) to execute sophisticated macro-strategies and micro-tactics. Source: DeepMind Blog",
+      "page": 20,
+      "index": 15,
+      "width": 481,
+      "height": 305
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-016.webp",
+      "caption": "Figure 10: WebShop: Autonomous Agents for Online Shopping. Serving as a realistic testbed for System-Level Web Interaction, WebShop requires agents to map natural language instructions into actionable sequences (searching, filtering, and attribute selection). It provides dual observation modes (raw HTML and simplified text) to evaluate both structural parsing and high-level semantic reasoning in long-horizon tasks. Source: WebShop Project",
+      "page": 20,
+      "index": 16,
+      "width": 481,
+      "height": 329
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23964v1/fig-017.webp",
+      "caption": "Figure 5: The multi-dimensional landscape of requisite agent capabilities. The diagram illustrates the diverse skill set necessary for generalist agents, bridging the gap between physical interaction (Control, Strategy) and abstract cognitive processes (Deduction, Planning, Structural Analysis).",
+      "page": 16,
+      "index": 17,
+      "width": 736,
+      "height": 406
+    }
+  ]
+}

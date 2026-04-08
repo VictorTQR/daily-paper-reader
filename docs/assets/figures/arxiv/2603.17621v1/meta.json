@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-001.webp",
+      "caption": "Figure 5: Ablation on Merge and search and ask in MiniHack Room.",
+      "page": 6,
+      "index": 1,
+      "width": 563,
+      "height": 228
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-002.webp",
+      "caption": "Figure 13: Training curves for Complementary RL and the baseline across different task mixture settings.",
+      "page": 15,
+      "index": 2,
+      "width": 841,
+      "height": 319
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-003.webp",
+      "caption": "Table 4: ALFWorld distilled experience.",
+      "page": 21,
+      "index": 3,
+      "width": 939,
+      "height": 468
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-004.webp",
+      "caption": "Table 5: SWE-Bench distilled experience.",
+      "page": 21,
+      "index": 4,
+      "width": 939,
+      "height": 615
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-005.webp",
+      "caption": "Figure 2: Overview of Complementary RL.",
+      "page": 2,
+      "index": 5,
+      "width": 570,
+      "height": 276
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-006.webp",
+      "caption": "Table 6: Universal distilled experience from multi-task training.",
+      "page": 22,
+      "index": 6,
+      "width": 939,
+      "height": 596
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-007.webp",
+      "caption": "Figure 11: Per-task training dynamic (corresponding to Figure 9a).",
+      "page": 14,
+      "index": 7,
+      "width": 852,
+      "height": 193
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-008.webp",
+      "caption": "Figure 10: Average number of actions per task throughout multi-task training (corresponding to Figure 8).",
+      "page": 14,
+      "index": 8,
+      "width": 846,
+      "height": 211
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-009.webp",
+      "caption": "Figure 3: (a) Co-evolving the actor and experience extractor consistently outperforms static alternatives. (b–d) Ablation study on advantage estimation designs for the actor. The Exp. denotes experience.",
+      "page": 3,
+      "index": 9,
+      "width": 914,
+      "height": 201
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-010.webp",
+      "caption": "Figure 9: Analysis of Complementary RL across different aspects of its design.",
+      "page": 9,
+      "index": 10,
+      "width": 916,
+      "height": 207
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-011.webp",
+      "caption": "Table 3: WebShop distilled experience.",
+      "page": 20,
+      "index": 11,
+      "width": 939,
+      "height": 469
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-012.webp",
+      "caption": "Table 2: Minihack distilled experience.",
+      "page": 20,
+      "index": 12,
+      "width": 939,
+      "height": 531
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-013.webp",
+      "caption": "Figure 4: Overview of the Complementary RL training infrastructure, where the actor and experience extractor are trained asynchronously and coordinated through a centralized experience manager.",
+      "page": 5,
+      "index": 13,
+      "width": 894,
+      "height": 509
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17621v1/fig-014.webp",
+      "caption": "Figure 14: Analysis of incorporating Actor-Critic into Complementary RL.",
+      "page": 16,
+      "index": 14,
+      "width": 839,
+      "height": 353
+    }
+  ]
+}

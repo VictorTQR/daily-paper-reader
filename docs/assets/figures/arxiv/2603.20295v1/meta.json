@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.20295v1/fig-001.webp",
+      "caption": "Figure 3: Average performance of DAG learning across all states on synthetic Linear-Gaussian datasets, varying (a) DAG scale (d = {20, 50, 100}) and (b) transition noise rate (e = {0, 1, 5}) for MARLIN and other baselines. The shaded area represents the standard deviation; ↑ indicates that higher values are better, while ↓ indicates that lower values are better.",
+      "page": 6,
+      "index": 1,
+      "width": 1002,
+      "height": 404
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20295v1/fig-002.webp",
+      "caption": "Figure 2: (a) The pipeline of MARLIN across three consecutive system states. For each batch, MARLIN learns the DAG using the intra-batch single-step RL algorithm, which includes state-specific and state-invariant RL agents optimizing their policies through an actor-critic approach. Detailed network architecture and variables are explained in Section . MARLIN facilitates efficient incremental DAG learning by disentangling state-specific and state-invariant causal relationships.",
+      "page": 3,
+      "index": 2,
+      "width": 1002,
+      "height": 348
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20295v1/fig-003.webp",
+      "caption": "Figure 4: Overall performance on the SWaT dataset across (a) PR@K, (b) AP@K, and (c) MRR metrics.",
+      "page": 7,
+      "index": 3,
+      "width": 727,
+      "height": 225
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20295v1/fig-004.webp",
+      "caption": "Table 1: DAG learning performance on synthetic QR and GP datasets with standard deviations reported in parentheses. A dash (−) for ATB indicates methods with notably poor performance. Bold indicates the best performance; ↑ indicates higher is better, and ↓ indicates lower is better.",
+      "page": 7,
+      "index": 4,
+      "width": 472,
+      "height": 452
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20295v1/fig-005.webp",
+      "caption": "Figure 1: Comparison of the learning processes of offline (top) and online (bottom) RL-based DAG learning methods in an online data stream. The gradient colors on the RL agent represent its learning progress, with white indicating the initial state. When the color aligns with a data batch, it signifies that the agent has learned the current causal mechanism. Instead of learning from scratch, online DAG learning needs to incrementally and efficiently adapt to continuously arriving data batches and non-stationary data distributions.",
+      "page": 1,
+      "index": 5,
+      "width": 477,
+      "height": 300
+    }
+  ]
+}

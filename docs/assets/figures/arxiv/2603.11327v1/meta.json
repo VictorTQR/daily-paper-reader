@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-001.webp",
+      "caption": "Figure 1: RL-based agents (a) condition solely on the current episode, and episodes are independent, whereas meta-RL-based agents (b) leverage context accumulated across episodes. MR-Search performs sequential self-reflection over past episodes to guide exploration in subsequent episodes. In MR-Search, we have inner-episodes, each consisting of a maximum of T interactions steps with an answer. A sequence of N episodes forms a meta-episode.",
+      "page": 2,
+      "index": 1,
+      "width": 784,
+      "height": 187
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-002.webp",
+      "caption": "Table 1: Main accuracy (%) on search-based QA benchmarks. The best results are marked in boldface. We compare with baselines that rely on outcome rewards (ReSearch and SearchR1) and those that use process rewards with external models (PPRM and StepResearch).",
+      "page": 7,
+      "index": 2,
+      "width": 810,
+      "height": 376
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-003.webp",
+      "caption": "Figure 4: Test performance, training curves of reward and search frequency on ASearcher, evaluated with Qwen2.5-7B-Base. Additional results are provided in Appendix A.2.1.",
+      "page": 7,
+      "index": 3,
+      "width": 783,
+      "height": 191
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-004.webp",
+      "caption": "Table 7: Case study 4: MR-Search subsequently revisits the problem through additional search and self-reflection, ultimately producing the correct final answer.",
+      "page": 22,
+      "index": 4,
+      "width": 826,
+      "height": 365
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-005.webp",
+      "caption": "Figure 2: An overview of our proposed MR-Search framework. Given a question, the agent first completes an initial episode by interleaving reasoning and tool calls. It then enters an iterative self-reflection loop, where previous episodes serve as experience to inform subsequent searches and answer revisions, enabling iterative improvement across episodes.",
+      "page": 3,
+      "index": 5,
+      "width": 744,
+      "height": 267
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-006.webp",
+      "caption": "Figure 5: MR-Search, Search-R1 with sequential reflection turns (Search-R1-S), and Search-R1 with parallel sampling (Search-R1-P), selecting the most frequent answer among them.",
+      "page": 8,
+      "index": 6,
+      "width": 802,
+      "height": 224
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-007.webp",
+      "caption": "Table 2: Ablation of discount factor and training algorithm evaluated on Qwen2.5-7B-Base.",
+      "page": 8,
+      "index": 7,
+      "width": 740,
+      "height": 188
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-008.webp",
+      "caption": "Figure 3: We evaluate MR-Search, Search-R1 with sequential reflection inference (Search-R1S), and Search-R1 with parallel sampling (Search-R1-P), selecting the most frequent answer among the generated trajectories. Shaded regions show the standard deviation across 3 runs. We observe that MR-Search achieves the best performance. See § 4.3 for details",
+      "page": 4,
+      "index": 8,
+      "width": 736,
+      "height": 208
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11327v1/fig-009.webp",
+      "caption": "Table 5: Case study 2: MR-Search subsequently revisits the problem through additional search and self-reflection, ultimately producing the correct final answer.",
+      "page": 19,
+      "index": 9,
+      "width": 826,
+      "height": 452
+    }
+  ]
+}

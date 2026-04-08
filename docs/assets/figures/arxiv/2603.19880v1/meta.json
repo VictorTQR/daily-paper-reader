@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-001.webp",
+      "caption": "Figure 1: Comparison of pseudo-labeling strategies under weak consensus. (a) Majority voting assigns the positive label despite dispersed answer distribution. (b) SCRL abstains from positive labeling when consensus is insufficient and identifies negative labels.",
+      "page": 1,
+      "index": 1,
+      "width": 451,
+      "height": 358
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-002.webp",
+      "caption": "Table 1: Main results on various reasoning benchmarks. We report the pass@1 accuracy (%) across five datasets under two rollout budgets. Results denoted by * represent peak performance before significant degradation during training. ∆ shows the performance gain over TTRL (Zuo et al., 2025).",
+      "page": 6,
+      "index": 2,
+      "width": 879,
+      "height": 548
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-003.webp",
+      "caption": "Table 2: Pass@1 accuracy (%) on Llama-3-Instruct models. Column denoted by ⋆ refers to MATH-500 for Llama-3.2-1B-Instruct and AMC for Llama-3.1-8BInstruct. Results denoted by † and ‡ are reported from COMPASS (Tang et al., 2025) and RESTRAIN (Yu et al., 2025b), respectively. ∆ shows the performance gain over the corresponding baseline.",
+      "page": 6,
+      "index": 3,
+      "width": 454,
+      "height": 330
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-004.webp",
+      "caption": "Figure 3: Statistics of positive and negative pseudo-label estimation on the AMC dataset using Qwen2.5-3B.",
+      "page": 7,
+      "index": 4,
+      "width": 925,
+      "height": 412
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-005.webp",
+      "caption": "Figure 2: Overview of the SCRL framework. SCRL addresses test-time label noise through three components: selective positive pseudo-labeling enforces strict consensus thresholds to prevent reinforcing unreliable majorities; entropy-gated negative pseudo-labeling identifies negative labels by isolating answers that are both rare and exhibit high uncertainty, pruning the search space without eliminating valid candidates; dynamic reward shaping constructs distribution-aware rewards that scale with consensus strength and penalize uncertainty trajectories.",
+      "page": 3,
+      "index": 5,
+      "width": 935,
+      "height": 384
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-006.webp",
+      "caption": "Figure 4: Training dynamics of SCRL and TTRL on Qwen2.5-3B across three mathematical benchmarks.",
+      "page": 13,
+      "index": 6,
+      "width": 940,
+      "height": 255
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-007.webp",
+      "caption": "Figure 5: Training dynamics of SCRL and TTRL on Qwen2.5-Math-7B across three mathematical benchmarks.",
+      "page": 13,
+      "index": 7,
+      "width": 940,
+      "height": 255
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19880v1/fig-008.webp",
+      "caption": "Table 7: Training hyperparameter configuration for Qwen2.5-3B and Qwen2.5-Math-7B based on the verl (Sheng et al., 2025) framework.",
+      "page": 13,
+      "index": 8,
+      "width": 671,
+      "height": 346
+    }
+  ]
+}

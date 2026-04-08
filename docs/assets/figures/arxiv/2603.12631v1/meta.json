@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-001.webp",
+      "caption": "Table 1. Query-Answering Accuracy on the PersonaMem Benchmark across 32K, 128K, and 1M context length settings. Bold indicates the best performance, and underlining denotes the second best.",
+      "page": 6,
+      "index": 1,
+      "width": 989,
+      "height": 375
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-002.webp",
+      "caption": "Figure 2. Illustration of challenges for joint optimization.",
+      "page": 2,
+      "index": 2,
+      "width": 473,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-003.webp",
+      "caption": "Figure 4. Detailed performance of different methods across seven question types on the PersonaMem benchmark across three history length settings (i.e., 32K, 128K, and 1M). The number of question types is consistent with those listed in Section 5.1",
+      "page": 7,
+      "index": 3,
+      "width": 474,
+      "height": 631
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-004.webp",
+      "caption": "Table 3. Ablation study of MDP regularization for heterogeneous, asynchronous agents. The “no train” variant denotes a memory system composed of agents merely guided by prompting.",
+      "page": 7,
+      "index": 4,
+      "width": 481,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-005.webp",
+      "caption": "Table 2. Ablation study for the contribution of different agents to the memory system.",
+      "page": 7,
+      "index": 5,
+      "width": 485,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-006.webp",
+      "caption": "Figure 6. The curves for local task-specific reward rn and global accuracy reward r3.",
+      "page": 14,
+      "index": 6,
+      "width": 999,
+      "height": 193
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-007.webp",
+      "caption": "Table 7. Hyperparameters of CoMAM on PersonaMem benchmark across different context lengths.",
+      "page": 13,
+      "index": 7,
+      "width": 1017,
+      "height": 1148
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-008.webp",
+      "caption": "Table 5. Convergence step comparison of the joint and independent optimization.",
+      "page": 8,
+      "index": 8,
+      "width": 488,
+      "height": 255
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12631v1/fig-009.webp",
+      "caption": "Figure 3. The overview of our proposed framework, CoMAM, which regularizes agents’ execution as MDP trajectories for joint RL optimization and fosters collaboration via adaptive credit assignment to achieve local-global alignment.",
+      "page": 4,
+      "index": 9,
+      "width": 894,
+      "height": 460
+    }
+  ]
+}

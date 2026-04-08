@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.18620v1/fig-001.webp",
+      "caption": "Table 1: Text-to-SQL results on BIRD. All methods use Qwen3-4B-Instruct as the action policy πθ. We report execution accuracy (%). Best result per column in bold.",
+      "page": 6,
+      "index": 1,
+      "width": 756,
+      "height": 224
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18620v1/fig-002.webp",
+      "caption": "Figure 1: Overview of Learning to Self-Evolve (LSE). Left: Tree-guided self-evolution at test time. Upper Confidence Bound (UCB) selection chooses a context from the evolution tree; the action model generates outputs for a new batch of problems; the self-evolving policy receives the performance summary and proposes a revised context. Right: LSE trains the self-evolving policy via RL with an improvement-based reward computed as the difference between post-edit and preedit performance.",
+      "page": 2,
+      "index": 2,
+      "width": 826,
+      "height": 406
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18620v1/fig-003.webp",
+      "caption": "Figure 4: Search strategy ablation on MMLU-Redux, complementing Figure 2b. Both variants use the untrained Qwen3-4B-Instruct as the self-evolving policy fψ . Tree search improves the average accuracy from 69.0% to 71.2%.",
+      "page": 13,
+      "index": 3,
+      "width": 805,
+      "height": 348
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18620v1/fig-004.webp",
+      "caption": "Figure 2: Ablation studies on reward design and search strategy. (a) AGRPO uses R̄(c1) with GRPO’s group-based advantage; ALSE uses the improvement-based reward rLSE = R̄(c1)− R̄(c0) (Eq. 7). (b) Tree search (UCB) vs. linear chain (always extends the most recent node), both with the untrained Qwen3-4B-Instruct as fψ .",
+      "page": 8,
+      "index": 4,
+      "width": 806,
+      "height": 290
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18620v1/fig-005.webp",
+      "caption": "Table 4: Number of evaluation problems per domain.",
+      "page": 12,
+      "index": 5,
+      "width": 643,
+      "height": 429
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-001.webp",
+      "caption": "Figure 6. Prompt Template for MovieRec Preference Estimation.",
+      "page": 25,
+      "index": 1,
+      "width": 1017,
+      "height": 875
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-002.webp",
+      "caption": "Figure 7. Prompt Template for MediQ.",
+      "page": 26,
+      "index": 2,
+      "width": 1017,
+      "height": 861
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-003.webp",
+      "caption": "Figure 1. Overall illustration of information self-locking (SeL) and its mitigation. (b, a, o) denote the agent’s internal belief, its chosen action, and the resulting feedback at each turn. Under vanilla outcome-based RL (top), the agent can become trapped in a self-locking regime: deficient belief tracking masks contributions of informative queries, leading to misaligned credit assignment. Our AREW (bottom) introduces advantage reweighting via directional critiques, correcting the learning signal and assisting to mitigate SeL in active reasoning.",
+      "page": 2,
+      "index": 3,
+      "width": 939,
+      "height": 396
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-004.webp",
+      "caption": "Table 1. Main results (average outcome reward on test sets) across three domains and seven active reasoning tasks.",
+      "page": 7,
+      "index": 4,
+      "width": 1008,
+      "height": 322
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-005.webp",
+      "caption": "Figure 3. Training dynamics of rewards, evaluated under the PPO algorithm with Qwen-2.5-7B-Instruct across vanilla PPO, PPO with AREW– AS-ONLY and PPO with AREW– AS+BT.",
+      "page": 7,
+      "index": 5,
+      "width": 984,
+      "height": 183
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-006.webp",
+      "caption": "Figure 2. (a)/(b): the training dynamics of outcome reward, per-turn AS, and per-turn BT proxies in PE-GS=2 and MediQ datasets (Qwen-2.5-7B-Instruct). (c)/(d): correlation between the reward and AS proxies in PE-GS=2 and MediQ (Qwen-2.5-7B-Instruct). In strong BT patterns (by human-defined rules or frontier LLMs), the same AS sequence exhibits stronger correlation with the final reward.",
+      "page": 3,
+      "index": 6,
+      "width": 995,
+      "height": 216
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-007.webp",
+      "caption": "Figure 4. Evaluations of AS and BT capabilities under PPO algorithm with Qwen-2.5-7B-Instruct across vanilla PPO, PPO with AREW.",
+      "page": 8,
+      "index": 7,
+      "width": 999,
+      "height": 200
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-008.webp",
+      "caption": "Figure 5. (a): outcome-RL reduces sensitivity to interactive feedback while increasing belief consistency. (b)/(c): Evaluations of AS and BT capabilities under GRPO and GSPO (Qwen-2.5-7B-Instruct). (d): Training dynamics of rewards under different strength of AREW.",
+      "page": 8,
+      "index": 8,
+      "width": 1004,
+      "height": 200
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-009.webp",
+      "caption": "Table 2. Final Performance under different strength of directional critique perturbation (controlled by α).",
+      "page": 8,
+      "index": 9,
+      "width": 494,
+      "height": 770
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12109v1/fig-010.webp",
+      "caption": "Figure 8. Prompt Template for FloDial.",
+      "page": 27,
+      "index": 10,
+      "width": 1017,
+      "height": 897
+    }
+  ]
+}

@@ -1,0 +1,494 @@
+Title: Dynamic Dual-Granularity Skill Bank for Agentic RL
+
+URL Source: https://arxiv.org/pdf/2603.28716v1
+
+Published Time: Tue, 31 Mar 2026 02:39:02 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+Preprint, In Progress. 
+
+# Dynamic Dual-Granularity Skill Bank for Agentic RL 
+
+Songjun Tu 1,2 , Chengdong Xu 3,2 , Qichao Zhang 1, Yaocheng Zhang 1,Xiangyuan Lan 2, Linjing Li 1, Dongbin Zhao 1,2 
+
+Institute of Automation, Chinese Academy of Sciences 1
+
+Pengcheng Laboratory 2 Sun Yat-Sen University 3
+
+## Abstract 
+
+Agentic reinforcement learning (RL) can benefit substantially from reusable experience, yet existing skill-based methods mainly extract trajectory-level guidance and often lack principled mechanisms for maintaining an evolv-ing skill memory. We propose D2Skill , a dynamic dual-granularity skill bank for agentic RL that organizes reusable experience into task skills for high-level guidance and step skills for fine-grained decision support and error correction. D2Skill jointly trains the policy and skill bank through paired baseline and skill-injected rollouts under the same policy, using their performance gap to derive hindsight utility signals for both skill updating and policy optimization. Built entirely from training-time experience, the skill bank is continuously expanded through reflection and maintained with utility-aware retrieval and pruning. Experiments on ALFW ORLD 
+
+and W EB SHOP with Q WEN 2.5-7B-I NSTRUCT and Q WEN 3-4B-I NSTRUCT -2507 show that D2Skill consistently improves success rates over skill-free baselines by 10–20 points. Further ablations and analyses show that both dual-granularity skill modeling and dynamic skill maintenance are critical to these gains, while the learned skills exhibit higher utility, transfer across evaluation settings, and introduce only modest training overhead. 
+
+Project Page: https://github.com/TU2021/D2Skill-AgenticRL. (ii) Skill Generation       
+
+> SkillBank ：A Collection of Skill Items
+> Task Agent Env
+> (iii) Skill Management
+> (i) Skill Retrieval
+> Skill Items Obs
+> Action
+> Dual-Granularity Skills
+> Task Skill ：High-level planning & exploration
+> Step Skill ：Fine-grained actions for local steps
+
+(a) D2Skill Framework Origin  GRPO  D2Skill (G3F)  D2Skill (O3)         
+
+> Success Rate
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 0
+> 12.5
+> 90.6 87.8
+> 3.9
+> 72.6
+> 80.5 84.4
+> 75.0
+> +15.6 +11.8
+> ALFWorld WebShop
+> 17.2
+> 53.9
+> 69.6 72.7
+> +18.8
+> Qwen2.5 -7B -Instruct Qwen3 -4B -Instruct -2507 Qwen2.5 -7B -Instruct
+
+(b) Main Results 0 20 40 60 80 100 120 140 160 
+
+> Training Steps
+> 0.1 0.2 0.3 0.4 0.5 0.6 0.7
+> Success Rate
+> D2Skill: Skill Group D2Skill: Baseline Group GRPO
+> ~6% ~15%
+
+(c) Training Curves of Success Rate 0 20 40 60 80 100 120 140 160 
+
+Training Steps  
+
+> 0.0 0.1 0.2 0.3
+> Average Skill utility  D2Skill: SkillBank
+> D2Skill: Retrieval w/o management: Skill Bank w/o management: Retrieval
+> Skill Pruning
+> Success:72 .7Success:57 .8
+
+(d) Skill Bank Dynamics of Utility 
+
+Figure 1: Overview of D2Skill. (a) The dynamic dual-granularity skill bank with retrieval, reflection-driven generation, and management. (b) Overall results on ALFW ORLD and WEB SHOP . (c) ALFW ORLD training curves for the D2Skill skill group, paired baseline group, and GRPO. (d) Skill bank dynamics with and without management, shown by average skill utility and retrieval statistics. 1
+
+> arXiv:2603.28716v1 [cs.AI] 30 Mar 2026
+
+Preprint, In Progress. 
+
+## 1 Introduction 
+
+Agentic reinforcement learning (RL) has recently emerged as a promising paradigm for training language-based agents to solve long-horizon decision-making tasks, including interactive environments (Jiang et al., 2026), web search (Zhang et al., 2025c), and research scenarios (Tu et al., 2026). In these settings, the policy interacts with the environment through a textual interface and selects actions based on the task description together with a limited history of past observations and actions. However, such history-based context is generally not a sufficient statistic of the underlying state, resulting in severe partial observability and making credit assignment increasingly difficult as the decision horizon grows (Zhang et al., 2025b). Under sparse rewards and large action spaces, learning each task in isolation is highly inefficient (Feng et al., 2025). Effective policies therefore require mechanisms for accumulating reusable knowledge that can be transferred across tasks. Recent studies alleviate these challenges by introducing additional supervision signals for agentic RL. Some methods employ outcome-based credit assignment to provide process rewards (Feng et al., 2025), while others derive hindsight supervision from completed trajectories (Yu et al., 2025). More recent work focuses on enabling agents to accumulate experience across tasks and iteratively refine it during training (Zhai et al., 2025; Cai et al., 2025b;a). Within this line, reusable skills have emerged as an effective form of past expe-rience and shown strong empirical gains in agentic RL (Wang et al., 2026). For instance, SkillRL (Xia et al., 2026) builds a skill bank from past trajectories and retrieves relevant skills to guide policy interaction, improving exploration efficiency in long-horizon tasks. However, existing skill-based and reflection-driven frameworks remain limited in two respects. Most methods derive skills from complete trajectories and emphasize task-level reflection, which captures high-level guidance but is less effective for correcting fine-grained errors at individual interaction steps (Xia et al., 2026; Zhang et al., 2026a). In addition, as training progresses, the skill bank expands continuously, making retrieval and manage-ment increasingly challenging. Without principled mechanisms for skill evaluation and pruning, redundant or ineffective skills can degrade retrieved guidance and hinder policy optimization (Zhou et al., 2025; 2026). To address these limitations, we propose Dynamic Dual-Granularity Skill Bank ( D2Skill )for agentic RL, which maintains reusable skills at both the task and step granularities throughout training. As illustrated in Figure 1a, D2Skill distinguishes between task skills for high-level task guidance and step skills for fine-grained decision support and local error correction during interaction. During training, it contrasts skill-injected and non-injected trajectories under the same policy to estimate hindsight skill utility, which in turn guides skill maintenance, retrieval, and policy optimization; the overall training behavior is further reflected in the success-rate curves in Figure 1c. Meanwhile, D2Skill continuously expands and refines the skill bank through reflection while pruning redundant or ineffective skills, keeping the memory compact, informative, and beneficial throughout training, as further illustrated by the skill-bank dynamics in Figure 1d. Experiments on representative agentic tasks show that D2Skill consistently outperforms both non-skill baselines and existing skill-augmented methods (Figure 1b), while effectively maintaining a dynamically updated skill bank with high utility throughout training. The main contributions of this work are as follows: 1. We present D2Skill , a dynamic dual-granularity skill bank framework for agentic RL, which organizes reusable experience into task skills for high-level guidance and 
+
+step skills for fine-grained interaction support. 2. We develop a joint training paradigm where the skill bank and policy co-evolve, with skills expanded through reflection and maintained via utility-guided retrieval and pruning , ensuring an efficient memory throughout training. 3. We evaluate D2Skill on ALFW ORLD and W EB SHOP using Q WEN 2.5-7B-I NSTRUCT 
+
+and Q WEN 3-4B-I NSTRUCT -2507. D2Skill achieves 10–20 point gains in success rate 
+
+over skill-free baselines (GRPO), and ablations validate its core components. 2Preprint, In Progress. 
+
+## 2 Preliminaries 
+
+2.1 Agentic RL as a History-Augmented Decision Process 
+
+We consider agentic RL in long-horizon environments modeled as a Markov decision process (MDP) M = ( S, A, P, r, γ), where st ∈ S , at ∈ A , and (st+1, rt, dt) ∼ P(· | st, at). Unlike classical RL, the policy does not directly observe the environment state. Instead, the agent interacts through a textual interface that provides a partial description of the task and the interaction history. For a task instance g, let τg denote the task specification, ot the textual observation at step t, and HLt = {(ot−L, at−L), . . . , (ot−1, at−1)} the most recent L observation–action pairs retained in the prompt. Let Aadm  
+
+> t
+
+⊆ A be the admissible action set. The policy acts on the effective context xt = ( τg, HLt , ot, Aadm  
+
+> t
+
+), and selects actions according to πθ (at | xt).Although the underlying dynamics are Markovian in (st, at), the context xt is a fixed-window summary of past interactions and is generally not a sufficient statistic of the latent state, so the resulting MDP can be viewed as a history-augmented partially observable MDP. 
+
+2.2 Skill Bank as an External Knowledge Store 
+
+In addition to the sliding window HLt , we maintain a persistent skill bank M, where each skill m ∈ M stores language guidance for decision making. At step t, a retrieval operator selects a small set of relevant skills mt ⊆ M conditioned on the current context 
+
+xt = ( τg, HLt , ot, Aadm  
+
+> t
+
+), and the policy acts on the augmented context ˜ xt = ( xt, mt).Taking GRPO (Shao et al., 2024) as the RL algorithm for example. For each task g, a group of N trajectories is sampled and advantages are computed by normalizing returns within the group. Under the skill-augmented context, the GRPO objective is 
+
+LGRPO (θ) = Ei
+
+min  ri(θ) ˆAi, clip (ri(θ), 1 − ϵ, 1 + ϵ) ˆAi
+
+ − βDKL 
+
+ πθ (· | ˜xi)∥πref (· | ˜xi) .Here ˜xit denotes the context augmented with retrieved skills, ˆAi,t denote the normalized advantage and ri,t(θ) = πθ (ai,t | ˜xi,t )     
+
+> πθold (ai,t|˜xi,t)
+
+be the likelihood ratio. The policy is optimized under skill-augmented observations, while the objective remains the same as in standard RL. 
+
+## 3 Method 
+
+3.1 Overall Framework 
+
+The framework of D2Skill combines RL with a dynamic skill bank that is continuously updated through reflection and reused to guide policy interaction. As illustrated in Fig. 2, the framework consists of three main components. 
+
+RL training with skill injection. (Section 3.2) During training, trajectories are sampled in groups that include both baseline rollouts and skill-injected rollouts under the same policy. Retrieved skills are injected into the policy context to guide decision making, and the performance gap between the two groups is used to construct hindsight signals for policy optimization and skill utility updates under the GRPO objective. 
+
+Reflection-driven skill generation. (Section 3.3) When performance on a task group falls below a threshold, a reflection module analyzes representative trajectories to produce new reusable skills. Generated skills are associated with retrieval keys and inserted into the skill bank after normalization and deduplication, allowing the agent to accumulate experience across tasks during training. 
+
+Skill retrieval and bank management. (Section 3.3) During interaction, relevant skills are retrieved from the skill bank based on the current task and observation and injected into 3Preprint, In Progress. SkillBank       
+
+> Task -Skill -001: Uninterrupted Command Sequence
+> "principle ": "When tasked with moving multiple …"
+> "when_to_apply ": "For tasks involving the ..."
+> "retrieval_obs ": “Put two soapbottle in toilet. "
+> Step -Skill -001: Search Unvisited Receptacles
+> "principle" : "When searching for a required …"
+> "when_to_apply": ""When the target object has ..."
+> "retrieval_obs": “Put some keychain on sofa.
+> Current observation: You arrive at loc 23. …"
+
+... 
+
+... A0 S1 A1 S2S0 ... 
+
+M 0
+
+M 1
+
+M 2
+
+A0 S1 A1 S2S0 ... 
+
+> Baseline Group
+> ...  ×N/2
+> Skill Group
+> ...  ×N/2
+
+R
+
+R           
+
+> Hindsight Reward
+> Sample
+> Failed Trajectories
+> Reflection Task Skills + Task Description
+> Step Skills + First Error Step
+> Add
+> Utility Evaluation
+> Delete
+> S0: Put some keychain on …
+> Rollout
+> 00000
+> N/2 N/2 N/2 N/2 N/2
+
+Figure 2: Overall framework of D2Skill. D2Skill couples RL with a dynamic dual-granularity skill bank. For each task, training rollouts are divided into a baseline group and a skill group, whose performance gap yields hindsight signals for policy optimization and skill utility estimation. When performance is poor, reflection on representative failed trajectories produces task skills for high-level guidance and step skills for local error correction. Skills are stored with retrieval keys, reused during subsequent interaction, and periodically pruned by utility-based bank management. the policy context. Skill utilities are updated online according to rollout outcomes, and the skill bank is periodically pruned using utility-based criteria to maintain a bounded memory while preserving effective skills. 
+
+3.2 RL Training with Skill Injection and Hindsight Optimization Rollout with skill injection. For each task g, we sample a group of N parallel trajectories, denoted by Gg. The group is evenly divided into a skill group Gskill 
+
+g and a baseline group 
+
+Gbase 
+
+g , each containing N/ 2 trajectories. Let bi ∈ { 0, 1 } denote the group indicator for trajectory i ∈ G g, where bi = 1 indicates i ∈ G skill 
+
+g and bi = 0 indicates i ∈ G base 
+
+g . Trajectories in the skill group retrieve skills from the skill bank during interaction, while those in the baseline group follow the same policy without skill injection. Let Yi ∈ { 0, 1 } denote the terminal success indicator of trajectory i. For each task g, the baseline success rate and the skill-group success rate are defined as ¯Ybase 
+
+g = 1
+
+|G base 
+
+g | ∑
+
+i∈G base 
+
+> g
+
+Yi, ¯Yskill 
+
+g = 1
+
+|G skill 
+
+g | ∑
+
+i∈G skill 
+
+> g
+
+Yi. (1) 
+
+Hindsight signals and utility updates. We use the performance gap between the skill group and the baseline group to construct hindsight signals for updating skill utilities. For each task g, the task-level hindsight signal ∆task 
+
+g and the trajectory-level credit ci for step skills retrieved along skill-injected trajectory i are defined as 
+
+∆task 
+
+g = ¯Yskill 
+
+g − ¯Ybase 
+
+g , ci = Yi − ¯Ybase 
+
+g . (2) Each skill m maintains a utility um updated using an exponential moving average. For a given task g, all retrieved task skills share the same signal ∆task 
+
+g , since the task context is identical for the whole group. In contrast, multiple step skills may be retrieved at different steps and from different trajectories, and each retrieved step skill is updated using the credit of the trajectory in which it appears. The updates are defined as 
+
+um ← (1 − βtask )um + βtask ∆task 
+
+g , um ← (1 − βstep )um + βstep ci, (3) 4Preprint, In Progress. where the first rule is applied to task skills retrieved in task g, and the second rule is applied to each step skill retrieved along skill-injected trajectory i.
+
+Hindsight intrinsic reward shaping. To encourage effective use of retrieved skills, we introduce a hindsight intrinsic reward for trajectories in the skill group. For each skill-injected trajectory i ∈ G skill  
+
+> g
+
+, the hindsight intrinsic reward is defined as 
+
+Rint  
+
+> i
+
+= λ Yi − ¯Ybase 
+
+> g
+
+, (4) where λ controls the strength of the shaping signal. This term measures performance gain over the baseline and encourages effective skill usage. The hindsight intrinsic reward is applied at the end of each skill-injected trajectory and included in the policy optimization. 
+
+Policy optimization with skill-augmented returns. The policy is optimized on the full samples. For each task g, trajectories in the skill group Gskill  
+
+> g
+
+are generated under skill-augmented context and receive an additional reward Rint . Let Ri denote the origin return of trajectory i. For skill-injected trajectories, the return is augmented with Rint  
+
+> i
+
+, and advantages are computed by group normalization over the whole trajectory group: ˜Ri =
+
+(
+
+Ri + Rint  
+
+> i
+
+, i ∈ G skill  
+
+> g
+
+,
+
+Ri, i ∈ G base  
+
+> g
+
+, Ai =
+
+˜Ri − mean 
+
+
+
+{ ˜Rj}j∈G g
+
+
+
+std 
+
+
+
+{ ˜Rj}j∈G g
+
+ . (5) Taking GRPO as an example, the final policy loss is 
+
+L = Ei∈G g [min (ri Ai, clip (ri, 1 − ϵ, 1 + ϵ)Ai) − βDKL ] . (6) 
+
+3.3 Skill Generation, Retrieval, and Bank Management Reflection and skill generation. Reflection is triggered only for task groups with low performance, i.e., when ¯Yskill  
+
+> g
+
+< τref , where τref is a reflection threshold. For each such task g, we sample one failed trajectory τ− 
+
+> g
+
+from the skill group and, when available, one successful trajectory τ+ 
+
+> g
+
+from either the skill or the baseline group, and use them for skill generation . The reflector produces at most one task skill and one step skill for each task group, formalized as 
+
+mtask  
+
+> g
+
+= f task reflect (g, τ− 
+
+> g
+
+, τ+ 
+
+> g
+
+), (mstep  
+
+> g
+
+, oj) = f step reflect (g, τ− 
+
+> g
+
+, τ+ 
+
+> g
+
+), (7) where freflect denotes an external reflector LLM used for skill generation, and oj denotes the observation at the earliest failure step j identified from the sampled failed trajectory. For each skill m, we define a retrieval key km that determines when the skill is applicable. For 
+
+m ∈ M task , the key is defined as km = g. For m ∈ M step , the key is defined as km = ( g, oj).New skills are inserted into the skill bank after deduplication and participate in subsequent retrieval and utility updates. 
+
+Two-stage skill retrieval. When interacting with environment, skills are retrieved from the skill bank by matching the current query key with the retrieval key km of each skill. For task-level retrieval, the query key is q = g, while for step-level retrieval the query key is 
+
+qt = ( g, ot), where g denotes the task identifier and ot is the observation at step t.In the first stage, we retrieve the top-m candidate skills from the pool M ∈ {M task , Mstep }
+
+according to cosine similarity between the embedding of q and km. A minimum similarity threshold τsim is applied, and only skills satisfying sim (q, km) ≥ τsim are retained. In the second stage, the candidates are ranked using a combination of semantic similarity and utility-based exploration. For each skill m ∈ M , we define the selection score score (m) = α dsim (m, q) + ( 1 − α)
+
+um + η
+
+s
+
+log (1 + Nr )
+
+1 + nm
+
+ , (8) 5Preprint, In Progress. where dsim (m, q) ∈ [0, 1 ] is the normalized cosine similarity, um is the utility of skill m, nm is the number of times the skill has been retrieved, and Nr = ∑m′ ∈M nm′ is the total retrieval count in the active pool. The second term corresponds to a UCB-style bonus that encourages exploration of skills with low retrieval counts. The top-k (<top-m) skills ranked by this score are injected into the policy context. 
+
+Skill pruning by utility. To prevent unbounded growth of the skill bank, we periodically prune each skill pool M after validation intervals. Each pool is associated with a capacity limit Nmax . If |M| > Nmax , each skill m ∈ M is assigned an eviction score evict (m) = um + η
+
+s
+
+log (1 + Nr )
+
+1 + nm
+
+. (9) Then, skills are sorted by evict (m) in ascending order, and the lowest-scoring skills are removed until |M| ≤ Nmax . Skills created within the last Tprot training steps, i.e., t − tcreate  
+
+> m
+
+<
+
+Tprot , are excluded from eviction to ensure sufficient evaluation. 
+
+## 4 Experiments 
+
+We evaluate D2Skill on two representative LLM agentic benchmarks, ALFW ORLD (Shridhar et al., 2020) and W EB SHOP (Yao et al., 2022), and compare it against both skill-free RL baselines and prior memory- or skill-augmented methods. Our experiments are designed to answer three questions: 1. Main Performance: Does D2Skill outperform standard RL and existing baselines on agentic tasks? (Section 4.1) 2. Ablation: What is the contribution of each major component to the overall gains? (Section 4.2) 3. Analysis: How does the dynamic skill bank affect skill utility, training dynamics, and computational overhead, and does the learned policy retain generalization ability without the skill bank at evaluation time? (Section 4.3) 
+
+4.1 Main Performance 
+
+Table 1 shows that D2Skill consistently outperforms strong skill-free baselines across both 
+
+Qwen2.5-7B-Instruct and Qwen3-4B-Instruct-2507 (Yang et al., 2025a), while also surpassing prior memory- and skill-based methods where available. During validation stage, the skill bank M is fixed, and the agent only performs retrieval from Mtask and Mstep to guide policy, without reflection or skill updates. Under Qwen2.5-7B-Instruct , D2Skill achieves 90.6 overall success on ALFW ORLD , exceeding GRPO by 15.6 points and SkillRL by 1.5 points. On W EB SHOP , the best D2Skill variants reach 91.1 in score and 84.4 in success rate, compared with 86.0 / 72.6 for GRPO and 85.2 / 72.7 for SkillRL. It also substantially outperforms memory-augmented GRPO variants such as Mem0+GRPO (Chhikara et al., 2025) and SimpleMem+GRPO (Liu et al., 2026a). Notably, 
+
+SkillRL constructs skills from validation trajectories and therefore benefits from stronger privileged information. By contrast, D2Skill acquires and maintains its skill bank using only training-time experience, while still achieving better overall performance under this more restrictive setting. Under the smaller Qwen3-4B-Instruct-2507 base model, D2Skill improves ALFW ORLD overall success from 53.9 with GRPO to 69.6 and 72.7, yielding gains of 15.7 and 18.8 points using skills generated by Gemini-3-Flash (G3F) and O3 , respectively. We further evaluate D2Skill on a teacher-initialized policy obtained by collecting 300 success-ful trajectories per environment with O3 (for ALFW ORLD ) / Gemini-3-Pro (for W EBSHOP )and performing SFT on Qwen3-4B-Instruct-2507 before RL. Even in this strong setting, D2Skill continues to improve both training efficiency and final performance. After 40 training steps, D2Skill reaches 92.2 on ALFW ORLD , nearly matching GRPO trained for 6Preprint, In Progress. Table 1: Performance on ALFW ORLD and W EB SHOP . For ALFW ORLD , we report the average success rate (%) for each subtask and the overall success rate. For W EB SHOP , we report the average score and average success rate (%). Unless otherwise stated, all methods are trained for 160 training steps in each environment, evaluated every 5 training steps on 128 validation tasks by default, and reported by their best performance over the entire training run. Following SkillRL, we use an SFT-initialized model for Qwen2.5-7B-Instruct 
+
+to ensure reliable instruction-following for skill usage, while for Qwen3-4B-Instruct-2507 
+
+we directly use the original instruct model. For Qwen3-4B-Instruct-2507 , performance on WEB SHOP remains close to zero both before and after training, and is therefore omitted from the table. ∗ denotes results replicated from (Feng et al., 2025) and (Xia et al., 2026). The best and second-best results are highlighted in red and blue, respectively.                                                                                                                                                                                         
+
+> Method ALFWorld WebShop
+> Pick Clean Cool Look Heat Pick2 All Score Success Closed-source LLMs
+> Gemini-3-Flash 96.4 57.1 96.2 85.7 72.2 95.3 85.2 14.1 16.5
+> O3 64.3 19.1 23.1 64.3 33.3 61.9 43.8 5.8 4.7 Base Model: Qwen2.5-7B-Instruct
+> Origin 17.9 4.8 3.8 64.3 0.0 5.3 12.5 16.6 3.9 GRPO 88.3 73.3 76.0 83.3 81.3 40.0 75.0 86.0 72.6 Mem0+GRPO* 78.1 56.1 65.0 54.8 31.0 26.9 54.7 58.1 37.5 SimpleMem+GRPO* 89.5 60.0 64.9 36.3 50.0 26.3 62.5 67.8 46.9 SkillRL( O3 )* 94.3 90.6 92.0 83.3 93.7 80.0 89.1 85.2 72.7
+> D2Skill (Gemini-3-Flash )97.1 100.0 75.0 87.5 100.0 78.6 90.6 91.1 80.5
+> D2Skill (O3 )93.8 94.7 95.5 77.8 95.0 72.0 87.8 90.1 84.4 Base Model: Qwen3-4B-Instruct-2507
+> Origin 50.0 9.5 0.0 2.1 11.1 4.8 17.2 --GRPO 73.5 46.6 48.0 61.1 62.5 20.0 53.9 --SkillRL( O3 )90.0 92.3 52.0 63.6 42.9 40.9 67.2 --
+> D2Skill (Gemini-3-Flash )88.6 75.0 54.2 66.7 60.0 52.6 69.6 --
+> D2Skill (O3 )89.4 72.4 66.7 54.5 60.0 50.0 72.7 --Base Model: Qwen3-4B-Instruct-2507 + SFT
+> Origin 53.6 28.6 46.2 71.4 55.5 38.1 47.7 65.6 53.1 GRPO( 40-Steps )89.7 77.8 85.7 91.6 86.7 69.6 83.6 77.4 67.2 GRPO( 120-Steps )100.0 95.2 80.8 88.9 78.6 88.3 92.9 88.2 79.9
+> D2Skill (40-Steps )92.9 100.0 95.2 80.0 90.9 86.7 92.2 84.1 71.9
+> D2Skill (120-Steps )97.6 95.8 100.0 88.9 90.0 91.7 95.3 89.2 81.3
+
+120 steps (92.9), and improves W EB SHOP to 84.1 / 71.9 in score / success rate. After 120 steps, it further reaches 95.3 on ALFW ORLD and 89.2 / 81.3 on W EB SHOP , consistently outperforming GRPO under the same budget .An additional finding is that the closed-source teacher models used in our framework are not necessarily strong standalone agents in these environments. Their direct rollout performance is often substantially below that of the final RL-trained policies. However, when deployed as reflectors to critique trajectories and extract reusable skills, they still yield clear gains in both training efficiency and final performance. This indicates that the utility of these models in D2Skill comes less from direct action generation and more from their ability to perform trajectory-level diagnosis and skill abstraction , which in turn provides 
+
+effective supervision for policy improvement .
+
+4.2 Ablation Study 
+
+We conduct ablations on ALFW ORLD with Q WEN 3-4B-I NSTRUCT -2507 to assess the contri-bution of each component in D2Skill. During training, we report the peak success rates of the skill and baseline groups, measured by the maximum 10-step moving average, and during validation we report the best held-out success rate. We consider six ablated variants: (i) w/o task skills , removing task-level skills; (ii) w/o step skills , removing step-level skills; (iii) w/o skill management , disabling skill pruning and retaining all accumulated skills; (iv) w/o 
+
+7Preprint, In Progress. 
+
+baseline group , removing paired baseline rollouts and training with absolute rewards only; 
+
+(v) w/o utility retrieval , removing utility-aware ranking and using similarity-only retrieval; 
+
+(vi) w/o utility module , removing the utility mechanism entirely, including baseline-based utility estimation and updates; and (vii) w/o skills (GRPO) as a skill-free reference. Table 2: Ablation Study on ALFW ORLD .
+
+Method Train Val Skill Baseline D2Skill 70.9 65.8 72.7 
+
+w/o task skills 59.1 53.7 62.7 w/o step skills 57.8 55.8 60.2 w/o skill management 60.0 57.4 57.8 w/o baseline group 63.9 - 68.8 w/o utility retrieval 61.4 51.8 64.8 w/o utility module 60.3 - 62.5 w/o skills (GRPO) - 50.6 53.9 The ablation results in Table 2 reveal three main findings. First, removing either task skills or step skills con-sistently reduces performance , indi-cating that both high-level task guid-ance and fine-grained step support are important to D2Skill. Second, the larger degradation caused by remov-ing skill management highlights the importance of dynamic bank mainte-nance in discarding ineffective skills and retaining compact, high-utility knowledge for reuse. Third, removing the baseline group or utility estimation results in smaller but still clear drops, suggesting that these components primarily enhance credit assignment and skill valuation , thereby improving optimization and retrieval quality, rather than driving the main gains directly. 
+
+4.3 Additional Analysis Success Rate 
+
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 0
+> 61.7
+> 72.6
+> 84.4
+> ALFWorld: Qwen3-4B
+> 53.9
+> 72.7
+> Webshop: Qwen2.5-7B
+> 68.0
+> D2Skill (O3)
+> GRPO
+> 77.3 73.4
+
+Figure 3: Eval with Different Skills. 
+
+Utility and transferability of the skill bank. As shown in Figure 1d, enabling skill management yields a skill bank and retrieved skills with con-sistently higher average utility, indicating that utility-aware maintenance improves memory and retrieval quality by filtering ineffective skills. Fig-ure 3 further shows that the learned skills are 
+
+transferable . Even without a skill bank at evalua-tion time, the policy trained with D2Skill remains competitive with, or outperforms, GRPO, suggest-ing that part of the gain from skill augmentation has been internalized into the policy during training. Moreover, using the Gemini-3-Flash -generated skill bank from the corresponding training setting at evaluation time still yields clear gains over the no-skill variant in both ALFW ORLD and W EB SHOP , while the self-generated skill bank remains the most effective. This suggests that D2Skill learns reusable skills that retain utility beyond the specific skill bank used during training. Table 3: Training Cost. 
+
+Method Training Hours 
+
+GRPO 20.8h (1.0 ×)SkillRL 49.2h (2.4 ×)
+
+D2Skill 25.6h (1.2 ×)0 5 10 15 20 25 30 35 
+
+> Training Times (Hours)
+> 0.2 0.4 0.6 0.8
+> Success Rate
+> GRPO D2Skill SkillRL
+> X1 .7
+
+Figure 4: Val Success Dynamics. 
+
+Training cost. Table 3 reports the wall-clock training time on ALFW ORLD with Qwen3-4B-Instruct-2507 , measured on 8 ×H100 GPUs. D2Skill takes 25.6 hours, remaining close to GRPO (20.8 hours) while being substantially cheaper than SkillRL (49.2 hours). As shown in Figure 4, D2Skill also reaches strong evalua-tion performance much earlier in wall-clock time, making it about 1.7 × faster than SkillRL in prac-tice. This low overhead mainly comes from an effi-cient retrieval pipeline: retrieval is executed with batched embedding queries and skill embeddings are updated incrementally, so only newly added skills need to be encoded after each bank update. As a result, D2Skill remains close to GRPO in train-ing cost despite introducing skill retrieval and management. Further implementation details are available in our open-source codebase. 8Preprint, In Progress. 
+
+## 5 Related Works 
+
+5.1 Agent Evolution and Memory Management 
+
+Recent work has increasingly studied agent evolution to address the limited post-training adaptability of LLMs. A central mechanism in this line is external memory, which supports continual adaptation beyond parameter updates (Zhang et al., 2024; Gao et al., 2025; Du, 2026). Existing studies explore evolving long-term memory from multiple perspectives, including retention and forgetting (Chhikara et al., 2025), structured updating and orga-nization (Xu et al., 2025; Yan et al., 2025), retrieval-aware optimization (Zhou et al., 2025), and hierarchical or generative memory construction (Zhang et al., 2025a). Beyond storing interaction history, another line of work abstracts experience into reusable knowledge, such as reasoning strategies (Zhao et al., 2024; Ouyang et al., 2025), reusable workflows (Wang et al., 2024), hierarchical experience libraries (Yang et al., 2025b), and continual experience re-finement (Cai et al., 2025b). Overall, these studies suggest that agent evolution increasingly relies on structured, reusable memory with effective retrieval and management. 
+
+5.2 Memory-augmented Agentic RL 
+
+Memory serves as a non-parametric complement to RL by storing useful successful or failed experiences in external memory and retrieving them into the policy context to improve agent performance (Liu et al., 2026b; Zhou et al., 2026). By coupling parametric RL updates with evolving experience repositories, recent methods enable LLM agents to accumulate reusable knowledge beyond model weights, improving both reasoning (Tu et al., 2025; Suzgun et al., 2026) and adaptation on complex tasks (Bai et al., 2026; Li et al., 2026). This is particularly important in agentic settings, where long-horizon decision making under partial observability often benefits more from structured reusable guidance than from raw trajectory storage. Accordingly, recent work increasingly organizes cross-task experience into reusable guidance for planning and action selection (Zhai et al., 2025; Cai et al., 2025a), with skills emerging as an especially effective abstraction for improving policy performance on complex agentic tasks (Wang et al., 2026). 
+
+5.3 Comparison with Contemporaneous Work 
+
+Contemporaneous works such as RetroAgent (Zhang et al., 2026b) and Complementary RL (Muhtar et al., 2026) are related in spirit to our approach, showing that self-evolving experience can substantially improve agentic RL performance. However, their results rely on more elaborate prompting pipelines for retrospection and experience extraction, which may increase system complexity and prompt dependence. SkillRL (Xia et al., 2026) is the most closely related prior work to D2Skill. Although SkillRL also distinguishes between two task types, this mainly reflects task categorization rather than different skill granularities, and its guidance remains task-level: each task retrieves skills once and uses them throughout the trajectory. In contrast, D2Skill maintains both task skills and step skills , enabling high-level guidance and fine-grained support with retrieval at each interaction step. Moreover, D2Skill performs skill generation and management during training , rather than relying on privileged validation information for skill construction. 
+
+## 6 Conclusion 
+
+We presented D2Skill , a dynamic dual-granularity skill bank framework for agentic RL. By combining task and step skill reuse with reflection-driven expansion, utility-aware retrieval, and pruning, D2Skill enables the policy and skill bank to improve jointly during training. Experiments show that this design consistently outperforms strong baselines, while ablations and analyses confirm the importance of both dual-granularity skill modeling and dynamic skill management, as well as the utility and transferability of the learned skill bank. Our evaluation is currently limited to two representative benchmarks, and D2Skill still relies on an external reflector model. Extending it to broader environments while reducing this dependency is an important direction for future work. 9Preprint, In Progress. 
+
+## References 
+
+Fei Bai, Zhipeng Chen, Chuan Hao, Ming Yang, Ran Tao, Bryan Dai, Wayne Xin Zhao, Jian Yang, and Hongteng Xu. Towards effective experiential learning: Dual guidance for utilization and internalization. arXiv preprint arXiv:2603.24093 , 2026. Yuzheng Cai, Siqi Cai, Yuchen Shi, Zihan Xu, Lichao Chen, Yulei Qin, Xiaoyu Tan, Gang Li, Zongyi Li, Haojia Lin, et al. Training-free group relative policy optimization. arXiv preprint arXiv:2510.08191 , 2025a. Zhicheng Cai, Xinyuan Guo, Yu Pei, Jiangtao Feng, Jinsong Su, Jiangjie Chen, Ya-Qin Zhang, Wei-Ying Ma, Mingxuan Wang, and Hao Zhou. Flex: Continuous agent evolution via forward learning from experience. arXiv preprint arXiv:2511.06449 , 2025b. Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, and Deshraj Yadav. Mem0: Building production-ready ai agents with scalable long-term memory. arXiv preprint arXiv:2504.19413 , 2025. Pengfei Du. Memory for autonomous llm agents: Mechanisms, evaluation, and emerging frontiers. arXiv preprint arXiv:2603.07670 , 2026. Lang Feng, Zhenghai Xue, Tingcong Liu, and Bo An. Group-in-group policy optimization for llm agent training. arXiv preprint arXiv:2505.10978 , 2025. Huan-ang Gao, Jiayi Geng, Wenyue Hua, Mengkang Hu, Xinzhe Juan, Hongzhang Liu, Shilong Liu, Jiahao Qiu, Xuan Qi, Yiran Wu, Hongru Wang, Han Xiao, Yuhang Zhou, Shaokun Zhang, Jiayi Zhang, Jinyu Xiang, Yixiong Fang, Qiwen Zhao, Dongrui Liu, Qihan Ren, Cheng Qian, Zhenhailong Wang, Minda Hu, Huazheng Wang, Qingyun Wu, Heng Ji, and Mengdi Wang. A survey of self-evolving agents: What, when, how, and where to evolve on the path to artificial super intelligence. arXiv preprint arXiv:2507.21046 ,2025. Zhennan Jiang, Shangqing Zhou, Yutong Jiang, Zefang Huang, Mingjie Wei, Yuhui Chen, Tianxing Zhou, Zhen Guo, Hao Lin, Quanlu Zhang, et al. Wovr: World models as reliable simulators for post-training vla policies with rl. arXiv preprint arXiv:2602.13977 , 2026. Yu Li, Rui Miao, Zhengling Qi, and Tian Lan. Arise: Agent reasoning with intrinsic skill evolution in hierarchical reinforcement learning. arXiv preprint arXiv:2603.16060 , 2026. Jiaqi Liu, Yaofeng Su, Peng Xia, Siwei Han, Zeyu Zheng, Cihang Xie, Mingyu Ding, and Huaxiu Yao. Simplemem: Efficient lifelong memory for llm agents. arXiv preprint arXiv:2601.02553 , 2026a. Zeyuan Liu, Jeonghye Kim, Xufang Luo, Dongsheng Li, and Yuqing Yang. Exploratory memory-augmented llm agent via hybrid on-and off-policy optimization. arXiv preprint arXiv:2602.23008 , 2026b. Dilxat Muhtar, Jiashun Liu, Wei Gao, Weixun Wang, Shaopan Xiong, Ju Huang, Siran Yang, Wenbo Su, Jiamang Wang, Ling Pan, and Bo Zheng. Complementary reinforcement learning. arXiv preprint arXiv:2603.17621 , 2026. Siru Ouyang, Jun Yan, I-Hung Hsu, Yanfei Chen, Ke Jiang, Zifeng Wang, Rujun Han, Long T. Le, Samira Daruki, Xiangru Tang, Vishy Tirumalashetty, George Lee, Mahsan Rofouei, Hangfei Lin, Jiawei Han, Chen-Yu Lee, and Tomas Pfister. Reasoningbank: Scaling agent self-evolving with reasoning memory. arXiv preprint arXiv:2509.25140 , 2025. Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Yang Wu, et al. Deepseekmath: Pushing the limits of mathe-matical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. Mohit Shridhar, Xingdi Yuan, Marc-Alexandre C ˆot ´e, Yonatan Bisk, Adam Trischler, and Matthew Hausknecht. Alfworld: Aligning text and embodied environments for interac-tive learning. arXiv preprint arXiv:2010.03768 , 2020. 10 Preprint, In Progress. Mirac Suzgun, Mert Yuksekgonul, Federico Bianchi, Dan Jurafsky, and James Zou. Dynamic cheatsheet: Test-time learning with adaptive memory. In Proceedings of the 19th Conference of the European Chapter of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 7080–7106, 2026. Songjun Tu, Jiahao Lin, Xiangyu Tian, Qichao Zhang, Linjing Li, Yuqian Fu, Nan Xu, Wei He, Xiangyuan Lan, Dongmei Jiang, et al. Enhancing llm reasoning with iterative dpo: A comprehensive empirical investigation. In Second Conference on Language Modeling , 2025. Songjun Tu, Yiwen Ma, Jiahao Lin, Qichao Zhang, Xiangyuan Lan, Junfeng Li, Nan Xu, Linjing Li, and Dongbin Zhao. Paperaudit-bench: Benchmarking error detection in research papers for critical automated peer review. arXiv preprint arXiv:2601.19916 , 2026. Yinjie Wang, Xuyang Chen, Xiaolong Jin, Mengdi Wang, and Ling Yang. Openclaw-rl: Train any agent simply by talking. arXiv preprint arXiv:2603.10165 , 2026. Zora Zhiruo Wang, Jiayuan Mao, Daniel Fried, and Graham Neubig. Agent workflow memory. arXiv preprint arXiv:2409.07429 , 2024. Peng Xia, Jianwen Chen, Hanyang Wang, Jiaqi Liu, Kaide Zeng, Yu Wang, Siwei Han, Yiyang Zhou, Xujiang Zhao, Haifeng Chen, et al. Skillrl: Evolving agents via recursive skill-augmented reinforcement learning. arXiv preprint arXiv:2602.08234 , 2026. Wujiang Xu, Zujie Liang, Kai Mei, Hang Gao, Juntao Tan, and Yongfeng Zhang. A-mem: Agentic memory for llm agents. arXiv preprint arXiv:2502.12110 , 2025. Sikuan Yan, Xiufeng Yang, Zuchao Huang, Ercong Nie, Zifeng Ding, Zonggen Li, Xiaowen Ma, Jinhe Bi, Kristian Kersting, Jeff Z. Pan, Hinrich Schuetze, Volker Tresp, and Yunpu Ma. Memory-r1: Enhancing large language model agents to manage and utilize memories via reinforcement learning. arXiv preprint arXiv:2508.19828 , 2025. An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025a. Cheng Yang, Xuemeng Yang, Licheng Wen, Daocheng Fu, Jianbiao Mei, Rong Wu, Pinlong Cai, Yufan Shen, Nianchen Deng, Botian Shi, Yu Qiao, and Haifeng Li. Learning on the job: An experience-driven self-evolving agent for long-horizon tasks. arXiv preprint arXiv:2510.08002 , 2025b. Shunyu Yao, Howard Chen, John Yang, and Karthik Narasimhan. Webshop: Towards scalable real-world web interaction with grounded language agents. Advances in Neural Information Processing Systems , 35:20744–20757, 2022. Hongli Yu, Tinghong Chen, Jiangtao Feng, Jiangjie Chen, Weinan Dai, Qiying Yu, Ya-Qin Zhang, Wei-Ying Ma, Jingjing Liu, Mingxuan Wang, et al. Memagent: Reshaping long-context llm with multi-conv rl-based memory agent. arXiv preprint arXiv:2507.02259 ,2025. Yunpeng Zhai, Shuchang Tao, Cheng Chen, Anni Zou, Ziqian Chen, Qingxu Fu, Shinji Mai, Li Yu, Jiaji Deng, Zouying Cao, et al. Agentevolver: Towards efficient self-evolving agent system. arXiv preprint arXiv:2511.10395 , 2025. Guibin Zhang, Muxin Fu, Guancheng Wan, Miao Yu, Kun Wang, and Shuicheng Yan. G-memory: Tracing hierarchical memory for multi-agent systems. arXiv preprint arXiv:2506.07398 , 2025a. Guibin Zhang, Hejia Geng, Xiaohang Yu, Zhenfei Yin, Zaibin Zhang, Zelin Tan, Heng Zhou, Zhongzhi Li, Xiangyuan Xue, Yijiang Li, et al. The landscape of agentic reinforcement learning for llms: A survey. arXiv preprint arXiv:2509.02547 , 2025b. Shengtao Zhang, Jiaqian Wang, Ruiwen Zhou, Junwei Liao, Yuchen Feng, Zhuo Li, Yujie Zheng, Weinan Zhang, Ying Wen, Zhiyu Li, et al. Memrl: Self-evolving agents via runtime reinforcement learning on episodic memory. arXiv preprint arXiv:2601.03192 , 2026a. 11 Preprint, In Progress. Xiaoying Zhang, Zichen Liu, Yipeng Zhang, Xia Hu, and Wenqi Shao. Retroagent: From solv-ing to evolving via retrospective dual intrinsic feedback. arXiv preprint arXiv:2603.08561 ,2026b. Yaocheng Zhang, Haohuan Huang, Zijun Song, Yuanheng Zhu, Qichao Zhang, Zijie Zhao, and Dongbin Zhao. Criticsearch: Fine-grained credit assignment for search agents via a retrospective critic. arXiv preprint arXiv:2511.12159 , 2025c. Zeyu Zhang, Xiaohe Bo, Chen Ma, Rui Li, Xu Chen, Quanyu Dai, Jieming Zhu, Zhenhua Dong, and Ji-Rong Wen. A survey on the memory mechanism of large language model based agents. arXiv preprint arXiv:2404.13501 , 2024. Andrew Zhao, Daniel Huang, Quentin Xu, Matthieu Lin, Yong-Jin Liu, and Gao Huang. Expel: Llm agents are experiential learners. arXiv preprint arXiv:2308.10144 , 2024. Huichi Zhou, Yihang Chen, Siyuan Guo, Xue Yan, Kin Hei Lee, Zihan Wang, Ka Yiu Lee, Guchun Zhang, Kun Shao, Linyi Yang, et al. Memento: Fine-tuning llm agents without fine-tuning llms. arXiv preprint arXiv:2508.16153 , 2025. Huichi Zhou, Siyuan Guo, Anjie Liu, Zhongwei Yu, Ziqin Gong, Bowen Zhao, Zhixun Chen, Menglong Zhang, Yihang Chen, Jinsong Li, et al. Memento-skills: Let agents design agents. arXiv preprint arXiv:2603.18743 , 2026. 12

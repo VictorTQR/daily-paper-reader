@@ -1,0 +1,246 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-001.webp",
+      "caption": "Fig. 2. The framework of our proposed RL-RH-PP. At each planning step, the RL policy encodes shortest path of each agents into agent embeddings and autoregressively decodes a total of 𝐾 priority orders. These orders are passed to the RH-PP planner to compute the conflict-free path, which is then executed in the warehouse simulation. Feedback rewards are used to update the policy. This closed-loop interaction enables the RL policy to learn to generate effective priority orders during training.",
+      "page": 11,
+      "index": 1,
+      "width": 637,
+      "height": 430
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-002.webp",
+      "caption": "Table 8 (continued)",
+      "page": 43,
+      "index": 2,
+      "width": 883,
+      "height": 1160
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-003.webp",
+      "caption": "Table 9. Hyperparameter Settings for RL-RH-PP",
+      "page": 43,
+      "index": 3,
+      "width": 386,
+      "height": 350
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-004.webp",
+      "caption": "Fig. 11. Total throughput versus different Symbotic maps in zero-shot transfer evaluation at 𝑁 = 120 and𝑤 = 20. The base model is trained at 𝑁 = 120 and𝑤 = 20 on the Original map.",
+      "page": 25,
+      "index": 4,
+      "width": 742,
+      "height": 361
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-005.webp",
+      "caption": "Fig. 12. Throughput per agent (TPA) at evaluation vs 𝐾 , evaluated with 𝑁 = 100",
+      "page": 26,
+      "index": 5,
+      "width": 779,
+      "height": 312
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-006.webp",
+      "caption": "Fig. 4. Our proposed decoding process for RL-RH-PP. Agent embeddings from the encoder are fed into a self-attention mechanism to generate a sampling distribution. To construct each priority order, agents are sampled and added one by one in an autoregressive manner until all 𝑁 agents are assigned. This process can be executed in parallel to generate a set of 𝐾 promising orders efficiently.",
+      "page": 15,
+      "index": 6,
+      "width": 916,
+      "height": 294
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-007.webp",
+      "caption": "Table 3. Evaluation comparison of RL-RH-PP to various baselines, RL-RH-PP policy trained from scratch with𝑤 = 20 for each setting. TPA = throughput per agent. Best is bolded; second best is underlined.",
+      "page": 21,
+      "index": 7,
+      "width": 761,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-008.webp",
+      "caption": "Table 7. Compare with other priority order assignment heuristics (𝑤 = 20). ‘Ama.’ for Amazon and ‘Sym.’ for Symbotic.",
+      "page": 30,
+      "index": 8,
+      "width": 848,
+      "height": 192
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-009.webp",
+      "caption": "Fig. 1. Robot fleet routing in a Symbotic warehouse (source: https://www.symbotic.com).",
+      "page": 2,
+      "index": 9,
+      "width": 472,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-010.webp",
+      "caption": "Fig. 15. Total throughput during training under different congestion (𝜅) and infeasibility (𝜎) weights in reward function Eq. 2, evaluated on-the-fly with 𝑁 = 120",
+      "page": 29,
+      "index": 10,
+      "width": 928,
+      "height": 333
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-011.webp",
+      "caption": "Fig. 16. Total throughput during training for encoder ablation study, evaluated on-the-fly with 𝑁 = 120",
+      "page": 29,
+      "index": 11,
+      "width": 916,
+      "height": 328
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-012.webp",
+      "caption": "Fig. 8. Total throughput versus agent number 𝑁 in zero-shot transfer evaluation at𝑤 = 20. The base model (yellow star) is trained at 𝑁 = 120 and𝑤 = 20, and evaluated zero-shot at other 𝑁 .",
+      "page": 22,
+      "index": 12,
+      "width": 926,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-013.webp",
+      "caption": "Fig. 20. Next movement directions along shortest path and the actual planned path of RH-PP→ RL-RH-PP curve at planning step = 45 in Figure 18. The blue bounding boxes highlight the agents located near the boundary of the congested region. Different ordinal directions are shown in different colors, the cross symbol indicates wait action.",
+      "page": 34,
+      "index": 13,
+      "width": 825,
+      "height": 713
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-014.webp",
+      "caption": "Fig. 19. Priority heatmaps for three planning methods (rows) at different steps (columns): 0, 30, and 100, as shown in Figure 18. Agents are shown in dots. The top row shows RH-PP, which assigns uniformly random priorities and experiences severe congestion by step 100. The middle row shows RL-RH-PP, which adaptively assigns higher priorities for agents in congested regions, sustaining high throughput. The bottom row shows switching from RH-PP (planning steps 0–29) to RL-RH-PP at step 30, effectively resolving inherited congestion by step 100. Lighter colors indicate higher priority assignments.",
+      "page": 33,
+      "index": 14,
+      "width": 853,
+      "height": 675
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-015.webp",
+      "caption": "Fig. 6. Symbotic warehouse map (obstacle density = 56.6%).",
+      "page": 18,
+      "index": 15,
+      "width": 486,
+      "height": 451
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-016.webp",
+      "caption": "Fig. 9. Total throughput versus planning horizon𝑤 in zero-shot transfer evaluation at 𝑁 = 120. The base model (yellow star) is trained at 𝑁 = 120 and𝑤 = 20, and evaluated zero-shot at other𝑤 .",
+      "page": 23,
+      "index": 16,
+      "width": 926,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-017.webp",
+      "caption": "Fig. 14. Throughput per agent (TPA) at evaluation vs 𝛽 , evaluated with 𝑁 = 100",
+      "page": 28,
+      "index": 17,
+      "width": 786,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-018.webp",
+      "caption": "Fig. 3. Our proposed encoding process for RL-RH-PP. Raw path inputs are indexed using position embeddings to construct a learnable representation for agent paths. Temporal and spatial attention mechanisms are applied in turn, along with normalization and residual modules, to extract and refine agent embeddings.",
+      "page": 13,
+      "index": 18,
+      "width": 908,
+      "height": 436
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-019.webp",
+      "caption": "Fig. 22. Total throughput versus agent number 𝑁 in zero-shot transfer evaluation. The base model is trained at 𝑁 = 120 and 𝑤 = 20, and evaluated zero-shot at other 𝑁 with𝑤 = 15.",
+      "page": 40,
+      "index": 19,
+      "width": 739,
+      "height": 271
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-020.webp",
+      "caption": "Fig. 23. Total throughput versus agent number 𝑁 in zero-shot transfer evaluation. The base model is trained at 𝑁 = 120 and 𝑤 = 20, and evaluated zero-shot at other 𝑁 with𝑤 = 10.",
+      "page": 40,
+      "index": 20,
+      "width": 742,
+      "height": 272
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-021.webp",
+      "caption": "Fig. 18. Number of tasks completed during simulation (Symbotic map, 𝑁 = 100). We measure how many tasks are completed between consecutive planning steps. The green dashed vertical lines highlight the key planning steps 0, 30, and 100 shown in Figure 19. In the RH-PP→ RL-RH-PP curve, we first use RH-PP for planning and switch to RL-RH-PP at planning step 30.",
+      "page": 32,
+      "index": 21,
+      "width": 677,
+      "height": 372
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-022.webp",
+      "caption": "Fig. 26. Throughput per agent (TPA) at evaluation vs 𝐾 , evaluated with 𝑁 = 80",
+      "page": 44,
+      "index": 22,
+      "width": 786,
+      "height": 312
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-023.webp",
+      "caption": "Fig. 25. Throughput per agent (TPA) at evaluation vs 𝛽 , evaluated with 𝑁 = 80",
+      "page": 41,
+      "index": 23,
+      "width": 786,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-024.webp",
+      "caption": "Fig. 13. Total throughput vs runtime budget of all methods, evaluated with 𝑁 = 100 and𝑤 = 20",
+      "page": 27,
+      "index": 24,
+      "width": 838,
+      "height": 305
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-025.webp",
+      "caption": "Table 4. Highest total throughput of each methods under the corresponding configurations (𝑁,𝑤) (TP = throughput).",
+      "page": 24,
+      "index": 25,
+      "width": 379,
+      "height": 331
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-026.webp",
+      "caption": "Fig. 10. Symbotic-style layout family: Original (training layout), Shorter Aisle (uniformly shortened aisles), Longer Aisle (uniformly lengthened aisles), In/Out Switch (inbound and outbound docks swapped), and In/Out Alternate (inbound/outbound docks interleaved along the perimeter). All share the same map size (𝑊,𝐻 ).",
+      "page": 24,
+      "index": 26,
+      "width": 886,
+      "height": 181
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-027.webp",
+      "caption": "Fig. 17. Total throughput during training for contextual bandit ablation study, evaluated on-the-fly with 𝑁 = 80",
+      "page": 31,
+      "index": 27,
+      "width": 492,
+      "height": 361
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-028.webp",
+      "caption": "Table 1. Evaluation comparison of RH-PP and RL-RH-PP with 𝐾 = 1, RL-RH-PP policy trained from scratch with𝑤 = 20 for each setting, TPA = throughput per agent, ‘Ama.’ for Amazon and ‘Sym.’ for Symbotic.",
+      "page": 20,
+      "index": 28,
+      "width": 850,
+      "height": 188
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-029.webp",
+      "caption": "Fig. 7. Ave. total throughput on held-out evaluation environments during training with 𝑁 = 120.",
+      "page": 20,
+      "index": 29,
+      "width": 912,
+      "height": 328
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23838v1/fig-030.webp",
+      "caption": "Table 2. Evaluation comparison of RH-PP and RL-RH-PP with 𝐾 = 5, RL-RH-PP policy trained from scratch with𝑤 = 20 for each setting, TPA = throughput per agent, ‘Ama.’ for Amazon and ‘Sym.’ for Symbotic.",
+      "page": 20,
+      "index": 30,
+      "width": 850,
+      "height": 189
+    }
+  ]
+}

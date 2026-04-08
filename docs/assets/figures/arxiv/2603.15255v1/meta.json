@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-001.webp",
+      "caption": "Figure 1: Overview of the SAGE framework. Four specialized agents—Challenger, Planner, Solver, and Critic—interact through quality filtering and format validation to enable closed-loop self-evolution.",
+      "page": 1,
+      "index": 1,
+      "width": 440,
+      "height": 379
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-002.webp",
+      "caption": "Table 1: Main results on reasoning benchmarks. Comparison of post-training methods across three model scales. We report pass@1 accuracy (%) on code generation (HumanEval+, MBPP+, LiveCodeBench) and mathematical reasoning (GSM8K, MATH, AIME 2024, AIME 2025, AMC, and OlympiadBench). C Avg., M Avg., and O Avg. denote the mean scores over code, math, and all benchmarks. SAGE achieves the best overall performance across all three model backbones. Bold indicates best per LLM backbone.",
+      "page": 6,
+      "index": 2,
+      "width": 891,
+      "height": 413
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-003.webp",
+      "caption": "Table 2: ID and OOD generalization comparison. SAGE consistently improves OOD performance (+4.2% on 7B) without sacrificing in-distribution accuracy.",
+      "page": 6,
+      "index": 3,
+      "width": 438,
+      "height": 321
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-004.webp",
+      "caption": "Table 4: Training Hyperparameters of our experiments.",
+      "page": 11,
+      "index": 4,
+      "width": 429,
+      "height": 542
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-005.webp",
+      "caption": "Figure 10: The prompt of the Critic Agent(answer).",
+      "page": 15,
+      "index": 5,
+      "width": 950,
+      "height": 815
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-006.webp",
+      "caption": "Figure 3: Training dynamics on Qwen-2.5-3B. The Challenger steadily expands the question pool (bars) throughout training, while validation accuracy (line) reaches peak performance around step 100–120 before gradual decline, suggesting potential over-specialization on the self-generated curriculum.",
+      "page": 7,
+      "index": 6,
+      "width": 437,
+      "height": 364
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-007.webp",
+      "caption": "Figure 9: The prompt of the Critic Agent(plan).",
+      "page": 14,
+      "index": 7,
+      "width": 950,
+      "height": 697
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-008.webp",
+      "caption": "Figure 2: The SAGE training pipeline. (1) The Challenger generates questions from reference examples, filtered by the Critic for quality; (2) verified questions expand the dataset; (3) sampled questions are processed by the Planner and Solver to produce solutions; (4) all agents are jointly updated using Task-Relative REINFORCE++ with per-role advantage normalization.",
+      "page": 3,
+      "index": 8,
+      "width": 942,
+      "height": 445
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-009.webp",
+      "caption": "Figure 8: The prompt of the Critic Agent(question).",
+      "page": 13,
+      "index": 9,
+      "width": 950,
+      "height": 727
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-010.webp",
+      "caption": "Figure 7: The prompt of the Solver Agent.",
+      "page": 13,
+      "index": 10,
+      "width": 950,
+      "height": 335
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-011.webp",
+      "caption": "Figure 4: Qualitative case study. The Challenger generates a math word problem, the Planner decomposes it into structured steps, the Solver executes the plan to produce the final answer, and the Critic provides quality scores for both the question and the plan.",
+      "page": 8,
+      "index": 11,
+      "width": 935,
+      "height": 452
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-012.webp",
+      "caption": "Figure 5: The prompt of the Challenger Agent.",
+      "page": 12,
+      "index": 12,
+      "width": 950,
+      "height": 558
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15255v1/fig-013.webp",
+      "caption": "Figure 6: The prompt of the planner Agent.",
+      "page": 12,
+      "index": 13,
+      "width": 950,
+      "height": 315
+    }
+  ]
+}

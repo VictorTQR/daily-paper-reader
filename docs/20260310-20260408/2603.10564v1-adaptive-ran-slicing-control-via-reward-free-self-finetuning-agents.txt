@@ -1,0 +1,455 @@
+Title: Adaptive RAN Slicing Control via Reward-Free Self-Finetuning Agents
+
+URL Source: https://arxiv.org/pdf/2603.10564v1
+
+Published Time: Thu, 12 Mar 2026 00:43:51 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Adaptive RAN Slicing Control via Reward-Free Self-Finetuning Agents 
+
+Yuanhao Li, Haozhe Wang, Geyong Min, Nektarios Georgalas, and Wang Miao 
+
+Abstract —The integration of Generative AI models into AI-native network systems offers a transformative path toward achieving autonomous and adaptive control. However, the ap-plication of such models to continuous control tasks is impeded by intrinsic architectural limitations, including finite context windows, the lack of explicit reward signals, and the degradation of the long context. This paper posits that the key to unlock-ing robust continuous control is enabling agents to internalize experience by distilling it into their parameters, rather than relying on prompt-based memory. To this end, we propose a novel self-finetuning framework that enables agentic systems to learn continuously through direct interaction with the environment, bypassing the need for handcrafted rewards. Our framework implements a bi-perspective reflection mechanism that generates autonomous linguistic feedback to construct preference datasets from interaction history. A subsequent preference-based fine-tuning process distills long-horizon experiences into the model’s parameters. We evaluate our approach on a dynamic Radio Access Network (RAN) slicing task, a challenging multi-objective control problem that requires the resolution of acute trade-offs between spectrum efficiency, service quality, and reconfiguration stability under volatile network conditions. Experimental results show that our framework outperforms standard Reinforcement Learning (RL) baselines and existing Large Language Model (LLM)-based agents in sample efficiency, stability, and multi-metric optimization. These findings demonstrate the potential of self-improving generative agents for continuous control tasks, paving the way for future AI-native network infrastructure. 
+
+Index Terms —AI-Native Networks, RAN Slicing, Autonomous Network Control, Generative Agents, Self-Finetuning 
+
+I. I NTRODUCTION 
+
+The transition toward 6G wireless systems marks a fun-damental paradigm shift in network architecture, driven by transformative applications such as holographic telepresence, the Internet of Everything (IoE), and autonomous vehicular networks [1], [2]. These applications impose unprecedented requirements for latency, throughput, and scalability, necessi-tating networks capable of persistent adaptation [3]. To meet these demands, AI-native architecture has emerged as a key enabler for future networks [4]. Unlike traditional “add-on” ap-proaches that apply AI as a supplementary component, an AI-native system integrates intelligence directly into the network infrastructure as a core element. This deep integration enables real-time autonomous control across the entire protocol stack [5], transforming the network into a truly self-optimizing system capable of dynamic adaptation to ever-changing traffic patterns, resource availability, and user demands [5].  
+
+> Y. Li, H. Wang, and G. Ming are with the Department of Computer Science, Faculty of Environment, Science and Economy, University of Exeter, Exeter, EX4 4QF, UK. Email: {yl1118, h.wang3, g.min }@exeter.ac.uk. Nektarios Georgalas is with the British Telecom, UK.
+
+Within the AI-native paradigm, Reinforcement Learning (RL) has been advocated as a key enabler for achieving the closed-loop autonomy required in 6G operations [6]. The agent-based nature of RL is particularly effective for complex tasks like Radio Access Network (RAN) slicing [7], [8], where an agent must perform continuous environment perception, precise resource allocation decisions, and multi-objective optimization [9]. However, the deployment of RL in dynamic networking environments is severely hindered by the reward engineering bottleneck [10]. Designing an effective reward function for RAN slicing requires the reconciliation of multiple conflicting performance metrics, including latency, throughput, energy efficiency, and fairness, under strict system constraints [7]. Achieving reliable performance and the opti-mal trade-off requires laborious manual tuning and extensive trial-and-error effort [11], [12], which limits the scalability and generalization of RL solutions across diverse network environments. This bottleneck raises a critical question: can we develop agents that adapt to complex network tasks without relying on handcrafted rewards? The recent convergence of Generative AI and autonomous systems has introduced a new frontier for general-purpose decision-making by enabling Large Language Model (LLM) to leverage expansive world knowledge for sophisticated rea-soning and prompt-based adaptation [13], [14]. LLMs can be prompted to generate structured actions and plan sequences in complex environments without task-specific training or ex-plicit reward supervision [15]. However, harnessing LLMs for continuous network control poses fundamental challenges. A primary issue is their proneness to hallucination in partially ob-servable environments [16]. Moreover, they lack mechanisms to learn from mistakes or adapt their behavior over time. While recent efforts utilize interaction history and self-reflection on past decisions to refine agent behavior and reduce hallucina-tion [17], [18], these methods are severely constrained by finite context window and Long Context Degradation [19] , which prevents true continual learning and confines these agents to short-horizon, episodic tasks, falling short of the persistent continuous control demanded by AI-Native network systems. To address these limitations, we propose a self-finetuning framework that enables LLM agents to continuously adapt by internalizing interaction history into model parameters rather than relying on ever-expanding prompt-based memory. The learning process is embedded directly into the interaction loop, where step-level and trajectory-level reflections are used to form an internalized prior. This enables self-generated oral improvement signals in place of environment-specific hand- 
+
+> arXiv:2603.10564v1 [cs.AI] 11 Mar 2026 Loss with
+> Advantage
+> Trajectory Reflection
+> Action
+
+RL  (Actor-Critic)  Self-Finetuning (ours) 
+
+> Transaction history
+> Actor
+> Reflector
+> Env
+> Actor
+> Env
+> Critic
+> Action
+> Rewards
+> trajectory
+> Action
+
+Reflexion        
+
+> Actor
+> Evaluator
+> Env Self-reflection
+> Trajectory
+> All tr ajectories
+> Insight
+> : Flagship LLM : Neural Network : Database : Trainable : Frozen
+> KTO
+> Preference
+> Finetuning
+> Feedback
+> Observation Observation Observation
+> : RIC : Station : Lightweight LLM
+
+Fig. 1: This figure compares three control algorithms (RL Actor-Critic, Reflexion, and Self-Finetuning), each organized into four key functional modules, color-coded for clarity: action-generating Actor (gray), interactive Environment (green), performance-evaluating module (blue), and Actor updating mechanism (yellow). RL updates the Actor via Advantage-based loss; Reflexion leverages self-reflection and a trajectory database to inject insights and history into the Actor’s prompt; Self-Finetuning generates training data through Reflection and directly improves the Actor via KTO Preference Finetuning. crafted rewards, supporting continuous control and sustained adaptation in dynamic AI-Native network environments. To realize this self-finetuning framework, we make the following key contributions:  
+
+> •
+
+We formalize a novel Reflective Markov Decision Pro-cess (R-MDP) and Actor-Reflector (AR) framework that bridges the gap between sequential optimization in RL and semantic reasoning capabilities of generative agents.  
+
+> •
+
+We design a bi-perspective reflection mechanism that integrates localized step-level feedback from the Actor with global trajectory-level reflections from the Reflector to facilitate dynamic policy adjustment without relying on handcrafted reward functions.  
+
+> •
+
+We propose Refine-from-Reflection (RfR), a novel fine-tuning framework that distills the agent’s experiences by converting reflection-labeled trajectories into preference datasets, to internalize the agent’s decision-making exper-tise into model parameters through Kahneman-Tversky Optimization (KTO) [20], effectively overcoming the context window limitations.  
+
+> •
+
+We conduct an extensive empirical evaluation of our framework on a challenging dynamic RAN slicing task and demonstrate that it outperforms standard RL base-lines, achieving superior performance with significantly fewer environment interactions. II. R ELATED WORK 
+
+A. RL for AI-Native Networking 
+
+RL has emerged as a powerful approach for addressing various network optimization challenges [6]. He proposed a blockchain-based deep RL framework for healthcare data offloading, demonstrating effective resource allocation in edge computing environments [21]. Zangooei developed a con-strained multi-agent RL solution for dynamic network slicing in Open RAN architectures, showcasing RL’s capability in handling complex resource partitioning problems [7]. Zhang investigated RL-based power control methods for cognitive radio networks, highlighting their effectiveness in spectrum sharing scenarios [22]. While RL has demonstrated state-of-the-art performance in network control tasks, designing effec-tive reward functions remains a significant challenge. Network environments involve multiple competing objectives—such as latency, throughput, energy efficiency, and fairness—that must be carefully balanced in the reward structure [7], [8], [21], [22]. The complexity of these trade-offs often leads to laborious trial-and-error processes to identify optimal reward formulations [9], [11]. This not only increases training time but also requires substantial domain expertise to ensure stable convergence and desirable policy behavior. Recent studies re-veal this challenge persists in practice, which shows even after extensive tuning, reward functions often remain suboptimal, over 90% of RL practitioners relying on manual trial-and-error approaches and nearly 90% acknowledging their final reward designs fail to achieve optimal performance [12]. 
+
+B. LLM Agent 
+
+LLM have recently been explored as autonomous agents for decision-making tasks. Approaches such as Reflexion [18] and ExpeL [17] enhance LLM adaptability via self-reflection and trajectory feedback. However, these methods remain limited by the finite context window and long context degradation [19], preventing effective use of long-term history. As a result, current LLM agents are better suited for short-horizon, episodic tasks and struggle in continuous control settings. This is a major limitation for AI-native network control, where tasks like RAN slicing or bitrate adaptation require continuous decision-making grounded in long-horizon experience. Existing interaction histories are often truncated or summarized, hindering sustained learning and generalization. NetLLM [23] is an early attempt to apply LLMs to net-working tasks, combining multimodal encoders and efficient adaptation to achieve strong performance. However, it relies on supervised learning from static expert trajectories, without interactive or continual learning capabilities. In contrast, our work introduces a self-finetuning LLM agent that learns di-rectly from environment interaction. By leveraging reflection and preference-based updates, it continuously distills long-term experience into model parameters, enabling sustained learning beyond the limitations of context length. III. RAN S LICING RESOURCE MANAGEMENT 
+
+A. System Model 
+
+We consider an AI-driven RAN slicing framework for 6G networks, leveraging a state-of-the-art AI-RAN architecture with a central controller deployed on the RAN Intelligent Controller (RIC) to enable adaptive resource allocation across multiple network slices [7]. Within this architecture, the sys-tem employs an LLM agent to manage the slice resources, which are structured as Physical Resource Blockss (PRBs) in time-frequency grids. The controller dynamically adjusts the inter-slice PRB allocation per decision interval based on monitored performance metrics [7]. To ensure isolation, PRBs are strictly segregated between slices, allowing independent operation within allocated resources. The framework operates in a closed-loop manner: LLM agents continuously evaluate slice demands and submit deci-sions to the controller, which optimizes the PRB distribution for the subsequent decision interval. This dynamic approach adapts to traffic fluctuations while maintaining efficient re-source utilization. Intra-slice scheduling is handled by a pro-portional fair scheduler [24], as our focus remains on inter-slice allocation. The resource allocation process operates with high dynamism, continuously adjusting to real-time traffic variations and evolving network conditions. Through a closed-loop framework of monitoring, decision-making, and alloca-tion, it enables adaptive and efficient resource management, ensuring that each slice’s performance requirements are ful-filled while maximizing overall network efficiency. 
+
+B. Problem Definition 
+
+We formulate the RAN slicing task as a Multi-Objective Optimization Problem (MOOP) with three conflicting goals: maximizing resource utilization, ensuring service quality, and minimizing reconfiguration overhead. Efficient utilization im-proves throughput under bandwidth constraints; service quality requires adaptive allocation to meet diverse QoS needs; and minimizing reconfiguration overhead is critical, as frequent spectrum reallocations trigger virtual resource adjustments that introduce operational costs and potential disruptions [8]. These objectives form conflicting trade-offs : Maximizing resource utilization requires frequent allocation adjustments, increasing reconfiguration overhead and service instability, while pri-oritizing service quality through over-provisioning can lead to underutilization during low demand. Similarly, minimiz-ing reconfiguration overhead through rigid allocations fails to adapt to dynamic service demands. This multi-objective tension defines the core challenge of efficient RAN slicing. Spectrum Efficiency (SE) serves as a key metric for quan-tifying radio resource utilization. At time step t, let Pt
+
+denote the set of packets successfully received by the User Equipments (UEs) in the slice, the spectrum efficiency SE t is computed as: 
+
+SE t =
+
+P 
+
+> p∈P t
+
+|p|
+
+τ /b t (1) where |p| denotes the size of packet p, τ represents the decision interval, and bt indicates the allocated bandwidth for the slice at time step t.The service quality of a slice is quantified by the cumulative Packet QoS (PQoS) violation V , which counts timesteps where any packet’s QoS metric (e.g., latency) falls below its requirement. A packet is considered to exceed its QoS requirement if its metric vector M tp violates the threshold 
+
+Θ, indicated by χtp = I(M tp̸ |= Θ) . A timestep is therefore counted as exceeding its QoS requirement if any packet within it triggers such an event. The cumulative Packet QoS violation over the measurement window Tm is given by: 
+
+V =
+
+> Tm
+
+X
+
+> t=0
+
+vt =
+
+> Tm
+
+X
+
+> t=0
+
+I ∃ p ∈ P t : χ tp = 1  (2) The overhead of resource allocation is measured by the Resource Reconfiguration Times metric C, which counts the number of time steps where the bandwidth allocation for slice changed. Let ct = I(bt̸ = bt−1) denote a binary indicator marking whether a reconfiguration occurs at timestep 
+
+t, The cumulative reconfiguration count over the measurement window Tm is given by: 
+
+C =
+
+> Tm
+
+X
+
+> t=0
+
+ct =
+
+> Tm
+
+X
+
+> t=0
+
+I(bt̸ = bt−1) (3) Lower C values indicate more stable resource allocations, di-rectly corresponding to lower system reconfiguration overhead. These metrics enable the formulation of an MOOP for control policy design. Specifically, we seek a policy π ∈ Π that simultaneously: (1) maximizes average spectrum efficiency PTm t=0 SE Tm , (2) minimize reconfiguration times through C, while (3) minimizing average PQoS violation times V . The optimiza-tion objective is formally expressed as: 
+
+max  
+
+> π∈Π
+
+lim 
+
+> Tm→∞
+
+(
+
+Eπ
+
+" TmX
+
+> t=0
+
+SE t
+
+#
+
+,
+
+−Eπ
+
+" TmX
+
+> t=0
+
+vt
+
+#
+
+, −Eπ
+
+" TmX
+
+> t=0
+
+cn
+
+#) (4) IV. M ETHODOLOGY 
+
+A. Reflective Markov Decision Process 
+
+Traditional reinforcement learning is commonly formulated as a Markov Decision Process (MDP) , defined by a tuple 
+
+⟨S, A, P, R, γ ⟩, where S is the set of states, A is the set of actions, P is the state transition probability, R is the reward function, and γ ∈ [0 , 1) is the discount factor. In this framework, an agent interacts with an environment by observing a state st ∈ S, taking an action at ∈ A, receiving a scalar reward rt = R(st, a t), and transitioning to the next state 
+
+st+1 ∼ P (· | st, a t). The agent’s objective is to learn a policy 
+
+π(a | s) that maximizes the expected return E [P 
+
+> t
+
+γtrt]. While this formalism supports many advances in sequential decision-making, it is not directly suited for LLM-based agents , which operate on structured prompts rather than scalar rewards. To better align the decision-making process with the struc-ture and capabilities of LLMs, we propose the Reflective MDP (R-MDP) , a novel formalism designed for LLM agents. In R-MDP, the agent-environment interaction is reformulated as a sequence of tuples: ⟨S, A, Ψ, Φ, M, P ′⟩
+
+where:  
+
+> •
+
+S is the state space, representing environment observa-tions,  
+
+> •
+
+A is the action space,  
+
+> •
+
+Ψ is the space of step-level reflections, representing natural language reflections on the previous step,  
+
+> •
+
+Φ is the space of step-level analyses, summarizing or justifying the current decision,  
+
+> •
+
+M is the space of environment feedback vectors (e.g., metrics like latency, throughput),  
+
+> •
+
+P ′ is the transition function, P ′ : S × A → S,At each timestep t, the agent observes the current state st
+
+and constructs a prompt using the trajectory history Ht−1 =
+
+{(s0, a 0, ψ 0, ϕ 0, M 0), . . . , (st−1, a t−1, ψ t−1, ϕ t−1, M t−1)},
+
+which contains all previous states, actions, reflections, analyses, and environment feedbacks. Conditioned on st and 
+
+Ht−1, the policy π generates a triplet (ψt, a t, ϕ t), where 
+
+ψt ∈ Ψ is a reflection on the previous step, at ∈ A is the current action, and ϕt ∈ Φ is a brief analysis of the current decision. The action at is then executed in the environment, leading to a new state st+1 = P ′(st, a t), and the environment returns a feedback vector Mt ∈ M , consisting of task-specific metrics. These metrics are not used to compute a scalar reward but are instead recorded as part of the trajectory, enabling subsequent global reflection and policy improvement. The R-MDP optimization objective follows the standard MDP formulation but replaces scalar rewards with language-derived feedback: 
+
+π∗ = arg max  
+
+> π
+
+Eπ
+
+" TX
+
+> t=0
+
+γtrlang (st, a t)
+
+#
+
+(5) where rlang (·) is an implicit reward function derived from the natural language feedback instead of scalar rewards in traditional RL. 
+
+Algorithm 1 Actor–Reflector Inference and Training Loop                                                              
+
+> 1: repeat
+> 2: Initialize empty history H← ∅
+> 3: while trajectory not terminated do
+> 4: Observe current state st
+> 5: Build input sequence: It←PROMPT (Ht−1, s t)
+> 6: LLM inference: obtain output Ot←π(It)
+> 7: Extract: (ψt, a t, ϕ t)←EXTRACTOR (Ot)
+> 8: Execute action at, receive feedback vector Mt
+> 9: Append (st, a t, ψ t, ϕ t, M t, I t, O t)to H
+> 10: end while
+> 11: Initialize empty labeled history H′← ∅
+> 12: Pass full history Hto Reflector
+> 13: for each step tin Hdo
+> 14: (ℓt,ˆat)←Rφ(st, a t, ψ t, ϕ t, M t, H )
+> 15: Append (st, a t, ψ t, ϕ t, M t, I t, O t, ℓ t,ˆat)to H′
+> 16: end for
+> 17: Fine-tune Actor: π′←PREF -F INETUNE (π, H ′)
+> 18: Update policy: π←π′
+> 19: until performance converges
+
+B. Actor-Reflector Framework 
+
+The Actor-Critic (AC) architecture [9] is a foundational RL framework that separates policy and value estimation into two components: the Actor and the Critic. As shown in Fig 1 (left), the Actor represents the policy πθ (at | st), which selects actions based on the current state. The Critic estimates the state-value function V π (st), which predicts the expected long-term return from state st and provides a learning signal to guide the Actor’s policy updates. In the AC framework, the Actor is updated by minimizing the loss: 
+
+LAC-actor = − log πθ (at | st) · A(st, a t)= − log πθ (at | st) ·
+
+> ∞
+
+X
+
+> k=0
+
+γkrt+k − V (st)
+
+!
+
+(6) which encourages the policy to increase the probability of actions whose returns exceed the current value estimate. This structure allows the Actor to improve behavior through feedback provided by the Critic’s value predictions. While the AC architecture relies on scalar value estimation to guide policy improvement, it is not naturally aligned with the strengths of LLMs in reasoning, reflection, and language-based supervision. To better integrate LLMs into sequential decision-making and solve the R-MDP, we propose the AR architecture, an RL-style framework that mirrors the structure of AC, but replaces the Critic with a Reflector that provides interpretable and semantic-level feedback over full trajectories. 
+
+1) Actor: As shown in Fig 1 (right), the Actor is imple-mented as an LLM policy π, which embeds the current state 
+
+st and interaction history Ht−1 from step 0 to step t − 1 into a prompt-formatted input sequence It = PROMPT (Ht−1, s t).The model outputs a structured sequence Ot = π(It), from which a triplet is extracted: a reflection on the previous step 
+
+ψt, the current action at, and an analysis of the current decision ϕt. After executing the action, the environment re-turns a task-specific metric vector Mt, which, along with 
+
+(st, a t, ψ t, ϕ t, I t, O t), is appended to the history H.
+
+2) Reflector: Unlike AC, where the Critic estimates a scalar value and updates the policy via gradients, the Reflector R in AR operates after each trajectory to perform trajectory-level assessment. It evaluates every step in the recorded history using environment feedback and language-level signals and assigns a quality label ℓt ∈ { True , False }. For suboptimal decisions, the Reflector proposes improved actions ˆat. The full trajectory is thus converted into a labeled dataset with step-wise annotations, which is used in the subsequent fine-tuning stage to adapt the LLM policy. 
+
+3) Bi-Perspective Reflection: The Actor’s step-level reflec-tion mechanism (ψt, ϕ t) operates through in-context learn-ing within the LLM’s input sequence. By embedding past reflections and analyses directly into the prompt as short-term memory, the Actor dynamically adjusts its policy with-out weight updates. Each new action at is conditioned on a finite history window Ht−1 in the input sequence. This approach leverages the LLM’s inherent ability to perform meta-reasoning over provided examples: recent (ψt, ϕ t) pairs serve as in-context ”demonstrations” that guide the current decision, analogous to few-shot prompting in language tasks. The limited context window naturally enforces a recency bias, prioritizing recent experiences while gradually forgetting older interactions, which is a property aligned with online adaptation in dynamic environments. The Reflector’s trajectory-level reflection mechanism en-ables the Reflector to optimize decisions through retrospective analysis of complete trajectory histories H. Leveraging the LLM’s reasoning capacity over this extended context, the Reflector identifies improved actions ˆat for each state st. This process formalizes as: 
+
+ˆat = arg max  
+
+> a∈A
+
+E
+
+" TX
+
+> k=t
+
+γk−trlang (sk, a k) st = s, a t = a, H 
+
+#
+
+(7) unlike step-level reflection that only observes past information, this full-trajectory view allows the Reflector to assess how individual actions contribute to long-term outcomes, analogous to value function estimation in RL but operating through natural language reasoning. The trajectory-level reflection mechanism reinterprets the AC paradigm through language-mediated optimization. In classical RL, the Critic provides scalar value estimates to guide the Actor’s gradient-based policy updates, thereby increasing the probability of high-value actions. Our framework preserves this structure but replaces the Critic’s numerical output with the Reflector’s semantic analysis. Instead of backpropagating advantage estimates, the Reflector examines complete trajecto-ries to generate natural language assessments. These linguistic signals serve the same theoretical role as value function to identify preferable actions, but avoid reward engineering complexities by deriving improvement signals directly from the LLM’s reasoning about decision consequences. The Actor 
+
+Algorithm 2 Preference Fine-Tuning of Actor (RfR)                                                                                          
+
+> Require: Labeled history H′,base policy π,rollout count m,maximum fine-tuning steps n
+> 1: #Perform nKTO iterations
+> 2: for i= 1 to ndo
+> 3: Initialize empty fine-tuning dataset D ← ∅
+> 4: Initialize flag promising ←False
+> 5: #Reflector-labeled data
+> 6: Append all (It, O t, ℓ t,ˆat)in H′to D
+> 7: #refine-rollout data
+> 8: for each ht= ( It, O t, ℓ t,ˆat)in H′do
+> 9: if label t== False then
+> 10: for j= 1 to mdo
+> 11: Ojt←π(It)
+> 12: Extract a′
+> t←EXTRACTOR (Ojt)
+> 13: λjt=
+> (
+> True ,a′
+> t= ˆ at,
+> False ,otherwise .
+> 14: D ← D ∪ { (It, O jt, λ jt)}
+> 15: end for
+> 16: if P(ˆ at|It)> ρ then
+> 17: Do not rollout htin next iteration
+> 18: end if
+> 19: end if
+> 20: end for
+> 21: Fine-tune πusing dataset Dvia KTO
+> 22: end for
+
+then internalizes these preferences through fine-tuning rather than gradient updates, maintaining the value-maximization principle while operating entirely in the language domain. Algorithm 1 details the AR’s inference and learning loop. Lines 3–10 describe step-wise interaction: the Actor builds a prompt from the state and history, generates action, step-wise reflection and analysis, and receives environmental feedback, stored for future reasoning. Lines 13–16 show the Reflector’s trajectory evaluation: it reviews each step, labels actions as effective or suboptimal using environment feedback and verbal reflection, and suggests better actions. Then, the labeled histry 
+
+H′ is used to finetuning the Actor (line 17). 
+
+C. Refine-from-Reflection (RFR) Fine-tuning framework 
+
+After the Reflector processes an trajectory and produces the labeled history H′, the system enters the fine-tuning phase. We propose the RfR framework to construct dataset and fine-tune the Actor, which operates multiple iterations, and in each iteration, a new preference dataset D is constructed based on 
+
+H′. The dataset consists of two components: 
+
+1) Reflector-labeled examples: As shown in Algorithm 2 (line 6), we directly extract preference examples from H′ where actions labeled as effective by the Reflector are treated as positive samples, while suboptimal actions are treated as negative samples. These form the base dataset derived from trajectory-level reflection. 
+
+2) Refine-rollout examples: To enhance sample efficiency and utilize the LLM’s generative capacity, we perform multiple rollouts on each negative sample as demostrated in Algo-rithm 2 (line 8-20). For each input prompt It associated with a suboptimal action, the Actor LLM is sampled m times to generate alternative outputs. If any sampled output yields an improved action (i.e., one that matches or aligns with the Reflector’s suggestion), it is treated as an additional positive sample; otherwise, it is marked negative. If the probability of generating improved actions exceeds threshold ρ, subsequent iterations omit further rollouts on this sample to prevent over-fitting.These rollout-derived examples are then merged with the Reflector-labeled examples to construct the full preference dataset for the current fine-tuning round. To optimize the LLM policy using the constructed pref-erence dataset, we adopt the KTO [20] algorithm. Unlike pairwise preference objectives such as DPO [25], KTO sup-ports unbalanced datasets by directly modeling the absolute preference likelihood of each sample using prospect-theory. The KTO loss is defined as: 
+
+LKTO (π′, π ) = Ex,y ∼D [λy − v(x, y )] (8) where: 
+
+v(x, y ) = 
+
+(
+
+λp · σ (β · (rθ (x, y ) − z0)) , if y ∼ ypositive | xλn · σ (β · (z0 − rθ (x, y ))) , if y ∼ ynegative | x
+
+(9) 
+
+rθ (x, y ) = log π′(y | x)
+
+π(y | x) (10) 
+
+z0 = KL (π′(y′ | x) ∥ π(y′ | x)) (11) Here, x corresponds to the input prompt I, and y is the generated output sequence O. The policy π(y | x) thus models the likelihood of generating output O given the prompt I.
+
+π′ is the current policy, π is the reference model (typically the original frozen LLM), and σ(·) is the sigmoid function. The KL term z0 captures the policy shift from the refer-ence model. The utility function v(x, y ) applies asymmetric gain/loss scaling using coefficients λp, λn, and sensitivity 
+
+β. KTO naturally handles unbalanced preference labels and encourages the policy to prefer positive outputs by the weights 
+
+λp and λn, which are defined as: 
+
+λD = max( Npositive , N negtive )
+
+Npositive 
+
+(12) 
+
+λU = max( Npositive , N negtive )
+
+Nnegtive 
+
+(13) where Npositive and Nnegtive denote the number of samples in the positive and negative datasets, respectively. The combination of base and rollout-derived preference data plays a complementary role in optimizing the LLM policy under the KTO objective. The base dataset, directly extracted from the Reflector-labeled trajectory history H, allows the model to learn which actions are effective or suboptimal within a given trajectory. Fine-tuning on this dataset en-ables the policy to internalize decision-making experience in a durable way, embedding trajectory-level insights into the TABLE I: Traffic Model Parameters                   
+
+> Metric GBR Traffic Non-GBR Traffic
+> Active UE count 20 4Transmission duration Exp(mean = 15 sec) Exp(mean = 15 sec) Idle duration Exp(mean = 15 sec) Exp(mean = 15 sec) Bit rate 0.5 Mb/s 2 Mb/s Packet Size 512 bytes 512 bytes QoS Requirement Delay <10 ms Delay <50 ms
+
+TABLE II: Radio Channel Parameters        
+
+> Parameter Value
+> Transmission power 30 dBm Base station antenna gain 0 dB Base station antenna pattern Antenna Model in 3GPP TR 38.901 Noise figure 5 dB Carrier frequency 2120 MHz Propagation model Urban Propagation Loss Model
+
+model weights rather than relying on external memory or retrieval mechanisms. Meanwhile, the rollout-derived examples capture the gen-erative flexibility of LLMs. Even when the initial output for a given prompt is poor, the model may still be capable of producing better actions through sampling. By identifying and reinforcing these successful alternative outputs, the fine-tuning process increases the likelihood of generating desirable actions for challenging decision points, while reducing the chance of repeating suboptimal behavior. This helps refine the policy’s preference boundary in ambiguous or high-variance situations. Together, these two data sources enable KTO to effectively align the model with reflective preferences, which is why we name this framework RfR. The terminology carries dual significance: first, it reflects the two-stage data generation pro-cess where reflector-labeled data spawns refine-rollout samples through iterative improvement; second, it captures the fun-damental paradigm where the entire model refinement stems from reflective processes. The base dataset encodes stable, trajectory-level decision quality distilled from reflection, while the rollout samples expand the model’s behavioral capacity through reflection-driven exploration without requiring addi-tional environment interaction. V. E XPERIMENT 
+
+A. Simulation Environment Settings 
+
+To evaluate the effectiveness and performance of our pro-posed framework, we conducted experiments in a custom Python-based RAN slicing simulator. The simulator leverages the ns-3 packet-level engine to create a realistic network environment. We focus on the challenging and dynamic task of inter-slice spectrum resource allocation, a canonical multi-objective control problem in 6G. The traffic is generated using on-off application models to simulate stochastic user activity within the network slices. In this model, the on and off durations follow exponential distributions, introducing realistic randomness into the activity patterns of user equipments (UEs). During the on period, UEs transmit at a constant bit rate. As shown in Table I, the parameters of the on-off model, including the average on and off times and the bit rates, were configured to reflect two distinct traffic modes. The radio channel was configured based on standard prop-agation models, including the urban propagation loss model specified in 3GPP TR 38.901. Key parameters such as trans-mission power, noise figure, and carrier frequency are de-tailed in Table II. Frequency-selective fading was introduced to capture realistic channel variability, using pre-generated fading traces that emulate typical mobility scenarios such as pedestrian and vehicular models. The decision-making cycle was set to 100 ms, during which the simulator captured relevant performance metrics and dynamically updated the resource allocation decisions. 
+
+B. Baseline algorithms 
+
+We evaluate our method against two categories of baselines to ensure thorough comparison. First, we implemented three state-of-the-art RL algorithms using the Ray RLlib framework [26]: Deep Q-Network (DQN) [27], Soft Actor-Critic (SAC) [28] and Proximal Policy Optimization (PPO) [29]. These carefully selected baselines provide broad coverage of modern RL techniques, spanning value-based, policy-based, and max-imum entropy paradigms to ensure a thorough evaluation of our method’s performance across different aspects of network control optimization. Second, we adapt the Reflexion framework as the primary LLM-agent baseline. Its tripartite architecture is preserved: the Actor is implemented using Qwen3-4B [30], and both the trajectory evaluator and the self-reflection modules are instantiated with DeepSeek-R1 [31]. For controlled comparison, our Self-Finetuning framework adopts the same backbone models. The Actor also uses Qwen3-4B, and the Reflector is implemented with DeepSeek-R1. This design ensures comparable action-generation ca-pability across agents and allows the observed performance differences to be attributed to our architectural and learning-mechanism innovations rather than model capacity. For all algorithms, the system state at time step t is represented as: 
+
+st = [ at−1, SE t, μ t, δ t, ϵ t] (14) where at−1 is the previous action (current PRB allocation), 
+
+SE t is the current spectral efficiency, μt represents the throughput of arriving traffic, δt denotes the increment in queued packet size, and ϵt indicates the size of dropped packets. This compact state representation provides the agent with complete information about current network conditions and resource demands. The action space represents the number of available PRBs for allocation, with the agent determining the optimal resource distribution based on the observed state. The action at each time step directly influences the network’s resource utilization and performance metrics. For RL baselines, the multi-objectives utility function at time step t is defined as: TABLE III: Performance comparison of different algorithms. The best and second-best results for each objective are marked in bold and underline.                         
+
+> Algorithms Avg. SE Reconf. Times PQoS vio. Utility SF (ours) 5.354 21.091 8.561 25702.2
+> Reflextion 5.299 29.454 8.630 25314.69 DQN 5.219 46.204 15.911 22519.1 PPO 3.587 51.411 1.997 19277.2 SAC 5.748 44.775 59.967 11704.3
+
+rt(st, a t) = α · SE tn − ct · Preconf − vt · PQoS (15) where α weights the spectral efficiency SE , ct indicates recon-figuration occurrences as shown in (3) with penalty Preconf ,and vt indicates PQoS violation as shown in (2) with penalty 
+
+PQoS . This reward formulation explicitly trades off three key objectives: maximizing spectral efficiency while minimizing both frequent reconfigurations and service violations. 
+
+C. Experiment Result 
+
+In the RAN slicing continuous control task, the performance of different algorithms is evaluated in a multi-objective opti-mization context over 300-step trajectories of environmental interaction for comparative analysis across three core metrics: Mean Spectral Efficiency (Mean SE), Reconfiguration Times, and PQoS violation times. As illustrated in Fig. 2, we present the performance trajectories of RL baselines (SAC, PPO, DQN) over 80 training rounds, alongside the final perfor-mance of Reflexion and the proposed Self-Finetuning method. Despite RL algorithms collecting 20 trajectories per round (totaling 1,600 for training), their convergence and stability in multi-objective optimization remain suboptimal. For instance, SAC exhibits significant volatility during training, with unsta-ble oscillations in Episode utility, making it difficult to form a stable policy (Fig. 2 (a)). While PPO performs well in PQoS violation times control (consistently maintaining low violation times in Fig. 2 (c)), its Mean SE is relatively poor, and frequent resource reconfigurations (Fig. 2 (d)) incur substantial system overhead. DQN attains a relatively high overall utility score, despite exhibiting no standout performance on any individual metric. In contrast, Self-Finetuning achieves superior comprehen-sive performance with just one training iteration and a single trajectory collection. As shown in Fig. 2, it has the highest utility score. In individual metrics, it excels in Mean SE, stability, and PQoS violation times control. Statistical data in Table III further corroborates this: Self-Finetuning achieves a Mean SE of 5.354, a slight improvement over Reflexion; its Reconfiguration Times are only 21.091, a 59% reduction compared to PPO and 28.4% lower than Reflexion; mean-while, its PQoS violation times is comparable to Reflexion, outperforming DQN and SAC while slightly trailing PPO, which exclusively optimizes PQoS violation times. These results demonstrate that even with minimal environmental (a) (b) (c) (d) 
+
+Fig. 2: Performance comparison of RL baselines, Reflexion, and our Self-Finetuning method across multiple objectives  
+
+> (a) Performance before and after training in one iteration.
+> (b) KTO iteration 1
+> (f) KTO iteration 5
+> (c) KTO iteration 2
+> (g) KTO iteration 6
+> (d) KTO iteration 3 (e) KTO iteration 4
+> (h) Reward convergence
+
+Fig. 3: Training dynamics of Self-Finetuning using one trajectory. (a) illustrates improved PQoS violation stability, 33% fewer reconfigurations, and higher spectral efficiency; (b–g) show KTO reward evolution in each iteration; (h) Reward convergence over KTO iterations, as chosen and rejected rewards both approach zero, indicating policy stabilization. interaction samples, Self-Finetuning can efficiently learn a balanced control policy, validating its generalization capability for multi-objective optimization. Reflexion, while achieving moderate SE and PQoS violation times performance, incurs higher reconfiguration costs than Self-Finetuning. This can be attributed to its reliance on long interaction histories, which often prevent the evaluator from distilling effective strategies from accumulated experiences. Consequently, the Reflexion agent’s performance primarily stems from the inherent reasoning capability of Qwen3-4B, rather than adaptive learning from the environment. In contrast, the Reflector in Self-Finetuning operates at the trajectory level, systematically analyzing each step and proposing improved actions based on holistic evaluations. This step-by-step reflection with trajectory-wide perspective enables the agent to extract meaningful insights even from long and complex interaction sequences of continuous control task. By leveraging the RfR mechanism, these insights are converted into preference-labeled datasets, which are then used to fine-tune the Actor via the KTO algorithm. Unlike prompt-based adaptation in Reflexion, this preference-driven fine-tuning directly embeds learned decision patterns into the model weights, allowing the Actor to internalize behavioral priors and effectively compress long-term experiences. As a result, Self-Finetuning is able to perform continual adaptation in continuous control settings, overcoming the context window limitations and long context degradation of LLMs and learning progressively from extended historical trajectories. To further illustrate the training dynamics and sample ef-ficiency of the proposed Self-Finetuning framework, we ana-lyze the learning trajectory within a single training iteration, as shown in Fig. 3. Despite using only one environment-generated trajectory, the framework performs six successive KTO fine-tuning iterations by augmenting the dataset with refine-rollout samples. In each KTO iteration, multiple new candidate actions are generated for previously suboptimal decisions, enabling the agent to explore and reinforce alter-native behaviors without additional environment interaction. This recursive exploitation of a single trajectory via rollout-based preference optimization is the core mechanism behind the sample efficiency of Self-Finetuning. Subplots (b)–(g) of Fig. 3 show the KTO reward curves for chosen and rejected samples across the six KTO iterations. These curves reflect how well the fine-tuned policy aligns with the Reflector’s preferences: the chosen reward corresponds to the model’s confidence in preferred decisions, while the rejected reward captures its tendency to produce suboptimal actions. During the first KTO iteration, the reward gap be-tween chosen and rejected samples is the widest—chosen rewards are the highest and rejected rewards are strongly neg-ative—indicating that the model learned a substantial amount from the initial preference dataset. As KTO iterations progress, the rewards of both groups gradually converge toward zero, as seen in Fig. 3(h), suggesting diminishing returns in preference learning. This convergence reflects that the single trajectory has been fully exploited: the model has internalized nearly all actionable information available from that episode, and further rollout samples contribute limited new knowledge. The effect of this training process on actual task perfor-mance is visualized in Fig. 3(a), which compares the key met-rics—PQoS violation times, reconfiguration times, and average SE—before and after this single training iteration. Notably, reconfiguration frequency decreases by approximately 33%, indicating improved policy stability and reduced operational overhead. PQoS violation times become more stable, reflecting enhanced consistency in meeting service-level requirements, while average SE shows a slight improvement. These results demonstrate that even with minimal interaction, the Self-Finetuning agent can make meaningful policy improvements through structured reflection and preference-based fine-tuning, underscoring the method’s efficiency in continuous control environments. VI. CONCLUSION 
+
+This paper presents a Self-Finetuning framework that en-ables LLM-based agents to autonomously and continuously learn in complex continuous control tasks like RAN slicing. Unlike traditional RL methods, our approach requires no hand-crafted reward functions and achieves superior performance in multi-objective RAN slicing resource allocation. By leveraging trajectory-level reflection and preference-based fine-tuning, the agent effectively extracts and internalizes long-horizon expe-riences, enabling sample-efficient continual policy improve-ment. While slow inference speed of LLMs currently hinders real-time deployment, future work will explore techniques such as imitation learning or policy distillation to transfer knowledge into lightweight models suitable for deployment in practical network systems. In addition, advancements in model optimization techniques (e.g., quantization) and hardware ac-celeration are expected to further alleviate this limitation. REFERENCES [1] H. Tataria, M. Shafi, A. F. Molisch et al. , “6g wireless systems: Vision, requirements, challenges, insights, and opportunities,” Proceedings of the IEEE , vol. 109, no. 7, pp. 1166–1199, 2021. [2] W. Saad, M. Bennis, and M. Chen, “A vision of 6g wireless systems: Applications, trends, technologies, and open research problems,” IEEE Network , vol. 34, no. 3, pp. 134–142, 2020. [3] M. Giordani, M. Polese, M. Mezzavilla et al. , “Toward 6g networks: Use cases and technologies,” IEEE Communications Magazine , vol. 58, no. 3, pp. 55–61, 2020. [4] W. Wu, C. Zhou, M. Li et al. , “Ai-native network slicing for 6g networks,” IEEE Wireless Communications , vol. 29, no. 1, pp. 96–103, 2022. [5] Y. Liu, Y. He, Y. Lin et al. , “Toward native artificial intelligence in 6g,” in 2022 IEEE International Symposium on Broadband Multimedia Systems and Broadcasting (BMSB) , 2022, pp. 1–6. [6] L. Jiao, Y. Shao, L. Sun et al. , “Advanced deep learning models for 6g: Overview, opportunities, and challenges,” IEEE Access , vol. 12, pp. 133 245–133 314, 2024. [7] M. Zangooei, M. Golkarifard, M. Rouili et al. , “Flexible ran slicing in open ran with constrained multi-agent reinforcement learning,” IEEE Journal on Selected Areas in Communications , vol. 42, no. 2, pp. 280– 294, 2024. [8] X. Shen, J. Gao, W. Wu et al. , “Ai-assisted network-slicing based next-generation wireless networks,” IEEE Open Journal of Vehicular Technology , vol. 1, pp. 45–66, 2020. [9] R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction ,2nd ed. MIT Press, 2018. [10] S. Sun, R. Liu, J. Lyu et al. , “A large language model-driven reward design framework via dynamic feedback for reinforcement learning,” 
+
+Knowledge-Based Systems , p. 114065, 2025. [11] Y. J. Ma, W. Liang, G. Wang et al. , “Eureka: Human-level reward design via coding large language models,” arXiv preprint arXiv:2310.12931 ,2023. [12] S. Booth, W. B. Knox, J. Shah et al. , “The perils of trial-and-error reward design: misdesign through overfitting and invalid task specifications,” in 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , vol. 37, no. 5, 2023, pp. 5920–5929. [13] L. Wang, C. Ma, X. Feng et al. , “A survey on large language model based autonomous agents,” Frontiers of Computer Science , vol. 18, no. 6, p. 186345, 2024. [14] G. Wang, Y. Xie, Y. Jiang et al. , “Voyager: An open-ended embodied agent with large language models,” Transactions on Machine Learning Research , 2024. [15] S. Yao, J. Zhao, D. Yu et al. , “React: Synergizing reasoning and acting in language models,” in International Conference on Learning Representations (ICLR) , 2023. [16] L. Huang, W. Yu, W. Ma et al. , “A survey on hallucination in large language models: Principles, taxonomy, challenges, and open questions,” 
+
+ACM Transactions on Information Systems , vol. 43, no. 2, pp. 1–55, 2025. [17] A. Zhao, D. Huang, Q. Xu et al. , “Expel: Llm agents are experiential learners,” in Proceedings of the AAAI Conference on Artificial Intelli-gence , vol. 38, no. 17, 2024, pp. 19 632–19 642. [18] N. Shinn, F. Cassano, A. Gopinath et al. , “Reflexion: Language agents with verbal reinforcement learning,” Advances in Neural Information Processing Systems , vol. 36, pp. 8634–8652, 2023. [19] N. F. Liu, K. Lin, J. Hewitt et al. , “Lost in the middle: How language models use long contexts,” arXiv preprint arXiv:2307.03172 , 2023. [20] K. Ethayarajh, W. Xu, N. Muennighoff et al. , “Kto: Model alignment as prospect theoretic optimization,” arXiv preprint arXiv:2402.01306 ,2024. [21] Q. He, Z. Feng, H. Fang et al. , “A blockchain-based scheme for secure data offloading in healthcare with deep reinforcement learning,” 
+
+IEEE/ACM Transactions on Networking , vol. 32, no. 1, pp. 65–80, 2023. [22] H. Zhang, N. Yang, W. Huangfu et al. , “Power control based on deep reinforcement learning for spectrum sharing,” IEEE Transactions on Wireless Communications , vol. 19, no. 6, pp. 4209–4219, 2020. [23] D. Wu, X. Wang, Y. Qiao et al. , “Netllm: Adapting large language models for networking,” in Proceedings of the ACM SIGCOMM 2024 Conference , 2024, pp. 661–678. [24] S. Sesia, I. Toufik, and M. Baker, LTE-the UMTS long term evolution: from theory to practice . John Wiley & Sons, 2011. [25] R. Rafailov, A. Sharma, E. Mitchell et al. , “Direct preference optimiza-tion: Your language model is secretly a reward model,” Advances in neural information processing systems , vol. 36, pp. 53 728–53 741, 2023. [26] E. Liang, R. Liaw, R. Nishihara et al. , “Rllib: Abstractions for distributed reinforcement learning,” in International conference on machine learn-ing . PMLR, 2018, pp. 3053–3062. [27] V. Mnih, K. Kavukcuoglu, D. Silver et al. , “Human-level control through deep reinforcement learning,” Nature , vol. 518, no. 7540, pp. 529–533, 2015. [28] T. Haarnoja, A. Zhou, P. Abbeel et al. , “Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor,” in International conference on machine learning . PMLR, 2018, pp. 1861–1870. [29] J. Schulman, F. Wolski, P. Dhariwal et al. , “Proximal policy optimization algorithms,” arXiv preprint arXiv:1707.06347 , 2017. [30] A. Yang, A. Li, B. Yang et al. , “Qwen3 technical report,” arXiv preprint arXiv:2505.09388 , May 2025. [31] D. Guo, D. Yang, H. Zhang et al. , “Deepseek-r1: Incentivizing rea-soning capability in llms via reinforcement learning,” arXiv preprint arXiv:2501.12948 , Jan 2025.

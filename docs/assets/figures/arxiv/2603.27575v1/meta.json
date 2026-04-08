@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.27575v1/fig-001.webp",
+      "caption": "Fig. 1. Illustration of the adaptive stage-based mechanism.",
+      "page": 4,
+      "index": 1,
+      "width": 510,
+      "height": 382
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27575v1/fig-002.webp",
+      "caption": "Fig. 4. Rewards comparison of three algorithms on the Fishing Game. “Centralized Q” denotes a centralized oracle that controls all agents’ actions to maximize the joint reward of both agents. “Independent Q” means each agent runs a naive single-agent Q-learning algorithm independently, taking greedy actions based only on local information without considering other agents.",
+      "page": 6,
+      "index": 2,
+      "width": 516,
+      "height": 251
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27575v1/fig-003.webp",
+      "caption": "Fig. 3. Average reward of two agents.",
+      "page": 6,
+      "index": 3,
+      "width": 516,
+      "height": 253
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27575v1/fig-004.webp",
+      "caption": "Fig. 2. Individual cumulative reward of two agents.",
+      "page": 6,
+      "index": 4,
+      "width": 513,
+      "height": 253
+    }
+  ]
+}

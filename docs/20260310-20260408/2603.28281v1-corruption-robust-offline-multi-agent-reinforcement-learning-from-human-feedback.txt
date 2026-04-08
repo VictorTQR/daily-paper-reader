@@ -1,0 +1,7395 @@
+Title: Corruption-robust Offline Multi-agent Reinforcement Learning From Human Feedback
+
+URL Source: https://arxiv.org/pdf/2603.28281v1
+
+Published Time: Tue, 31 Mar 2026 01:57:04 GMT
+
+Number of Pages: 33
+
+Markdown Content:
+# Corruption-robust Offline Multi-agent Reinforcement Learning From Human Feedback 
+
+Andi Nika 
+
+MPI-SWS 
+
+Debmalya Mandal 
+
+University of Warwick 
+
+Parameswaran Kamalaruban 
+
+Visa 
+
+Adish Singla 
+
+MPI-SWS 
+
+Goran Radanovi´ c
+
+MPI-SWS 
+
+## Abstract 
+
+We consider robustness against data corruption in offline multi-agent reinforcement learning from human feedback (MARLHF) under astrong-contamination model: given a dataset D
+
+of trajectory–preference tuples (each preference being an n-dimensional binary label vector representing each of the n agents’ preferences), an ϵ-fraction of the samples may be arbitrarily corrupted. We model the problem using the framework of linear Markov games. First, under a uniform coverage assumption—where every policy of interest is sufficiently represented in the clean (prior to corruption) data—we introduce a robust estimator that guarantees an O(ϵ1−o(1) )
+
+bound on the Nash-equilibrium gap. Next, we move to the more challenging unilateral coverage 
+
+setting, in which only a Nash equilibrium and its single-player deviations are covered: here our proposed algorithm achieves an O(√ϵ) Nash-gap bound. Both of these procedures, however, suffer from intractable computation. To address this, we relax our solution concept to coarse correlated equilibria (CCE). Under the same unilateral-coverage regime, we then derive a quasi-polynomial-time algorithm whose CCE gap scales as O(√ϵ). To the best of our knowledge, this is the first systematic treatment of adversarial data corruption in offline MARLHF. 
+
+## 1 INTRODUCTION 
+
+Reinforcement Learning from Human Feedback (RLHF) [Christiano et al., 2017] has surged in popularity as a straightforward, efficient means of fine-tuning large lan-
+
+Proceedings of the 29 th International Conference on Artificial Intel-ligence and Statistics (AISTATS) 2026, Tangier, Morocco. PMLR: Volume 300. Copyright 2026 by the author(s). 
+
+guage models (LLMs) [Ouyang et al., 2022]. While most existing work focuses on single-agent settings, many real-world applications involve multiple interacting decision-makers, such as autonomous vehicles, distributed systems, or strategic marketplaces. Extending RLHF to such set-tings leads to multi-agent RLHF (MARLHF), where the goal is to learn aligned joint policies from preference data. Yet, despite its importance, research on MARLHF remains remarkably limited [Zhang et al., 2024]. At the same time, a critical shortcoming of all learning algorithms is their susceptibility to data-poisoning at-tacks—and RLHF is no exception [Wang et al., 2023a, Shi et al., 2023, Rando and Tramèr, 2023, Nika et al., 2025, Baumgärtner et al., 2024]. By injecting malicious feedback or subtly corrupting preference labels, adversaries can steer LLMs toward biased or harmful outputs—an especially serious risk as these models are increasingly deployed in safety-critical settings. Mandal et al. [2025] have proposed robust methods against data corruption for single-agent RLHF. However, no prior work has tackled the robustness of MARLHF systems against data-poisoning attacks. The added strategic complexity of MARLHF can amplify the impact of such attacks. It is therefore unclear whether single-agent methods extend directly to this setting. Motivated by the above, we initiate the study of corruption-robust offline MARLHF. Our setting assumes access to preference data D = {(τ, τ ′, o )} of size m, where τ, τ ′ are two sample trajectories and o is an n-dimensional vector of binary entries, each denoting a preference over the trajectory pair, corresponding to one of n agents. We assume that an 
+
+ϵ-fraction of D is arbitrarily corrupted by an attacker. Using the standard Bradley-Terry (BT) [Bradley and Terry, 1952] preference model, we cast our problem as an instance of a linear Markov game. Previous work has already established that the optimal theoretical guarantees in corruption-robust offline RL and two-player zero-sum Markov games, under linear function approximation, exhibit a linear dependence on ϵ. However, such dependence is achieved only when the data covers all possible directions (i.e. uniform cov-
+
+> arXiv:2603.28281v1 [cs.LG] 30 Mar 2026 Corruption-robust MARLHF
+
+erage ). When the data covers only a Nash policy and its unilateral deviations (i.e. unilateral coverage ), prior work in RLHF (also RL and two-player zero-sum MGs) achieves √ϵ bounds. An immediate question is whether we can at-tain the same ϵ-dependent robustness rates in MARLHF as those of RLHF. Optimal dependence can be expected under uniform coverage. However, weaker coverage assumptions (e.g. unilateral coverage) imply a more challenging setting. 
+
+Challenges. The main challenge stems from uncertainty over multiple reward models: deriving worst-case guaran-tees means selecting a policy that performs well under every 
+
+reward model in a confidence set obtained from a robust reward estimation, but computing that policy’s worst-case performance is challenging—it requires optimizing over all candidate reward models, even though our data-coverage assumption only holds with respect to the true (unknown) reward. In the single-agent case, Mandal et al. [2025] resort to subgradient methods (yielding an O(ϵ1/4) rate) and then a primal-dual approach to recover O(√ϵ). No analogous primal-dual theory exists for Markov games. Thus, we take a different approach. 
+
+Our approach. In multi-agent environments, the ultimate objective is to identify equilibrium policies, and minimizing the Nash gap provides a natural surrogate for that goal. Our key insight is that, for any reward model in the confidence set obtained by a robust reward estimation, the gap at a true Nash equilibrium policy π∗ must lie within a small margin of the minimal gap over all policies, up to the reward-estimation error induced by the confidence set. Thus, if eπ
+
+nearly minimizes the gap for a candidate reward model, then the gradient of π∗ with respect to rewards can serve as a biased—but usable—proxy for the gradient at eπ. To estimate that proxy, we make use of our unilateral coverage (i.e. D sufficiently covers π∗ and its unilateral deviations). In the linear Markov-game setting, the empirical feature differences between data-generating policies μ and μref then furnish a tractable approximation to the desired gradient. Plugging this into a first-order optimizer allows us to obtain the desired O(√ϵ) guarantee on the Nash gap. In particular, we make the following contributions. A summary of our results is given in Table 1. • First, assuming that D has uniform coverage, we design an algorithm that approximately computes a NE solely from corrupted preference data. Our algorithm first ro-bustly estimates each reward function. Then, it runs a value-based backward-induction procedure to compute a policy that minimizes an estimate of the gap. We prove that our algorithm incurs O(nϵ 1−o(1) + n/ √m) bounds on the Nash gap. • Next, we relax our coverage assumption on our data and assume only unilateral coverage. We run projected gradi-ent ascent (PGA) with a biased estimate of the gradient of the true gap for T1 steps to compute the worst-case reward parameter. Using that parameter, we run the same procedure as in our previous method. We finally prove that our algorithm incurs O(n√ϵ + n/ √m + n/ √T1)
+
+bounds on the Nash gap. • Our final contribution is on computational tractability. It is well-known that the NE computation is intractable for general-sum Markov games. We thus relax the NE notion into that of coarse correlated equilibrium (CCE). This allows us to frame each stage game as a saddle-point problem with convex-concave objective. We then utilize Optimistic Hedge to learn the CCE of each stage game. This yields and O(n√ϵ + n/ √m + n/ √T1 + n/T 2)
+
+bound on the CCE gap, where T2 is the number of steps for which we run Optimistic Hedge. 
+
+## 2 PRELIMINARIES 
+
+This section contains the background technical material to be used throughout the paper. 
+
+2.1 Markov Games 
+
+A Markov game of finite horizon H be-tween n agents is defined by the tuple G = S, {Ai}ni=1 , {Ph}H−1 
+
+> h=0
+
+, {R i,h }H−1 
+
+> h=0
+
+, s 0
+
+, where S
+
+is the state space, Ai is the action set of agent i,
+
+Ph : S×A1 ×· · ·× An → ∆( S) is the state transition kernel at time-step h; the map Ri,h : S × A1 × · · · × An → ∆( R)
+
+denotes the random reward of agent i at time-step h, with 
+
+Ri,h (s, a) := E[Ri,h (s, a)|s, a ]; finally, s0 ∈ S denotes the initial state. 
+
+Policies and value functions. Given agent i, a Markov policy πi = ( πi, 0, . . . , π i,H −1) denotes the tuple containing the decision-making strategies of agent i, where, for each 
+
+h ∈ [H − 1] := {0, 1, . . . , H − 1}, πi,h : S → ∆( Ai)
+
+maps states to probability simplices over actions. A joint product policy is defined as the tuple π = ( π1, . . . , π n)
+
+over all agents. We denote by ΠPP = Π PP  
+
+> 1
+
+× . . . × ΠPP  
+
+> n
+
+the overall product policy class and write π = ( πi, π−i), where 
+
+π−i = ( π1, . . . , π i−1, π i+1 , . . . , π n). Given joint policy π
+
+and state s at time-step h, the value function with respect to 
+
+π, s, and h is defined as 
+
+V π
+
+> i,h
+
+(s) = E
+
+"H−1X
+
+> t=h
+
+Ri,t (st, at)|sh = s, πt, P t
+
+#
+
+,
+
+where a = ( a1, . . . , a n). Moreover, for given a the action value function is defined as 
+
+Qπ
+
+> i,h
+
+(s, a) = E
+
+"H−1X
+
+> t=h
+
+Ri,t (st, at)|sh = s, ah = a, πt, P t
+
+#
+
+Nash equilibria. A product policy π∗ is said to be an α-
+
+Nash equilibrium if there exists α ≥ 0, such that, for every agent i and state s, we have V π∗ 
+
+> i, 0
+
+(s) ≥ V π′ 
+
+> i,π∗−i
+> i, 0
+
+(s) − α, for every π′ 
+
+> i
+
+∈ ΠPP  
+
+> i
+
+. If α = 0 , then π∗ is said to be a Nash equilibrium. We also define the notion of optimality of a Nika, Mandal, Kamalaruban, Singla, and Radanovi´ cBounds on the NE (CCE) gap 
+
+NE & Unif. Cov. eO
+
+ 1 
+
+> ξR
+
++ 1
+
+> ξP
+
+
+
+Hnϵ 1−o(1) + H2n√poly (d)
+
+> ξP
+> √m
+
+
+
+NE & Unil. Cov. eO
+
+ 1√CR
+
++ 1√CP
+
++ 1√T1
+
+  
+
+H5/2nd 3/4√ϵ + H2n√poly (d)
+
+> √m
+
+ 
+
+CCE & Unil. Cov. eO
+
+ 1√CR
+
++ 1√CP
+
++ 1√T1
+
+  
+
+H5/2nd 3/4√ϵ + H2n√poly (d)
+
+> √m
+
+
+
++ Hn 2
+
+> T2
+
+
+
+Table 1: Summary of our bounds for: (i) NE gap minimization under uniform coverage, (ii) NE gap minimization under unilateral coverage, and (iii) CCE gap minimization under unilateral coverage. Here, eO hides any poly-logarithmic factors, n denotes the number of agents, H denotes the horizon and d denotes the dimension. Moreover, ξR and ξP denote the uniform coverage coefficients, while CR and 
+
+CP denote the unilateral coverage coefficients; ϵ denotes the corruption parameter, m is the data size, T1 is the number of gradient steps while T2 is the number of steps for which OptimisticHedge is run. It is worth mentioning that our bounds have optimal dependence on ϵ in the uniform coverage setting, while maintaining the same dependence as the single-agent (and two-player zero-sum Markov game) settings under non-uniform coverage. Moreover, note that the algorithm for CCE approximation is also computationally efficient. 
+
+given policy π profile. The Nash gap [Cui and Du, 2022] of 
+
+π is defined as Gap (π) = P 
+
+> i∈[n]
+
+V †,π−i 
+
+> i, 0
+
+(s0) − V π
+
+> i, 0
+
+(s0) ,
+
+where V †,π−i 
+
+> i, 0
+
+(s0) = max π′ 
+
+> i
+
+V π′ 
+
+> i,π−i
+> i, 0
+
+(s0) . Note that, by definition, any Nash equilibrium has 0 Nash gap, and any 
+
+α-Nash equilibrium has at most α Nash gap. 
+
+Linear Markov games. In this paper, we consider linear Markov games [Zhong et al., 2022]. Formally, 
+
+G is said to be a linear Markov game with feature map ϕ : S × A → Rd, for some d ∈ N, if we have Ph(sh+1 |sh, ah) = ⟨ϕ(sh, ah), ξ h(sh+1 )⟩, and 
+
+Ri,h (sh, ah) = ⟨ϕ(sh, ah), θ ∗
+
+> i,h
+
+⟩ + ζi,h , ∀(sh, ah, i, h ) ∈
+
+S × A × [n] × [H − 1] , where ξh and θ∗ 
+
+> i
+
+are unknown parameters and ζi,h zero-mean γ2-subGaussian noise. Here, 
+
+∥ϕ(s, a)∥2 ≤ 1 for all state-action tuples (s, a) ∈ S × A,
+
+max { θ∗ 
+
+> i,h 2
+
+, ∥ξh(s)∥2} ≤ √d, for all i ∈ [n] and h ∈
+
+[H − 1] . Let Θ denote the set of all feasible θ as defined here. 
+
+Remark 1. There are two main reasons why we consider linear Markov games to model our problem. First, the corruption-robust offline RL literature in the general func-tion approximation [Ye et al., 2023] consider a corrup-tion model which is defined in terms of Bellman residuals. Since we only assume access to preference data, this type of corruption model is not well-defined for our setting. Sec-ond, relaxing the linearity of rewards would then require corruption-robust maximum likelihood estimation proce-dures beyond generalized linear models, which, to the best of our knowledge, are not present in the current literature. 
+
+2.2 Preference Data 
+
+Following the formulation in [Zhang et al., 2024], we denote by eD = {(eτi, eτ ′ 
+
+> i
+
+, eoi)}mi=1 the clean preference dataset, where eτ = ( es0, ea1,0, ea2,0, . . . , ean, 0, es1, . . . , esH−1)
+
+and eτ ′ = (es′
+
+> 0
+
+, ea′
+
+> 1,0
+
+, ea′
+
+> 2,0
+
+, . . . , ea′
+
+> n, 0
+
+, es′
+
+> 1
+
+, . . . , es′
+
+> H−1
+
+) denote sampled trajectories from behavior policies μ and μref , re-spectively, and eoi = ( eoi, 1, . . . , eoi,n ), with eoi,j ∈ {− 1, +1 },for all j ∈ [n], gives information about individual prefer-ences of agents for each pair of trajectories: eoi,j = 1 implies that eτi is preferred to eτ ′ 
+
+> i
+
+for agent j. We assume that the preferences are generated according to the Bradley-Terry (BT) model [Bradley and Terry, 1952]: for each agent j, we assume that we have 
+
+P(eoi,j = 1 |eτi, eτ ′ 
+
+> i
+
+)= σ
+
+> H−1
+
+X
+
+> h=0
+
+Ri,h (esh, eah) −
+
+> H−1
+
+X
+
+> h=0
+
+Ri,h (es′
+
+> h
+
+, ea′
+
+> h
+
+)
+
+!
+
+,
+
+with σ(x) = 1 /(1 + exp( −x)) being the sigmoid function. 
+
+2.3 Corruption Model 
+
+Following the ϵ-corruption model in offline RL(HF) [Zhang et al., 2022, Mandal et al., 2025], we assume that there exists an attacker that has full access to the dataset eD and arbitrar-ily perturbs an ϵ-fraction of it. That is, given ϵ ∈ [0 , 1/2) ,we assume that the attacker inspects eD and modifies up to 
+
+ϵ · m samples in eD. We denote by D the poisoned dataset. In other words, there are at most ϵ · m data samples in D
+
+such that (τ, τ ′, o )̸ = ( eτ , eτ ′, eo).1
+
+2.4 Data Coverage 
+
+Offline learning problems necessitate access to a dataset that contains, at least to some extent, "good" samples, in the sense that they are traversed by policies we are trying to approximate. This condition is usually described by the notion of data coverage . In linear Markov games (MG), data coverage is captured by the feature covariance matrix. Formally, for every h ∈ [H − 1] , we define 
+
+Σμ(h) = Eμh
+
+ϕ(sh, ah)ϕ(sh, ah)⊤
+
+> 1
+
+Following prior literature on corruption-robust RL [Zhang et al., 2022], we assume that, for each h ∈ [H − 1] , the subset of 
+
+D containing only the h steps of the samples, is also consistent with the ϵ-corruption model. Corruption-robust MARLHF 
+
+and 
+
+Σ− 
+
+> μ,μref
+
+= Eμ,μref 
+
+h
+
+(ϕ(τ ) − ϕ(τ ′)) ( ϕ(τ ) − ϕ(τ ′)) ⊤i
+
+as the feature covariance matrices that will determine cov-erage of our given data. Here ϕ(τ ) = PH−1 
+
+> h=0
+
+ϕ(sh, ah).Note that Σμ(h) is the standard covariance matrix used in the literature of offline RL, while Σ− 
+
+> μ,μref
+
+is the difference covariance matrix which has been previously used in RLHF literature [Zhan et al., 2023]. 
+
+## 3 ROBUST NE LEARNING UNDER UNIFORM COVERAGE 
+
+We start by considering the case when the preference dataset has uniform coverage, that is, all basis directions of the fea-ture space are sufficiently covered. We state this assumption below. 
+
+Assumption 1 (Uniform Coverage) . Let μ and μref be the behavior policies that were used to generate trajectories present in the data eD. We assume that we have Σ− 
+
+> μ,μref
+
+⪰
+
+ξRH · I and Σμ(h) ⪰ ξP · I, for all h ∈ [H − 1] , where 
+
+ξR and ξP are strictly positive constants and A ⪰ B is equivalent to x⊤(A − B)x ≥ 0, for all vectors x̸ = 0 .
+
+Remark 2. Note that we require coverage with respect to two covariance matrices. The first one, Σ− 
+
+> μ,μref
+
+, captures coverage of the rewards, since rewards are estimated in terms of feature differences. The second one, Σμ(h), cap-tures coverage of transitions for each step h. In standard RL, the second condition is enough to provide guarantees. However, in preference-based RL, the first condition is nec-essary due to the lack of the reward signal in the given data [Zhan et al., 2023]. 
+
+On a high level, all our algorithms are based on the follow-ing pipeline. They first use the preference data to robustly estimate each agent’s reward parameters. Then, using those rewards, they proceed to compute robust pessimistic and op-timistic estimates of the individual Q-functions for policies of interest. Finally, they estimate the gap and output a joint policy that minimizes it. We will instantiate different ver-sions of this pipeline under different coverage assumptions and notions of equilibria. Robust Reward Estimation 
+
+⇒ Robust Q-function Estimation 
+
+⇒ Estimated Gap Minimization 
+
+3.1 Algorithm 
+
+The main idea of our proposed algorithm is as follows. First, note that our overall objective is to find a joint policy that minimizes the Nash gap with respect to the ground-truth reward functions. However, we have access neither to these functions, nor to the real environment. We are only given a finite preference dataset D, an ϵ-fraction of which is arbitrarily corrupted. Therefore, our first step is to compute robust estimates of the reward parameters of each agent. Note that, for linear rewards, maximum likelihood estimation becomes standard logistic regression. And for such an objective, it is known [Awasthi et al., 2022] that we can recover the true parameter of interest from ϵ-corrupted data with O(ϵ1−o(1) ) accuracy via a robust method called TrimmedMLE (for a pseudocode, see Algorithm 6 in Appendix E). Thus, for each agent i, we let eθi = TrimmedMLE (D, ϵ, ν ), where we denote by θi
+
+the Hd -dimensional result of the concatenation of θi,h , for 
+
+h ∈ [H − 1] , and ν denotes a granularity hyperparameter. 
+
+Algorithm 1 Corruption-robust Equilibrium Learning from Human Feedback with Uniform Coverage 
+
+Require: Preference dataset D; confidence parameter δ. 
+
+> 1:
+
+Split D into equal D1 and D2.        
+
+> 2: ▷Reward Estimation via Trimmed MLE using D1.
+> 3:
+
+for i ∈ [n] do  
+
+> 4:
+
+Compute eθi = TrimmedMLE (D1, ϵ, ν ). 
+
+> 5:
+
+Set the optimistic and pessimistic rewards Ri,h (·, ·)
+
+and Ri,h (·, ·) as in Equations (2) and (3) , respectively.         
+
+> 6: ▷Robust Value Function Estimation Phase using D2.
+> 7:
+
+for π ∈ ΠPP do  
+
+> 8:
+
+Apply Algorithm 7 on D2 using only the preferred trajectories generated by μ, with input π, i, Ri,and Ri, and bonus function Γ( ·, ·) = 0 , to obtain 
+
+V †,π−i 
+
+> i,h
+
+(·) and V π
+
+> i,h
+
+(·), for all h ∈ [H − 1] . 
+
+> 9:
+
+end for  
+
+> 10:
+
+end for       
+
+> 11: ▷Nash Gap Estimation Phase
+> 12:
+
+for every policy π ∈ ΠPP : do  
+
+> 13:
+
+Compute the estimated gap gGap (π). 
+
+> 14:
+
+end for  
+
+> 15:
+
+return eπ ∈ arg min π∈ΠPP gGap (π).Next, since we are in the offline setting, the most reasonable approach is to apply pessimism with respect to the recovered parameters. To that end, we form confidence sets, for each agent i, based on the TrimmedMLE guarantees: 
+
+ΘUnif (eθi) = 
+
+
+
+θ ∈ Θ : eθi − θ 2
+
+≤ O
+
+ ϵ1−o(1) 
+
+ξR
+
+ 
+
+,
+
+(1) where δ > 0 is a randomness parameter. Once we have access to the confidence set, we compute the boundary pa-rameters 
+
+Ri,h (s, a) = max 
+
+> θi∈ΘUnif (eθi)
+
+θ⊤
+
+> i,h
+
+ϕ(s, a), (2) 
+
+Ri,h (s, a) = min 
+
+> θi∈ΘUnif (eθi)
+
+θ⊤
+
+> i,h
+
+ϕ(s, a) . (3) Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+Note that the inner problems are convex programs that have closed-form solutions. Now that we have access to our esti-mate reward functions, we need to minimize the Nash gap with respect to these rewards. In order to do that, we apply backward induction. First, we initialize the value function estimates V π 
+
+> H
+
+(·) = V †,π−i 
+
+> H
+
+(·) = 0 , for every joint policy 
+
+π. Then, for every step h down to 0, we apply a robust estimation algorithm Rob-Q (see Algorithm 2) for the Q-values. Essentially, the procedure first robustly estimates the parameters of the Bellman operator using a RobEst 
+
+oracle which is guaranteed to return an O(ϵ)-close value parameter under uniform coverage [Zhang et al., 2022]. Then, it computes the estimated Q-values by properly clip-ping the bonus-inflated (deflated) estimates so that they remain in [−H√d, H √d]. Once we have the Q-functions, 
+
+Algorithm 2 Robust Estimation of Q-Functions ( Rob-Q )
+
+Require: Dataset D; corruption level ϵ; policy π; agent i;reward functions Ri,h and Ri,h ; step h; next-step value estimates V π
+
+> i,h +1
+
+(·), V †,π−i
+
+> i,h +1
+
+(·); bonus Γ( ·, ·).
+
+1: Set ωπ 
+
+> i,h
+
+as 
+
+RobEst  ϕ(sh, ah), R i,h (sh, ah) + V π
+
+> i,h +1
+
+(sh+1 ).
+
+2: Set ω†,π−i 
+
+> i,h
+
+as 
+
+RobEst 
+
+
+
+ϕ(sh, ah), R i,h (sh, ah) + V †,π−i
+
+> i,h +1
+
+(sh+1 )
+
+
+
+.
+
+3: Set Qπ
+
+> i,h
+
+(·, ·) as Clip [−(H−h)√d, (H−h)√d]
+
+
+
+ϕ(·, ·)⊤ωπ 
+
+> i,h
+
+− Γ( ·, ·)
+
+
+
+.
+
+4: Set Q†,π−i 
+
+> i,h
+
+(·, ·) as Clip [−(H−h)√d, (H−h)√d]
+
+
+
+ϕ(·, ·)⊤ω†,π−i 
+
+> i,h
+
++ Γ( ·, ·)
+
+
+
+.
+
+5: return Q-functions Qπ
+
+> i,h
+
+(·, ·) and Q†,π−i 
+
+> i,h
+
+(·, ·).the value function estimates V π 
+
+> i,h
+
+(·) (and V †,π−i 
+
+> i,h
+
+(·)) for all steps, defined with respect to the estimated reward pa-rameters, are then computed by taking expectations over (and taking max over actions for player i) the given poli-cies. 2 Once we do this for every policy, we then return the policy eπ that minimizes the estimated gap with respect to 
+
+(R, R ) = ( R1, R 1, . . . , R n, R n):
+
+arg min 
+
+> π
+
+gGap  π, R, R  := X
+
+> i∈[n]
+
+V †,π−i 
+
+> i, 0
+
+(s0) − V π 
+
+> i, 0
+
+(s0) .
+
+(4) As shown in Appendix (see Lemma A.6), our optimistic and pessimistic value estimates are high-probability approx-imates of the true value function, which implies that the estimated gap is a high-probability upper bound on the ac-tual Nash gap. Minimizing this surrogate gap therefore 
+
+> 2
+
+Note that Algorithm 7 runs Algorithm 2 for H steps and finally returns the estimates of the value functions. We have used Algo-rithm 7 to present Algorithm 1 for ease of presentation. However, Algorithm 2 will be necessary in the following sections. 
+
+serves as a proxy for minimizing the true Nash gap—and, as the gap approaches zero, the resulting joint policy cor-respondingly approaches a Nash equilibrium. Algorithm 1 provides the pseudocode for the full procedure. 
+
+3.2 Theoretical guarantees 
+
+In this section, we state the theoretical guarantees on the convergence of the Algorithm 1. Proofs can be found in Appendix A. 
+
+Theorem 3.1. Let ϵ ∈ [0 , 1/2) , δ > 0 and Γ( ·, ·) = 0 . Fur-thermore, assume that m ≥ Ω(( H3/2/ϵ 2)( d + log( n/δ ))) .Then, under Assumption 1 with ξR ≥ 5ϵ, for some positive constant c, there exist robust algorithms TrimmedMLE and 
+
+RobEst such that, with probability at least 1−δ, the output 
+
+eπ of Algorithm 1 satisfies 
+
+Gap (eπ) ≤ O
+
+Hn 
+
+ exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ H√d + γξP
+
+!
+
+· ϵ + Hn 
+
+s
+
+(H√d + γ)2poly (d)
+
+ξ2 
+
+> P
+
+m
+
+
+
+Remark 3. Note that the bounds of Theorem 3.1 have a quasi-linear dependence on ϵ, which is known to be optimal in the single agent setting [Zhang et al., 2022] and the two-agent zero-sum setting [Nika et al., 2024b]. This is due to the strong coverage assumption on the data. In practice, the data may cover only some directions of interest, in which case, a different approach is needed. 
+
+## 4 ROBUST NE LEARNING UNDER UNILATERAL COVERAGE 
+
+In the previous section, we proposed an algorithm that re-turns an O(nϵ + n/ √m)-approximate Nash equilibrium under uniform coverage. However, such coverage is rarely possible in practice. The purpose of this section is to solve the Nash gap minimization problem under a more relaxed notion of coverage, namely unilateral coverage , which sim-ply requires coverage of a Nash policy and all its unilateral deviations for each agent. We extend the notion of low rel-ative uncertainty of [Zhong et al., 2022] to the MARLHF setting. 
+
+Assumption 2 (Unilateral Coverage) . Given Nash equilib-rium π∗, we assume that there exist positive constants CR
+
+and CP , such that, for all h ∈ [H − 1] and i ∈ { 1, . . . , n },
+
+Σ− 
+
+> ρ,ρ′
+
+⪰ CR · Σ− 
+
+> (πi,π∗−i),ρ′
+
+, for ρ, ρ′ ∈ { μ, μref },
+
+and Σμ(h) ⪰ CP · Σπi,π∗−i (h) .
+
+The first condition simply says that behavior policies μ and 
+
+μref sufficiently cover a Nash equilibrium and its unilateral deviations in the feature space. Different from single-agent Corruption-robust MARLHF 
+
+RL, where single policy concentrability is enough to pro-vide theoretical guarantees, its extension to Markov games, where only Nash policies are covered does not allow for any guarantees. Unilateral coverage is in fact necessary and sufficient to provide any meaningful guarantees in zero-sum [Zhong et al., 2022] and general-sum Markov games [Zhang et al., 2023]. 
+
+4.1 Algorithm 
+
+For the uniform coverage setting, we applied TrimmedMLE 
+
+to obtain estimates for the ground-truth reward parameters. The benefit of such an approach is that, under such coverage, it comes with bounds on the ℓ2-norm of the error, which then allows for defining our confidence set in terms of such error bounds. This, in turn, allows us to directly upper bound the difference between value functions and their estimates in terms of ℓ2-difference of their respective reward parameters. When we do not have uniform coverage, the final estimate is not guaranteed to remain close to the true parameter in the ℓ2 sense. In this case, as shown in Appendix (see Lemma ?? ), the parameters are close in the log-sigmoid sense. Given the output eθi of TrimmedMLE , we define the confidence set for the unilateral coverage setting as 
+
+ΘUnil (eθi) = 
+
+(
+
+θ ∈ Θ : 2
+
+m
+
+X 
+
+> (τ,τ ′,o )∈D
+
+log 
+
+σ
+
+
+
+o · eθ⊤ 
+
+> i
+
+(ϕ(τ ) − ϕ(τ ′)) 
+
+
+
+σ (o · θ⊤ (ϕ(τ ) − ϕ(τ ′))) ≤ κ
+
+)
+
+, (5) where κ = 6 ϵH √d + (2 d/m ) · log( Hm/δ ) controls the ‘radius’ of the confidence set. We can provide theoretical guarantees that ΘUnil (eθi) contains the ground-truth param-eter θ∗ 
+
+> i
+
+with high probability. Unfortunately though, the 
+
+Algorithm 3 Reward Parameter Estimation ( RewardEst )
+
+Require: Dataset D; corruption level ϵ; confidence param-eter δ; learning rate η; slackness parameter ν; number of steps T . 
+
+> 1:
+
+for i ∈ [n] do  
+
+> 2:
+
+Let eθi = TrimmedMLE (D, ϵ, ν ). 
+
+> 3:
+
+Initialize bθ(0)  
+
+> i
+
+uniformly at random in ΘUnil (eθi) (de-fined in Equation (5)).  
+
+> 4:
+
+for t = 0 , 1, . . . , T − 1 do  
+
+> 5:
+
+Take gradient step 
+
+bθ(t+1)  
+
+> i
+
+= PΘUnil (eθi)
+
+bθ(t) 
+
+> i
+
++ η e∇θi Gap 
+
+
+
+π∗, bθ(t) 
+
+. 
+
+> 6:
+
+end for  
+
+> 7:
+
+Set bθi = (1 /T ) PTt=1 bθ(t) 
+
+> i
+
+. 
+
+> 8:
+
+end for  
+
+> 9:
+
+return bθ = ( bθ1, . . . , bθn).same analysis does not go through just by choosing reward 
+
+Algorithm 4 Corruption-robust Nash Equilibrium Learning from Human Feedback 
+
+Require: Dataset D; corruption level ϵ; regularization pa-rameter λ; confidence parameter δ; learning rate η1;bonus functions Γ( ·, ·); slackness parameter ν; number of gradient steps T1. 
+
+> 1:
+
+Split D into equal D1 and D2. 
+
+> 2:
+
+Compute bθ = RewardEst (D1, ϵ, δ, η 1, ν, T 1). 
+
+> 3:
+
+for i ∈ [n] do  
+
+> 4:
+
+for π ∈ ΠPP do  
+
+> 5:
+
+Initialize V π 
+
+> i,H
+
+(·) = V †,π−i 
+
+> i,H
+
+(·) = 0 . 
+
+> 6:
+
+for h = H − 1, . . . , 0 do  
+
+> 7:
+
+Compute bRi,h (·, ·) = ( bθi,h )⊤ϕ(·, ·) to be the estimated reward.  
+
+> 8:
+
+Compute 
+
+
+
+Qπ
+
+> i,h
+
+(·, ·), Q †,π−i 
+
+> i,h
+
+(·, ·)
+
+
+
+=
+
+Rob-Q 
+
+
+
+D2,h , π, ϵ, bRi,h , V π
+
+> i,h +1
+
+, V †,π−i
+
+> i,h +1
+
+, Γ
+
+
+
+. 
+
+> 9:
+
+Set V π
+
+> i,h
+
+(·) = Ea∼πh
+
+h
+
+Qπ
+
+> i,h
+
+(·, a)
+
+i
+
+and V †,π−i 
+
+> i,h
+
+(·) =max ai Ea−i∼π−i,h 
+
+h
+
+Q†,π−i 
+
+> i,h
+
+(·, a)
+
+i
+
+. 
+
+> 10:
+
+end for  
+
+> 11:
+
+end for  
+
+> 12:
+
+end for  
+
+> 13:
+
+return eπ ∈ arg min π∈ΠPP gGap (π, bθ).estimates that maximize (minimize) over the confidence set, due to this more complicated notion of closeness. Hence, we follow a different approach in this section. Intuitively, if we can find θ in our confidence set that maximizes the gap of our output policy , and, similarly, find a policy π that minimizes the gap with respect to this choice of θ, we can finally bound the true gap on the ground-truth reward. This intuition is based on the observation that any Nash gaps of policies that used θ parameters in the confidence set should be close to each-other. Based on the above discussion, we will utilize projected gradient ascent (PGA) to update our estimates of θ. How-ever, we do not have access to the true gap given parameter 
+
+θ, neither of its gradient with respect to θ. We thus resort to using biased estimates of it. As we show in Appendix (see Lemma B.5), for any θ := ( θ1, . . . , θ n) ∈ ΘUnil (eθi) ×
+
+. . . , ×ΘUnil (eθn), any policy π that is the minimizer of the estimated gap computed via Rob-Q on θ, satisfies 
+
+|Gap (π, θ) − Gap (π∗, θ)| ≤ O(n√ϵ + n/ √m) ,
+
+for Nash equilibrium policy π∗ which is covered by D,where Gap (π, θ) here denotes the true Nash gap of π
+
+under reward function parameterized by θ. Therefore, we optimize Gap (π∗, θ) as a surrogate objective, and later transfer guarantees to Gap (π, θ) using Lemma B.5. However, we do not have access to ∇θ Gap (π∗, θ). Here, Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+we use the following observation: in the linear setting, the (sub)gradient of the gap becomes the average feature dif-ferences over convex combinations of occupancy measures. Thus, we can use ∇θ
+
+P
+
+> i∈[n]
+
+(V μ
+
+> i, 0
+
+(s0, θ i) − V μref  
+
+> i, 0
+
+(s0, θ i)) 
+
+as an estimate for ∇θ Gap (π∗, θ), since μ and μref 
+
+already cover π∗ and its unilateral deviations. Here, 
+
+V μ
+
+> i, 0
+
+(s0, θ i) denotes the value function of μ with respect to reward function parametrized by θi. To estimate 
+
+∇θi (V μ
+
+> i, 0
+
+(s0, θ i) − V μref  
+
+> i, 0
+
+(s0, θ i)) , we use a robust mean oracle RobMean that takes as input corrupted fea-ture differences and returns a O(√ϵ)-approximate estimate of their true mean, which in our case is just 
+
+∇θi (V μ
+
+> i, 0
+
+(s0, θ i) − V μref  
+
+> i, 0
+
+(s0, θ i)) . We thus define our gradient estimate e∇θi Gap (π∗, θ) with respect to θi as 
+
+> H−1
+
+X
+
+> h=0
+
+RobMean 
+
+
+
+Dμ
+
+> h,ϕ
+
+
+
+−
+
+> H−1
+
+X
+
+> h=0
+
+RobMean 
+
+
+
+Dμref 
+
+> h,ϕ
+
+
+
+,
+
+where Dμ 
+
+> h,ϕ
+
+and Dμref  
+
+> h,ϕ
+
+partition each h-level of D and store only the features of trajectories generated by μ and μref ,respectively. After running PGA for T1 steps, we compute the empirical average of the iterates and use that to compute our estimated reward function. The reward estimation procedure RewardEst is described in Algorithm 3. Once we have access to this reward, we can run Rob-Q on it and obtain estimated gaps for each policy. However, lack of uniform coverage implies weaker guaran-tees on Rob-Q . Thus, we need to properly define a bonus term that accounts for corruption and lack of coverage. First, let us define a scaled sample covariance matrix with respect to the preferred trajectories in the corrupted data, using regularization parameter λ ≥ 0 (to be specified later) as 
+
+Λh = 35
+
+ 1
+
+m
+
+> m
+
+X
+
+> j=1
+
+ϕ(sjh, ajh)ϕ(sjh, ajh)⊤ + ( ϵ + λ)I
+
+ .
+
+Using Λh, we now define the bonus term to be used in this section as follows. For any (s, a), let 
+
+Γ( s, a) = E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥Λ−1
+
+> h
+
+,
+
+where E(d, m, δ, ϵ ) = O(√ϵ + 1 /√m) (see Appendix B for detailed definition). We run Rob-Q with bonus set as Γ
+
+and obtain estimated gaps for every joint policy. Finally, we return a joint policy that minimizes estimated gap. The full procedure is described in Algorithm 4. 
+
+4.2 Theoretical guarantees 
+
+In this section, we state the theoretical guarantee on the convergence of Algorithm 4. 
+
+Theorem 4.1. Let ϵ ∈ [0 , 1/2) , λ ≥ Ω( dH log( m/δ )/m ),and δ > 0. Set ΘUnil (·) as in Equation (5) and Γ( s, a) = 
+
+E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥Λ−1
+
+> h
+
+. Suppose Assumption 2 is satisfied and PGA is run for T1 steps with learning rate 
+
+η = O(1 /√T1). Then, there exist robust subroutines 
+
+RobEst , TrimmedMLE , and RobMean such that, with probability at least 1 − δ, the output eπ of Algorithm 4 with subroutines RobEst , TrimmedMLE , RobMean and 
+
+RewardEst , satisfies 
+
+Gap (eπ) ≤ eO
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
++ 1
+
+√T1
+
+
+
+· H5/2nd 3/4√ϵ + H2n
+
+r poly (d)
+
+m
+
+!! 
+
+.
+
+Remark 4. Note that the order of ϵ in the above bounds is 1/2. This deterioration comes from the relaxation of uniform coverage. This dependence is identical to that in single-agent RL [Zhang et al., 2022], two-player zero-sum Markov games [Nika et al., 2024b], and single-agent RLHF [Mandal et al., 2025] under data corruption. The currently established linear lower bounds hold under uniform cover-age. It remains an open question whether weaker coverage implies tighter lower bounds. 
+
+## 5 ROBUST CCE LEARNING UNDER UNILATERAL COVERAGE 
+
+In the previous section, we provided an algorithm that was designed to compute an approximate NE using corrupted preference data under the minimal unilateral coverage as-sumption. However, a key bottleneck of Algorithm 4 is the intractability of the gap-minimization step. It is well-known that even normal-form general-sum games suffer from the curse of multi-agents—computational time scales exponentially with the number of agents (actions) [Foster et al., 2023]. Thus, to address this issue, previous work has considered more relaxed versions of the NE, such as 
+
+correlated equilibria or coarse correlated equilibria (CCE) [Cui et al., 2023, Zhang et al., 2023, Ma et al., 2023, Song et al., 2021], the latter of which can be approximated using no-regret learning algorithms. A general correlated policy is defined as a set of H maps 
+
+π := {πh : Ω × (S × A)h−1 × S → ∆( A)}h∈[H−1] ,where the first argument w ∈ Ω is sampled from some underlying distribution. A crucial difference from Markov policies is information about prior states that is given as input. We denote by ΠGCP the space of all general correlated policies. We denote by ΠGCP  
+
+> i
+
+the set of general correlated policies for agent i. Then, policy π∗ is said to be an α-CCE if there exists α ≥ 0, such that, for every agent 
+
+i and state s, we have V π∗ 
+
+> i, 0
+
+(s) ≥ V π′,π∗−i 
+
+> i, 0
+
+(s) − α, for every 
+
+π′ 
+
+> i
+
+∈ ΠGCP  
+
+> i
+
+. If α = 0 , then π∗ is said to be a CCE. Note that the only difference between NEs and CCEs is that an NE is restricted to be a product policy, while a CCE can be any arbitrary combination of individual policies in the joint action space simplex. Hereafter, we overload notation and use Gap (π) to denote the CCE gap of a joint policy π.Corruption-robust MARLHF 
+
+There has been a lot of interest in efficiently computing approximate CCEs in Markov games using V-learning type algorithms [Jin et al., 2021, Wang et al., 2023b, Cui et al., 2023]. However, all these works consider the online set-ting, where the learner can explore the environment and increasingly gather more relevant data. We only have at our disposal offline corrupted preference data. 
+
+5.1 Algorithm 
+
+In this section, we propose an offline-learning algorithm for computing approximate CCE in linear Markov games. First, we again assume unilateral coverage on our data (Assumption 2). Given preference data D, we again run 
+
+RewardEst procedure to obtain the reward estimates bθ.At this point, different from the previous section, we take another approach at the estimated gap minimization prob-lem. First, for a given joint policy π, agent i, state s, step h,and actions a and a†, we define the loss Lsi (a†, a ′) for this stage as 
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Q†,π−i 
+
+> i,h
+
+(s, a †, a−i) − Qπ
+
+> i,h
+
+(s, a ′, a−i)
+
+i
+
+,
+
+where the optimistic and pessimistic Q-function estimates are computed using bθ. Using this loss function, we can now express the estimated gap minimization problem at stage h
+
+as 
+
+min 
+
+> π′
+> h
+
+X
+
+> i∈[n]
+
+max 
+
+> π†
+> i,h
+
+Ea† 
+
+> i∼π†
+> i,h (·| s),a ′
+> i∼π′
+> i,h (·| s)
+
+Lsi (a†, a ′) .
+
+Note that such an objective can be framed as a normal-form game at stage h. To solve the stage game, we utilize 
+
+OptimisticHedge [Daskalakis et al., 2021], a no-regret learning algorithm which returns a eO(1 /T 2)-approximate CCE of the game when run for T2 iterations. Each player basically solves a max − min problem at stage h and up-dates its policy using a multiplicative weights update style. We run the algorithm for T2 iterations and return the av-erage joint policy. The pseudo-code for Optimistic Hedge applied to our setting is given in Algorithm 8 (see Appendix E). Once we have computed our joint policy at stage h, we then compute the optimistic and pessimistic values by tak-ing expectations of the Q-function estimates over the newly computed policies. We use these value estimates to run the next iteration h − 1 of our algorithm. Finally, we return the joint policy eπ which is a composition of the returned policies from OptimisticHedge at each stage h. The full procedure is given in Algorithm 5. 
+
+5.2 Theoretical guarantees 
+
+In this section, we provide upper bounds on the CCE gap for the output of Algorithm 5. 
+
+Theorem 5.1. Let ϵ ∈ [0 , 1/2) , λ ≥ Ω( dH log( m/δ )/m ),and δ > 0. Set ΘUnil (·) as in Equation (5) and Γ( s, a) = 
+
+E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥Λ−1
+
+> h
+
+. Suppose Assumption 2 is satisfied, PGA is run for T1 steps with learning rate 
+
+Algorithm 5 Corruption-robust CCE Learning from Human Feedback 
+
+Require: Preference dataset D; regularization parameter 
+
+λ; confidence parameter δ; learning rates η1, η2; bonus functions Γ( ·, ·); slackness parameter ν; number of gra-dient steps T1; number of optimization steps T2.
+
+1: Split D into equal D1 and D2.
+
+2: Compute bθ = RewardEst (D1, ϵ, δ, η 1, ν, T 1).
+
+3: Initialize eπ uniformly at random and V eπ 
+
+> i,H
+
+(·) =
+
+V †,eπ−i 
+
+> i,H
+
+(·) = 0 , for all i ∈ { 1, . . . , n }.
+
+4: for h = H − 1, . . . , 0 do 
+
+5: for i = 1 , . . . , n do 
+
+6: Compute bRi,h (·, ·) = ( bθi,h )⊤ϕ(·, ·) to be the esti-mated reward. 
+
+7: Compute 
+
+
+
+Qeπ
+
+> i,h
+
+(·, ·), Q †,eπ−i 
+
+> i,h
+
+(·, ·)
+
+
+
+=
+
+Rob-Q 
+
+
+
+D2,h , eπ, ϵ, bRi,h , V eπ
+
+> i,h +1
+
+, V †,eπ−i
+
+> i,h +1
+
+, Γ
+
+
+
+.
+
+8: Compute loss Lsi , for states s ∈ S.
+
+9: end for 
+
+10: Compute eπh(·| s) =
+
+OptimisticHedge (Ls
+
+> 1
+
+, . . . , Lsn, η 2, T 2).
+
+11: Set V eπ
+
+> i,h
+
+(·) = Ea∼eπh
+
+h
+
+Qeπ
+
+> i,h
+
+(·, a)
+
+i
+
+and 
+
+V †,eπ−i 
+
+> i,h
+
+(·) = max ai Ea−i∼eπ−i,h 
+
+h
+
+Q†,eπ−i 
+
+> i,h
+
+(·, a)
+
+i
+
+, for 
+
+i ∈ { 1, . . . , n }.
+
+12: end for 
+
+13: return eπ = ( eπ0, . . . , eπH−1).
+
+η1 = O(1 /√T1), and OptimisticHedge is run for T2
+
+steps with learning rate η2 = O(1 /(n log 4 T2)) . Then, there exist robust subroutines RobEst , TrimmedMLE ,and RobMean such that, with probability at least 1 − δ,the output eπ of Algorithm 5 with subroutines RobEst ,
+
+TrimmedMLE , RobMean and OptimisticHedge , sat-isfies 
+
+Gap (eπ) ≤ eO
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
++ 1
+
+√T1
+
+
+
+· H5/2nd 3/4√ϵ + H2n
+
+ppoly (d)
+
+√m
+
+!
+
++ Hn 2
+
+T2
+
+!
+
+.
+
+Remark 5. Note that we only incur an additional O(1 /T 2)
+
+term on the CCE Gap, which comes from applying the no-regret sub-routine OptimisticHedge . The benefit of such procedure is that it can be run in quasi-polynomial time in dataset size and feature dimension. The computational complexity of Algorithm 5 is 
+
+O
+
+
+
+(nd )log( 1  
+
+> ϵ)
+
++ ( T1 + nH ) · (poly (m, d, 1
+
+ϵ )+ HT 2 max  
+
+> i
+
+|Ai|)
+
+
+
+.Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+## 6 RELATED WORK 
+
+Reinforcement Learning from Human Feedback (RLHF) 
+
+RLHF has substantially grown in popularity in the recent years, largely due to LLMs [Ziegler et al., 2019, Nakano et al., 2021, Wu et al., 2021, Ouyang et al., 2022, Stien-non et al., 2020, Glaese et al., 2022, Ramamurthy et al., 2023, Menick et al., 2022, Ganguli et al., 2022, Bai et al., 2022, Gao et al., 2023]. Yet RLHF’s utility extends far beyond LLMs, encompassing diverse applications—from game playing [Christiano et al., 2017, Warnell et al., 2018, Knox and Stone, 2008, MacGlashan et al., 2017] to robotic control [Shin et al., 2023, Brown et al., 2019]. Our work is related to recent theoretical studies on (MA)RLHF [Zhan et al., 2023, Zhu et al., 2023, Zhang et al., 2024, Li et al., 2023, Xiong et al., 2023, Nika et al., 2024a]. In particu-lar, we consider data corruption on MARLHF. In the single player setting, Nika et al. [2025] propose a general data-poisoning framework in RLHF, while Mandal et al. [2025] propose robust algorithms trained on ϵ-corrupted data. The latter is the most closely related work to ours. While we share the preference-based model and the data corruption model, our setting is a generalization of the single-agent RLHF setting considered in [Mandal et al., 2025]. This in-troduces a new layer of complexity: instead of maximizing value functions over single policies, our goal is to minimize the Nash gap over joint policies. This involves a different style of analysis. Algorithmically, our methods diverge in two key ways. First, instead of relying on zeroth-order or-acle calls to estimate gradients, we directly approximate the gradient of the Nash gap with respect to each agent’s strategy via the biased gradient with respect to a Nash pol-icy. This allows us to also maintain the O(√ϵ) bounds on the gap. Second, we incorporate a quasi-polynomial-time subroutine that computes an approximate coarse correlated equilibrium (CCE) of the induced game. 
+
+Corruption-robust Offline Reinforcement Learning (RL) 
+
+There has been a substantial body of research on adversarial attacks in (MA)RL [Huang et al., 2017, Lin et al., 2017, Wu et al., 2023, Rakhsha et al., 2021, Rangi et al., 2022, Nika et al., 2024b, Ma et al., 2023, Gleave et al., 2020]. Our research relates to a specific type of adversarial attack, namely, data corruption [Mei and Zhu, 2015, Xiao et al., 2015, Rakhsha et al., 2021]. Our focus is on designing robust algorithms trained on corrupted data generated via 
+
+ϵ-corruption model (a.k.a. strong contamination model [Di-akonikolas et al., 2019]). In this line of work, Zhang et al. [2022] first consider corruption-robust RL via linear Markov decision processes (MDP), which is later extended to linear zero-sum Markov games (MG) [Nika et al., 2024b]. Us-ing a different contamination model, Ye et al. [2023] study the problem of corruption-robustness in RL with general function approximation. Our work diverges from the above in that we study strong data corruption in multi-agent rein-forcement learning from human feedback, which, due to its dependence on preference data, introduces additional layers of complexity in providing robustness guarantees. 
+
+Offline Markov Games (MG) Our work also relates to the literature of learning in MGs [Tian et al., 2021, Vrancx et al., 2008, Littman, 1994, 2001]. We model our underlying environment from which the data is generated as a linear MG [Zhong et al., 2022]. We are interested in approximating notions of optimal joint policies from corrupted preference data. The primary notion of optimality in MGs is that of the Nash equilibrium (NE) [Nash Jr, 1950]. Due to its computational intractability in general-sum MGs, prior work has considered relaxed versions of it such as CCEs [Cui et al., 2023, Zhang et al., 2023, Ma et al., 2023, Song et al., 2021], and designed computationally efficient methods to compute them in the online setting [Jin et al., 2021, Wang et al., 2023b, Cui et al., 2023]. We depart from this line of work and consider the CCE computation problem in the offline setting, where we compute the CCE of each stage game via no-regret methods [Daskalakis et al., 2021]. 
+
+## 7 DISCUSSION 
+
+In this paper, we studied the problem of data corruption in offline MARLHF. We proposed provable-robust algorithms, both under uniform and unilateral coverage assumptions. Finally, we proposed a computationally efficient algorithm that robustly approximates a coarse correlated equilibrium of the underlying Markov game. A key technical contribution of our work is a new way to op-timize the Nash gap without access to true reward functions or their gradients. Prior single-agent RLHF approaches rely on primal-dual methods or unbiased gradients, which do not extend to general-sum Markov games due to strategic cou-pling. We instead introduce a biased but tractable gradient surrogate : by leveraging the linear structure of the underly-ing Markov game, we approximate the gradient at a Nash equilibrium using feature expectations induced by behavior policies. Under unilateral coverage, these policies capture the occupancy measures of the equilibrium and its unilateral deviations, so their feature differences act as a proxy for the true gradient direction. Despite the bias, this estimate is ac-curate enough to guide projected gradient ascent over the re-ward confidence set, yielding O(√ϵ) robustness guarantees. This idea—leveraging equilibrium structure to construct us-able gradient surrogates from corrupted offline preference data—appears to be new and may be of independent interest. Several interesting directions are worth pursuing. First, it is not clear how one can formulate the data corruption problem in MARLHF with general function approximation, and then how to design robust algorithms in that setting. Second, it would be interesting to address the open question of whether the O(√ϵ) bound under non-uniform coverage is tight. Finally, implementing the proposed algorithms and experimentally testing them on MARL environments is another exciting future direction. Corruption-robust MARLHF 
+
+Acknowledgements 
+
+The work of Andi Nika and Goran Radanovic was funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) – project number 467367360. 
+
+## References 
+
+Pranjal Awasthi, Abhimanyu Das, Weihao Kong, and Ra-jat Sen. Trimmed Maximum Likelihood Estimation for Robust Generalized Linear Model. NeurIPS , 2022. Yuntao Bai et al. Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback. 
+
+CoRR , abs/2204.05862, 2022. Tim Baumgärtner, Yang Gao, Dana Alon, and Donald Met-zler. Best-of-Venom: Attacking RLHF by Injecting Poi-soned Preference Data. CoRR , abs/2404.05530, 2024. Ralph Allan Bradley and Milton E Terry. Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons. Biometrika , 39(3/4), 1952. Daniel S. Brown, Wonjoon Goo, Prabhat Nagarajan, and Scott Niekum. Extrapolating Beyond Suboptimal Demon-strations via Inverse Reinforcement Learning from Ob-servations. In ICML , 2019. Paul F Christiano, Jan Leike, Tom Brown, Miljan Martic, Shane Legg, and Dario Amodei. Deep Reinforcement Learning from Human Preferences. In NeurIPS , 2017. Qiwen Cui and Simon S Du. Provably Efficient Offline Multi-agent Reinforcement Learning via Strategy-wise Bonus. NeurIPS , 2022. Qiwen Cui, Kaiqing Zhang, and Simon Du. Breaking the Curse of Multiagents in a Large State Space: RL in Markov Games with Independent Linear Function Ap-proximation. In COLT , 2023. Constantinos Daskalakis, Maxwell Fishelson, and Noah Golowich. Near-optimal No-regret Learning in General Games. In NeurIPS , 2021. Ilias Diakonikolas, Gautam Kamath, Daniel Kane, Jerry Li, Ankur Moitra, and Alistair Stewart. Robust estimators in high-dimensions without the computational intractability. 
+
+SIAM Journal on Computing , 48(2):742–864, 2019. Ilias Diakonikolas, Daniel M Kane, and Ankit Pensia. Out-lier Robust Mean Estimation with Subgaussian Rates via Stability. In NeurIPS , 2020. Ilias Diakonikolas, Samuel B Hopkins, Ankit Pensia, and Stefan Tiegel. Sos Certifiability of Subgaussian Distribu-tions and its Algorithmic Applications. In Proceedings of the 57th Annual ACM Symposium on Theory of Com-puting , pages 1689–1700, 2025. Yihe Dong, Samuel Hopkins, and Jerry Li. Quantum En-tropy Scoring for Fast Robust Mean Estimation and Im-proved Outlier Detection. Advances in Neural Informa-tion Processing Systems , 32, 2019. Dylan J Foster, Noah Golowich, and Sham M Kakade. Hard-ness of Independent Learning and Sparse Equilibrium Computation in Markov Games. In ICML , 2023. D Ganguli et al. Red Teaming Language Models to Re-duce Harms: Methods, Scaling Behaviors, and Lessons Learned. CoRR , abs/2209.07858, 2022. Leo Gao, John Schulman, and Jacob Hilton. Scaling Laws for Reward Model Overoptimization. In ICML , 2023. Amelia Glaese et al. Improving Alignment of Dia-logue Agents via Targeted Human Judgements. CoRR ,abs/2209.14375, 2022. Adam Gleave, Michael Dennis, Cody Wild, Neel Kant, Sergey Levine, and Stuart Russell. Adversarial Policies: Attacking Deep Reinforcement Learning. In ICLR , 2020. Sandy Huang, Nicolas Papernot, Ian Goodfellow, Yan Duan, and Pieter Abbeel. Adversarial Attacks on Neural Net-work Policies. CoRR , abs/1702.02284, 2017. Chi Jin, Qinghua Liu, Yuanhao Wang, and Tiancheng Yu. V-learning: A Simple, Efficient, Decentralized Algorithm for Multiagent RL. arXiv preprint arXiv:2110.14555 ,2021. W Bradley Knox and Peter Stone. Tamer: Training an Agent Manually via Evaluative Reinforcement. In ICDL , 2008. Zihao Li, Zhuoran Yang, and Mengdi Wang. Reinforcement Learning with Human Feedback: Learning Dynamic Choices via Pessimism. arXiv preprint arXiv:2305.18438 ,2023. Yen-Chen Lin, Zhang-Wei Hong, Yuan-Hong Liao, Meng-Li Shih, Ming-Yu Liu, and Min Sun. Tactics of Adversar-ial Attack on Deep Reinforcement Learning Agents. In 
+
+IJCAI , 2017. Michael L. Littman. Markov Games as a Framework for Multi-agent Reinforcement Learning. In ICML , 1994. Michael L Littman. Value-function Reinforcement Learning in Markov Games. Cognitive Systems Research , 2001. Shaocong Ma, Ziyi Chen, Shaofeng Zou, and Yi Zhou. Decentralized Robust V-Learning for Solving Markov Games with Model Uncertainty. JMLR , 2023. James MacGlashan, Mark K Ho, Robert Loftin, Bei Peng, Guan Wang, David L Roberts, Matthew E Taylor, and Michael L Littman. Interactive Learning from Policy-dependent Human Feedback. In ICML , 2017. Debmalya Mandal, Andi Nika, Parameswaran Kamalaruban, Adish Singla, and Goran Radanovi´ c. Corruption Robust Offline Reinforcement Learning with Human Feedback. In AISTATS , 2025. Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+Shike Mei and Xiaojin Zhu. Using Machine Teaching to Identify Optimal Training-set Attacks on Machine Learn-ers. In AAAI , 2015. Jacob Menick et al. Teaching Language Models to Support Answers with Verified Quotes. CoRR , abs/2203.11147, 2022. Reiichiro Nakano et al. Webgpt: Browser-assisted Question-answering with Human Feedback. CoRR ,abs/2112.09332, 2021. John F Nash Jr. Equilibrium Points in n-person Games. 
+
+Proceedings of the National Academy of Sciences , 1950. Andi Nika, Debmalya Mandal, Parameswaran Kamalaruban, Georgios Tzannetos, Goran Radanovi´ c, and Adish Singla. Reward Model Learning vs. Direct Policy Optimization: A Comparative Analysis of Learning from Human Prefer-ences. In ICML , 2024a. Andi Nika, Debmalya Mandal, Adish Singla, and Goran Radanovic. Corruption-Robust Offline Two-player Zero-sum Markov Games. In AISTATS , 2024b. Andi Nika, Jonathan Nöther, Debmalya Mandal, Parameswaran Kamalaruban, Adish Singla, and Goran Radanovi´ c. Policy Teaching via Data poisoning in Learning from Human Preferences. In AISTATS , 2025. Long Ouyang et al. Training Language Models to Follow Instructions with Human Feedback. In NeurIPS , 2022. Amin Rakhsha, Goran Radanovic, Rati Devidze, Xiaojin Zhu, and Adish Singla. Policy Teaching in Reinforcement Learning via Environment Poisoning Attacks. JMLR ,2021. Rajkumar Ramamurthy, Prithviraj Ammanabrolu, Kianté Brantley, Jack Hessel, Rafet Sifa, Christian Bauckhage, Hannaneh Hajishirzi, and Yejin Choi. Is Reinforcement Learning (not) for Natural Language Processing: Bench-marks, Baselines, and Building Blocks for Natural Lan-guage Policy Optimization. In ICLR , 2023. Javier Rando and Florian Tramèr. Universal Jailbreak Back-doors from Poisoned Human Feedback. In ICLR , 2023. Anshuka Rangi, Haifeng Xu, Long Tran-Thanh, and Mas-simo Franceschetti. Understanding the Limits of Poison-ing Attacks in Episodic Reinforcement Learning. CoRR ,abs/2208.13663, 2022. Jiawen Shi, Yixin Liu, Pan Zhou, and Lichao Sun. Badgpt: Exploring Security Vulnerabilities of ChatGPT via Back-door Attacks to InstructGPT. CoRR , abs/2304.12298, 2023. Daniel Shin, Anca D. Dragan, and Daniel S. Brown. Bench-marks and Algorithms for Offline Preference-Based Re-ward Learning. Transactions of Machine Learning Re-search , 2023. Ziang Song, Song Mei, and Yu Bai. When Can We Learn General-sum Markov Games with a Large Num-ber of Players Sample-Efficiently? arXiv preprint arXiv:2110.04184 , 2021. Nisan Stiennon, Long Ouyang, Jeffrey Wu, Daniel Ziegler, Ryan Lowe, Chelsea Voss, Alec Radford, Dario Amodei, and Paul F Christiano. Learning to Summarize with Human Feedback. In NeurIPS , 2020. Yi Tian, Yuanhao Wang, Tiancheng Yu, and Suvrit Sra. Online Learning in Unknown Markov Games. In ICML ,2021. Peter Vrancx, Katja Verbeeck, and Ann Nowé. Decentral-ized Learning in Markov Games. IEEE Transactions on Systems, Man, and Cybernetics, Part B (Cybernetics) , 38, 2008. Jiongxiao Wang, Junlin Wu, Muhao Chen, Yevgeniy Vorob-eychik, and Chaowei Xiao. On the Exploitability of Reinforcement Learning with Human Feedback for Large Language Models. CoRR , abs/2311.09641, 2023a. Yuanhao Wang, Qinghua Liu, Yu Bai, and Chi Jin. Breaking the Curse of Multiagency: Provably Efficient Decentral-ized Multi-agent RL with Function Approximation. In 
+
+COLT , 2023b. Garrett Warnell, Nicholas Waytowich, Vernon Lawhern, and Peter Stone. Deep TAMER: Interactive Agent Shaping in High-dimensional State Spaces. In AAAI , 2018. Jeff Wu, Long Ouyang, Daniel M Ziegler, Nisan Stien-non, Ryan Lowe, Jan Leike, and Paul Christiano. Recur-sively Summarizing Books with Human Feedback. CoRR ,abs/2109.10862, 2021. Young Wu, Jeremy McMahan, Xiaojin Zhu, and Qiaomin Xie. Reward Poisoning Attacks on Offline Multi-agent Reinforcement Learning. In AAAI , 2023. Huang Xiao, Battista Biggio, Gavin Brown, Giorgio Fumera, Claudia Eckert, and Fabio Roli. Is Feature Selection Secure Against Training Data Poisoning? In ICML ,2015. Wei Xiong, Hanze Dong, Chenlu Ye, Han Zhong, Nan Jiang, and Tong Zhang. Gibbs Sampling from Human Feedback: A Provable KL-constrained Framework for RLHF. CoRR ,2023. Chenlu Ye, Rui Yang, Quanquan Gu, and Tong Zhang. Corruption-robust Offline Reinforcement Learning with General Function Approximation. In NeurIPS , 2023. Andrea Zanette, Ching-An Cheng, and Alekh Agarwal. Cau-tiously Optimistic Policy Optimization and Exploration with Linear Function Approximation. In COLT , 2021. Wenhao Zhan, Masatoshi Uehara, Nathan Kallus, Jason D Lee, and Wen Sun. Provable Offline Reinforcement Corruption-robust MARLHF 
+
+Learning with Human Feedback. CoRR , abs/:2305.14816, 2023. Natalia Zhang, Xinqi Wang, Qiwen Cui, Runlong Zhou, Sham M Kakade, and Simon S Du. Multi-Agent Re-inforcement Learning from Human Feedback: Data Coverage and Algorithmic Techniques. arXiv preprint arXiv:2409.00717 , 2024. Xuezhou Zhang, Yiding Chen, Xiaojin Zhu, and Wen Sun. Corruption-robust Offline Reinforcement Learning. In 
+
+AISTATS , 2022. Yuheng Zhang, Yu Bai, and Nan Jiang. Offline Learning in Markov Games with General Function Approximation. In ICML , 2023. Han Zhong, Wei Xiong, Jiyuan Tan, Liwei Wang, Tong Zhang, Zhaoran Wang, and Zhuoran Yang. Pessimistic Minimax Value Iteration: Provably Efficient Equilibrium Learning from Offline Datasets. In ICML , 2022. Banghua Zhu, Michael I. Jordan, and Jiantao Jiao. Prin-cipled Reinforcement Learning with Human Feedback from Pairwise or K-wise Comparisons. In ICML , 2023. Daniel M Ziegler, Nisan Stiennon, Jeffrey Wu, Tom B Brown, Alec Radford, Dario Amodei, Paul Christiano, and Geoffrey Irving. Fine-tuning Language Models from Human Preferences. CoRR , abs/1909.08593, 2019. Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+# Corruption-robust Offline Multi-agent Reinforcement Learning from Human Feedback 
+
+# Appendix 
+
+# Table of Contents 
+
+A Proof of Theorem 3.1 13 B Proof of Theorem 4.1 18 C Proof of Theorem 5.1 28 D Technical Results 30 E Additional Algorithm Pseudocodes 32 
+
+## A Proof of Theorem 3.1 
+
+In this section, we provide the full proof for Theorem 3.1. 
+
+Lemma A.1. [Lemma A.1 of Mandal et al. [2025]] Let Assumption 1 hold with ξR ≥ 5ϵ, for some positive constant c, and let 
+
+m ≥ Ω
+
+ H3/2
+
+ϵ2 (d + log( n/δ )) 
+
+
+
+.
+
+Then, for every i, Algorithm 6 returns an estimator eθi such that, with probability at least 1 − δ/ 2, satisfies 
+
+eθi − θ∗ 
+
+> i2
+
+≤ O
+
+ ϵξR
+
+exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+,
+
+where eθi denotes the Hd -dimensional vector with sub-vectors eθi,h for every h.Proof. This result is an immediate application of Lemma A.1 of [Mandal et al., 2025] to the multi-agent setting by applying the union bound over n agents. This upper bound provides us with a provable threshold function for our confidence sets. Next, we will make use of the following result. 
+
+Theorem A.1. [Zhang et al., 2022] Given an ϵ-corrupted dataset D = {xi, y i}i∈[m], where the clean data is generated as 
+
+exi ∼ β, P(∥exi∥ ≤ 1) = 1 , eyi = ex⊤ 
+
+> i
+
+ω∗ + ζi, where ζi is zero-mean σ2-variance sub-Gaussian random noise, then a robust least square estimator returns an estimator ω such that: 
+
+• If Eβ [xx ⊤] ⪰ ξI , then with probability at least 1 − δ/ 2, we have 
+
+∥ω∗ − ω∥2 ≤ c1(δ) ·
+
+s
+
+σ2poly (d)
+
+ξ2m + σξ ϵ
+
+!
+
+;
+
+• With probability at least 1 − δ/ 2, we have 
+
+Eβ
+
+hex⊤(ω∗ − ω) 22
+
+i
+
+≤ c2(δ) ·
+
+ σ2poly (d)
+
+m + σ2ϵ
+
+
+
+,Corruption-robust MARLHF 
+
+where c1 and c2 hide constants and polylog (1 /δ ) terms. 
+
+Applying this to our setting means considering the corrupted Bellman operator samples from our data as signals generated from an unknown underlying distribution. We thus define, for every i, h, s, a ∈ [n] × [H − 1] × S × A, the Bellman operator as 
+
+Bi,h Vi,h +1 (s, a) = Ri,h (s, a) + X
+
+> s′∈S
+
+P (s′|s, a)Vi,h +1 (s′) .
+
+We also define the Bellman operator with respect to the estimated rewards as 
+
+Bi,h V π
+
+> i,h +1
+
+(s, a) = Rπ
+
+> i,h
+
+(s, a) + X
+
+> s′∈S
+
+P (s′|s, a)V π
+
+> i,h +1
+
+(s′) , (6) and 
+
+Bi,h V †,π−i
+
+> i,h +1
+
+(s, a) = R†,π−i 
+
+> i,h
+
+(s, a) + X
+
+> s′∈S
+
+P (s′|s, a)V †,π−i
+
+> i,h +1
+
+(s′) . (7) We then have the following result. 
+
+Lemma A.2. We have, for every tuple (sh, ah, s h+1 ) in D,
+
+V ar  Ri,h (sh, ah) + V i,h +1 (sh+1 ) − Bi,h V i,h +1 (sh, ah)|sh, ah
+
+ ≤ (H√d + γ)2 ,
+
+and 
+
+V ar  Ri,h (sh, ah) + V i,h +1 (sh+1 ) − Bi,h V i,h +1 (sh, ah)|sh, ah
+
+ ≤ (H√d + γ)2 .
+
+Proof. Note that we have 
+
+V ar  Ri,h (sh, ah) + V i,h +1 (sh+1 ) − Bi,h V i,h +1 (sh, ah)|sh, ah
+
+
+
+= E
+
+h Ri,h (sh, ah) + V i,h +1 (sh+1 ) − E Ri,h (sh, ah) + V i,h +1 (sh+1 ) 2i
+
+≤ V ar (Ri,h (sh, ah)) + V ar (V i,h +1 (sh+1 )) 
+
+≤ (H√d + γ)2 ,
+
+since both H and γ are nonnegative numbers. The proof of the second statement is similar. Using the above, we will define the error stated above using short-hand notation for ease of presentation: 
+
+E1(d, m, δ, ϵ ) = c1(δ) ·
+
+s
+
+(H√d + γ)2poly (d)
+
+ξ2 
+
+> P
+
+m + H√d + γξP
+
+ϵ
+
+ . (8) Next, we prove upper bounds on the maximum and minimum values of estimated reward functions in terms of ground-truth rewards. 
+
+Lemma A.3. With probability at least 1 − δ/ 2, we have 
+
+Ri,h (s, a) − C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+≤ Ri,h (s, a) ≤ Ri,h (s, a)
+
+≤ Ri,h (s, a) ≤ Ri,h (s, a) + C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+.
+
+Proof. Let θi,h be the parameter that corresponds to Ri,h and let θi,h be defined similarly. Observe that, for every agent i
+
+and time-step h, we have 
+
+Ri,h (s, a) − Ri,h (s, a) = ϕ(s, a), θ i,h − ϕ(s, a), θ ∗
+
+> i,h
+
+Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+≤ ϕ(s, a), θ i,h − ϕ(s, a), θ ∗
+
+> i,h
+
+= ϕ(s, a), θ i,h −
+
+D
+
+ϕ(s, a), eθi,h 
+
+E
+
++
+
+D
+
+ϕ(s, a), eθi,h 
+
+E
+
+− ϕ(s, a), θ ∗
+
+> i,h
+
+=
+
+D
+
+ϕ(s, a), eθi,h − θi,h 
+
+E
+
++ ϕ(s, a), θ i,h − θ∗
+
+> i,h
+
+≤ ∥ ϕ(s, a)∥2 eθi,h − θi,h 2
+
++ ∥ϕ(s, a)∥2 θi,h − θ∗ 
+
+> i,h 2
+
+≤ eθi,h − θi,h 2
+
++ θi,h − θ∗ 
+
+> i,h 2
+
+≤ C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+,
+
+where the first equality follows by definition, and the fact that the true expected rewards are already in [−√d, √d]; we have used Cauchy-Schwarz for the second inequality, the fact that ∥ϕ(s, a)∥2 ≤ 1 by assumption, and Lemma A.1 for the final inequality. Similarly, we have 
+
+Ri,h (s, a) − Ri,h (s, a) ≤ C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+.
+
+Next, we have the following result that provides bounds on the Bellman errors. 
+
+Lemma A.4. With probability at least 1 − δ/ 2, we have, for every i, h, s, a and policy profile π,
+
+−E1(d, m, δ, ϵ ) ≤ Bi,h V π
+
+> i,h +1
+
+(s, a) − Qπ
+
+> i,h
+
+(s, a) ≤ E1(d, m, δ, ϵ ) ,
+
+−E1(d, m, δ, ϵ ) ≤ Bi,h V †,π−i
+
+> i,h +1
+
+(s, a) − Q†,π−i 
+
+> i,h
+
+(s, a) ≤ E1(d, m, δ, ϵ ) .
+
+Proof. First, as noted in [Zhong et al., 2022], in linear MDPs, the value functions are also linear in features. Thus, denoting by ωπ,∗ 
+
+> i,h
+
+the parameter of the Bellman transform of V π 
+
+> i,h
+
+and defining ω†,π−i,∗ 
+
+> i,h
+
+similarly, we have 
+
+ϕ(s, a)⊤ωπ,∗ 
+
+> i,h
+
+− Bi,h V π
+
+> i,h +1
+
+(s, a) =
+
+D
+
+ϕ(s, a), ω π,∗ 
+
+> i,h
+
+− ωπ
+
+> i,h
+
+E
+
+≤ ∥ ϕ(s, a)∥2 ωπ,∗ 
+
+> i,h
+
+− ωπ 
+
+> i,h 2
+
+≤ E1(d, m, δ, ϵ ) ,
+
+where the penultimate step uses Cauchy-Schwarz and the final step uses the feature norm assumption and Theorem A.1. Next, we prove a similar result for the estimated value functions and best responses. 
+
+Lemma A.5. Under the event of Lemma A.4, we have, for every agent i, state s, step h and policy π:
+
+V π
+
+> i,h
+
+(s) ≤ V π
+
+> i,h
+
+(s) + E1(d, m, δ, ϵ ) + C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+, and 
+
+V †,π−i 
+
+> i,h
+
+(s) ≥ V †,π−i 
+
+> i,h
+
+(s) − E1(d, m, δ, ϵ ) − C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+.
+
+Proof. We prove the result by induction. Let V si,H (π) = 0 . The result holds for step H. Suppose the result holds for step 
+
+h + 1 . Then, for step h we have 
+
+V π
+
+> i,h
+
+(s) = Ea∼πh
+
+h
+
+Qπ
+
+> i,h
+
+(s, a)
+
+i
+
+(9) 
+
+≤ Ea∼πh
+
+Bi,h V π
+
+> i,h +1
+
+(s, a) + E1(d, m, δ, ϵ ) (10) 
+
+≤ Ea∼πh
+
+Bi,h V π
+
+> i,h +1
+
+(s, a) + E1(d, m, δ, ϵ ) (11) Corruption-robust MARLHF 
+
+= Ea∼πh
+
+"
+
+Ri,h (s, a) + X
+
+> s′
+
+P (s′|s, a)V π
+
+> i,h +1
+
+(s′)
+
+#
+
++ E1(d, m, δ, ϵ )
+
+≤ Ea∼πh
+
+"
+
+Ri,h (s, a) + X
+
+> s′
+
+P (s′|s, a)V π
+
+> i,h +1
+
+(s′)
+
+#
+
++ C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ ) (12) 
+
+= Ea∼πh
+
+Bi,h V π
+
+> i,h +1
+
+(s, a) + C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ )= V π
+
+> i,h
+
+(s) + C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ ) (13) where Equation (9) follows by definition; Equation (10) follows from Lemma A.4; Equation (11) follows by the inductive assumption; Equation (12) follows from Lemma A.3; Equation (13) follows by definition. Similarly, 
+
+V †,π−i 
+
+> i,h
+
+(s) = max 
+
+> ai∈Ai
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Q†,π−i 
+
+> i,h
+
+(s, a)
+
+i
+
+(14) 
+
+≥ max 
+
+> ai∈Ai
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Bi,h V †,π−i
+
+> i,h +1
+
+(s, a)
+
+i
+
+− E1(d, m, δ, ϵ ) (15) 
+
+≥ max 
+
+> ai∈Ai
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Bi,h V †,π−i 
+
+> i,h +1
+
+(s, a)
+
+i
+
+− E1(d, m, δ, ϵ ) (16) 
+
+≥ max 
+
+> ai∈Ai
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Bi,h V †,π−i 
+
+> i,h +1
+
+(s, a)
+
+i
+
+− C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+− E1(d, m, δ, ϵ ) (17) 
+
+= V †,π−i 
+
+> i,h
+
+(s) − C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+− E1(d, m, δ, ϵ ) , (18) where again Equation (14) follows by definition; Equation (15) follows from Lemma A.4; Equation (16) follows from the linearity and monotonicity of Bi,h ; Equation (17) follows by the inductive assumption and Lemma A.3, and (18) follows by definition. Next, we provide bounds on the difference between the estimated and true expected returns. 
+
+Lemma A.6. Under the event of Lemma A.4 we have, for any π ∈ ΠPP ,
+
+V π
+
+> i, 0
+
+(s0) − V π
+
+> i, 0
+
+(s0) ≤ HC 1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ HE 1(d, m, δ, ϵ ) ,V π
+
+> i, 0
+
+(s0) − V π
+
+> i, 0
+
+(s0) ≤ HC 1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ HE 1(d, m, δ, ϵ ) .
+
+Proof. Note that we have 
+
+V π
+
+> i, 0
+
+(s0) − V π
+
+> i, 0
+
+(s0) = Ea0∼π0(·| s0)
+
+Qπ
+
+> i, 0
+
+(s0, a0) − Ea0∼π0(·| s0)
+
+h
+
+Qπ
+
+> i, 0
+
+(s0, a0)
+
+i
+
+≤ Ea0∼π0(·| s0)
+
+Qπ
+
+> i, 0
+
+(s0, a0) − Bi, 0V π
+
+> i, 1
+
+(s0, a0) + E1(d, m, δ, ϵ ) (19) 
+
+= Ea0∼π0(·| s0)
+
+Bi, 0V π
+
+> i, 1
+
+(s0, a0) − Bi, 0V π
+
+> i, 1
+
+(s0, a0) + E1(d, m, δ, ϵ ) (20) 
+
+= Ea0∼π0(·| s0)
+
+Ri, 0(s0, a0) − Ri, 0(s0, a0) + Es1∼P (·| s0,a0)
+
+Vi, 1(s1) − V i, 1(s1) + E1(d, m, δ, ϵ ) (21) 
+
+≤ Ea0∼π0(·| s0)
+
+Es1∼P (·| s0,a0)
+
+Vi, 1(s1) − V i, 1(s1) + C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ )
+
+ (22) 
+
+= C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ ) + Ea0∼π0(·| s0),s 1∼P (·| s0,a0)
+
+V π
+
+> i, 1
+
+(s1) − V π
+
+> i, 1
+
+(s1)
+
+= . . . Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+≤ H
+
+C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ )
+
+ , (23) where Equation (19) follows from Lemma A.4; Equation (20) follows from the fact that the true action-value function has zero error with respect to the Bellman operator; Equation (21) follows from expanding the Bellman operator for both value functions; Equation (22) follows from Lemma A.3 and, finally, Equation (23) follows from applying the same bounds H
+
+steps. Following similar arguments, for the best response value gap, we have: 
+
+V †,π−i 
+
+> i, 0
+
+(s0) − V †,π−i 
+
+> i, 0
+
+(s0) = max 
+
+> ai, 0∈Ai
+
+Ea−i, 0∼π−i, 0(·| s0)
+
+h
+
+Q†,π−i 
+
+> i, 0
+
+(s0, a0) − Q†,π−i 
+
+> i, 0
+
+(s0, a0)
+
+i
+
+≤ max 
+
+> ai, 0∈Ai
+
+Ea−i, 0∼π−i, 0(·| s0)
+
+h
+
+Bi, 0V †,π−i 
+
+> i, 1
+
+(s0, a0) − Bi, 0V †,π−i 
+
+> i, 1
+
+(s0, a0) + E1(d, m, δ, ϵ )
+
+i
+
+≤ C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ ) + max 
+
+> ai, 0∈Ai
+
+Ea−i, 0∼π−i, 0(·| s0),s 1∼P (·| s0,a0)
+
+h
+
+V †,π−i 
+
+> i, 1
+
+(s1) − V †,π−i 
+
+> i, 1
+
+(s1)
+
+i
+
+≤ H
+
+C1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ E1(d, m, δ, ϵ )
+
+ .
+
+Next, we state a result that provides an upper bound on the Nash gap in terms of the estimated value functions. 
+
+Lemma A.7. Under the event of Lemma A.5, we have, for some C1 > 0,
+
+Gap (eπ) ≤ min 
+
+> π
+
+X
+
+> i∈[n]
+
+V †,π−i 
+
+> i, 0
+
+(s0) − V π
+
+> i, 0
+
+(s0) + 2 nE 1(d, m, δ, ϵ ) + 2 nC 1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+.
+
+Proof. Note that, by definition of the Nash gap and Lemma A.5, we have Gap (eπ) = X
+
+> i∈[n]
+
+V †,eπ−i 
+
+> i, 0
+
+(s0) − V eπ
+
+> i, 0
+
+(s0)
+
+≤ X
+
+> i∈[n]
+
+V †,eπ−i 
+
+> i, 0
+
+(s0) − V eπ
+
+> i, 0
+
+(s0) + 2 nE 1(d, m, δ, ϵ ) + 2 nC 1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+= min 
+
+> π
+
+X
+
+> i∈[n]
+
+V †,π−i 
+
+> i, 0
+
+(s0) − V π
+
+> i, 0
+
+(s0) + 2 nE 1(d, m, δ, ϵ ) + 2 nC 1
+
+ϵ · exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+,
+
+where the last step uses the fact that eπ minimizes the quantity within the summation, as defined in Algorithm 1. Now we are ready to finalize the proof of the main theorem of Section 3. We restate it for convenience. 
+
+Theorem A.2. Let ϵ ∈ [0 , 1/2) , δ > 0 and Γ( ·, ·) = 0 . Furthermore, assume that m ≥ Ω(( H3/2/ϵ 2)( d + log( n/δ ))) .Then, under Assumption 1 with ξR ≥ 5ϵ, for some positive constant c, there exist robust algorithms TrimmedMLE and 
+
+RobEst such that, with probability at least 1 − δ, the output eπ of Objective (4) satisfies 
+
+Gap (eπ) ≤ O
+
+Hn 
+
+ exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ H√d + γξP
+
+ · ϵ + Hn 
+
+s
+
+(H√d + γ)2poly (d)
+
+ξ2 
+
+> P
+
+m
+
+ .
+
+Proof. Let π∗ be a Nash equilibrium. We have Gap (eπ) ≤ min 
+
+> π
+
+X
+
+> i∈[n]
+
+V †,π−i 
+
+> i, 0
+
+(s0) − V π
+
+> i, 0
+
+(s0) + 2 nE 1(d, m, δ, ϵ ) + 2 nϵC 1
+
+exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+(24) Corruption-robust MARLHF 
+
+≤ X
+
+> i∈[n]
+
+V †,π∗−i 
+
+> i, 0
+
+(s0) − V †,π∗−i 
+
+> i, 0
+
+(s0) + X
+
+> i∈[n]
+
+V π∗ 
+
+> i, 0
+
+(s0) − V π∗ 
+
+> i, 0
+
+(s0) + X
+
+> i∈[n]
+
+V †,π∗−i 
+
+> i, 0
+
+(s0) − V π∗ 
+
+> i, 0
+
+(s0)+ 2 nE 1(d, m, δ, ϵ ) + 2 nϵC 1
+
+exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
+(25) 
+
+≤ 2Hn ·
+
+2ϵC 1
+
+exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ 2 E1(d, m, δ, ϵ )
+
+ + X
+
+> i∈[n]
+
+V †,π∗−i 
+
+> i, 0
+
+(s0) − V π∗ 
+
+> i, 0
+
+(s0) (26) 
+
+≤ 2Hn ·
+
+2ϵC 1
+
+exp 
+
+
+
+H + plog( n/ 2δϵ )
+
+
+
+ξR
+
++ 2 E1(d, m, δ, ϵ )
+
+ , (27) where Equation (24) follows from Lemma A.7; for Equation (25) , we pick a Nash equilibrium π∗ and use the fact that eπ is the minimizer of the estimated gap; Equation (26) follows from Lemma A.6 and, finally, Equation (27) follows from the fact that π∗ is a Nash equilibrium and thus any unilateral deviation yields a smaller value for agent i.
+
+## B Proof of Theorem 4.1 
+
+Note that the above bounds characterize the confidence set that we used throughout Section 4. As a robust estimation technique, we again make use of RobEst based on the second part of Theorem A.1, which does not require uniform coverage. Lemma A.2 and Theorem A.1 give us the following guarantee for the output of the robust estimate eω, where, without loss of generality, we use the behavior policy μ:
+
+Eμ
+
+ ϕ(s, a)⊤(ω∗ − eω) 2
+
+ ≤ c2(δ) ·
+
+s
+
+(H√d + γ)2poly (d)
+
+m + ( H√d + γ)2ϵ . (28) Note that, using the above, we can equivalently write 
+
+∥ω∗ − eω∥2Σμ(h) ≤ c2(δ) (H√d + γ)2poly (d)
+
+m + ( H√d + γ)2ϵ
+
+!
+
+,
+
+which implies that 
+
+∥ω∗ − eω∥2Σμ(h)+(2 ϵ+λ)I ≤ c2(δ) (H√d + γ)2poly (d)
+
+m + ( H√d + γ)2ϵ + (2 ϵ + λ)H√d
+
+!
+
+,
+
+since ∥ω∗∥ ≤ H√d (Lemma A.1 of [Zhang et al., 2022]). Let us define 
+
+E(d, m, δ, ϵ ) := 
+
+vuutc2(δ) (H√d + γ)2poly (d)
+
+m + ( H√d + γ)2ϵ + (2 ϵ + λ)H√d
+
+!
+
+. (29) This term will be useful in defining our bonus for this section. Recall that, for each step h, we have defined the scaled sample covariance matrix with respect to the corrupted data as follows: 
+
+Λh = 35
+
+1
+
+m
+
+> m
+
+X
+
+> i=1
+
+ ϕ(sh, ah)ϕ(sh, ah)⊤ + ( ϵ + λ)I
+
+!
+
+, (30) while the bonus has been defined as 
+
+Γ( s, a) = E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥Λ−1
+
+> h
+
+. (31) In the absence of bounds on the norm of the parameter, we cannot bound the difference in rewards directly, as we did in Lemma A.3. Thus, we will need to follow another approach. First, similar to the previous section, we have the following result. Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+Lemma B.1. Let λ ≥ Ω( dH log( m/δ )) and Γ be defined as in Equation (31) . Then, with probability at least 1 − δ/ 2 we have, for every i, h, s, a, and policy π,
+
+0 ≤ Bi,h V π
+
+> i,h +1
+
+(s, a) − Qπ
+
+> i,h
+
+(s, a) ≤ 2Γ( s, a) ,
+
+0 ≥ Bi,h V †,π−i
+
+> i,h +1
+
+(s, a) − Q†,π−i 
+
+> i,h
+
+(s, a) ≥ − 2Γ( s, a) .
+
+Proof. Following a similar approach as the proof of Lemma A.4, we have 
+
+ϕ(s, a)⊤ω∗ 
+
+> i,h
+
+− Bi,h V π
+
+> i,h +1
+
+(s, a) = ϕ(s, a), ω ∗ 
+
+> i,h
+
+− ωπ
+
+> i,h
+
+≤ ω∗ 
+
+> i,h
+
+− ωπ  
+
+> i,h Σμ(h)+(2 ϵ+λ)I
+
+∥ϕ(s, a)∥(Σ μ(h)+(2 ϵ+λ)I)−1
+
+≤ E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥(Σ μ(h)+(2 ϵ+λ)I)−1
+
+≤ E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥(Σ μ(h)+(2 ϵ+λ)I)−1
+
+≤ E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥Λ−1
+
+> h
+
+= Γ( s, a) ,
+
+where the penultimate inequality uses the fact that ω∗ 
+
+> i,h 2
+
+≤ H√d and the final inequality follows from the following observation: 
+
+Λh = 35
+
+1
+
+m
+
+> m
+
+X
+
+> i=1
+
+ϕ(sh, ah)ϕ(sh, ah)⊤ + ( ϵ + λ)I
+
+!
+
+⪯ 35
+
+1
+
+m
+
+> m
+
+X
+
+> i=1
+
+ϕ(esh, eah)ϕ(esh, eah)⊤ + (2 ϵ + λ)I
+
+!
+
+⪯ Σμ(h) + (2 ϵ + λ)I , 
+
+where the second step uses the fact that ∥ϕ(s, a)∥2 ≤ 1 and that only ϵ · m samples are corrupted, while the last step uses Lemma D.1 and the fact that m(2 ϵ + λ) ≥ Ω( d log( m/δ )) , due to our choice of λ and the fact that ϵ ≥ 0.Thus, we obtained that 
+
+Bi,h V π
+
+> i,h +1
+
+(s, a) − Γ( s, a) ≤ ϕ(s, a)⊤ω∗ 
+
+> i,h
+
+≤ Bi,h V π
+
+> i,h +1
+
+(s, a) + Γ( s, a) ,
+
+which, by subtracting Γ( s, a) from all sides, further implies that 
+
+Bi,h V π
+
+> i,h +1
+
+(s, a) − 2Γ( s, a) ≤ ϕ(s, a)⊤ω∗ 
+
+> i,h
+
+− Γ( s, a) ≤ Bi,h V π
+
+> i,h +1
+
+(s, a) .
+
+Now, since Bi,h V π
+
+> i,h +1
+
+(s, a) ∈ [−(H − h)√d, (H − h)√d], and since the clipping operator is monotone, we have 
+
+Bi,h V π
+
+> i,h +1
+
+(s, a) − 2Γ( s, a) ≤ Clip [−(H−h)√d, (H−h)√d]
+
+ Bi,h V π
+
+> i,h +1
+
+(s, a) − 2Γ( s, a)
+
+≤ Clip [−(H−h)√d, (H−h)√d]
+
+ ϕ(s, a)⊤ω∗ 
+
+> i,h
+
+− Γ( s, a)
+
+= Qπ
+
+> i,h
+
+(s, a)
+
+≤ Bi,h V π
+
+> i,h +1
+
+(s, a) .
+
+This finally implies that 
+
+0 ≤ Bi,h V π
+
+> i,h +1
+
+(s, a) − Qπ
+
+> i,h
+
+(s, a) ≤ 2Γ( s, a) .
+
+For the optimistic estimates, we argue in a symmetrical fashion, thus, we omit the proof. Next, we will state a result which is the analogue of Lemma A.5 for this section. We define V π
+
+> i,h
+
+(s, bθi) and V †,π−i 
+
+> i,h
+
+(s, bθi)
+
+to be the lower and upper estimates of the value functions of given policy π with respect to parameter bθi. We use similar notation for the Q-function estimates. Corruption-robust MARLHF 
+
+Lemma B.2. Let bθi ∈ ΘUnil (eθi) be a parameter used by the robust subroutine. Then, under the event of Lemma B.1, we have, for every agent i, state s, step h and policy π:
+
+V π
+
+> i,h
+
+(s, bθi) ≤ V π
+
+> i,h
+
+(s, bθi) , and V †,π−i 
+
+> i,h
+
+(s, bθi) ≥ V †,π−i 
+
+> i,h
+
+(s, bθi) .
+
+Proof. Similar to Lemma A.5, we again apply induction. Note that the result holds for step H where all value estimates are 
+
+0, since the bound term is non-negative. Suppose the statement holds for step h + 1 . Then, for step h, we have 
+
+V π
+
+> i,h
+
+(s, bθi) = Ea∼πh
+
+h
+
+Qπ
+
+> i,h
+
+(s, a, bθi)
+
+i
+
+≤ Ea∼πh
+
+h
+
+Bi,h V π
+
+> i,h +1
+
+(s, a, bθi)
+
+i
+
+≤ Ea∼πh
+
+h
+
+Bi,h V π
+
+> i,h +1
+
+(s, a, bθi)
+
+i
+
+= V π
+
+> i,h
+
+(s, bθi) .
+
+For V †,π−i 
+
+> i,h
+
+(s, bθi) we have 
+
+V †,π−i 
+
+> i,h
+
+(s, bθi) = max 
+
+> ai∈Ai
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Q†,π−i 
+
+> i,h
+
+(s, a, bθi)
+
+i
+
+≥ max 
+
+> ai∈Ai
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Bi,h V †,π−i
+
+> i,h +1
+
+(s, a, bθi)
+
+i
+
+≥ max 
+
+> ai∈Ai
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Bi,h V †,π−i 
+
+> i,h +1
+
+(s, a, bθi)
+
+i
+
+= V †,π−i 
+
+> i,h
+
+(s, bθi) .
+
+Next, we prove an upper bound on the expected sum of bonuses. 
+
+Lemma B.3. Let π∗ be a Nash equilibrium which is covered by D. Then, for every agent i, we have 
+
+Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+≤ H · E(d, m, δ, ϵ ) ·
+
+r 5dCP
+
+.
+
+Proof. Using the definition of the bonus in Equation (31), we have 
+
+Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+= E(d, m, δ, ϵ ) · Eπ∗
+
+"H−1X
+
+> h=0
+
+∥ϕ(sh, ah)∥Λ−1
+
+> h
+
+#
+
+.
+
+We bound the last factor on the right-hand side of the equation above. Using the definition of Λh in Equation (30) , we have, for every h ∈ [H − 1] :
+
+Eπ∗
+
+h
+
+∥ϕ(sh, ah)∥Λ−1
+
+> h
+
+i
+
+≤ Eπ∗
+
+h
+
+∥ϕ(sh, ah)∥((Σ μ(h)+ λI )) −1
+
+i
+
+(32) 
+
+≤ Eπ∗
+
+q 
+
+ϕ(sh, ah)⊤ ((Σ μ(h) + λI )) −1 ϕ(sh, ah)
+
+
+
+≤
+
+r
+
+Eπ∗
+
+h
+
+ϕ(sh, ah)⊤ ((Σ μ(h) + λI )) −1 ϕ(sh, ah)
+
+i
+
+(33) 
+
+=
+
+r
+
+T r 
+
+
+
+Eπ∗ [ϕ(sh, ah)ϕ(sh, ah)⊤] ((Σ μ(h) + λI )) −1
+
+(34) 
+
+≤
+
+r 1
+
+CP
+
+r
+
+T r 
+
+
+
+Eμh [ϕ(sh, ah)ϕ(sh, ah)⊤] ((Σ μ(h) + λI )) −1
+
+(35) 
+
+=
+
+r 1
+
+CP
+
+r
+
+T r 
+
+
+
+Σμ(h) ((Σ μ(h) + λI )) −1Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+≤
+
+r 1
+
+CP
+
+vuut dX
+
+> j=1
+
+σj
+
+σj + λ (36) 
+
+≤
+
+r dCP
+
+, (37) where T r (M ) denotes the trace of matrix M and σj denote the eigenvalues of covariance matrix Σμ(h). Above, Equation (32) uses the observation 
+
+Λ−1 
+
+> h
+
+= 35
+
+1
+
+m
+
+> m
+
+X
+
+> i=1
+
+ϕ(sh, ah)ϕ(sh, ah)⊤ + ( ϵ + λ)I
+
+!! −1
+
+⪯ 35
+
+1
+
+m
+
+> m
+
+X
+
+> i=1
+
+ϕ(esh, eah)ϕ(esh, eah)⊤ + λI 
+
+!! −1
+
+⪯ ((Σ μ(h) + λI )) −1 ,
+
+which follows from Lemma D.1 and similar arguments as in the proof of Lemma B.1; Equation (33) uses Jensen’s inequality; Equation (34) uses the commutativity of the trace operator: T r (x⊤M x ) = T r (M xx ⊤); Equation (35) uses the transition coverage part of Assumption 2; finally, Equation (36) uses the fact that the eigenvalues of Σμ(h) and λ are nonnegative real numbers. Next, we will provide an upper bound on the difference in preference functions between the ground-truth and estimated parameters. 
+
+Lemma B.4. For any agent i and θi ∈ ΘUnil (eθi), with probability at least 1 − δ/ 2, we have 
+
+E τ ∼dμ 
+
+> τ′∼dμref
+
+h
+
+∥P (·| τ, τ ′, θ ∗ 
+
+> i
+
+) − P (·| τ, τ ′, θ i)∥21
+
+i
+
+≤ 8H√dϵ + c · dm log 2Hnm √dδ
+
+!
+
+,
+
+where c is an absolute constant. Proof. Lemma D.2 gives us the following bound: 
+
+E τ ∼dμ 
+
+> τ′∼dμref
+
+h
+
+∥P (·| τ, τ ′, θ ∗ 
+
+> i
+
+) − P (·| τ, τ ′, θ )∥21
+
+i
+
+≤ c1
+
+m
+
+> m
+
+X
+
+> j=1
+
+log P  eoj |eτj , eτ ′ 
+
+> j
+
+, θ 
+
+P  eoj |eτj , eτ ′ 
+
+> j
+
+, θ ∗
+
+> i
+
+!
+
++ log ( d log (2 n/δ )) .
+
+Let us deal with the first term of the bound below. Note that the bound depends on clean samples. Let bD be the given dataset and S denote the set of corrupted trajectories in bD. We can write 
+
+> m
+
+X
+
+> j=1
+
+log P  eoj |eτj , eτ ′ 
+
+> j
+
+, θ 
+
+P  eoj |eτj , eτ ′ 
+
+> j
+
+, θ ∗
+
+> i
+
+!
+
+= X 
+
+> (τ,τ ′,o )∈S
+
+log P  oj |τj , τ ′ 
+
+> j
+
+, θ 
+
+P  oj |τj , τ ′ 
+
+> j
+
+, θ ∗
+
+> i
+
+!
+
++ X 
+
+> (τ,τ ′,o )̸∈ S
+
+log P  oj |τj , τ ′ 
+
+> j
+
+, θ 
+
+P  oj |τj , τ ′ 
+
+> j
+
+, θ ∗
+
+> i
+
+!
+
+≤ X  
+
+> (τ,τ ′,o )∈bD
+
+log P  oj |τj , τ ′ 
+
+> j
+
+, θ 
+
+P  oj |τj , τ ′ 
+
+> j
+
+, θ ∗
+
+> i
+
+!
+
++ ϵ · log 
+
+ 1 + exp 
+
+
+
+H√d
+
+
+
+1 + exp 
+
+
+
+−H√d
+
+
+
+≤ X  
+
+> (τ,τ ′,o )∈bD
+
+log 
+
+ P
+
+
+
+oj |τj , τ ′ 
+
+> j
+
+, eθi
+
+
+
+P  oj |τj , τ ′ 
+
+> j
+
+, θ ∗
+
+> i
+
+ + 2 ϵ · H√d
+
+≤ 8H√dϵ + c2 · dm log 
+
+ 2Hmn δ
+
+
+
+,
+
+where the first inequality uses the fact that the corrupted subset comprises an ϵ-fraction of the whole dataset and the fact that 
+
+ϕ⊤θ ≤ H√d, by assumption of linear MDPs; the second inequality uses the fact that eθi maximizes the log-likelihood with respect to the corrupted data, and that H and d are natural numbers so we can bound the log expression directly in terms of the bounds on the rewards; finally, for the last inequality we have used Lemma ?? with some constant c2. Putting things together, we obtain the stated bound. Corruption-robust MARLHF 
+
+Next, we prove bounds on the gaps with respect to any chosen reward parameters from the confidence set. 
+
+Lemma B.5. Let bθ = ( bθ1, . . . , bθn), where bθi ∈ ΘUnil (eθi), for every i ∈ [n], and let π∗ be a Nash equilibrium covered by 
+
+D. Then, if 
+
+eπ ∈ arg min 
+
+> π
+
+gGap 
+
+
+
+π, bθ
+
+
+
+,
+
+we have, with probability at least 1 − δ:
+
+0 ≤ Gap 
+
+eπ, bθ
+
+
+
+≤ eO
+
+
+
+n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+ 
+
+,
+
+0 ≤ Gap 
+
+
+
+π∗, bθ
+
+
+
+≤ eO
+
+
+
+n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+ 
+
+,
+
+Proof. First, note that both the true gap and estimated gap are, by definition, non-negative. Now, given bθ and eπ, as specified in the statement, we have Gap 
+
+eπ, bθ
+
+
+
+= X
+
+> i∈[n]
+
+V †,eπ−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V eπ
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+(38) 
+
+≤ X
+
+> i∈[n]
+
+V †,eπ−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V eπ
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+(39) 
+
+≤ min 
+
+> π
+
+X
+
+> i∈[n]
+
+V †,π−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V π
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+(40) 
+
+≤ X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+−
+
+
+
+V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+ 
+
+(41) 
+
+= X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ V μref  
+
+> i, 0
+
+(s0, θ ∗) − V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+−
+
+
+
+V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ V μref  
+
+> i, 0
+
+(s0, θ ∗) − V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+ 
+
+(42) 
+
+= X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ V μref  
+
+> i, 0
+
+(s0, θ ∗) − V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V †,π∗−i 
+
+> i, 0
+
+(s0, θ ∗)+ V π∗ 
+
+> i, 0
+
+(s0, θ ∗) −
+
+
+
+V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ V μref  
+
+> i, 0
+
+(s0, θ ∗) − V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+ 
+
++
+
+
+
+V †,π∗−i 
+
+> i, 0
+
+(s0, θ ∗) − V π∗ 
+
+> i, 0
+
+(s0, θ ∗)
+
+| {z }
+
+> =0
+
+(43) 
+
+= X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ V μref  
+
+> i, 0
+
+(s0, θ ∗) − V †,π∗−i 
+
+> i, 0
+
+(s0, θ ∗)
+
+| {z }
+
+> := Z1
+
++ V π∗ 
+
+> i, 0
+
+(s0, θ ∗) − V μref  
+
+> i, 0
+
+(s0, θ ∗) −
+
+
+
+V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+ | {z }
+
+> := Z2
+
+(44) where Equation (38) follows by definition; Equation (39) follows from Lemma B.2; Equation (40) follows by design of Algorithm 4; in Equation (41) we just substitute π∗ and add and subtract the same term; in Equation (42) and Equation (43) we again add and subtract identical terms; Equation (44) follows from the fact that π∗ is a NE under θ∗.Now, we will deal with the two terms above, Z1 and Z2, separately. First, let us consider the term Z2. For every i, we have 
+
+V π∗ 
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) − V μref  
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) −
+
+
+
+V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+ 
+
+= Ea0∼π∗ 
+
+> 0(·| s0)
+
+h
+
+Qπ∗ 
+
+> i, 0
+
+(s0, a0) − Qπ∗ 
+
+> i, 0
+
+(s0, a0, bθi)
+
+i
+
+− V μref  
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) + V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+≤ Ea0∼π∗ 
+
+> 0(·| s0)
+
+h
+
+Bi, 0V π∗ 
+
+> i, 1
+
+(s0, a0) − Bi, 0V π∗ 
+
+> i, 0
+
+(s0, a0, bθi) + 2Γ( s0, a0)
+
+i
+
+− V μref  
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) + V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+(45) Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+= Ea0∼π∗ 
+
+> 0(·| s0)
+
+h
+
+Ri, 0(s0, a0) − Ri, 0(s0, a0) + Es1∼P1(·| s0,a0)
+
+h
+
+V π∗ 
+
+> i, 1
+
+(s1) − V π∗ 
+
+> i, 1
+
+(s1, bθi)
+
+i
+
++ 2Γ( s0, a0)
+
+i
+
+− V μref  
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) + V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+(46) 
+
+≤ Ea0∼π∗  
+
+> 0(·| s0),s 1∼P1(·| s0,a0),a1∼π∗
+> 1(·| s1)
+
+" 1X
+
+> h=0
+
+ Ri,h (sh, ah) − Ri,h (sh, ah) + 2Γ( sh, ah)#
+
++ Ea0∼π∗  
+
+> 0(·| s0),s 1∼P1(·| s0,a0),a1∼π∗
+> 1(·| s1),s 2∼P2(·| s1,a1)
+
+h
+
+V π∗ 
+
+> i, 2
+
+(s2) − V π∗ 
+
+> i, 2
+
+(s2, bθi)
+
+i
+
+− V μref  
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) + V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+≤ . . . . . . 
+
+≤ Eπ∗
+
+"H−1X
+
+> h=0
+
+ Ri,h (sh, ah) − Ri,h (sh, ah) + 2Γ( sh, ah)#
+
+− V μref  
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) + V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+= Eτ ∼dπ∗
+
+h
+
+ϕ(τ )⊤θ∗ 
+
+> i
+
+− ϕ(τ )⊤ bθi
+
+i
+
+− Eτ ∼dμref 
+
+h
+
+ϕ(τ )⊤θ∗ 
+
+> i
+
+− ϕ(τ )⊤ bθi
+
+i
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+(47) 
+
+= Eτ ∼dπ∗ ,τ ′∼dμref 
+
+h
+
+(ϕ(τ ) − ϕ(τ ′)) ⊤ 
+
+θ∗ 
+
+> i
+
+− bθi
+
+i 
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+≤
+
+s
+
+Eτ ∼dπ∗ ,τ ′∼dμref 
+
+
+
+(ϕ(τ ) − ϕ(τ ′)) ⊤ 
+
+θ∗ 
+
+> i
+
+− bθi
+
+ 2
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+(48) 
+
+=
+
+r
+
+θ∗ 
+
+> i
+
+− bθi
+
+⊤
+
+Eτ ∼dπ∗ ,τ ′∼dμref 
+
+h
+
+(ϕ(τ ) − ϕ(τ ′)) ( ϕ(τ ) − ϕ(τ ′)) ⊤i  
+
+θ∗ 
+
+> i
+
+− bθi
+
+
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+=
+
+r
+
+θ∗ 
+
+> i
+
+− bθi
+
+⊤
+
+Σ−
+
+> π∗,μref
+
+
+
+θ∗ 
+
+> i
+
+− bθi
+
+
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+(49) 
+
+≤
+
+r 1
+
+CR
+
+r
+
+θ∗ 
+
+> i
+
+− bθi
+
+⊤
+
+Σ−
+
+> μ,μref
+
+
+
+θ∗ 
+
+> i
+
+− bθi
+
+
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+(50) 
+
+=
+
+r 1
+
+CR
+
+s
+
+Eτ ∼dμ,τ ′∼dμref 
+
+
+
+(ϕ(τ ) − ϕ(τ ′)) ⊤ θ∗ 
+
+> i
+
+− (ϕ(τ ) − ϕ(τ ′)) ⊤ bθi
+
+2
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+=
+
+r 1
+
+CR
+
+s
+
+Eτ ∼dμ,τ ′∼dμref 
+
+
+
+σ−1 (P (o = 1 |τ, τ ′, θ ∗ 
+
+> i
+
+)) − σ−1
+
+
+
+P
+
+
+
+o = 1 |τ, τ ′, bθi
+
+ 2
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+(51) 
+
+≤
+
+s
+
+ι2
+
+CR
+
+s
+
+Eτ ∼dμ,τ ′∼dμref 
+
+
+
+P (o = 1 |τ, τ ′, θ ∗ 
+
+> i
+
+) − P
+
+
+
+o = 1 |τ, τ ′, bθi
+
+ 2
+
++ 2 Eπ∗
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+(52) 
+
+≤
+
+s
+
+ι2
+
+2CR
+
+s
+
+Eτ ∼dμ,τ ′∼dμref 
+
+
+
+P (·| τ, τ ′, θ ∗ 
+
+> i
+
+) − P
+
+
+
+·| τ, τ ′, bθi
+
+ 21
+
+
+
++ 2 H · E(d, m, δ, ϵ ) ·
+
+r 5dCP
+
+(53) 
+
+≤
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
++ 2 H · E(d, m, δ, ϵ ) ·
+
+r 5dCP
+
+(54) (55) where Equation (45) follows by definition of Q-functions and the Bellman operator, and Lemma B.1; Equation (46) follows from the definition of the Bellman operator; Equation (47) uses the trajectory-based definition of the return; Equation (48) Corruption-robust MARLHF 
+
+uses Jensen’s inequality; Equation (49) uses the definition of the difference covariance matrix with respect to π∗ and μref ;Equation (50) uses the first part of Assumption 2; Equation (51) uses the definition of the link function and the preference data generation assumption; Equation (52) uses uses Lemma D.3; finally, for Equation (53) we have used Lemma B.3. Now, denote π† 
+
+> i
+
+∈ arg max π′ V π′,π∗−i 
+
+> i, 0
+
+(s0, bθi). For the final term, Z1, we similarly have 
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+−
+
+
+
+V †,π∗−i 
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+) − V μref  
+
+> i, 0
+
+(s0, θ ∗ 
+
+> i
+
+)
+
+
+
+≤ Eτ ∼dπ†  
+
+> i,τ ′∼dπ∗−i
+
+h
+
+(ϕ(τ ) − ϕ(τ ′)) ⊤ bθi − θ∗
+
+> i
+
+i 
+
++ 2 Eπ† 
+
+> i,π∗−i
+
+"H−1X
+
+> h=0
+
+Γ( sh, ah)
+
+#
+
+≤
+
+r 1
+
+CR
+
+rbθi − θ∗
+
+> i
+
+⊤
+
+Σ−
+
+> μ,μref
+
+bθi − θ∗
+
+> i
+
+
+
++ 2 H · E(d, m, δ, ϵ ) ·
+
+r 5dCP
+
+≤
+
+s
+
+ι2
+
+2CR
+
+r
+
+Eτ ∼dμ,τ ′∼dμref 
+
+h
+
+∥P (·| τ, τ ′, θ ∗ 
+
+> i
+
+) − P (·| τ, τ ′, θ i)∥21
+
+i
+
++ 2 H · E(d, m, δ, ϵ ) ·
+
+r 5dCP
+
+≤
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
++ 2 H · E(d, m, δ, ϵ ) ·
+
+r 5dCP
+
+,
+
+where we have used similar arguments as above (note that this is the part where low relative uncertainty is needed, as opposed to coverage of only a Nash equilibrium). Putting everything together, and using the definition of E(d, m, δ, ϵ ) from Equation (28) we obtain Gap (eπ, bθ1, . . . , bθn) ≤ 2n ·
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
++ 4 nH ·
+
+vuutc2(δ) (H√d + γ)2poly (d)
+
+m + ( H√d + γ)2ϵ + (2 ϵ + λ)H√d
+
+!
+
+·
+
+r 5dCP
+
+≤ eO
+
+
+
+n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+ 
+
+,
+
+where we have also used our choice of λ. Finally, for the third statement, note that Gap 
+
+
+
+π∗, bθ1, . . . , bθn
+
+
+
+= X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+≤ X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+−
+
+
+
+V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+ 
+
+≤ eO
+
+
+
+n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+ 
+
+,
+
+where the first inequality uses Lemma B.2 as if the robust subroutine were applied on π∗, while the second inequality follows from noting that we already have a bound on the previous quantity from Equation (41). Before we proceed, we need to provide guarantees on the output of the PGA methods used in Algorithm 4. 
+
+Proposition B.1. Let η1 = 1 /√T1 and, for every agent i, let 
+
+bθ∗ 
+
+> i
+
+∈ arg max 
+
+> θi∈ΘUnil (eθi)
+
+Gap i(π∗, θ i),
+
+where 
+
+bθi := 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+bθ(t) 
+
+> i
+
+,Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+and the iterates bθ(t) 
+
+> i
+
+are generated by 
+
+bθ(t+1)  
+
+> i
+
+= PΘUnil (eθi)
+
+bθ(t) 
+
+> i
+
++ η1 e∇θ Gap i(π∗, bθ(t) 
+
+> i
+
+)
+
+
+
+for T1 steps. Then, 
+
+Gap i(π∗, bθ∗ 
+
+> i
+
+)−Gap i(π∗, bθi) ≤ eO
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+  
+
+H5/2d3/4√ϵ + H2 poly (d)
+
+√m
+
+
+
++ H2ppoly (d)
+
+√T1
+
+√ϵ + 1
+
+√m
+
+!
+
+.
+
+Proof. First, note that, for any agent i and parameter θi, we have Gap i (π∗, θ i) = V †,π∗−i 
+
+> i, 0
+
+(s0, θ i) − V π∗ 
+
+> i, 0
+
+(s0, θ i)= max 
+
+> π′
+> i
+
+V π′ 
+
+> i,π∗−i
+> i, 0
+
+(s0, θ i) − V π∗ 
+
+> i, 0
+
+(s0, θ i) .
+
+Now, let us define 
+
+ΠPP ,† 
+
+> i
+
+(θi) = 
+
+
+
+π† 
+
+> i
+
+∈ ΠPP  
+
+> i
+
+: V π†  
+
+> i,π∗−i
+> i, 0
+
+(s0, θ i) = max 
+
+> π′
+> i
+
+V π′ 
+
+> i,π∗−i
+> i, 0
+
+(s0, θ i)
+
+
+
+,
+
+as the set of unilateral maximizer policies for player i at θi. Let π† 
+
+> i
+
+∈ ΠPP ,† 
+
+> i
+
+(bθ∗ 
+
+> i
+
+) be any unilateral maximizer at bθ∗ 
+
+> i
+
+, and define 
+
+g∗ 
+
+> i
+
+:= ∇θi
+
+
+
+V π†  
+
+> i,π∗−i
+> i, 0
+
+(s0, θ i) − V π∗ 
+
+> i, 0
+
+(s0, θ i)
+
+
+
+.
+
+Since the value function is linear in θi, g∗ 
+
+> i
+
+does not depend on θi. Moreover, Danskin’s subdifferential formula implies that 
+
+g∗ 
+
+> i
+
+∈ ∂θi Gap i
+
+
+
+π∗, bθ∗
+
+> i
+
+
+
+.
+
+By linearity in θi, for any θ′ 
+
+> i
+
+we have 
+
+(θ′
+
+> i
+
+)⊤ g∗ 
+
+> i
+
+= V π†  
+
+> i,π∗−i
+> i, 0
+
+(s0, θ ′
+
+> i
+
+) − V π∗ 
+
+> i, 0
+
+(s0, θ ′
+
+> i
+
+) . (56) In particular, since π† 
+
+> i
+
+is active at bθ∗ 
+
+> i
+
+,Gap i
+
+
+
+π∗, bθ∗
+
+> i
+
+
+
+=
+
+bθ∗
+
+> i
+
+⊤
+
+g∗ 
+
+> i
+
+,
+
+while for any θi,Gap i (π∗, θ i) ≥ θ⊤ 
+
+> i
+
+g∗ 
+
+> i
+
+.
+
+Thus, we can write: Gap i
+
+
+
+π∗, bθ∗
+
+> i
+
+
+
+− Gap i (π∗, θ i) ≤
+
+Dbθ∗ 
+
+> i
+
+− θi, g ∗
+
+> i
+
+E
+
+. (57) Now, since μ and μref cover π∗ and its unilateral deviations, we can estimate the gradient of the value function at π∗, or its unilateral deviations, from the gradient of the value function at μ or μref . Let bθi = (1 /T 1) PT1 
+
+> t=1
+
+bθ(t) 
+
+> i
+
+. Note that, since 
+
+bθi ∈ ΘUnil (eθi) and bθ∗ 
+
+> i
+
+∈ ΘUnil (eθi), we have 
+
+Dbθ∗ 
+
+> i
+
+− bθi, g ∗ 
+
+> i
+
+− ∇ θ V μ
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ ∇θ V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+E 
+
+=
+
+
+
+V π† 
+
+> i,π∗−i
+> i, 0
+
+
+
+s0, bθ∗
+
+> i
+
+
+
+− V μ
+
+> i, 0
+
+
+
+s0, bθ∗
+
+> i
+
+
+
+−
+
+
+
+V π† 
+
+> i,π∗−i
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μ
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+= Eτ ∼dπ†  
+
+> i ,π∗−i,τ ′∼dμ
+
+h
+
+(ϕ(τ ) − ϕ(τ ′)) ⊤ bθi − bθ∗
+
+> i
+
+i Corruption-robust MARLHF 
+
+≤ Eτ ∼dπ†  
+
+> i ,π∗−i,τ ′∼dμ
+
+h
+
+(ϕ(τ ) − ϕ(τ ′)) ⊤ bθi − θ∗
+
+> i
+
+i 
+
++ Eτ ∼dπ†  
+
+> i ,π∗−i,τ ′∼dμ
+
+h
+
+(ϕ(τ ) − ϕ(τ ′)) ⊤ 
+
+θ∗ 
+
+> i
+
+− bθ∗
+
+> i
+
+i 
+
+≤ 2
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
+, (58) where the first equality follows from Equation (56) and linearity of the value function in θ; the rest follows the same argument as the proof of Lemma B.4. Similarly, we have 
+
+Dbθ∗ 
+
+> i
+
+− bθi, ∇θi V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− ∇ θi V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+E 
+
+≤ 2
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
+.
+
+Combining, we get 
+
+Dbθ∗ 
+
+> i
+
+− bθi, g ∗ 
+
+> i
+
+− ∇ θi R(bθi)
+
+E
+
+≤ 4
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
+, (59) where 
+
+R(bθi) = V μ
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+.
+
+So, along the direction of bθ∗ 
+
+> i
+
+− bθi, the gradient of the difference of values at μ and μref is a good approximation of the active linear branch of the gap at bθ∗ 
+
+> i
+
+. Now, in order to approximate the gradient at μ and μref , we use the fact that 
+
+∇θi V μ
+
+> i, 0
+
+(s0, bθi) = 
+
+> H−1
+
+X
+
+> h=0
+
+(dμ 
+
+> h
+
+)⊤Φ ,
+
+together with the fact that we already have access to ϵ-corrupted features from dμ. Thus, we can define a robust estimate of the above as 
+
+e∇θi V μ
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+=
+
+> H−1
+
+X
+
+> h=0
+
+RobMean 
+
+
+
+Dμ
+
+> h,ϕ
+
+
+
+,
+
+and 
+
+e∇θi V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+=
+
+> H−1
+
+X
+
+> h=0
+
+RobMean 
+
+
+
+Dμref 
+
+> h,ϕ
+
+
+
+.
+
+Corollary 2 gives us bounds f (ϵ) on the L2-error: 
+
+e∇θ V μ 
+
+> i, 0
+
+(s0, θ ) − ∇ θ V μ
+
+> i, 0
+
+(s0, θ ) ≤ O(Hf (ϵ)) ,
+
+and 
+
+e∇θ V μref  
+
+> i, 0
+
+(s0, θ ) − ∇ θ V μref  
+
+> i, 0
+
+(s0, θ ) ≤ O(Hf (ϵ)) ,
+
+where 
+
+f (ϵ) = 
+
+r d log( poly (d)) 
+
+m + √dϵ +
+
+r d log(1 /δ )
+
+m .
+
+Let us now define 
+
+e∇θi Gap i
+
+
+
+π∗, bθi
+
+
+
+= e∇θi V μ
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− e∇θi V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+.
+
+Note that we have 
+
+E
+
+h e∇θ Gap i
+
+
+
+π∗, bθi
+
+ i 
+
+≤ 4H + O(Hf (ϵ)) ,Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+due to the guarantees of RobMean and the feature norm bounds. Therefore, we are in the conditions of Lemma D.4. Recall that bθ∗ 
+
+> i
+
+is the true maximizer of Gap i(π∗, θ i) over ΘUnil (eθi). Then, using the active branch g∗ 
+
+> i
+
+selected above, we have Gap i
+
+
+
+π∗, bθ∗
+
+> i
+
+
+
+− 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+Gap i
+
+
+
+π∗, bθ(t)
+
+> i
+
+
+
+≤ 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+Dbθ∗ 
+
+> i
+
+− bθ(t) 
+
+> i
+
+, g ∗
+
+> i
+
+E
+
+(60) 
+
+= 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+Dbθ∗ 
+
+> i
+
+− bθ(t) 
+
+> i
+
+, e∇θ Gap i
+
+
+
+π∗, bθ(t)
+
+> i
+
+E 
+
++ 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+Dbθ∗ 
+
+> i
+
+− bθ(t) 
+
+> i
+
+, g ∗ 
+
+> i
+
+− e∇θ Gap i
+
+
+
+π∗, bθ(t)
+
+> i
+
+E 
+
+(61) 
+
+≤ 1
+
+T1
+
+bθ∗ 
+
+> i
+
+− bθ(1) 
+
+> i
+> 2
+
+2η + ηT 1(4 H + O(Hf (ϵ))) 2
+
+2
+
+
+
++ 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+Dbθ∗ 
+
+> i
+
+− bθ(t) 
+
+> i
+
+, g ∗ 
+
+> i
+
+− ∇ θ V μ
+
+> i, 0
+
+
+
+s0, bθ(t)
+
+> i
+
+
+
++ ∇θ V μref 
+
+> i, 0
+
+
+
+s0, bθ(t)
+
+> i
+
+E 
+
++ 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+Dbθ∗ 
+
+> i
+
+− bθ(t) 
+
+> i
+
+, ∇θ V μ
+
+> i, 0
+
+
+
+s0, bθ(t)
+
+> i
+
+
+
+− ∇ θ V μref 
+
+> i, 0
+
+
+
+s0, bθ(t)
+
+> i
+
+
+
+− e∇θ Gap i
+
+
+
+π∗, bθ(t)
+
+> i
+
+E 
+
+(62) 
+
+≤ O
+
+ H2 + f (ϵ)
+
+√T1
+
+
+
++ 4 
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
++ 1
+
+T1
+
+> T1
+
+X
+
+> t=1
+
+bθ∗ 
+
+> i
+
+− bθ(t) 
+
+> i
+
+∇θ V μ
+
+> i, 0
+
+
+
+s0, bθ(t)
+
+> i
+
+
+
+− ∇ θ V μref 
+
+> i, 0
+
+
+
+s0, bθ(t)
+
+> i
+
+
+
+− e∇θ Gap i
+
+
+
+π∗, bθ(t)
+
+> i
+
+
+
+(63) 
+
+≤ O
+
+ H2 + f (ϵ)
+
+√T1
+
+
+
++ 4 
+
+s
+
+ι2
+
+2CR
+
+r
+
+8ϵ + c · dm log 
+
+ nm δ
+
+
+
++ 2 H2√df (ϵ)
+
+≤ eO
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+
+
++ H2ppoly (d)
+
+√T1
+
+√ϵ + 1
+
+√m
+
+!
+
+,
+
+where Equation (60) follows from Equation (57) ; Equation (61) adds and subtracts the same term; Equation (62) follows from Lemma D.4; Equation (63) follows from Cauchy-Schwarz and Equation (59) ; and the last inequality follows from Corollary 2. 
+
+Theorem B.1. Let ϵ ∈ [0 , 1/2) , λ ≥ Ω( dH log( m/δ )/m ), and δ > 0. Set ΘUnil (·) as in Equation (5) and Γ( s, a) = 
+
+E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥Λ−1
+
+> h
+
+. Suppose Assumption 2 is satisfied and PGA is run for T1 steps with learning rate η =
+
+O(1 /√T1). Then, there exist robust subroutines RobEst , TrimmedMLE , and RobMean such that, with probability at least 1 − δ, the output eπ of Algorithm 4 with subroutines RobEst , TrimmedMLE , RobMean and RewardEst , satisfies 
+
+Gap (eπ) ≤ eO
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
++ 1
+
+√T1
+
+
+
+· H5/2nd 3/4√ϵ + H2n
+
+r poly (d)
+
+m
+
+!! 
+
+.
+
+Proof. Define θ∗ = ( θ∗ 
+
+> 1
+
+, . . . , θ ∗
+
+> n
+
+) and let 
+
+f (ϵ) = eO
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+
+
++ H2ppoly (d)
+
+√T1
+
+√ϵ + 1
+
+√m
+
+!
+
+.
+
+Also define 
+
+∆ := eO
+
+
+
+n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+ 
+
+.
+
+Moreover, let bθ∗ denote the maximizer of the gap with respect to π∗ over the unilateral confidence set, i.e., 
+
+bθ∗ ∈ arg max 
+
+> θ∈ΘUnil (eθ1)×... ×ΘUnil (eθn)
+
+Gap (π∗, θ) .Corruption-robust MARLHF 
+
+We have Gap (eπ, θ∗) ≤ Gap (π∗, θ∗) + ∆ (64) 
+
+≤ Gap 
+
+
+
+π∗, bθ∗
+
++ ∆ (65) 
+
+≤ Gap 
+
+
+
+π∗, bθ
+
+
+
++ n · f (ϵ) + ∆ (66) 
+
+≤ Gap 
+
+eπ, bθ
+
+
+
++ n · f (ϵ) + 2∆ (67) 
+
+≤ gGap 
+
+eπ, bθ
+
+
+
++ n · f (ϵ) + 2∆ (68) 
+
+≤ gGap 
+
+
+
+π∗, bθ
+
+
+
++ n · f (ϵ) + 2∆ (69) 
+
+= X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ n · f (ϵ) + 2∆ (70) 
+
+≤ X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+−
+
+
+
+V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V μref 
+
+> i, 0
+
+
+
+s0, bθi
+
+ 
+
++ n · f (ϵ) + 2∆ (71) 
+
+≤ eO
+
+
+
+n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+ 
+
++ n · f (ϵ) + 2∆ (72) 
+
+≤ eO n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+
+
++ H2nppoly (d)
+
+√T1
+
+√ϵ + 1
+
+√m
+
+!
+
+.
+
+Equation (64) follows from Lemma B.5. Equation (65) follows from the definition of bθ∗. Equation (66) follows from Proposition B.1, applied coordinate-wise at π∗. Equation (67) follows again from Lemma B.5. Equation (68) follows from Lemma B.2. Equation (69) follows by design of Algorithm 4, since eπ minimizes the estimated gap at bθ. Equation (70) follows by definition of estimated gap. In Equation (71) we add and subtract the same term. Equation (72) follows from Lemma B.5. The final inequality follows from the definitions of f (ϵ) and ∆.
+
+## C Proof of Theorem 5.1 
+
+This section includes full proof of Theorem 5.1. We begin by establishing regret guarantees on the Optimistic Hedge algorithm applied to our setting. 
+
+Lemma C.1. Denote by eπ the joint policy returned by Optimistic Hedge run for T2 rounds. For each i ∈ [n], let 
+
+Reg i,h,T 2 = max 
+
+> π†
+> i,h
+
+Ea† 
+
+> i∼π†
+> i,h (·| s),a ′
+> i∼eπi,h (·| s)
+
+
+
+Ea−i∼eπ−i,h (·| s)
+
+
+
+Qπ†  
+
+> i,eπ−i,h
+> i,h
+
+(s, a † 
+
+> i
+
+, a−i) − Qeπ (s, a ′
+
+> i
+
+, a−i)
+
+ 
+
+− min 
+
+> π′
+> i,h
+
+max 
+
+> π†
+> i,h
+
+Ea† 
+
+> i∼π†
+> i,h (·| s),a ′
+> i∼π′
+> i,h (·| s)
+
+
+
+Ea−i∼π−i,h (·| s)
+
+
+
+Qπ†  
+
+> i,eπ−i
+> i,h
+
+(s, a † 
+
+> i
+
+, a−i) − Qπ′ 
+
+> i,eπ−i
+
+(s, a ′
+
+> i
+
+, a−i)
+
+ 
+
+.
+
+For every i ∈ [n] and h ∈ [H − 1] , we have 
+
+X
+
+> i∈[n]
+
+Reg i,h,T 2 ≤ O  n2H · log |A| · log 4 T2
+
+
+
+Proof. Recall that the loss we use for Optimistic Hedge is defined as 
+
+Lsi (a†, a ′) = Ea−i∼eπ−i,h (·| s)
+
+h
+
+Q†,eπ−i 
+
+> i,h
+
+(s, a † 
+
+> i
+
+, a−i) − Qeπ
+
+> i,h
+
+(s, a ′, a−i)
+
+i
+
+.
+
+Now, let π(†,(t) 
+
+> i
+
+denote the iterations of player i with respect to the max problem. Note that, for every agent i and state s,after T2 steps, we have 
+
+max 
+
+> π†
+> i
+> T2
+
+X
+
+> t=1
+
+Ea†∼π† 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′) − min 
+
+> πi
+
+max 
+
+> π†
+> i
+> T2
+
+X
+
+> t=1
+
+Ea†∼π† 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′)Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+= max 
+
+> π†
+> i
+> T2
+
+X
+
+> t=1
+
+Ea†∼π† 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′) −
+
+> T2
+
+X
+
+> t=1
+
+Ea†∼π†,(t) 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′)| {z }  
+
+> Reg i,h,T 2for π†,(t)
+> i
+
++
+
+> T2
+
+X
+
+> t=1
+
+Ea†∼π†,(t) 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′) − min 
+
+> πi
+> T2
+
+X
+
+> t=1
+
+Ea†∼π†,(t) 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′)| {z }  
+
+> Reg i,h,T 2for π(t)
+> i
+
++ min 
+
+> πi
+> T2
+
+X
+
+> t=1
+
+Ea†∼π†,(t) 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′) − min 
+
+> πi
+
+max 
+
+> π†
+> i
+> T2
+
+X
+
+> t=1
+
+Ea†∼π† 
+
+> i,a ′∼eπ(t)
+> i
+
+Lsi (a†, a ′)| {z }
+
+> ≤0
+
+≤ O  nH log |Ai| log 4 T2
+
+ ,
+
+where for the inequality we have used Theorem D.2 applied on the regrets with respect to the max and min players, and the fact that min x f (x, y ) ≤ min x max y f (x, y ), due to the monotonicity of the min operator. This implies that, the empirical distribution of the sequence of policies up to time step T2, which equals the returned policy eπ, satisfies, for any player i and state s,
+
+max 
+
+> π†
+> i
+
+Ea†∼π† 
+
+> i,a ′∼eπi
+
+Lsi (a†, a ′) − min 
+
+> πi
+
+max 
+
+> π†
+> i
+
+Ea†∼π† 
+
+> i,a ′∼πi
+
+Lsi (a†, a ′) ≤ O
+
+ n · log |A| · log 4 T2
+
+T2
+
+
+
+.
+
+In particular, we have 
+
+X
+
+> i∈[n]
+
+max 
+
+> π†
+> i,h
+
+Ea† 
+
+> i∼π†
+> i,h (·| s),a ′
+> i∼eπi,h (·| s)
+
+h
+
+Ea−i∼eπ−i,h (·| s)
+
+h
+
+Q†,eπ−i,h  
+
+> i,h
+
+(s, a † 
+
+> i
+
+, a−i) − Qeπ
+
+> i,h
+
+(s, a ′
+
+> i
+
+, a−i)
+
+ii 
+
+− min 
+
+> π′
+> h
+
+X
+
+> i∈[n]
+
+max 
+
+> π†
+> i,h
+
+Ea† 
+
+> i∼π†
+> i,h (·| s),a ′
+> i∼π′
+> i,h (·| s)
+
+h
+
+Ea−i∼π−i,h (·| s)
+
+h
+
+Q†,eπ−i 
+
+> i,h
+
+(s, a † 
+
+> i
+
+, a−i) − Qeπ
+
+> i,h
+
+(s, a ′
+
+> i
+
+, a−i)
+
+ii 
+
+≤ O
+
+ n2H · log |A| · log 4 T2
+
+T2
+
+
+
+,
+
+where we have used the fact that the min of the sum is larger than the sum of individual min s. Finally, we are ready to state and prove Theorem 5.1. We restate it here for convenience. 
+
+Theorem C.1. Let ϵ ∈ [0 , 1/2) , λ ≥ Ω( dH log( m/δ )/m ), and δ > 0. Set ΘUnil (·) as in Equation (5) and Γ( s, a) = 
+
+E(d, m, δ, ϵ ) · ∥ ϕ(s, a)∥Λ−1
+
+> h
+
+. Suppose Assumption 2 is satisfied, PGA is run for T1 steps with learning rate η1 = O(1 /√T1),and OptimisticHedge is run for T2 steps with learning rate η2 = O(1 /(n log 4 T2)) . Then, there exist robust subroutines 
+
+RobEst , TrimmedMLE , and RobMean such that, with probability at least 1 − δ, the output eπ of Algorithm 5 with subroutines RobEst , TrimmedMLE , RobMean and OptimisticHedge , satisfies 
+
+Gap (eπ) ≤ eO
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
++ 1
+
+√T1
+
+
+
+· H5/2nd 3/4√ϵ + H2n
+
+ppoly (d)
+
+√m
+
+!
+
++ Hn 2
+
+T2
+
+!
+
+.
+
+Proof. Similar to the proof of Theorem 4.1, we can write Gap (eπ, θ∗) ≤ Gap 
+
+eπ, bθ∗
+
+≤ Gap 
+
+eπ, bθ
+
+
+
++ n · f (ϵ)
+
+≤ gGap 
+
+eπ, bθ
+
+
+
++ n · f (ϵ)
+
+≤ min 
+
+> π
+
+gGap 
+
+
+
+π, bθ
+
+
+
++ O
+
+ n2H · log |A| · log 4 T2
+
+T2
+
+
+
++ n · f (ϵ) (73) Corruption-robust MARLHF 
+
+≤ gGap 
+
+
+
+π∗, bθ
+
+
+
++ O
+
+ n2H · log |A| · log 4 T2
+
+T2
+
+
+
++ n · f (ϵ)= X
+
+> i∈[n]
+
+V †,π∗−i
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
+− V π∗
+
+> i, 0
+
+
+
+s0, bθi
+
+
+
++ O
+
+ n2H · log |A| · log 4 T2
+
+T2
+
+
+
++ n · f (ϵ)
+
+≤ eO
+
+
+
+n ·
+
+ 1
+
+√CR
+
++ 1
+
+√CP
+
++ 1
+
+√T1
+
+
+
+·
+
+
+
+H5/2d3/4√ϵ + H2poly (d) 1
+
+√m
+
+
+
++ n2HT2
+
+
+
+, (74) where Equation (73) follows from Lemma C.1 and Equation (74) follows from Theorem 4.1. 
+
+## D Technical Results 
+
+This section includes various miscellaneous technical results that are used throughout the proofs in the paper. 
+
+Lemma D.1 (Zanette et al. [2021]) . Let {ϕi}mi=1 ⊂ Rd be i.i.d. samples from an underlying bounded distribution μref , with 
+
+∥ϕi∥2 ≤ 1 and covariance Σμref . Define 
+
+Λ = 
+
+> m
+
+X
+
+> i=1
+
+ϕiϕ⊤ 
+
+> i
+
++ λI , 
+
+for some λ ≥ Ω( d log( m/δ )) . Then, with probability at least 1 − δ, we have 
+
+13 (mΣμref + λI ) ⪯ Λ ⪯ 53 (mΣμref + λI ) .
+
+Next, we state a result that bounds the difference in log probabilities of parameters in a given space. 
+
+Lemma D.2 (Lemma 2 of [Zhan et al., 2023] for the linear setting) . With probability at least 1 − δ, we have, for every agent 
+
+i and θ ∈ ΘUnil (eθi):
+
+E τ ∼dμ 
+
+> τ′∼dμref
+
+h
+
+∥P (·| τ, τ ′, θ ∗ 
+
+> i
+
+) − P (·| τ, τ ′, θ )∥21
+
+i
+
+≤ cm
+
+> m
+
+X
+
+> j=1
+
+log P  eoj |eτj , eτ ′ 
+
+> j
+
+, θ ∗
+
+> i
+
+
+
+P  eoj |eτj , eτ ′ 
+
+> j
+
+, θ !
+
++ log ( d log ( n/δ )) ,
+
+where c > 0 is an absolute constant. Proof. This is just an application of Proposition 1 of [Zhan et al., 2023] to the linear setting, which then induces the result above by applying the union bound over all agents. Next, we show that the inverse of the sigmoid link function is Lipschitz on a bounded domain. 
+
+Lemma D.3. Let −∞ < a, b < ∞ be two real numbers and let σ(x) = 1 /(1 + exp( −x)) be defined on the domain 
+
+x ∈ [a, b ]. Then, there exists a positive number ι < ∞, such that the inverse σ−1 of σ is Lipschitz with constant ι, that is, 
+
+sup 
+
+> p(x)∈(0 ,1): x∈[a,b ]
+
+∂σ −1(p)
+
+∂p ≤ ι . 
+
+As a consequence, if the rewards are bounded, then the inverse of the preference link function is Lipschitz continuous for some ι > 0.Proof. First, note that the derivative of the inverse of the sigmoid can be written as 
+
+∂σ −1(p)
+
+∂p = ∂∂p log p
+
+1 − p = 1
+
+p(1 − p) .
+
+Now, since x ∈ [a, b ] and σ is continuous in R, then, there exist −∞ < a ′, b ′ < ∞, such that p = σ(x) ∈ [a′, b ′], for every 
+
+x ∈ [a, b ]. Moreover, since the function p(1 − p) is also continuous in R, then, there exist −∞ < a ′′ , b ′′ < ∞, such that 
+
+p(1 − p) ∈ [a′′ , b ′′ ], for all p ∈ [a′, b ′]. Thus, there exists a positive constant ι, such that 
+
+1
+
+p(1 − p) ≤ ι , Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+for all x ∈ [a, b ]. This implies that the function σ−1 is Lipschitz on the domain of σ.For the final statement of the result, note that the preference function uses differences in expected rewards that are individually bounded in [−√d, √d]. Thus, we have 
+
+> H−1
+
+X
+
+> h=0
+
+R(sh, a h) − R′(sh, a h) ∈ [−2H√d, 2H√d] .
+
+Thus, the domain of the sigmoid link function, used for our preference model, has a bounded domain, which implies that its inverse is Lipschitz continuous. 
+
+Corollary 1. The function f (θ) = Eτ ∼dμref 
+
+ϕ(τ )⊤θ is H-Lipschitz and convex. Moreover, the set ΘUnil (θ′) is a convex set, for any θ′ and λ > 0.Proof. Note that we have 
+
+∥∇ θ f (θ)∥ = (dμref )⊤Φ ≤ ∥ dμref ∥1 ∥Φ∥∞ ≤ max  
+
+> (s,a )
+
+∥ϕ(s, a )∥1 ≤ H max  
+
+> (s,a )
+
+∥ϕ(s, a )∥2 ≤ H . 
+
+Convexity follows from the direct observation that ∇θ (dμref )⊤Φ = 0 . The convexity of ΘUnil (θ′) is observed in [Mandal et al., 2025]. Next, we provide an upper bound on the error of the estimate returned by the RobMean algorithm. 
+
+Theorem D.1 (Proposition 1.5 of [Diakonikolas et al., 2020]) . Let T be an ϵ-corrupted set of m samples from a distribution in Rd with mean ρ and covariance Σ. Let ϵ′ be in the order of (log(1 /δ )/m + ϵ) ≤ c, for a constant c > 0. Then any stability-based algorithm on input T and ϵ′, efficiently computes eρ such that with probability at least 1 − δ, we have 
+
+∥ρ − eρ∥ = O
+
+r T r (Σ) log( T r (Σ) / ∥Σ) ∥
+
+m + p∥Σ∥ ϵ +
+
+r ∥Σ∥ log(1 /δ )
+
+m
+
+!
+
+.
+
+Corollary 2. The RobMean algorithm returns a gradient estimate that satisfies 
+
+e∇θ V μref  
+
+> i, 0
+
+(s0) − ∇ θ V μref  
+
+> i, 0
+
+(s0) ≤ O
+
+r d log( poly (d)) 
+
+m + √dϵ +
+
+r d log(1 /δ )
+
+m
+
+!
+
+.
+
+Proof. Note that, since ∥ϕ(s, a)∥ ≤ 1, for all state action tuples, then ∥Φ∥ ≤ d and T r (Φ) ≤ d.Next, we state an upper bound on the individual regret of each agent when playing Optimistic Hedge. 
+
+Theorem D.2 (Theorem 1.1 of [Daskalakis et al., 2021]) . There are constants C, C ′ > 1 so that the following holds. Suppose a time horizon T ∈ N and a game G with n players and |Ai| actions for each player i ∈ [n] is given. Suppose all players play according to Optimistic Hedge with any positive step size η = 1 /(Cn log 4 T ). Then, for any player i ∈ [n], the regret of player i satisfies 
+
+Reg i,T ≤ O  n · log |A| · log 4 T  .
+
+Lemma D.4 (Lemma E.6 of [Mandal et al., 2025]) . Let y1 ∈ W , and η > 0. Define the sequence y2, . . . , y n+1 and 
+
+h1, . . . , h n such that, for k = 1 , . . . , n yk+1 = PW
+
+
+
+yk − ηbhk
+
+
+
+,
+
+and bhk satisfies 
+
+E
+
+hbhk|F k−1
+
+i
+
+= hk, and E
+
+bhk
+
+> 2
+
+|F k−1
+
+
+
+≤ G2 ,
+
+where Fk are the σ-algebras on which the variables up to k are defined. Then, for any y∗ ∈ W , we have 
+
+E
+
+" nX
+
+> k=1
+
+⟨y∗ − yk, h k⟩
+
+#
+
+≤ ∥y1 − y∗∥2
+
+2η + ηnG 2
+
+2 .Corruption-robust MARLHF 
+
+Algorithm 6 Alternating Minimization ( Trimmed MLE ) for full sample corruption. 
+
+Require: Corrupted data D; corruption parameter ϵ; slackness parameter ν.
+
+1: Split D into equally-sized D1 and D2, uniformly at random. 
+
+2: Use D1 to build a robust estimate bΣ of the Σ− 
+
+> μ,μref
+
+[Diakonikolas et al., 2025]. 
+
+3: Whiten covariates using bΣ, i.e. form eD = {bΣ−1/2(ϕ(τ ) − ϕ(τ ′)) |(τ, τ ′) ∈ D2}.
+
+4: Let bD ← Filtering ( eD, ϵ ) (Algorithm 4 of [Dong et al., 2019]). 
+
+5: Define Lθ (τ, τ ′, o ) = log σ
+
+
+
+o · θ⊤ bΣ1/2 (ϕ(τ ) − ϕ(τ ′)) 
+
+
+
+, for τ ∈ bD.
+
+6: Set eθ0 = 0 .
+
+7: for t = 1 , 2, . . . do 
+
+8: eSt = arg max S⊂ bD:
+
+> |S|=(1 −ϵ)m
+
+P  
+
+> (τ,τ ′,o )∈S
+
+Leθt (τ, τ ′, o ) .
+
+9: eθt+1 = arg max θ:∥θ∥≤ √Hd 
+
+P   
+
+> (τ,τ ′,o )∈eSt
+
+Lθ (τ, τ ′, o ) .
+
+10: if P   
+
+> (τ,τ ′,o )∈eSt
+
+Leθt+1 (τ, τ ′, o ) ≤ P   
+
+> (τ,τ ′,o )∈eSt
+
+Leθt (τ, τ ′, o ) + ν then 
+
+11: Return eθt+1 .
+
+12: end if 
+
+13: end for Algorithm 7 Robust Estimation of Value Functions 
+
+Require: Dataset D, policy π, agent i, reward functions Ri and Ri, bonus function Γ( ·, ·).
+
+1: Initialize V π 
+
+> i,H
+
+(·) = V †,π−i 
+
+> i,H
+
+(·) = 0 , for all agents i ∈ [n].
+
+2: for h = H − 1, . . . , 0: do 
+
+3: ωπ 
+
+> i,h
+
+= RobEst  ϕ(sh, ah), R i,h (sh, ah) + V π
+
+> i,h +1
+
+(s).
+
+4: ω†,π−i 
+
+> i,h
+
+= RobEst 
+
+
+
+ϕ(sh, ah), R i,h (sh, ah) + V †,π−i
+
+> i,h +1
+
+(s)
+
+
+
+.
+
+5: Qπ
+
+> i,h
+
+(·, ·) = Clip [−(H−h)√d, (H−h)√d]
+
+
+
+ϕ(·, ·)⊤ωπ 
+
+> i,h
+
+− Γ( ·, ·)
+
+
+
+.
+
+6: Q†,π−i 
+
+> i,h
+
+(·, ·) = Clip [−(H−h)√d, (H−h)√d]
+
+
+
+ϕ(·, ·)⊤ω†,π−i 
+
+> i,h
+
++ Γ( ·, ·)
+
+
+
+.
+
+7: V π
+
+> i,h
+
+(s) = Ea∼πh
+
+h
+
+Qπ
+
+> i,h
+
+(s, a)
+
+i
+
+.
+
+8: V †,π−i 
+
+> i,h
+
+(s) = max ai∈Ai Ea−i∼π−i
+
+h
+
+Q†,π−i 
+
+> i,h
+
+(s, a)
+
+i
+
+.
+
+9: end for 
+
+10: return Value functions V †,π−i 
+
+> i,h
+
+(·) and V π
+
+> i,h
+
+(·), for all h ∈ [H − 1] .
+
+## E Additional Algorithm Pseudocodes Nika, Mandal, Kamalaruban, Singla, and Radanovi´ c
+
+Algorithm 8 Optimistic Hedge for n min − max Games ( OptimisticHedge )
+
+Require: Loss functions L1(·), . . . , Ln(·); step size ν; steps T .
+
+1: Initialize policies π(0)  
+
+> i
+
+, π †,(0)  
+
+> i
+
+uniformly at random, for every i ∈ { 1, . . . , n }
+
+2: for t = 0 , . . . , T − 1 do 
+
+3: for i ∈ { 1, . . . , n } do 
+
+4: Let u(t) 
+
+> i
+
+(a†) = Ea′∼π(t)
+
+> i
+
+Li(a†, a ′), for every individual action a of player i.
+
+5: Let ℓ(t) 
+
+> i
+
+(a′) = Ea†∼π†,(t)
+
+> i
+
+Li(a†, a ′), for every individual action a of player i.
+
+6: for ai ∈ Ai do 
+
+7: Update for the max player: 
+
+π†,(t+1)  
+
+> i
+
+(a†) = 
+
+π†,(t) 
+
+> i
+
+(a†) · exp 
+
+
+
+ν · u(t) 
+
+> i
+
+(a†)
+
+P 
+
+> a‡
+
+π†,(t) 
+
+> i
+
+(a‡) · exp 
+
+
+
+ν · u(t) 
+
+> i
+
+(a‡)
+
+ .
+
+8: Update for the min player: 
+
+π(t+1)  
+
+> i
+
+(a′) = 
+
+π(t) 
+
+> i
+
+(a′) · exp 
+
+
+
+−ν · ℓ(t) 
+
+> i
+
+(a′)
+
+P 
+
+> a′′
+
+π(t) 
+
+> i
+
+(a′′ ) · exp 
+
+
+
+−ν · ℓ(t) 
+
+> i
+
+(a′′ )
+
+ .
+
+9: end for 
+
+10: end for 
+
+11: end for 
+
+12: return Average policy profile over T rounds 1
+
+> T
+
+PTt=1 π(t).

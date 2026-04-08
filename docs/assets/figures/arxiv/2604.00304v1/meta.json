@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00304v1/fig-001.webp",
+      "caption": "Figure 1: Existing actor–critic methods assume trainable actors and structured action spaces. We propose an asymmetric actor–critic framework where a lightweight open-source critic supervises a fixed proprietary actor at runtime, enabling reliable control for one-shot multiturn conversational agents.",
+      "page": 1,
+      "index": 1,
+      "width": 458,
+      "height": 291
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00304v1/fig-002.webp",
+      "caption": "Table 13: Statistics of the generated critic training data. Each critic evaluation point in a trajectory corresponds to one training sample. Positive samples denote critic rejections, while negative samples denote approvals. For UserBench, the critic is trained on data aggregated across all environments.",
+      "page": 18,
+      "index": 2,
+      "width": 779,
+      "height": 204
+    }
+  ]
+}

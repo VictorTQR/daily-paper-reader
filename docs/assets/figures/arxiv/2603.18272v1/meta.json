@@ -1,0 +1,190 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-001.webp",
+      "caption": "Table 15: Difference between Qwen 2.5 7B 1M and Qwen 2.5 7B in zero-shot performance. Each cell reports Qwen 2.5 7B 1M − Qwen 2.5 7B for the corresponding retrieval configuration and evaluation split. Positive values indicate that the 1M-context model performs better; negative values indicate that the standard-context 7B model performs better.",
+      "page": 25,
+      "index": 1,
+      "width": 829,
+      "height": 567
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-002.webp",
+      "caption": "Figure 2: Different trajectory formats: chat JSON, agentic JSON, compact JSON, and textual.",
+      "page": 26,
+      "index": 2,
+      "width": 1030,
+      "height": 677
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-003.webp",
+      "caption": "Table 10: Summary statistics for standard deviations in zero-shot Ministral 3-8B results. The top row summarizes variability by retrieval setting and by evaluation split. The bottom table breaks the same standard deviations down jointly by retrieval index and benchmark split.",
+      "page": 21,
+      "index": 3,
+      "width": 1019,
+      "height": 568
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-004.webp",
+      "caption": "Figure 5: Example of a partial JSON trajectory in ALFWorld.",
+      "page": 30,
+      "index": 4,
+      "width": 1036,
+      "height": 488
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-005.webp",
+      "caption": "Figure 6: System prompt used for ALFWorld experiments.",
+      "page": 30,
+      "index": 5,
+      "width": 1008,
+      "height": 646
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-006.webp",
+      "caption": "Table 1: Complex solutions can underperform a strong baseline. Success rate results for Qwen 2.5-7B on official held-out split of ALFWorld (valid-unseen) for training-free and supervised fine-tuned methods. Despite using the same backbone model, this is a cross-paper comparison and should therefore be interpreted qualitatively, as different works may potentially use different experimental setups. Unless noted, values come from original works; superscripts denote third-party reports used only when original papers do not report that model result: aLiu et al. (2026b), bXia et al. (2026), cYu et al. (2026), eFeng et al. (2025), dZhang et al. (2025a), fFei et al. (2025).",
+      "page": 2,
+      "index": 6,
+      "width": 935,
+      "height": 410
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-007.webp",
+      "caption": "Table 2: Results for ExpRAG inference without training across ALFWorld and ScienceWorld for Ministral 3-8B. Values are mean success rates over 3 seeds; full mean ± std for every entry is reported in Appendix C.1. Across entries, the median/max std is 1.58/6.20 points on ALFWorld and 1.83/4.45 on ScienceWorld. The bold values mark the best top-𝑘 setting for each (ExpRAG type, index) within a given dataset split. For dynamic retrieval rows, the superscript arrows report the per-cell difference against the corresponding static row with the same index and top-𝑘: ↑ indicates improvement, ↓ indicates a decline, and black values denote ties.",
+      "page": 7,
+      "index": 7,
+      "width": 898,
+      "height": 617
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-008.webp",
+      "caption": "Table 11: Results for ExpRAG inference without training across ALFWorld and ScienceWorld for Gemma 3 4B. The bold values mark the best top-𝑘 setting for each (ExpRAG type, index) within a given dataset split. For dynamic retrieval rows, the superscript arrows report the per-cell difference against the corresponding static row with the same index and top-𝑘: ↑ indicates improvement, ↓ indicates a decline, and black values denote ties.",
+      "page": 22,
+      "index": 8,
+      "width": 1011,
+      "height": 595
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-009.webp",
+      "caption": "Table 4: Robustness to lack of relevant target trajectories on unseen (hard) tasks across different model backbones. Each cell reports the success-rate drop induced by the index stress test as (𝑎 → 𝑏), where (𝑎) uses trajectories from the matched unseen hard-task index and (𝑏) replaces that index with either Empty (no trajectories) or Mismatched (training-index trajectories reused at test time). Bold indicates the most robust method in each scenario.",
+      "page": 10,
+      "index": 9,
+      "width": 529,
+      "height": 852
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-010.webp",
+      "caption": "Table 6: Task variations used in our subsampled ScienceWorld test set.",
+      "page": 18,
+      "index": 10,
+      "width": 1015,
+      "height": 804
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-011.webp",
+      "caption": "Table 13: Results for ExpRAG inference without training across ALFWorld and ScienceWorld for Qwen 2.5 7B. The bold values mark the best top-𝑘 setting for each (ExpRAG type, index) within a given dataset split. For dynamic retrieval rows, the superscript arrows report the per-cell difference against the corresponding static row with the same index and top-𝑘: ↑ indicates improvement, ↓ indicates a decline, and black values denote ties.",
+      "page": 23,
+      "index": 11,
+      "width": 877,
+      "height": 566
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-012.webp",
+      "caption": "Table 12: Results for ExpRAG inference without training across ALFWorld and ScienceWorld for Qwen 2.5 3B. The bold values mark the best top-𝑘 setting for each (ExpRAG type, index) within a given dataset split. For dynamic retrieval rows, the superscript arrows report the per-cell difference against the corresponding static row with the same index and top-𝑘: ↑ indicates improvement, ↓ indicates a decline, and black values denote ties.",
+      "page": 23,
+      "index": 12,
+      "width": 858,
+      "height": 567
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-013.webp",
+      "caption": "Figure 4: Longer fine-tuning can improve generalization despite rising validation loss. Comparison of validation loss and inference performance with respect to number oftraining epochs on ScienceWorld. Blue: validation cross-entropy (left axis). Green/orange: rollout success rate and average episode score (right axis) across checkpoints during 50-epoch fine-tuning. Top: easy→easy (in-distribution). Bottom: easy→hard (out-ofdistribution). For ExpRAG-LoRA, retrieval uses a matched index for each evaluation split.",
+      "page": 28,
+      "index": 13,
+      "width": 1008,
+      "height": 523
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-014.webp",
+      "caption": "Figure 3: Longer fine-tuning can improve generalization despite rising validation loss. Comparison of validation loss and inference performance with respect to number oftraining epochs on ALFWorld. Blue: validation cross-entropy (left axis; lower is better). Green/orange: rollout success rate and average episode score (right axis; higher is better) evaluated at multiple checkpoints during 50-epoch fine-tuning. Top: easy→easy (in-distribution). Bottom: easy→hard (out-of-distribution). For ExpRAG-LoRA, retrieval uses a matched index for each evaluation split.",
+      "page": 28,
+      "index": 14,
+      "width": 1008,
+      "height": 521
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-015.webp",
+      "caption": "Table 7: All the hyperparameters used for our method. Values are shared across models unless specified otherwise in the text.",
+      "page": 19,
+      "index": 15,
+      "width": 387,
+      "height": 473
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-016.webp",
+      "caption": "Table 8: ScienceWorld task-dependent rollout budgets used in evaluation (max_steps_per_task).",
+      "page": 19,
+      "index": 16,
+      "width": 941,
+      "height": 441
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-017.webp",
+      "caption": "Table 5: Details about the hard/easy task splits: number of training and test samples, and task names assigned to each category. Samples from training tasks are used to build the index for the corresponding split (hard/easy), while easy training tasks are used for ExpRAG fine-tuning.",
+      "page": 17,
+      "index": 17,
+      "width": 1002,
+      "height": 921
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-018.webp",
+      "caption": "Table 16: Impact of trajectory formatting on ExpRAG performance (all tasks, official valid unseen split)",
+      "page": 27,
+      "index": 18,
+      "width": 802,
+      "height": 673
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-019.webp",
+      "caption": "Table 14: Results for ExpRAG inference without training across ALFWorld and ScienceWorld for Qwen 2.5 7B 1M. The bold values mark the best top-𝑘 setting for each (ExpRAG type, index) within a given dataset split. For dynamic retrieval rows, the superscript arrows report the per-cell difference against the corresponding static row with the same index and top-𝑘: ↑ indicates improvement, ↓ indicates a decline, and black values denote ties.",
+      "page": 24,
+      "index": 19,
+      "width": 898,
+      "height": 567
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-020.webp",
+      "caption": "Table 3: Task generalization through retrieval-augmented training for different model backbones. We report success rates of ALFWorld and ScienceWorld after fine-tuning on a subset of tasks (easy tasks). The best method for each model and test set appears in bold. All retrieval settings use matched index.",
+      "page": 9,
+      "index": 20,
+      "width": 808,
+      "height": 544
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-021.webp",
+      "caption": "Figure 7: System prompt used for ScienceWorld experiments.",
+      "page": 31,
+      "index": 21,
+      "width": 1008,
+      "height": 827
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-022.webp",
+      "caption": "Table 17: Model: Ministral 3-8B, dataset: ALFWorld. Efficiency of different ExpRAGvariants compared to zero-shot: average number of prompt tokens processed at each step, average number of steps per episode, total generation time for 134 episodes, and average time per step.",
+      "page": 31,
+      "index": 22,
+      "width": 731,
+      "height": 190
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18272v1/fig-023.webp",
+      "caption": "Table 9: Mean and standard deviation of success-rates for ExpRAG inference without training across ALFWorld and ScienceWorld for Ministral 3-8B. Values are reported as mean ± std over 3 seeds. Across entries, the median/max std is 1.58/6.20 points on ALFWorld and 1.83/4.45 on ScienceWorld. The bold mean values mark the best top-𝑘 setting for each (ExpRAG type, index) within a given dataset split.",
+      "page": 20,
+      "index": 23,
+      "width": 887,
+      "height": 617
+    }
+  ]
+}

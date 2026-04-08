@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.17631v1/fig-001.webp",
+      "caption": "Fig. 4: Compact result summaries. Macro-averaged optimality gaps and regrets across all experiments.",
+      "page": 11,
+      "index": 1,
+      "width": 514,
+      "height": 675
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17631v1/fig-002.webp",
+      "caption": "Fig. 2: Converse-optimal benchmark pipeline: sampling, drift construction, validation, fixture export, paired evaluation, and reporting.",
+      "page": 8,
+      "index": 2,
+      "width": 487,
+      "height": 816
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17631v1/fig-003.webp",
+      "caption": "Fig. 1: Training dynamics snapshot: stage reward r = −c over learning for representative algorithms on a fixed fixture under CRN evaluation. The core comparisons in this paper use absolute, oracle-referenced metrics (OptGap, regret).",
+      "page": 2,
+      "index": 3,
+      "width": 1054,
+      "height": 358
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17631v1/fig-004.webp",
+      "caption": "Fig. 5: Discounted reward bars (r = −c) with 95% CIs under CRN. Colors correspond to p ∈ {0.5, 0.6, 0.8}.",
+      "page": 12,
+      "index": 4,
+      "width": 1054,
+      "height": 316
+    }
+  ]
+}

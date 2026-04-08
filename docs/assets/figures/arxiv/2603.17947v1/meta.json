@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.17947v1/fig-001.webp",
+      "caption": "Figure 1. MLP-based bilinear actor–critic architecture. A. Scheme of our architecture: the actor and critic are decomposed into K parallel basis modules, policy primitives Yk(s) and value components φk(s,a). B–C. Comparison between the learning curves of a traditional architecture (2-layer MLP) and a single-layer MLP with bilinear decomposition. (inset) Scheme of the navigation task: a robot with 8 DOF is asked to move in a specific direction. D. Comparison of learning curves between the cases in which the latent space Gk is independent or shared between actor and critic. E–F. Direction encoding for actor and critic. G–I. Reward, correlation between actor and critic G, and direction encoding in the G space, as functions of training steps.",
+      "page": 3,
+      "index": 1,
+      "width": 940,
+      "height": 510
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17947v1/fig-002.webp",
+      "caption": "Figure 2. Zero-shot learning. A. Task scheme: the MuJoCo Ant agent is pre-trained on target directions and tested on new ones. Pretrained bilinear agent is evaluated on unseen goal directions (or task descriptors) without any parameter update, by conditioning on g. B. Performance compared against baselines when switching to novel directions. C–D. Behavior trajectories for training and test directions, respectively, illustrating successful generalization to intermediate angles not explicitly trained. E. Direct comparison between train and test directions (averaged over trials).",
+      "page": 4,
+      "index": 2,
+      "width": 925,
+      "height": 615
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17947v1/fig-003.webp",
+      "caption": "Figure 3. Bilinear decomposition allows for interpretability and generalization. A. Manipulating individual gating coordinates Gk produces consistent, semantically meaningful changes in behavior, indicating interpretable control axes. (Top) Average movement direction as a function of latent-space direction for three different amplitudes; (bottom) speed distribution for the same three amplitudes (color-coded). Notably, speed modulation emerges spontaneously, although training objectives were defined only over movement direction. B. Online adaptation of Gk, allowing real-time solution of the current task. Reward as a function of the target direction (blue). As a reference, a task with negative reward is shown (orange).",
+      "page": 5,
+      "index": 3,
+      "width": 940,
+      "height": 329
+    }
+  ]
+}

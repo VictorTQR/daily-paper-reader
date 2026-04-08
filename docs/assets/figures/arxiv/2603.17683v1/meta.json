@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.17683v1/fig-001.webp",
+      "caption": "Figure 2: Learning item state machine. Each curriculum item progresses through three states. The self-loop on learning represents repeated evaluation until the sense score meets the threshold τ . Upon completion, accumulated figured-out items are promoted to facts, creating a knowledge accumulation chain.",
+      "page": 7,
+      "index": 1,
+      "width": 637,
+      "height": 394
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17683v1/fig-002.webp",
+      "caption": "Figure 4: Architectural comparison of Sensi v1 and v2. V1 (left) uses a simple two-player loop with shared hypothesis lists. V2 (right) preserves the Player1/Player2 core (blue) but adds frame differencing, dynamic metric generation, sense scoring, and the database-as-control-plane (red/orange). The two-player core is embedded within a richer learning infrastructure.",
+      "page": 10,
+      "index": 2,
+      "width": 756,
+      "height": 370
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17683v1/fig-003.webp",
+      "caption": "Figure 5: Self-consistent hallucination cascade. A frame differencing error (step 1) propagates through the pipeline. Player1 builds a wrong hypothesis (step 2), which the sense scorer validates because it is internally consistent (step 3). This triggers premature completion (step 4), and the wrong knowledge contaminates subsequent learning items (step 5). The ground truth (green, bottom-left) never enters the pipeline.",
+      "page": 13,
+      "index": 3,
+      "width": 977,
+      "height": 267
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17683v1/fig-004.webp",
+      "caption": "Table 1: Database schema. Six SQLite tables constitute the agent’s externalized cognitive state.",
+      "page": 8,
+      "index": 4,
+      "width": 706,
+      "height": 229
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17683v1/fig-005.webp",
+      "caption": "Figure 3: Sense score progression over turns (illustrative). The agent’s sense score for each curriculum item rises toward the threshold τ = 8 as it accumulates figured-out items. Vertical dashed lines mark curriculum transitions where one item is completed and the next begins. The entire curriculum is completed in approximately 32 turns. Scores are representative of observed behavior; exact per-turn values vary across runs.",
+      "page": 9,
+      "index": 5,
+      "width": 954,
+      "height": 287
+    },
+    {
+      "url": "assets/figures/arxiv/2603.17683v1/fig-006.webp",
+      "caption": "Figure 1: Sensi v2 architecture. Each turn involves up to five LLM calls orchestrated through a pipeline. The SQLite database serves as the control plane: all agent state resides in database tables that are queried to construct prompts and updated with each turn’s outputs. The curriculum state machine (left) manages learning progression, promoting figured-out items to facts when a learning item is completed. MetricGen (LLM2) runs only once when a new learning item is activated.",
+      "page": 5,
+      "index": 6,
+      "width": 977,
+      "height": 377
+    }
+  ]
+}

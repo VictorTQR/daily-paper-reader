@@ -1,0 +1,238 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-001.webp",
+      "caption": "Figure 14: Average attention map on stalker-zealot task with STAIRS",
+      "page": 25,
+      "index": 1,
+      "width": 829,
+      "height": 1071
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-002.webp",
+      "caption": "Table 25: Comparison of average and per-task performances on the Marine-easy task set across four dataset qualitieswith all transformer backbones using depth 2. We report mean±standard deviation, with the best shown in bold.",
+      "page": 38,
+      "index": 2,
+      "width": 821,
+      "height": 694
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-003.webp",
+      "caption": "Figure 15: Average attention map on marine-easy task with STAIRS",
+      "page": 26,
+      "index": 3,
+      "width": 826,
+      "height": 747
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-004.webp",
+      "caption": "Table 6: Properties of offline datasets with different qualities.",
+      "page": 15,
+      "index": 4,
+      "width": 764,
+      "height": 780
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-005.webp",
+      "caption": "Figure 10: Average attention map on marine-hard task with HiSSD",
+      "page": 21,
+      "index": 5,
+      "width": 829,
+      "height": 779
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-006.webp",
+      "caption": "Table 18: Comparison of average and per-task performances on the SMAC-V2 task set. We report mean±standard deviation, with the best result shown in bold. For brevity, we abbreviate task names such as 3_vs_3 to Terran 3, Protoss 3, and so on.",
+      "page": 30,
+      "index": 6,
+      "width": 821,
+      "height": 788
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-007.webp",
+      "caption": "Table 1: Comparison of average and per-task performances on the Marine-Hard task set across four dataset qualities. We report mean±standard deviation, with the best shown in bold.",
+      "page": 7,
+      "index": 7,
+      "width": 821,
+      "height": 703
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-008.webp",
+      "caption": "Table 16: Properties of offline datasets with different qualities.",
+      "page": 29,
+      "index": 8,
+      "width": 810,
+      "height": 675
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-009.webp",
+      "caption": "Figure 19: Average attention maps of models trained on the Marine-Hard-Medium task, evaluated on the seen (3m) and unseen (4m) tasks. UpDeT-m (upper) vs UpDeT-m with an added GRU history token (lower).",
+      "page": 39,
+      "index": 9,
+      "width": 822,
+      "height": 204
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-010.webp",
+      "caption": "Figure 11: Average attention map on stalker-zealot task with HiSSD",
+      "page": 22,
+      "index": 10,
+      "width": 829,
+      "height": 1081
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-011.webp",
+      "caption": "Figure 18: Attention maps of models trained on the Marine-Hard-Medium task, evaluated on the 3m task and sampled every 2–3 timesteps for different values of τ .",
+      "page": 34,
+      "index": 11,
+      "width": 802,
+      "height": 506
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-012.webp",
+      "caption": "Figure 17: Average attention maps of models trained on the Marine-Hard-Medium task, evaluated on the seen (3m) and unseen (4m) tasks across the entire trajectory for different values of τ .",
+      "page": 34,
+      "index": 12,
+      "width": 818,
+      "height": 368
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-013.webp",
+      "caption": "Table 5: Ablation results on Seen and Unseen tasks. “ST” = Spatial & Temporal, “STD” = ST + Dropout. The best performance is shown in bold, and the second-best performance is underlined.",
+      "page": 10,
+      "index": 13,
+      "width": 819,
+      "height": 252
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-014.webp",
+      "caption": "Figure 6: Dormant neuron ratios on marine-hard tasks: STAIRS vs. ablations.",
+      "page": 10,
+      "index": 14,
+      "width": 320,
+      "height": 425
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-015.webp",
+      "caption": "Table 12: Comparison of average and per-task performances on the Cooperative navigation task set across two dataset qualities. We report mean±standard deviation, with the best shown in bold.",
+      "page": 18,
+      "index": 15,
+      "width": 656,
+      "height": 519
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-016.webp",
+      "caption": "Figure 12: Average attention map on marine-easy task with HiSSD",
+      "page": 23,
+      "index": 16,
+      "width": 829,
+      "height": 775
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-017.webp",
+      "caption": "Table 2: Comparison of average and per-task performances on the Stalker-Zealot task set across four dataset qualities. We report mean±standard deviation, with the best shown in bold.",
+      "page": 8,
+      "index": 17,
+      "width": 821,
+      "height": 623
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-018.webp",
+      "caption": "Figure 2: Attention map on both seen and unseen task with basic transformer in HiSSD",
+      "page": 4,
+      "index": 18,
+      "width": 591,
+      "height": 264
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-019.webp",
+      "caption": "Table 23: Comparison of average and per-task performances on the Marine-hard task set across four dataset qualitieswith all transformer backbones using depth 2. We report mean±standard deviation, with the best shown in bold.",
+      "page": 36,
+      "index": 19,
+      "width": 821,
+      "height": 744
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-020.webp",
+      "caption": "Table 10: Comparison of average and per-task performances on the Marine-Easy task set across four dataset qualities. We report mean±standard deviation, with the best shown in bold.",
+      "page": 17,
+      "index": 20,
+      "width": 821,
+      "height": 694
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-021.webp",
+      "caption": "Table 21: Comparison of average and per-task performances on the HalfCheetah task set in MAMuJoCo. We report mean±standard deviation, with the best result shown in bold.",
+      "page": 32,
+      "index": 21,
+      "width": 490,
+      "height": 320
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-022.webp",
+      "caption": "Figure 13: Average attention map on marine-hard task with STAIRS",
+      "page": 24,
+      "index": 22,
+      "width": 829,
+      "height": 771
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-023.webp",
+      "caption": "Table 24: Comparison of average and per-task performances on the Stalker-Zealot task set across four dataset qualitieswith all transformer backbones using depth 2. We report mean±standard deviation, with the best shown in bold.",
+      "page": 37,
+      "index": 23,
+      "width": 821,
+      "height": 792
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-024.webp",
+      "caption": "Table 19: Descriptions of ’HalfCheetah’",
+      "page": 31,
+      "index": 24,
+      "width": 819,
+      "height": 248
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-025.webp",
+      "caption": "Figure 9: Attention maps and trajectories on other tasks: STAIRS-Former (Above) vs. HiSSD (Below)",
+      "page": 20,
+      "index": 25,
+      "width": 829,
+      "height": 444
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-026.webp",
+      "caption": "Figure 3: Overview of STAIRS-Former architecture.",
+      "page": 5,
+      "index": 26,
+      "width": 806,
+      "height": 235
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-027.webp",
+      "caption": "Table 7: Descriptions of marine-easy tasks",
+      "page": 16,
+      "index": 27,
+      "width": 690,
+      "height": 287
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-028.webp",
+      "caption": "Table 8: Descriptions of marine-hard tasks",
+      "page": 16,
+      "index": 28,
+      "width": 770,
+      "height": 335
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11691v1/fig-029.webp",
+      "caption": "Table 9: Descriptions of stalker-zealot tasks",
+      "page": 16,
+      "index": 29,
+      "width": 826,
+      "height": 334
+    }
+  ]
+}

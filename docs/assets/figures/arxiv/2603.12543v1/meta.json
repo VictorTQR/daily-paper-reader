@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.12543v1/fig-001.webp",
+      "caption": "Figure 3: CartPole: Performance comparison across deployment modes for each training regime. Full network-aware training maintains robust performance under real network conditions, while baseline training exhibits severe degradation. Delay-only training provides partial robustness, demonstrating the necessity of modelling jitter and packet loss in addition to latency. Error bars represent ±1 std across 10 seeds.",
+      "page": 11,
+      "index": 1,
+      "width": 877,
+      "height": 548
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12543v1/fig-002.webp",
+      "caption": "Figure 1: Real-world distributed systems employ hybrid communication strategies to maintain operation under varying network conditions. Unmanned aerial vehicles, for instance, choose between multiple communication channels (satellite, radio frequency, optical tether) based on signal quality and operational constraints, defaulting to autonomous operation when no reliable connection exists. This illustrates the challenge CALF addresses: policies must function across heterogeneous network conditions rather than assuming perfect connectivity. We focus on LANlike scenarios (Wi-Fi, Ethernet); WAN/adversarial scenarios motivate the need for configurable impairments but are not evaluated here.",
+      "page": 2,
+      "index": 2,
+      "width": 850,
+      "height": 427
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12543v1/fig-003.webp",
+      "caption": "Figure 2: CALF’s three progressive deployment modes enable incremental validation from pure simulation to distributed deployment. Mode 1 (Local Sim) provides a zero-latency baseline for rapid development with environment and policy co-located. Mode 2 (Sim + Simulated Network) introduces NetworkShim services that inject realistic latency, jitter, and packet loss for network-aware training. Mode 3 (Edge Sim) validates distributed deployment on real hardware (Raspberry Pi for environment, Desktop for policy) communicating over real Wi-Fi/Ethernet networks. This progressive approach ensures that network-aware policies trained in Mode 2 transfer successfully to distributed edge deployment in Mode 3, addressing the network axis of the sim-to-real gap.",
+      "page": 7,
+      "index": 3,
+      "width": 787,
+      "height": 644
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12543v1/fig-004.webp",
+      "caption": "Table 1: CALF design goals and their role in answering research questions.",
+      "page": 5,
+      "index": 4,
+      "width": 912,
+      "height": 251
+    }
+  ]
+}

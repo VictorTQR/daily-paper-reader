@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.20279v1/fig-001.webp",
+      "caption": "FIGURE 1. Homogeneous agent scenario training curve. The inset plot shows best case scenario performance of approximately -4 average reward.",
+      "page": 4,
+      "index": 1,
+      "width": 1067,
+      "height": 441
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20279v1/fig-002.webp",
+      "caption": "FIGURE 2. Heterogeneous agent scenario training curve.",
+      "page": 5,
+      "index": 2,
+      "width": 1067,
+      "height": 441
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20279v1/fig-003.webp",
+      "caption": "FIGURE 3. Homogeneous agent scenario training curve. The inset plot provides a closer view of peak performance across training and evaluation episodes.",
+      "page": 6,
+      "index": 3,
+      "width": 1067,
+      "height": 441
+    }
+  ]
+}

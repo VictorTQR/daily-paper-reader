@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-001.webp",
+      "caption": "Table 1: Performance and token cost comparison across baseline, flat, and hierarchical organizations.",
+      "page": 6,
+      "index": 1,
+      "width": 950,
+      "height": 281
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-002.webp",
+      "caption": "Figure 8: Skill-selection distributions across six skill types on MuSiQue. The top row shows the Drafter, and the bottom row shows the Specialist, across GPT-5mini, GPT-OSS-120B, and LLaMA-3.1-8B.",
+      "page": 15,
+      "index": 2,
+      "width": 929,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-003.webp",
+      "caption": "Figure 7: Token-performance trade-off on SQuAD 2.0 across GPT-5 mini, GPT-OSS-120B, and Llama-3.1-8B.",
+      "page": 15,
+      "index": 3,
+      "width": 925,
+      "height": 278
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-004.webp",
+      "caption": "Table 2: Average token consumption under different execution policies across benchmarks and models.",
+      "page": 7,
+      "index": 4,
+      "width": 458,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-005.webp",
+      "caption": "Figure 5: Token-performance trade-off on MuSiQue across GPT-5 mini, GPT-OSS-120B, and Llama-3.1-8B.",
+      "page": 14,
+      "index": 5,
+      "width": 937,
+      "height": 284
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-006.webp",
+      "caption": "Figure 6: Token-performance trade-off on MuSR across GPT-5 mini, GPT-OSS-120B, and Llama-3.1-8B.",
+      "page": 14,
+      "index": 6,
+      "width": 937,
+      "height": 285
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-007.webp",
+      "caption": "Figure 4: Skill distribution on SQuAD 2.0 across GPT-5mini, GPT-OSS-120B, and LLaMA-3.1-8B. The pie charts show the proportion of selected skill profiles under the hierarchical framework.",
+      "page": 8,
+      "index": 7,
+      "width": 929,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01020v1/fig-008.webp",
+      "caption": "Figure 9: Skill-selection distributions across six skill types on MuSR. The top row shows the Drafter, and the bottom row shows the Specialist, across GPT-5mini, GPT-OSS-120B, and LLaMA-3.1-8B.",
+      "page": 16,
+      "index": 8,
+      "width": 929,
+      "height": 327
+    }
+  ]
+}

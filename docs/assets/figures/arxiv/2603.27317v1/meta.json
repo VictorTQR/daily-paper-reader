@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.27317v1/fig-001.webp",
+      "caption": "Fig. 1: Illustration of the proposed directed exploration.",
+      "page": 1,
+      "index": 1,
+      "width": 474,
+      "height": 260
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27317v1/fig-002.webp",
+      "caption": "Fig. 4: Training curve of 8 benchmark tasks comparing the proposed method against the PPO baseline, the PPO with RND technique. The curves of SHAC serve as a reference. Solid lines and shaded regions depict the mean and standard deviation among the five trials, respectively. Across most benchmark tasks, our method achieves higher or matched asymptotic performance over the PPO baseline and PPO with RND technique, with improved sample efficiency and better training stability.",
+      "page": 6,
+      "index": 2,
+      "width": 1076,
+      "height": 402
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27317v1/fig-003.webp",
+      "caption": "TABLE III: Reward terms for TRON velocity tracking training.",
+      "page": 7,
+      "index": 3,
+      "width": 442,
+      "height": 383
+    },
+    {
+      "url": "assets/figures/arxiv/2603.27317v1/fig-004.webp",
+      "caption": "Fig. 2: Method Overview.",
+      "page": 3,
+      "index": 4,
+      "width": 508,
+      "height": 434
+    }
+  ]
+}

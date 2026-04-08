@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.11802v1/fig-001.webp",
+      "caption": "Figure 1: A semi-decentralized multiagent evacuation scenario with probabilistic restrictions on communication. Aircraft and watercraft must coordinate under communication constraints to move patients from aid stations to hospitals.",
+      "page": 1,
+      "index": 1,
+      "width": 498,
+      "height": 296
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11802v1/fig-002.webp",
+      "caption": "Figure 3: Illustrating RS-SDA* applied to SDec-Tiger using mixed component policies through stage 𝜎 = 2.",
+      "page": 7,
+      "index": 2,
+      "width": 456,
+      "height": 671
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11802v1/fig-003.webp",
+      "caption": "Table 2: RS-SDA* offline planning performance on semidecentralized benchmarks and MaritimeMEDEVAC. TO denotes timeout (>1200s) and MO denotes memout (>16GB).",
+      "page": 8,
+      "index": 3,
+      "width": 506,
+      "height": 633
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11802v1/fig-004.webp",
+      "caption": "Figure 2: The SDec-POMDP dynamic decision network, with the policy infrastructure on the left and model on the right.",
+      "page": 4,
+      "index": 4,
+      "width": 506,
+      "height": 344
+    }
+  ]
+}

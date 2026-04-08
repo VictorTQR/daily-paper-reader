@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.24241v1/fig-001.webp",
+      "caption": "Figure 1: Point maze navigation. Green spheres are agents, red is the goal, and yellow is the start. The empowered agent prefers the safer, wider path.",
+      "page": 5,
+      "index": 1,
+      "width": 387,
+      "height": 349
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24241v1/fig-002.webp",
+      "caption": "Figure 2: Visualization of the sampling-based reachable set approximation in 2D for different initial velocities. The blue areas indicate total reachable areas; red areas represent the approximated terminal set volume.",
+      "page": 5,
+      "index": 2,
+      "width": 389,
+      "height": 515
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24241v1/fig-003.webp",
+      "caption": "Table 1: Key Definitions and Notation",
+      "page": 3,
+      "index": 3,
+      "width": 429,
+      "height": 313
+    }
+  ]
+}

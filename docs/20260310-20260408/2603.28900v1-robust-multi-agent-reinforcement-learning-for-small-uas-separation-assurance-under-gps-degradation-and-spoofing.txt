@@ -1,0 +1,863 @@
+Title: Robust Multi-Agent Reinforcement Learning for Small UAS Separation Assurance under GPS Degradation and Spoofing
+
+URL Source: https://arxiv.org/pdf/2603.28900v1
+
+Published Time: Wed, 01 Apr 2026 00:05:32 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Robust Multi-Agent Reinforcement Learning for Small UAS Separation Assurance under GPS Degradation and Spoofing 
+
+Alex Zongo :, Filippos Fotiadis ‹, Ufuk Topcu ‹ and Peng Wei :
+
+Abstract — We address robust separation assurance for small Unmanned Aircraft Systems (sUAS) under GPS degradation and spoofing via Multi-Agent Reinforcement Learning (MARL). In cooperative surveillance, each aircraft (or agent) broadcasts its GPS-derived position; when such position broadcasts are corrupted, the entire observed air traffic state becomes unreli-able. We cast this state observation corruption as a zero-sum game between the agents and an adversary: with probability R, the adversary perturbs the observed state to maximally degrade each agent’s safety performance. We derive a closed-form expression for this adversarial perturbation, bypassing adversarial training entirely and enabling linear-time evaluation in the state dimension. We show that this expression approxi-mates the true worst-case adversarial perturbation with second-order accuracy. We further bound the safety performance gap between clean and corrupted observations, showing that it degrades at most linearly with the corruption probability under Kullback-Leibler regularization. Finally, we integrate the closed-form adversarial policy into a MARL policy gradient algorithm to obtain a robust counter-policy for the agents. In a high-density sUAS simulation, we observe near-zero collision rates under corruption levels up to 35% , outperforming abaseline policy trained without adversarial perturbations. 
+
+I. I NTRODUCTION 
+
+The proliferation of small Unmanned Aircraft Systems (sUAS) in urban airspaces is reshaping logistics and emer-gency response. Commercial operators, including Zipline and Wing, now conduct beyond-visual-line-of-sight package de-liveries under FAA authorization [1], [2]. As these operations scale, autonomous separation assurance becomes imperative: vehicles must avoid conflicts without human intervention, relying entirely on onboard sensing and cooperative infor-mation exchange. This autonomy, however, rests on fragile infrastructure. Small UAS depend on Global Positioning System (GPS) for position and velocity estimation, yet urban canyons induce multipath errors of 10–60 m [3], [4], and GPS signals are vulnerable to spoofing attacks with field-demonstrated success rates of 5–40% [5], [6]. Moreover, unlike commercial aviation’s radar-verified surveillance, sUAS traffic manage-ment relies on cooperative position sharing via Remote 
+
+This work was supported by NASA under grant 80NSSC24M0070, and by ONR under grant N00014-22-1-2703. 
+
+> :
+
+A. Zongo and P. Wei are with the Department of Mechanical and Aerospace Engineering, George Washington University, Washington, D.C. 20052, USA. Email: {a.zongo, pwei }@gwu.edu .
+
+> ‹
+
+F. Fotiadis and U. Topcu are with the Oden Institute for Computational Engineering & Sciences, University of Texas at Austin, Austin, TX 78712, USA. Email: {ffotiadis, utopcu }@utexas.edu. 
+
+> 0
+
+This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible. Entry 
+
+1
+
+Exit WP 
+
+1
+
+WP 
+
+2
+
+WP 
+
+3
+
+WP 
+
+5
+
+WP 
+
+6
+
+WP 
+
+7
+
+Entry 
+
+2
+
+Fig. 1. An en-route airspace setting for sUAS package delivery. WP = WayPoint. The UASs flying in this airspace need to maintain safe separation when they are impacted by degraded or spoofed GPS signal. The network includes two routes that first cross at WP 1 (in red), then merge later at 
+
+WP 7 (light red). Each route spans about 10 km, illustrating a compact yet realistic urban scenario for sUAS operations. 
+
+Identification (Remote ID) [7], where each broadcast is itself derived from the vehicle’s onboard GPS receiver. When GPS is corrupted, an sUAS’s observation includes not only its own erroneous position but also the corrupted broadcasts of every vehicle in its vicinity. The resulting joint state observation may thus be adversarially perturbed in every component si-multaneously, with perturbations correlated through a shared corruption source. 
+
+Related Work and Contributions 
+
+Multi-agent reinforcement learning (MARL) has emerged as a compelling paradigm for separation assurance. Brittain et al. [8] demonstrated effective conflict resolution using attention-based architectures that scale gracefully to variable intruder counts, while Chen et al. [9] integrated tactical de-confliction with strategic traffic demand management. These approaches achieve impressive performance but assume per-fect state observation, an assumption incompatible with GPS-dependent cooperative surveillance. The vulnerability of learned policies to observation pertur-bations has motivated robust training methods. Adversarial approaches expose agents to gradient-based attacks [10], [11] or learned adversaries [12], [13]. The Robust Markov Decision Process (MDP) framework captures worst-case out-comes via uncertainty sets over transitions [14], [15]. Recent extensions address observation-level attacks: Zhang et al. 
+
+> arXiv:2603.28900v1 [cs.RO] 30 Mar 2026
+
+[16] introduced state-adversarial perturbations for single-agent settings, while Wang and Zou [17] developed policy gradients under R-contamination, where the state transition itself is corrupted with probability R. These state-adversarial formulations are well-suited to GPS spoofing, where vehicle dynamics are nominal, but observation is degraded. How-ever, existing work addresses single-agent settings and does not consider the correlated full-state corruption arising in cooperative multi-agent surveillance. Control Barrier Functions (CBFs) offer an alternative path to safety via forward-invariance guarantees [18]. Neural CBF extensions [19] and multi-agent formulations such as GCBF++ [20] have shown promise. Yet, CBF methods often require known dynamics, access to true state observations, or typically centralized coordination, all of which are assump-tions violated precisely when GPS is unreliable and agents must act on local, potentially corrupted information received through a cooperative surveillance network. To the best of our knowledge, no existing framework addresses robust multi-agent separation assurance under full-state observation corruption, where both the controlled air-craft’s and neighboring aircraft’s positions may be simulta-neously degraded, while providing formal performance guar-antees and supporting decentralized execution. We bridge this gap by combining R-contamination modeling of the complete traffic picture with analytical adversarial optimiza-tion and decision-invariance regularization. To that end, our contributions are as follows. 1) We cast GPS observation corruption as a zero-sum game between the adversarial and the UAS agents, and derive a closed-form approximate solution for the worst-case adversarial perturbation (Theorem 1). 2) We prove that this closed-form adversarial perturbation approximates the true worst-case perturbation with error that is second-order in the perturbation magnitude (Theorem 2). 3) We prove that Kullback-Leibler (KL)-based policy reg-ularization between clean and adversarial observations bounds the expected performance loss induced by cor-rupted observations, yielding a principled robustness-performance tradeoff (Proposition 1). 4) In high-density sUAS simulation, the robust policy achieves near-zero collision rates under corruption lev-els up to 35% , outperforming a baseline policy trained without adversarial perturbations. 
+
+Notation: Bold symbols denote matrices. We write 
+
+xA, By “ ř 
+
+> ij
+
+Aij Bij for the Frobenius inner product, 
+
+A d B for element-wise multiplication, and sign pAq for the element-wise sign operator. } ¨ } p is the Lp-norm operator. | ¨ |TV “ 12 }¨} 1 denotes the total variation distance operator. In-equalities between matrices are understood component-wise. Absolute values are taken element-wise. For a set X , ∆pX q
+
+denotes the ( |X | ´ 1)-dimensional probability simplex on 
+
+X . For a variable x P R and fixed values a, b , clip px, a, b q
+
+clamps x to ra, b s.II. P ROBLEM FORMULATION 
+
+We study autonomous separation assurance for sUAS operating in a structured low-altitude airspace, as illustrated in Fig. 1. Each aircraft follows a predefined route through a sequence of waypoints. The control objective for an sUAS agent is to regulate its speed so as to maintain safe separation from nearby traffic while preserving efficient progress toward its destination. We formulate this problem as decentralized multi-agent reinforcement learning: N homogeneous agents (with identical dynamics) apply the same learned policy using local observations, with each agent viewing itself as the ownship and nearby aircraft as intruders .
+
+A. States, Actions, and Dynamics 
+
+At time t, the true local traffic state from the ownship’s viewpoint is denoted by St P S, which collects information relevant for separation assurance, including the ownship’s progress and speed along its route, together with the relative geometric and kinematic information of nearby intruders. For each ownship, the state is represented as St P
+
+Rp1`mqˆ n, where the first row corresponds to the ownship and the remaining rows correspond to up to m nearby intruders. Since all rows of St are derived from GPS (both the ownship’s own coordinates and the intruders’ broadcasts), GPS corruption can affect the entire state matrix simultane-ously, coupling observation errors across all p1 ` mq rows. Each aircraft state is given by s “ r x, y, ψ, v, d g , u ´s P 
+
+R1ˆn with n “ 6, where px, y q denotes planar position, 
+
+ψ heading, v speed, dg distance-to-destination, and u´ the previous action. The action space consists of discrete speed adjustments A “ t´ δv, 0, `δv u, where δv “ 5 knots [8], [21]. The action ut P A is a guidance-level speed command tracked by the vehicle’s inner-loop flight controller. The aircraft state transitions are modeled by discrete-time point-mass kinematics [22] 
+
+st`1 “ f pst, u tq “ apstq ` bpstqut (1) with 
+
+apsq “ 
+
+»——————–
+
+x`p v cos ψ`wE q∆ty`p v sin ψ`wN q∆thpψq
+
+vdg ´ v∆t
+
+0
+
+fi ffi ffi ffi ffi ffi ffi fl 
+
+, b psq “ 
+
+»——————–
+
+cos ψ ∆t
+
+sin ψ ∆t
+
+01
+
+´∆t
+
+1
+
+fi ffi ffi ffi ffi ffi ffi fl 
+
+. (2) The terms pwE , w N q are wind components, ∆t “ 1 s is the integration time step, and hpψq updates the route heading at waypoint transitions. This guidance-level model captures the traffic evolution relevant to separation assurance as used in traffic-level simulations [8], [22]. 
+
+B. Markov Decision Process with Adversarial Observation Corruption 
+
+We model the robust sUAS separation and navigation problem as a Markov Decision Process (MDP) with adversar-ially corrupted observations. The MDP tuple pS, A, P, r, γ q
+
+is described by a state space S, an action space A, a transition kernel P “ t pu 
+
+> S
+
+P ∆pSq, u P A, S P Su, where pu 
+
+> S
+
+is the distribution of the next state over S upon taking action u in state S; a reward function r : S ˆ A Ñ R; and a discount factor γ P r 0, 1q.Let ˜St denote the observation available to the agent at time t. This observation may be corrupted by spoofing or sensor errors, so it may be different from the true state St.However, since the observation and the true state have the same structure, we write the agent’s policy as π : S Ñ ∆pAq
+
+with action sampled according to ut „ πp¨ | ˜Stq. After the agent applies action ut, the environment evolves to the next true state St`1 „ put 
+
+> St
+
+and produces reward rpSt`1, u tq.In contrast to classical robust MDP formulations [14], [15] which place uncertainty on the transition kernel, we consider uncertainty in the agent’s observation. This choice is motivated by GPS spoofing and related sensor attacks: the physical airspace state evolves according to nominal dynamics, but the agent may act on a corrupted observa-tion of that state. Such state-adversarial models have been studied in robust reinforcement learning [16], [17] and are well aligned with empirical evidence on Global Navigation Satellite Systems (GNSS) spoofing in UAV systems [5], [6], [23]. We model GPS corruption through R-contamination un-certainty. Specifically, conditional on the true next state St`1,the observation ˜St`1 available to the agent is generated as 
+
+˜St`1 „ ORp¨ | St`1q, (3) where R P r 0, 1q denotes the corruption probability. 
+
+Definition 1. Given the true next state St`1, the corrupted observation follows: 
+
+ORp¨ | St`1q “ p 1 ´ Rq ¨ δSt`1 ` R ¨ δΞt`1 , (4) where δS denotes a point mass at S, and the adversarial observation Ξt`1 belongs to the state-dependent uncertainty set: 
+
+ΩpSt`1q “ t Ξ P S : |Ξ ´ St`1| ď κu . (5) Here, κ P R|S|ě0 specifies element-wise corruption bounds. Thus, with probability 1 ´ R the next observation is accurate, and with probability R it is replaced by an ad-versarial observation within the bounded uncertainty set. The uncertainty bound κ reflects physically plausible GPS and sensing errors. In particular, the position components are calibrated to empirically reported urban GNSS error magnitudes [3]. This corruption model captures bounded but potentially adversarial deviations in the agent’s perceived traffic configuration. A key modeling choice is that the reward depends on the true next state St`1 rather than the corrupted observation 
+
+˜St`1. This reflects the fact that collisions and separation violations are physical events: they occur in the real airspace regardless of what the agent perceives. Since training is performed offline in simulation, computing such true rewards is realistic. 
+
+C. Reward 
+
+The reward is computed from the true next state and encourages safe separation with minimal speed changes. Specifically, we design it as 
+
+rpSt`1, u tq “ 
+
+> m
+
+ÿ
+
+> j“1
+
+qpdoj pSt`1qq ` gputq, (6) where 
+
+doj pSt`1q “ 
+
+›››pxot`1, y ot`1q ´ p xjt`1, y jt`1q
+
+›››2
+
+(7) is the distance between the ownship o and intruder j.The function qp¨q penalizes unsafe proximity, i.e. loss-of-separation, while the function gp¨q penalizes control effort. 
+
+D. Robust Objective 
+
+Given this reward, the value function of a stationary policy 
+
+π (evaluated on the true state) is: 
+
+V π pStq “ Eπ
+
+« 8ÿ
+
+> k“0
+
+γkrpSt`k`1, u t`kq
+
+ˇˇˇˇˇ St
+
+ff 
+
+. (8) However, under observation corruption, the policy no longer acts on the true state St but on the corrupted observation 
+
+˜St. The controlled agent’s performance is therefore affected through the selected action and, recursively, through the future value of the resulting trajectory. Conditioned on the true next state St`1, the R-contamination model implies that the next observation is clean with probability 1 ´ R and adversarial with probability 
+
+R. Accordingly, for a given action ut, we define the one-step robust value objective as 
+
+J π
+
+> rob
+
+pSt, u t, Ξt`1q “ rpSt`1, u tq ` γ
+
+”
+
+p1 ´ RqV π pSt`1q` R V π pΞt`1q
+
+ı
+
+, (9) where St`1 „ put 
+
+> St
+
+is the true next state and Ξt`1 P ΩpSt`1q
+
+is chosen within the uncertainty set (5). The worst-case adversarial observation is then defined by 
+
+Ξ‹ 
+
+> t`1
+
+P arg min 
+
+> ΞPΩpSt`1q
+
+J π
+
+> rob
+
+pSt, u t, Ξq. (10) Since rpSt`1, u tq and V π pSt`1q do not depend on Ξ, the minimization is equivalently 
+
+Ξ‹ 
+
+> t`1
+
+P arg min 
+
+> ΞPΩpSt`1q
+
+V π pΞq. (11) This yields the one-step robust value target of policy πV π
+
+> rob
+
+pStq “ Eπ
+
+”
+
+rpSt`1, u tq ` γ`p1 ´ RqV π pSt`1q` R min  
+
+> ΞPΩpSt`1q
+
+V π pΞq˘ ˇˇˇ St
+
+ı
+
+. (12) The corresponding robust control objective for the aircraft is to find a policy that maximizes expected discounted return under this worst-case bounded corruption model: 
+
+π‹ P arg max  
+
+> π
+
+ErV π
+
+> rob
+
+pS0qs . (13) However, direct optimization of (10)–(13) is generally in-tractable for nonlinear value approximators. We therefore develop a tractable policy-gradient method based on a first-order characterization of the worst-case adversarial observa-tion, coupled with regularization that promotes perturbation-invariant policy behavior. III. R OBUST POLICY OPTIMIZATION METHOD 
+
+A. First-Order Worst-Case Adversarial Observation 
+
+The robust objective in Section II-D requires solving the inner minimization in (13) described by (12) and (11). To that end, we make the following assumption. 
+
+Assumption 1. The value function V π : S Ñ R is differentiable. This assumption is standard for local first-order analysis and is reasonable for smooth neural value approximators on bounded neighborhoods of the state space. Under such assumption, a first-order Taylor expansion of V π pΞq around 
+
+St`1 yields 
+
+V π pΞq “ V π pSt`1q ` x ∇V π pSt`1q, Ξ ´ St`1y` op} Ξ ´ St`1}q . (14) Neglecting higher-order terms inside op¨q , we approximate 
+
+min  
+
+> ΞPΩpSt`1q
+
+V π pΞq « min 
+
+> ΞPΩpSt`1q
+
+“V π pSt`1q` @∇V π pSt`1q, Ξ ´ St`1
+
+D‰ . (15) This leads to a closed-form expression for the worst-case adversarial perturbation, given in the following theorem. 
+
+Theorem 1. Let Assumption 1 hold, and let the uncertainty set be componentwise bounded as in (5) . Then, a minimizer of the first-order (FO) adversarial problem (15) is 
+
+Ξ‹,FO “ St`1 ´ κ d sign `∇V π pSt`1q˘. (16) 
+
+Proof. Letting δ “ Ξ ´ St`1, the constraint Ξ P ΩpSt`1q
+
+becomes |δ| ď κ. Therefore, since V π pSt`1q is constant with respect to Ξ, (15) reduces to 
+
+min  
+
+> |δ|ď κ
+
+x∇V π pSt`1q, δy . (17) In addition, 
+
+x∇V π pSt`1q, δy “ ÿ
+
+> i,j
+
+BV π
+
+BSij 
+
+pSt`1q δij , |δij | ď κij .
+
+Hence, each term in (17) is minimized independently by taking 
+
+δ‹ 
+
+> ij
+
+“ ´ κij sign 
+
+ˆ BV π
+
+BSij 
+
+pSt`1q
+
+˙
+
+.
+
+Collecting the coordinates yields 
+
+δ‹ “ ´ κ d sign p∇V π pSt`1qq .
+
+Substituting Ξ “ St`1 ` δ proves (16). l
+
+Using Theorem 1, we also immediately get a closed-form expression for the worst-case value function as follows. 
+
+Corollary 1. Under the conditions of Theorem 1, 
+
+min  
+
+> ΞPΩpSt`1q
+
+V π pΞq « V π pSt`1q´ ››κd∇V π pSt`1q››1. (18) 
+
+Proof. Substituting δ‹ “ ´ κ d sign p∇V π pSt`1qq into the linearized objective gives 
+
+V π pSt`1q ` x ∇V π pSt`1q, δ‹y“ V π pSt`1q ´ ÿ
+
+> i,j
+
+κij 
+
+ˇˇˇˇ
+
+BV π
+
+BSij 
+
+pSt`1q
+
+ˇˇˇˇ ,
+
+which is exactly (18). l
+
+Next, we also quantify the accuracy of this first-order approximation, and we further assume local smoothness of the value function to that end. 
+
+Assumption 2. The value function V π : S Ñ R has LV -Lipschitz gradient in the neighborhood of St`1, i.e., 
+
+}∇V π pxq ´ ∇V π pyq} 2 ď LV }x ´ y}2, (19) for all x, y in that neighborhood. 
+
+Theorem 2. Under Assumptions 1 and 2, the first-order approximation error of the worst-case value over ΩpSt`1q
+
+satisfies 
+
+ˇˇˇ min  
+
+> ΞPΩpSt`1q
+
+V π pΞq ´ `V π pSt`1q ´ } κ d ∇V π pSt`1q} 1
+
+˘ˇˇˇ
+
+ď LV
+
+2 }κ}22. (20) 
+
+Proof. By the standard smoothness inequality for functions with LV -Lipschitz gradient, for any Ξ in a neighborhood of 
+
+St`1,
+
+V π pΞq ď V π pSt`1q ` x ∇V π pSt`1q, Ξ ´ St`1y` LV
+
+2 }Ξ ´ St`1}22, (21) and similarly 
+
+V π pΞq ě V π pSt`1q ` x ∇V π pSt`1q, Ξ ´ St`1y´ LV
+
+2 }Ξ ´ St`1}22. (22) For any Ξ P ΩpSt`1q, we have |Ξ ´ St`1| ď κ, hence 
+
+}Ξ ´ St`1}22 ď } κ}22. (23) Minimizing the linear term over ΩpSt`1q gives the follow-ing, based on Corollary 1 
+
+min  
+
+> ΞPΩpSt`1q
+
+rV π pSt`1q ` x ∇V π pSt`1q, Ξ ´ St`1ys “ V π pSt`1q ´ } κ d ∇V π pSt`1q} 1. (24) Combining (21)-(22) with (23)-(24) yields 
+
+min  
+
+> ΞPΩpSt`1q
+
+V π pΞq ď V π pSt`1q ´ } κ d ∇V π pSt`1q} 1 ` LV
+
+2 }κ}22,
+
+min  
+
+> ΞPΩpSt`1q
+
+V π pΞq ě V π pSt`1q ´ } κ d ∇V π pSt`1q} 1 ´ LV
+
+2 }κ}22.
+
+Combining the two inequalities proves (20). lTheorem 2 provides a local approximation guarantee for the first-order adversarial surrogate: the gap between the ex-act worst-case value and its closed-form estimate is second-order in the corruption radius. Hence, for sufficiently small bounded observation perturbations, the first-order adversarial observation captures the dominant degradation in the value function of next state. 
+
+B. Robust PPO with Shared Actor-Critic 
+
+Having established a closed-form expression for the worst-case adversarial perturbation, i.e., for the minimizer in (12), we solve (13) using proximal policy optimization (PPO) [24] with a shared actor-critic network. Training is centralized in the sense that trajectories collected by all agents are aggregated to update a single set of shared parameters, whereas execution is decentralized: each sUAS applies the learned policy using only its own local observation. We parameterize the policy with an actor πθ and the value function with a critic Vϕ. As shown in Fig. 2, the actor and critic share a common observation encoder and differ only in their output heads. Training proceeds offline and has two phases. In the first phase, we pretrain the architecture under clean observations (R “ 0) using standard PPO, yielding a set of frozen parameters ¯θ, ¯ϕ. In the second phase, we initialize another set of trainable parameters θ, ϕ and optimize them under R-contaminated observations: at each transition, the true next state St`1 is observed with probability 1 ´ R, and replaced by the adversarial perturbation (derived in Subsection III-A) 
+
+Ξ‹,FO  
+
+> t`1
+
+“ St`1 ´ κ d sign `∇V ¯ϕpSt`1q˘ (25) with probability R. The frozen V ¯ϕ ensures that the adversary targets consistent vulnerabilities rather than co-adapting with the policy. The actor and critic losses follow standard PPO, computed on contaminated trajectories. Specifically, let ˆRRt denote the return target computed from the sampled trajectory under (4), and let ˆARt denote the corresponding advantage estimate. The value head is trained by minimizing the squared error between its prediction and the realized return impacted by the R-contamination: 
+
+LV pϕq “ Et
+
+”`Vϕp ˜Stq ´ ˆRRt
+
+˘2ı
+
+. (26) The actor is updated by the PPO clipped surrogate 
+
+Lclip pθq “ ´ Et
+
+„
+
+min 
+
+´
+
+ρtpθq ˆARt , clip `ρtpθq, 1 ´ ϵ, 1 ` ϵ˘ ˆARt
+
+¯ȷ
+
+,
+
+(27) 
+
+where 
+
+ρtpθq “ πθ put | ˜Stq
+
+πθold put | ˜Stq . (28) Here θold denotes the policy parameters before the update during training and ϵ “ 0.2 is a hyparameter [24]. An entropy bonus is added in the usual way to encourage exploration [24]. Note that the training structure follows standard PPO, with observations probabilistically replaced by the closed-form adversarial perturbation (25). The regularization terms FC   
+
+> Multi-head Attention
+> +
+> Pooling
+> Concat Encoding Input
+> FC
+> FC FC
+> FC
+> FC
+> Decoding & Output
+> Fig. 2. Neural network architecture. Ownship and intruder states are in-dependently encoded through fully connected (FC) layers with LeakyReLU activations. Intruder embeddings are aggregated via multi-head attention with pooling. The concatenated representation branches into policy and value heads.
+
+introduced next further encourage the policy to behave consistently under clean and corrupted observations while preserving nominal safe separation performance. 
+
+C. Perturbation-Invariant Policy Regularization 
+
+We augment the robust PPO objective with two comple-mentary Kullback-Leibler (KL) regularizers: an invariance term that aligns the current policy on clean and adversarial observations, and an anchoring term that keeps the learned policy close to the pretrained nominal policy on clean observations. Let π¯θ denote the pretrained nominal teacher policy. For the first-order adversarial observation Ξ‹,FO  
+
+> t
+
+defined in (25), we define the perturbation-invariance regularizer as 
+
+Linv pθq “ Et
+
+„
+
+DKL 
+
+`πθ p¨ | Stq ›› πθ p¨ | Ξ‹,FO  
+
+> t
+
+q˘ȷ
+
+. (29) This term penalizes the policy sensitivity to observation corruption, encouraging similar decisions under clean and perturbed inputs. Moreover, the teacher-anchor regularizer is 
+
+Lanchor pθq “ Et
+
+„
+
+DKL 
+
+`π¯θ p¨ | Stq ›› πθ p¨ | Stq˘ȷ
+
+. (30) This term discourages unnecessary drift from the nominal teacher on clean observations, ensuring that robustness does not come at the cost of performance. Thus, the complete actor objective becomes 
+
+Lactor pθq “ Lclip pθq ` λinv Linv pθq ` λanchor Lanchor pθq,
+
+(31) where λinv , λ anchor ě 0 are regularization weights. The following proposition shows that con-trolling the invariance regularizer (so that 
+
+ES rDKL pπθ p¨ | Sq } πθ p¨ | Ξ‹qqs ď B) directly bounds the one-step decision degradation induced by acting on corrupted observations. To that end, we define the state-action value function for a policy π:
+
+Qπ pSt, u tq “ ErrpSt`1, u tq ` γV π pSt`1q | St, u ts.
+
+Proposition 1. Suppose the policy satisfies 
+
+ES rDKL pπθ p¨ | Sq } πθ p¨ | Ξ‹qqs ď B, where Ξ‹ P ΩpSq is the adversarial observation and B ě 0
+
+is the expected invariance budget. Let 
+
+V π
+
+> corrupt
+
+pSq “ Eu„πθ p¨| Ξ‹q
+
+“Qπ pS, u q‰,
+
+denote the one-step value obtained when the action is selected from the corrupted observation, and assume 
+
+|Qπ pS, u q| ď Qmax , for all S, u. 
+
+Then 
+
+ES
+
+“|V π pSq ´ V π
+
+> corrupt
+
+pSq| ‰ ď Qmax 
+
+?2B. (32) 
+
+Proof. For any fixed S, let pp¨q “ πθ p¨ | Sq, q p¨q “ πθ p¨ | 
+
+Ξ‹q. Then 
+
+V π pSq ´ V π
+
+> corrupt
+
+pSq “ ÿ
+
+> u
+
+`ppuq ´ qpuq˘Qπ pS, u q.
+
+Using |Qπ pS, u q| ď Qmax and the total-variation (TV) bound on expected differences: 
+
+ˇˇV π pSq ´ V π
+
+> corrupt
+
+pSqˇˇ ď 2Qmax |p ´ q|TV . (33) By Pinsker’s inequality (Lemma 12.6.1 in [25]) 
+
+|p ´ q|TV ď
+
+c 12 DKL pp}qq. (34) Let ∆V pSq :“ | V π pSq ´ V π
+
+> corrupt
+
+pSq| . Combining (33) and (34), and then taking expectation over S, gives 
+
+ES r∆V pSqs ď 2Qmax ES
+
+«c 12 DKL pπθ p¨ | Sq} πθ p¨ | Ξ‹qq 
+
+ff 
+
+.
+
+Applying Jensen’s inequality to the concave square-root function yields Er?Xs ď aErXs, hence ES r∆V pSqs ď 
+
+2Qmax 
+
+b B 
+
+> 2
+
+“ Qmax 
+
+?2B, which proves (32). l
+
+Proposition 1 bounds the one-step degradation or spoofing attack, and the next corollary generalizes the bound over the full planning horizon. 
+
+Corollary 2. Under the conditions of Proposition 1, the expected degradation in robust next-state value under the probabilistic R-contamination model satisfies 
+
+ErV π pSq ´ V π
+
+> rob
+
+pSqs ď γR 
+
+1 ´ γ Qmax 
+
+?2B. (35) 
+
+Proof. By Proposition 1, each corrupted decision incurs expected loss at most Qmax 
+
+?2B relative to the clean-observation action. Under R-contamination, corruption oc-curs independently with probability R at each future step. Summing the discounted one-step losses yields 
+
+> 8
+
+ÿ
+
+> k“1
+
+γkR Q max 
+
+?2B “ γR 
+
+1 ´ γ Qmax 
+
+?2B, 
+
+which proves (35). l
+
+In practice, the regularization weight λinv in (31) controls the achieved invariance budget B: larger λinv drives Linv 
+
+toward zero, reducing B and tightening the bounds in (32) and (35). 
+
+Algorithm 1 Robust PPO with Adversarial Observation 
+
+Require: Multi-agent environment E, total iterations T , cor-ruption schedule R, corruption bounds κ 
+
+> 1:
+
+Phase 1: Nominal pre-training  
+
+> 2:
+
+Train nominal teacher policy π¯θ and value network V ¯ϕ
+
+using standard PPO with R “ 0 
+
+> 3:
+
+Freeze π¯θ and V ¯ϕ 
+
+> 4:
+
+Phase 2: Robust training  
+
+> 5:
+
+Initialize trainable shared actor-critic parameters pθ, ϕ q 
+
+> 6:
+
+for k “ 1 to T do  
+
+> 7:
+
+Sample corruption rate R „ R 
+
+> 8:
+
+Collect pooled trajectories from all agents using the current shared policy πθ 
+
+> 9:
+
+for each transition p ˜St, u t, St`1q in the batch do  
+
+> 10:
+
+Compute true reward rt Ð rpSt`1, u tq 
+
+> 11:
+
+Compute teacher gradient gt`1 Ð ∇V ¯ϕpSt`1q 
+
+> 12:
+
+Construct first-order adversarial observation (25)  
+
+> 13:
+
+Sample next observation under probabilistic R-contamination (4)  
+
+> 14:
+
+Store transition p ˜St, u t, r t, ˜St`1q 
+
+> 15:
+
+Compute invariance penalty 
+
+ℓinv ,t Ð DKL 
+
+´
+
+πθ p¨ | Stq
+
+››› πθ p¨ | Ξ‹,FO  
+
+> t
+
+q
+
+¯ 
+
+> 16:
+
+Compute anchoring penalty 
+
+ℓanchor ,t Ð DKL pπ¯θ p¨ | Stq } πθ p¨ | Stqq  
+
+> 17:
+
+end for  
+
+> 18:
+
+Compute contaminated-rollout return targets ˆRRt and advantages ˆARt using standard PPO return / GAE estimation on the realized sampled trajectories  
+
+> 19:
+
+Form batch losses Lclip , LV , Linv , Lanchor , Hpπθ q and 
+
+Lclip uses ˆARt 
+
+> 20:
+
+Update shared parameters pθ, ϕ q by minimizing (36)  
+
+> 21:
+
+end for  
+
+> 22:
+
+return robust shared policy πθ
+
+D. Overall Training Objective and Procedure 
+
+The overall training objective combines the losses from the previous subsections: 
+
+Ltotal pθ, ϕ q “ Lclip pθq ` cV LV pϕq ´ cH Hpπθ q`λinv Linv pθq ` λanchor Lanchor pθq, (36) where Lclip is the PPO clipped surrogate in (27), LV
+
+is the robust value loss in (26), Hpπθ q is the entropy bonus standard in PPO to encourage exploration [24], and 
+
+Linv and Lanchor are defined in (29)–(30). The coefficients 
+
+cV , c H , λ inv , λ anchor ě 0 balance value fitting, exploration, perturbation invariance, and teacher anchoring. At each iteration, trajectories from all agents are aggre-gated into a centralized batch, from which robust bootstrap targets, advantages, and regularization terms are computed. The shared actor-critic parameters are then updated by mini-mizing (36). The complete training procedure is summarized in Algorithm 1. 0.00 0.25 0.50 0.75 1.00      
+
+> Contamination Rate R
+> 0
+> 5
+> 10
+> 15
+> 20 NMACs
+> 0.00 0.25 0.50 0.75 1.00
+> Contamination Rate R
+> 0
+> 100
+> 200
+> 300
+> 400 Min. Separation Distance (m) Robust Policy Nominal Policy
+
+Fig. 3. Safety performance under increasing observation corruption. Left :Near mid-air collision (NMAC) count of the small UAS. Right : Minimum separation distance between the aircraft agents achieved per episode. The robust policy maintains near-zero NMACs through R « 0.35 and degrades gracefully beyond, while the nominal policy deteriorates sharply after. Shaded regions indicate ˘ standard deviation. 
+
+IV. E XPERIMENTAL EVALUATION 
+
+We evaluate the proposed robust MARL framework in the structured en-route airspace of Fig. 1, designed within the BlueSky air traffic simulator [22]. Traffic arrivals on each route follow a Poisson process with a minimum headway of 
+
+30 s. Each vehicle is modeled after the Amazon MK30 sUAS, with nominal cruise speed 20 m/s and admissible speed range 
+
+r7.5, 36 s m/s. 
+
+A. Training Setup 
+
+Both nominal and robust policies use the shared actor-critic architecture shown in Fig. 2. Training is performed over 2ˆ10 6 steps. The nominal teacher policy is first trained under clean observations ( R “ 0) using standard PPO. The robust policy is then trained from pooled multi-agent experience using the proposed method, with a curriculum on 
+
+R P t 0, 0.05 , 0.15 , 0.25 , 0.35 , 0.5u. PPO hyperparame-ters follow standard settings, with additional regularization weights λinv “ 0.01 and λanchor “ 0.01 . The learning rate is set to 2.5 ˆ 10 ´4 and the number of epoch 8. The maximum number of intruders for each agent is m “ 5. The entropy and value loss coefficient are respectively cH “ 10 ´1 and 
+
+cV “ 0.5. The protected radius or near mid-air collision (NMAC) distance threshold is set to dpz “ 100 m, and for each sUAS, the intruder aircraft are detected within radius 
+
+dr “ 500 m. Hence the function qp¨q and gp¨q defined in the reward function (6) are initialized as 
+
+gpxq “ 
+
+#
+
+´α ` βx if x ď dr (loss of separation) 
+
+´α ` βx ´ cNMAC if x ď dpz (NMAC) ,qpuq “ ´ λupu{δv q2,
+
+where α “ 0.1, β “ 2 ˆ 10 ´4, c NMAC “ 1, λ u “ 0.001 
+
+are empirically chosen and δv “ 5 knots (Section II-A). The corruption bound κ is chosen from reported urban GNSS error magnitudes (e.g., κx “ κy “ 60m , κ v “
+
+2m {s, κ ψ “ 5˝), consistent with the uncertainty model introduced in Section II-B. 
+
+Fig. 4. Snapshot of high-density sUAS traffic under the robust policy at corruption rate R “ 0.35 . Aircraft (triangles) traverse structured routes through waypoints, with separation buffers shown as circles. Yellow indicates aircraft approaching loss of separation; green indicates nominal separation status. Labels display flight ID, speed (knots), and altitude (ft). Despite adversarial GPS perturbations, all aircraft maintain safe separation. 0.00 0.25 0.50 0.75 1.00     
+
+> Contamination Rate R
+> 0
+> 5
+> 10
+> 15
+> 20
+> NMACs
+> 0.00 0.25 0.50 0.75 1.00
+> Contamination Rate R
+> 0
+> 100
+> 200
+> 300
+> Min. Separation Distance (m)
+> Full Robust Policy w/o Anchor, w/ Invariance w/ Anchor, w/o Invariance
+
+Fig. 5. Ablation study isolating the contributions of invariance and anchoring regularization. Left : NMAC count. Right : Minimum separation distance. Invariance regularization without anchoring (blue) destabilizes training, yielding poor performance even at R “ 0. Anchoring alone (green) preserves nominal behavior but degrades sharply at high R. The full method (purple) combines both regularizers for consistent performance. Shaded regions indicate ˘ standard deviation. 
+
+B. Evaluation Protocol 
+
+We compare the nominal policy trained without adversarial corruption against the proposed robust policy. Both policies are evaluated under the same conditions over a range of corruption rates R P r 0, 1s. The results are averaged over 
+
+100 simulated episodes. We report the following safety metrics: the number of near mid-air collisions (NMACs) and the minimum separation distance achieved during each episode on average. Lower NMAC counts and larger minimum LOS distances indicate better robustness. 
+
+C. Results and Discussion 
+
+Fig. 3 compares the robust and nominal policies across adversarial observation perturbation rates R P r 0, 1s. Under clean observation ( R “ 0), both policies achieve comparable safety performance, confirming that robust training does not sacrifice nominal capability. As R increases, however, their behaviors diverge sharply. The nominal policy maintains near-zero NMACs only through R « 0.25 after which collision counts rise steeply by reaching approximately 18 NMACs per episode at R “ 0.95 .In contrast, the robust policy sustains near-zero NMACs through R « 0.35 and degrades more gracefully beyond, with roughly 5 NMACs at R “ 0.95 . The minimum separation distance (right panel) tells a consistent story: the robust policy preserves larger safety margins across all corruption levels, with the gap widening as R increases. Fig. 4 illustrates a representative traffic scenario under the robust policy at R “ 0.35 . Despite adversarial perturbations, all aircraft maintain safe separation as they traverse the structured airspace. 
+
+Ablation Study Fig. 5 isolates the contributions of each regularization term. Two findings emerge. First, the invari-ance regularization without anchoring (blue) destabilizes training: NMACs are high even at R “ 0, indicating that enforcing output consistency without a stable reference collapses the learned representation. Second, anchoring alone (green) preserves nominal competence at low corruption but degrades sharply beyond R « 0.5. The full method (purple) achieves the strongest performance while providing the theoretical guarantees of Proposition 1. Together, these results validate the method’s design: the closed-form adver-sary (Theorem 1) and the complementary regularizers (29)-(30) drive robustness, stabilize training and yield the formal guarantees linking invariance to bounded performance loss. V. C ONCLUSION 
+
+We presented a robust MARL framework for sUAS sep-aration assurance under GPS degradation and spoofing. The key contributions are a closed-form adversarial perturbation that bypasses adversarial training while approximating the worst-case perturbation to second order, and a KL-based regularization that provably bounds performance degradation under observation corruption. These are integrated into a PPO algorithm with centralized training but decentralized execution. The simulation experiments demonstrate the ef-fectiveness of the robust MARL policy and its superiority compared to a baseline policy, on maintaining safe separation between the sUASs under GPS degradation and spoofing. REFERENCES [1] Federal Aviation Administration. (2023) Package Delivery by Drone (Part 135). U.S. Department of Transportation. [2] Y. L. Marquand. (2024) FAA Authorises Zipline and Wing for BVLOS Operations in Dallas. Revolution.Aero. [3] M. Peretic, R. Gilabert, J. Carroll, J. Gutierrez, A. Moore, J. Christie, and E. T. Dill, “Statistical Analysis of GNSS Multipath Errors in Urban Canyons,” in IEEE/ION Position, Location and Navigation Symposium (PLANS) , 2025, pp. 1216–1225. [4] J. Gutierrez, “Multipath Mitigation via Clustering for Position Es-timation Refinement in Urban Environments,” in ION Pacific PNT Conference , April 2024, pp. 556–568. [5] H. Sathaye, M. Strohmeier, V. Lenders, and A. Ranganathan, “An Experimental Study of GPS Spoofing and Takeover Attacks on UAVs,” in 31st USENIX Security Symposium (USENIX Security 22) . USENIX Association, Aug. 2022, pp. 3503–3520. [6] A. J. Kerns, D. P. Shepard, J. A. Bhatti, and T. E. Humphreys, “Unmanned Aircraft Capture and Control Via GPS Spoofing,” J. Field Robot. , vol. 31, no. 4, pp. 617–636, Jul. 2014. [7] Federal Aviation Administration. (2021) Remote Identification of Un-manned Aircraft (14 CFR Part 89). U.S. Department of Transportation. [8] M. Brittain, X. Yang, and P. Wei, “Autonomous Separation Assur-ance with Deep Multi-Agent Reinforcement Learning,” Journal of Aerospace Information Systems , vol. 18, no. 12, pp. 890–905, 2021. [9] S. Chen, A. D. Evans, M. Brittain, and P. Wei, “Integrated Conflict Management for UAM With Strategic Demand Capacity Balancing and Learning-Based Tactical Deconfliction,” IEEE Transactions on Intelligent Transportation Systems , vol. 25, no. 8, pp. 10 049–10 061, Aug. 2024. [10] I. J. Goodfellow, J. Shlens, and C. Szegedy, “Explaining and Harness-ing Adversarial Examples,” in Proceedings of the 3rd International Conference on Learning Representations (ICLR) , vol. abs/1412.6572, Dec. 2014. [11] P. Huang, E. Yanik, P. K. Jain, and P. H. S. Torr, “Adversarial Attacks on Neural Network Policies,” in Proceedings of the International Con-ference on Learning Representations Workshops , vol. abs/1702.02284, Feb. 2017. [12] L. Pinto, J. Davidson, R. Sukthankar, and A. Gupta, “Robust Adver-sarial Reinforcement Learning,” in Proceedings of the 34th Interna-tional Conference on Machine Learning (ICML) , ser. Proceedings of Machine Learning Research, vol. 70, 2017, pp. 2817–2826. [13] A. Gleave, M. Dennis, C. Wild, N. Kant, S. Levine, and S. Russell, “Adversarial policies: Attacking deep reinforcement learning,” in In-ternational Conference on Learning Representations , 2020. [14] G. N. Iyengar, “Robust Dynamic Programming,” Mathematics of Operations Research , vol. 30, no. 2, pp. 257–280, 2005. [15] A. Nilim and L. El Ghaoui, “Robust Control of Markov Decision Processes with Uncertain Transition Matrices,” Operations Research ,vol. 53, no. 5, pp. 780–798, 2005. [16] H. Zhang, H. Chen, C. Xiao, B. Li, M. Liu, D. Boning, and C.-J. Hsieh, “Robust deep reinforcement learning against adversarial perturbations on state observations,” in Proceedings of the 34th International Con-ference on Neural Information Processing Systems , 2020. [17] Y. Wang and S. Zou, “Policy Gradient Method For Robust Reinforce-ment Learning,” in Proceedings of the 39th International Conference on Machine Learning , Jun. 2022, pp. 23 484–23 526. [18] A. D. Ames, S. Coogan, M. Egerstedt, G. Notomista, K. Sreenath, and P. Tabuada, “Control Barrier Functions: Theory and Applications,” in 
+
+2019 18th European Control Conference (ECC) , Jun. 2019, pp. 3420– 3431. [19] C. Dawson, S. Gao, and C. Fan, “Safe Control With Learned Certifi-cates: A Survey of Neural Lyapunov, Barrier, and Contraction Methods for Robotics and Control,” IEEE Transactions on Robotics , vol. 39, no. 3, pp. 1749–1767, 2023. [20] Z. Qin, K. Zhang, Y. Chen, J. Chen, and C. Fan, “Learning Safe Multi-agent Control with Decentralized Neural Barrier Certificates,” in International Conference on Learning Representations , Jan. 2021. [21] Federal Aviation Administration. (2015) FAA Order JO 7110.65BB: Air Traffic Control —Section 7. Speed Adjustment. U.S. Department of Transportation. [22] J. M. Hoekstra and J. Ellerbroek, “BlueSky ATC Simulator Project: An Open Data and Open Source Approach,” in Proceedings of the 7th International Conference on Research in Air Transportation (ICRAT) .FAA/Eurocontrol USA/Europe, 2016, pp. 1–8. [23] M. L. Psiaki and T. E. Humphreys, “GNSS spoofing and detection,” 
+
+Proceedings of the IEEE , vol. 104, no. 6, pp. 1258–1270, 2016. [24] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, “Proximal Policy Optimization Algorithms,” arXiv eprint arXiv:1707.06347 , 2017. [25] T. M. Cover and J. A. Thomas, Elements of Information Theory ,2nd ed. Hoboken, New Jersey: Wiley-Interscience, 2006.

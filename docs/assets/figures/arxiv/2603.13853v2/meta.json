@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.13853v2/fig-001.webp",
+      "caption": "Table 1: Main results comparison between Qwen2.5-7B-Instruct and Qwen2.5-3B-Instruct across different benchmarks. The highest score for each Benchmark is marked in bold.",
+      "page": 7,
+      "index": 1,
+      "width": 1044,
+      "height": 365
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v2/fig-002.webp",
+      "caption": "Figure 1: Overview of the APEX-Searcher framework. The architecture utilizes RL-driven agentic planning in Stage I to decompose a complex question into a multi-step plan. Subsequently, Stage II employs SFT-guided execution to solve each sub-question using an iterative retrieval loop that features dynamic continuation decisions and context management for final synthesis. See Figure 2 for an example.",
+      "page": 4,
+      "index": 2,
+      "width": 1002,
+      "height": 398
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v2/fig-003.webp",
+      "caption": "Figure 4: (a) shows the Plan score improvements over base models, (b-c) show the reward score convergence during training for the 3B and 7B variants, and (d) shows the optimization of response length over training steps.",
+      "page": 9,
+      "index": 3,
+      "width": 1044,
+      "height": 279
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v2/fig-004.webp",
+      "caption": "Figure 5: Comparison of question decomposition strategies.",
+      "page": 9,
+      "index": 4,
+      "width": 506,
+      "height": 389
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v2/fig-005.webp",
+      "caption": "Figure 3: Parameter Sensitivity Analysis on APEX-Searcher. The curves illustrate the impact of the number of retrieved documents (# Doc) and the maximum allowed reasoning hops (# Hop) on model accuracy across four benchmarks. The asterisk (★) denotes the optimal parameter configuration selected for this study and its corresponding performance.",
+      "page": 9,
+      "index": 5,
+      "width": 1035,
+      "height": 235
+    },
+    {
+      "url": "assets/figures/arxiv/2603.13853v2/fig-006.webp",
+      "caption": "Figure 2: An example of two stage walkthrough of the APEX-Searcher pipeline, demonstrating the planning and execution processes on a sample complex question.",
+      "page": 5,
+      "index": 6,
+      "width": 948,
+      "height": 469
+    }
+  ]
+}

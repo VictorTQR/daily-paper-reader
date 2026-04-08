@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-001.webp",
+      "caption": "Figure 5: Performance comparison between the PDA with scaled sum advantage update (labeled as PDA) and an exponential smoothing scheme (labeled with smoothing parameter α) across two environments. Results are averaged over 5 random seeds. The curve and shaded region represent the mean and standard deviation of the test results.",
+      "page": 11,
+      "index": 1,
+      "width": 786,
+      "height": 302
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-002.webp",
+      "caption": "Figure 6: Comparison of optimizer effects on PDA and PPO in the Ant and Hopper environments. across two environments. Results are averaged over 5 random seeds. The curve and shaded region represent the mean and standard deviation of the test results.",
+      "page": 11,
+      "index": 2,
+      "width": 786,
+      "height": 302
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-003.webp",
+      "caption": "Table 3: Benchmark results of PDA, PPO for MuJoCo-v5 environments in 1M (or 3M) environment steps (mean ± std) . The results are calculated with the average episodic reward of the last 5 epochs using 10 seeds per environment and 10 tests per epoch.",
+      "page": 21,
+      "index": 3,
+      "width": 590,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-004.webp",
+      "caption": "Figure 8: Performance comparison of PDA and PPO for MuJoCo environments. The curves and the shaded areas represent the mean and standard deviation across 100 test evaluations (10 seeds per environment and 10 tests per seed), respectively.",
+      "page": 21,
+      "index": 4,
+      "width": 902,
+      "height": 529
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-005.webp",
+      "caption": "Figure 1: Visualization of optimum tracking with the actor in the Pendulum-v1 environment. The landscape evolution of the scaled optimization sub-problem Ψ̃′ over epochs 5, 8, and 11, at a fixed θ̇ = 0.2 is shown in the first three plots. The pink dotted line represents the true optimum of Ψ̃′, and the solid red line represents the output of the actor network. The final plot tracks the mean absolute error (MAE) between the true optimum and the actor output averaged across a range of states and actions at each epoch for an extended training process.",
+      "page": 7,
+      "index": 5,
+      "width": 786,
+      "height": 636
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-006.webp",
+      "caption": "Table 4: Hyperparameters for NPG, PDA, PPO, and TRPO algorithms",
+      "page": 22,
+      "index": 6,
+      "width": 636,
+      "height": 634
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-007.webp",
+      "caption": "Figure 4: Sensitivity on exploration noise parameter σ0 and step size λ. The heatmap shows the testing episodic reward averaged for the last 5 epochs. The final plot shows the sensitivity study with constant noise (3 seeds per environment and 10 tests per seed), while the rest of the plots show the default decreasing noise (5 seeds per environment and 10 tests per seed)",
+      "page": 10,
+      "index": 7,
+      "width": 882,
+      "height": 591
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-008.webp",
+      "caption": "Figure 2: Performance comparison of PDA, PPO, TRPO, and NPG across MuJoCo and Box2D environments. The curves and the shaded areas represent the mean and standard deviation across 100 test evaluations (10 seeds per environment and 10 tests per seed), respectively.",
+      "page": 8,
+      "index": 8,
+      "width": 979,
+      "height": 577
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-009.webp",
+      "caption": "Figure 3: OR-Gym Benchmark for PDA and PPO. Episodic reward distributions of agents after training for 3 million (Newsvendor) and 1 million (PortfolioOpt) environment steps, aggregated over 10 random seeds with 103 random trials per seed. A lower threshold is applied for the Newsvendor environment to maintain readability of the plot due to the existence of extreme negative values for PPO. The training curves are shown in Appendix B.2.",
+      "page": 9,
+      "index": 9,
+      "width": 786,
+      "height": 315
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-010.webp",
+      "caption": "Figure 7: Performance comparison of PDA, PPO, TRPO, and NPG for OR-Env environments. The curves and the shaded areas represent the mean and standard deviation across 100 test evaluations (10 seeds per environment and 10 tests per seed), respectively.",
+      "page": 20,
+      "index": 10,
+      "width": 976,
+      "height": 193
+    },
+    {
+      "url": "assets/figures/arxiv/2603.10199v1/fig-011.webp",
+      "caption": "Table 2: Benchmark results of PDA, PPO, TRPO, and NPG for MuJoCo-v4, Box2d, and OR-Env environments in 1M (or 3M) environment steps (mean ± std). The results are calculated with the average episodic reward of the last 5 epochs using 10 seeds per eenvironment and 10 tests per epoch. The Newsvendor-v0 environment uses 500 tests per epoch due to its high variance.",
+      "page": 20,
+      "index": 11,
+      "width": 932,
+      "height": 443
+    }
+  ]
+}

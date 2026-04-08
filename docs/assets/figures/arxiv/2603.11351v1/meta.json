@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.11351v1/fig-001.webp",
+      "caption": "Fig. 5: Comparison of the LLM Guided (LG) Sub-goal Learning with the LEAGUE-Sparse (LS) [18] and Reward Machine (RM) [20] Baselines. We record two metrics: success rate of the operator and progress towards the completion. Progress is the percent of sub-goals achieved. Metrics are averaged across ten seeds with standard error of the mean (SEM).",
+      "page": 6,
+      "index": 1,
+      "width": 955,
+      "height": 367
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11351v1/fig-002.webp",
+      "caption": "Fig. 6: Reward Function Candidates Evaluation Curves For Each Sub-goal During Training. The worst performing candidate was eliminated at 2×105 timestep intervals.",
+      "page": 6,
+      "index": 2,
+      "width": 1043,
+      "height": 317
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11351v1/fig-003.webp",
+      "caption": "Fig. 1: The plan-learn-execute loop. The Hybrid LLM Symbolic planner parses the domain PDDL and problem PDDL files, prompts the LLM to structurally define the missing operator(s) in PDDL, and finds a plan with grounded operators. It lifts the grounded operators, and outputs the modified domain PDDL file with the added lifted operator definitions and the plan. The LLM’s newly defined operators are in blue while the existing operators are in black. The learn-execute loop starts by executing the operators in the plan. When it encounters a newly defined operator for which an executor policy does not yet exist, it prompts the LLM to generate dense reward shaping function candidates and launches RL agents to learn a policy for the operator. The effects of the operator are treated as sub-goals for the RL agents. One agent is launched per dense reward function candidate and the worst performing agent is eliminated periodically based on sub-goal success rates. The sub-goals are trained in phases. Once training is complete, the best performing policy is saved as an executor object. The pseudocode for the algorithm is shown in Algorithm 1.",
+      "page": 2,
+      "index": 3,
+      "width": 1040,
+      "height": 270
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11351v1/fig-004.webp",
+      "caption": "TABLE II: Wilcoxon signed tests p-values for Success Rate and Progress. Comparisons are made between the LEAGUEsparse agent (LS), the Reward Machine (RM), and the proposed LLM-Guided Subgoal agent. Values marked with * indicate statistical significance (p < 0.05).",
+      "page": 7,
+      "index": 4,
+      "width": 475,
+      "height": 331
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11351v1/fig-005.webp",
+      "caption": "Fig. 2: Problem domains and hybrid LLM-symbolic planner outputs. Domains are ordered by the difficulty of discovering a plannable state via random exploration. Green arrows indicate injected novelties: a lid (Kitchen), a round peg (Nut Assembly), and a drawer or box (Coffee). In the planning graph, green nodes represent states reached via LLM-suggested operators, blue nodes denote existing operators, and orange nodes indicate where the search-ahead algorithm finds a valid plan. Identified missing operators (shown in blue text) include: pick-up-lid-from-pot (Kitchen), pick-up-nut-from-peg (Nut Assembly), pickup-from-open-box (Coffee-Box), and open-drawer and pick-up-from-drawer (Coffee-Drawer).",
+      "page": 3,
+      "index": 5,
+      "width": 1040,
+      "height": 204
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11351v1/fig-006.webp",
+      "caption": "Fig. 3: The Prompt-LLM-for-New-Operator Pipeline. We sample five operator candidates and select the majority to improve accuracy [42]. Using dynamic prompts containing the current state, goal, and existing operators, the LLM suggests names and parameters for missing operators. Preconditions are automatically filled with grounded predicates involving these parameters, while the LLM defines and orders the effects. For example, if preconditions for open-drawer include not open drawer1 and not grasped drawer1, the LLM generates grasped drawer1 and open drawer1 as ordered effects, which subsequently serve as sub-goals for the guided learning stage. We observe that errors in effects ordering and operator generation are greatly reduced through self-consistency [42]. Finally, the grounded operator is lifted into a general PDDL definition by mapping specific entities to their variable types (e.g., drawer1 to ?d - drawer), enabling domain-wide generalization.",
+      "page": 4,
+      "index": 6,
+      "width": 1042,
+      "height": 210
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11351v1/fig-007.webp",
+      "caption": "Fig. 4: The LLM Guided Sub-goal Learning Pipeline. Three reward shaping function candidates are sampled from the LLM. The prompt contains the template for a reward shaping function candidate. Information such as definition of the grounded operator and the observation space of the robot is dynamically filled into the template. The LLM writes a function to compute a velocity based progress using the relevant observations in the robot’s numeric observation space. In this example, the function computes the progress for open drawer1 using the distance between the drawer handle and the cabinet. During each sub-goal’s training phase, the reward shaping for the sub-goal is unlocked. The worst performing candidate is periodically eliminated.",
+      "page": 5,
+      "index": 7,
+      "width": 1044,
+      "height": 254
+    }
+  ]
+}

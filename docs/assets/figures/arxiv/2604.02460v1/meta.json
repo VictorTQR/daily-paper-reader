@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-001.webp",
+      "caption": "Table 9: FRAMES full results for Gemini-2.5-Flash.",
+      "page": 25,
+      "index": 1,
+      "width": 830,
+      "height": 702
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-002.webp",
+      "caption": "Table 10: FRAMES full results for Gemini-2.5-Pro.",
+      "page": 26,
+      "index": 2,
+      "width": 829,
+      "height": 702
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-003.webp",
+      "caption": "Table 4: MuSiQue 4-hop full results for Qwen3-30B-A3B.",
+      "page": 21,
+      "index": 3,
+      "width": 830,
+      "height": 408
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-004.webp",
+      "caption": "Table 3: FRAMES full results for Qwen3-30B-A3B.",
+      "page": 21,
+      "index": 4,
+      "width": 829,
+      "height": 409
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-005.webp",
+      "caption": "Table 1: Single-agent (SAS) vs. multi-agent architectures under matched thinking-token budgets on FRAMES and MuSiQue. SAS-L is the “longer thinking” single-agent variant. “Seq” denotes our primary Sequential multi-agent baseline. “Sub”, “Roles”, “Deb”, and “Ens” denote subtask-parallel, parallel roles, debate, and ensemble architectures, respectively. Bold indicates the highest-accuracy systems and every other system whose 95% bootstrap confidence interval overlaps with that highest system’s confidence interval (see Appendix F for bootstrap confidence interval values).",
+      "page": 7,
+      "index": 5,
+      "width": 825,
+      "height": 604
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-006.webp",
+      "caption": "Table 5: FRAMES full results for DeepSeek-R1-Distill-Llama-70B.",
+      "page": 22,
+      "index": 6,
+      "width": 830,
+      "height": 411
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-007.webp",
+      "caption": "Table 6: MuSiQue 4-hop full results for DeepSeek-R1-Distill-Llama-70B.",
+      "page": 22,
+      "index": 7,
+      "width": 830,
+      "height": 406
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-008.webp",
+      "caption": "Table 7: MuSiQue 4-hop full results for Gemini-2.5-Flash.",
+      "page": 23,
+      "index": 8,
+      "width": 830,
+      "height": 705
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-009.webp",
+      "caption": "Figure 2: MuSiQue 4-hop accuracy across Gemini model versions with unlimited thinking tokens.",
+      "page": 8,
+      "index": 9,
+      "width": 622,
+      "height": 363
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-010.webp",
+      "caption": "Figure 3: Context degradation results on MuSiQue 4-hop with Qwen3-30B-A3B under a fixed 1000-token thinking budget. The x-axis is the degradation level (α for deletion, masking, and substitution; k for distractors), and the y-axis is answer accuracy.",
+      "page": 8,
+      "index": 10,
+      "width": 802,
+      "height": 535
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-011.webp",
+      "caption": "Table 13: Context-degradation results on MuSiQue 4-hop with Qwen3-30B-A3B and a fixed 1000-token thinking budget.",
+      "page": 27,
+      "index": 11,
+      "width": 622,
+      "height": 354
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-012.webp",
+      "caption": "Table 8: MuSiQue 4-hop full results for Gemini-2.5-Pro.",
+      "page": 24,
+      "index": 12,
+      "width": 830,
+      "height": 963
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02460v1/fig-013.webp",
+      "caption": "Figure 1: Sequential is the closest MAS comparator to SAS. Both are serial reasoning pipelines over the same question and the same global budget. The essential difference is that Sequential MAS externalizes intermediate reasoning into explicit messages between steps, whereas SAS keeps those intermediates latent within one continuous reasoning trajectory.",
+      "page": 5,
+      "index": 13,
+      "width": 832,
+      "height": 314
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04651v1/fig-001.webp",
+      "caption": "Figure 1: Left: With Always-Search Policy, the distilled SLM significantly narrows the performance gap with the teacher model. Right: SLMs suffer from adaptive search and ASP is the most effective policy.",
+      "page": 1,
+      "index": 1,
+      "width": 425,
+      "height": 453
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04651v1/fig-002.webp",
+      "caption": "Table 3: Hyperparameters and architectural details for the Confidence Probe. The probe utilizes features from the final stages of the backbone model to predict generation confidence.",
+      "page": 11,
+      "index": 2,
+      "width": 450,
+      "height": 329
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04651v1/fig-003.webp",
+      "caption": "Table 1: String-F1 scores across agentic-search benchmarks. Small models distilled with Always-Search Policy have comparable performance with their larger variants. Mixed means start with SFT and then OPD.",
+      "page": 4,
+      "index": 3,
+      "width": 937,
+      "height": 323
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04651v1/fig-004.webp",
+      "caption": "Figure 3: Confidence probing results. (a) illustrates the full sample distribution on a log scale; (b) zooms into high-confidence bins (0.5–1.0).",
+      "page": 12,
+      "index": 4,
+      "width": 929,
+      "height": 393
+    }
+  ]
+}

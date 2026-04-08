@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.24324v2/fig-001.webp",
+      "caption": "Figure 5: Candidate promotion diagram. Nodes summarize evaluated candidates and objective scores, and edges indicate the promotion path used to condition subsequent generations.",
+      "page": 11,
+      "index": 1,
+      "width": 902,
+      "height": 531
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v2/fig-002.webp",
+      "caption": "Figure 4: Learning curves of evaluation sparse return J. Performance comparison between the MAPPO baseline and the selected candidates from the first and second generations across four layouts: (a) Cramped Room, (b) Forced Coordination, (c) Coordination Ring, and (d) Asymmetric Advantages. Shaded regions indicate variability across evaluation episodes.",
+      "page": 10,
+      "index": 2,
+      "width": 979,
+      "height": 636
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v2/fig-003.webp",
+      "caption": "Figure 1: Overview of the proposed autonomous reward search framework. The system establishes a closed-loop optimization process where an LLM-based reward engineer agent iteratively refines reward candidates based on MAPPO evaluations and diagnostic feedback, grounded in task specifications and archive data.",
+      "page": 3,
+      "index": 3,
+      "width": 979,
+      "height": 575
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v2/fig-004.webp",
+      "caption": "Figure 3: Overcooked-AI layouts and coordination challenges. Each environment isolates specific facets of multiagent cooperation: (a) Cramped Room evaluates spatial efficiency and collision avoidance in shared workspaces. (b) Forced Coordination necessitates strict functional specialization and inter-agent hand-offs. (c) Coordination Ring tests movement synchronization to prevent bottlenecks in circular corridors. (d) Asymmetric Advantages introduces resource-specific disparities, requiring strategic role delegation based on proximity to dispensers.",
+      "page": 8,
+      "index": 4,
+      "width": 868,
+      "height": 741
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v2/fig-005.webp",
+      "caption": "Figure 6: Empirical coordination diagnostics across Overcooked-AI layouts. (a) Cramped Room: action coupling (NMI) and incentive alignment (ρ) trends signify reduced collision rates. (b) Forced Coordination: decline in payoff imbalance (∆) indicates equitable workload distribution. (c) Coordination Ring: growth in ρ and NMI demonstrates synchronized circular motion. (d) Asymmetric Advantages: NMI trajectory confirms specialized reward structures. The plots illustrate the iterative improvement from Baseline to Generation 2. Blue solid lines represent NMI, green dashed lines show ρ , and orange dotted lines indicate ∆.",
+      "page": 12,
+      "index": 5,
+      "width": 976,
+      "height": 757
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v2/fig-006.webp",
+      "caption": "Table 2: Final evaluation on four Overcooked layouts. J denotes sparse return (mean ± std across evaluation episodes). Deliveries and invalid deliveries are episode means.",
+      "page": 9,
+      "index": 6,
+      "width": 988,
+      "height": 189
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v2/fig-007.webp",
+      "caption": "Figure 2: Overview of the CTDE paradigm for multi-agent reinforcement learning. (a) Centralized training: a shared critic (V) utilizes global state information and joint observation buffers to guide policy updates via training feedback. (b) Decentralized execution: individual actors (πi) rely exclusively on local observations for action selection, ensuring scalability in partially observable environments.",
+      "page": 5,
+      "index": 7,
+      "width": 955,
+      "height": 437
+    }
+  ]
+}

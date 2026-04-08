@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-001.webp",
+      "caption": "Figure 5: Sensitivity to actor delay. All methods tuned at D=30. DG dominates across the full range; even with large delay it outperforms baselines at D=1.",
+      "page": 6,
+      "index": 1,
+      "width": 822,
+      "height": 307
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-002.webp",
+      "caption": "Figure 6: Sensitivity to actor bugs. All methods tuned at pE=3×10−3. DG dominates across the full range of bug probabilities.",
+      "page": 7,
+      "index": 2,
+      "width": 822,
+      "height": 328
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-003.webp",
+      "caption": "Figure 7: Sensitivity to reward corruption. All methods tuned at pR=0.01. DG dominates across the full range of corruption rates.",
+      "page": 7,
+      "index": 3,
+      "width": 822,
+      "height": 309
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-004.webp",
+      "caption": "Figure 1: MNIST under staleness. Results average over 30 seeds with ±1 standard error.",
+      "page": 3,
+      "index": 4,
+      "width": 822,
+      "height": 303
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-005.webp",
+      "caption": "Figure 16: Hyperparameter sensitivity under combined friction (H=5, all frictions active), 10 seeds.",
+      "page": 18,
+      "index": 5,
+      "width": 822,
+      "height": 219
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-006.webp",
+      "caption": "Figure 17: Sensitivity to reward shaping under rare discovery (pC=10−3, H=5). DG dominates across all reward structures; gains are largest in the hedonic trap.",
+      "page": 18,
+      "index": 6,
+      "width": 822,
+      "height": 302
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-007.webp",
+      "caption": "Figure 11: Baseline sensitivity on MNIST. Each panel sweeps sampler delay D under a different baseline. DG dominates under all baselines. Under baseline: zero, REINFORCE matches DG and PG is worse than uncorrected REINFORCE.",
+      "page": 13,
+      "index": 7,
+      "width": 829,
+      "height": 242
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-008.webp",
+      "caption": "Figure 8: Sensitivity to rare discovery under the hedonic trap (κ=−1). DG latches onto rare oracle trajectories; baselines require much higher oracle rates to make progress.",
+      "page": 8,
+      "index": 8,
+      "width": 822,
+      "height": 309
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-009.webp",
+      "caption": "Figure 9: Combined friction: all four frictions at their §5.1–5.4 operating points, scaling H . DG’s compute advantage over every baseline is order-of-magnitude and grows with problem complexity.",
+      "page": 8,
+      "index": 9,
+      "width": 822,
+      "height": 307
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-010.webp",
+      "caption": "Figure 2: Gradient misalignment under staleness (D=1000). (a) Distance to ideal PG direction g∗PG. (b) Distance to cross-entropy direction g∗CE. Results average over 30 seeds with ±1 standard error.",
+      "page": 4,
+      "index": 10,
+      "width": 822,
+      "height": 302
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-011.webp",
+      "caption": "Figure 15: Hyperparameter sensitivity under rare discovery (pC=10−3), 10 seeds.",
+      "page": 17,
+      "index": 11,
+      "width": 822,
+      "height": 220
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-012.webp",
+      "caption": "Figure 12: Hyperparameter sensitivity under staleness (D=30), 10 seeds.",
+      "page": 17,
+      "index": 12,
+      "width": 826,
+      "height": 218
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-013.webp",
+      "caption": "Figure 14: Hyperparameter sensitivity under reward corruption (pR=0.01), 10 seeds.",
+      "page": 17,
+      "index": 13,
+      "width": 826,
+      "height": 220
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-014.webp",
+      "caption": "Figure 13: Hyperparameter sensitivity under actor bugs (pE=3×10−3), 10 seeds.",
+      "page": 17,
+      "index": 14,
+      "width": 826,
+      "height": 265
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-015.webp",
+      "caption": "Figure 10: Learning rate sweep on MNIST at D=30. All methods are optimal near lr = 10−3; DG dominates across the range. Training and test error track closely, confirming no train/test gap.",
+      "page": 12,
+      "index": 15,
+      "width": 829,
+      "height": 298
+    },
+    {
+      "url": "assets/figures/arxiv/2603.20521v1/fig-016.webp",
+      "caption": "Figure 3: K-armed bandit (K=100), ν = Unif([K]), B=100, α=0.1, η=1. Results average over 100 seeds with ±1 standard error.",
+      "page": 5,
+      "index": 16,
+      "width": 823,
+      "height": 303
+    }
+  ]
+}

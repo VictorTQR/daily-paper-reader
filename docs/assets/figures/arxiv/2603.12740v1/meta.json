@@ -1,0 +1,142 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-001.webp",
+      "caption": "Table 1: Comparison of ToolTree with other baselines across GTA and m&m. The experiment is carried out under both step-by-step and end-to-end mode. ”Tool” stands for tool selection F1 score; ”Arg” stands for argument prediction F1 score; ”Plan” and ”Exec” stand for planning and execution F1 score. Ours achieves the best performance overall.",
+      "page": 6,
+      "index": 1,
+      "width": 818,
+      "height": 513
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-002.webp",
+      "caption": "Figure 3: Progressive efficiency analysis across step limits. (a) Performance vs. step limit; (b) Runtime vs. step limit; (c) Efficiency vs. step limit. ToolTree achieves the highest efficiency compared with baselines. mprovements are largest for step limits between 12 and 64.",
+      "page": 6,
+      "index": 2,
+      "width": 826,
+      "height": 261
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-003.webp",
+      "caption": "Figure 8: Breakdown comparison with the few-shot baseline setup under GPT-4o-mini.",
+      "page": 15,
+      "index": 3,
+      "width": 829,
+      "height": 738
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-004.webp",
+      "caption": "Table 12: Metadata schema for the Medical Object Detection tool.",
+      "page": 21,
+      "index": 4,
+      "width": 830,
+      "height": 248
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-005.webp",
+      "caption": "Figure 1: Comparison of ToolTree with greedy search and search-based tool planning. Our ToolTree chooses the optimal tool trajectory and answers correctly with 20.",
+      "page": 2,
+      "index": 5,
+      "width": 826,
+      "height": 292
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-006.webp",
+      "caption": "Table 2: Open-set tool-planning results on RestBench and ToolBench using GPT-4o-mini and GPT-4o as back-end LLMs. Higher values indicate better performance; the best score for each dataset-model pair is highlighted in bold. ”Pass” and ”Win” refer to pass rate and win rate.",
+      "page": 7,
+      "index": 6,
+      "width": 810,
+      "height": 379
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-007.webp",
+      "caption": "Table 7: Comparison of ToolTree as a plug-and-play module with ReAct, COT-SC and ToT modules. ToolTree achieves highest score on average.",
+      "page": 14,
+      "index": 7,
+      "width": 827,
+      "height": 346
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-008.webp",
+      "caption": "Figure 7: Breakdown comparison for each of the domains.",
+      "page": 14,
+      "index": 8,
+      "width": 829,
+      "height": 352
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-009.webp",
+      "caption": "Figure 10: Two qualitative case studies showcasing ToolTree’s iterative tool orchestration on (a) a radiology image question and (b) a multi-hop knowledge reasoning task.",
+      "page": 18,
+      "index": 9,
+      "width": 748,
+      "height": 835
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-010.webp",
+      "caption": "Table 5: A comparison of ToolTree with notable LLM agent frameworks, tool-augmented LLM systems and LLM agent tree search. Our method shows significant advantages in tool integration.",
+      "page": 13,
+      "index": 10,
+      "width": 828,
+      "height": 229
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-011.webp",
+      "caption": "Table 6: Comparison across 15 datasets in five domains. ToolTree consistently outperforms standard few-shot prompting, HuggingGPT, and OctoTools on both GPT-4o-mini and GPT-4o, achieving highest overall score.",
+      "page": 13,
+      "index": 11,
+      "width": 825,
+      "height": 346
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-012.webp",
+      "caption": "Figure 2: Architecture overview of ToolTree. An input query is processed sequentially via iterative dual evaluation-guided Monte Carlo Tree Search, including selection, pre-evaluation, expansion, execution, post-evaluation and backward-propagation. The Answer Predictor then incorporates the tool trajectories with the highest reward found by the MCTS to produce the final prediction.",
+      "page": 4,
+      "index": 12,
+      "width": 816,
+      "height": 279
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-013.webp",
+      "caption": "Table 11: Stress test on tool library size. We start from a 14-tool baseline and progressively add distractor tools. “Avg. F1” denotes average task performance, and “Rel. drop” is the relative performance decrease compared to the 14-tool baseline.",
+      "page": 19,
+      "index": 13,
+      "width": 827,
+      "height": 239
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-014.webp",
+      "caption": "Figure 9: Effect of different LLM for post evaluation.",
+      "page": 17,
+      "index": 14,
+      "width": 829,
+      "height": 552
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-015.webp",
+      "caption": "Figure 6: A Sample Case of ToolTree on GTA.",
+      "page": 9,
+      "index": 15,
+      "width": 790,
+      "height": 386
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-016.webp",
+      "caption": "Table 8: APIBench results (BM25 retriever) for GPT-4o and GPT-4o-mini with different planning strategies. We report AST-based overall accuracy (%) on HuggingFace, TensorHub, and TorchHub, as well as the macro-average accuracy and hallucination rate across the three subsets.",
+      "page": 16,
+      "index": 16,
+      "width": 823,
+      "height": 201
+    },
+    {
+      "url": "assets/figures/arxiv/2603.12740v1/fig-017.webp",
+      "caption": "Table 9: Restoration analysis of LLM-judge errors on ToolBench. “Judge error rate” is the fraction of incorrect pre-/post-evaluation decisions. “Task success” is the overall pass rate; ∆ denotes the absolute difference (in percentage points) relative to the actual ToolTree baseline for each backbone.",
+      "page": 16,
+      "index": 17,
+      "width": 660,
+      "height": 224
+    }
+  ]
+}

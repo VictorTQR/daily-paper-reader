@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-001.webp",
+      "caption": "Fig. 1. System architecture.",
+      "page": 1,
+      "index": 1,
+      "width": 512,
+      "height": 779
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-002.webp",
+      "caption": "Fig. 8. Episode of the Qwen2.5-VL-3B (fine-tuned) critic.",
+      "page": 6,
+      "index": 2,
+      "width": 512,
+      "height": 958
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-003.webp",
+      "caption": "Fig. 9. Qualitative BT evolution under perceptual uncertainty.",
+      "page": 6,
+      "index": 3,
+      "width": 514,
+      "height": 356
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-004.webp",
+      "caption": "Fig. 2. Hardware architecture of the mobile robot: (1) three-wheeled omnidirectional base, (2) custom pneumatic gripper, (3) LiDAR sensor, (4) onboard Intel NUC computer, (5) custom STM32-based low-level controller, (6) LiPo battery, and (7) emergency stop button.",
+      "page": 3,
+      "index": 4,
+      "width": 362,
+      "height": 450
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-005.webp",
+      "caption": "Fig. 3. Layout of the experimental environment: (1) start/finish area, (2) load zones containing block sets, (3) designated unload zones, (4) initial position of the movable shelf, and (5) target position of the movable shelf.",
+      "page": 3,
+      "index": 5,
+      "width": 512,
+      "height": 293
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-006.webp",
+      "caption": "Fig. 4. Mean Score across environments.",
+      "page": 4,
+      "index": 6,
+      "width": 512,
+      "height": 287
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-007.webp",
+      "caption": "Fig. 5. Mean Accuracy across environments.",
+      "page": 4,
+      "index": 7,
+      "width": 514,
+      "height": 287
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-008.webp",
+      "caption": "Fig. 6. Mean Confidence across environments.",
+      "page": 5,
+      "index": 8,
+      "width": 512,
+      "height": 287
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22169v1/fig-009.webp",
+      "caption": "Fig. 7. Mean Human Alarm across environments.",
+      "page": 5,
+      "index": 9,
+      "width": 514,
+      "height": 287
+    }
+  ]
+}

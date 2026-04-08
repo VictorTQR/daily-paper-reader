@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00860v1/fig-001.webp",
+      "caption": "Figure 4: Efficiency on MATH dataset. (a) Step Overhead: PIPO incurs a 12–19% per-step latency increase (b) Wall-clock Efficiency: Despite lower throughput, PIPO reaches higher accuracy faster than GRPO",
+      "page": 10,
+      "index": 1,
+      "width": 734,
+      "height": 295
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00860v1/fig-002.webp",
+      "caption": "Figure 2: Theoretical distortion and empirical instability of GRPO. (a) Gradient Distortion: The gradient scaling factor η(pt) evaluated across success rates pt. As established in Corollary 3.2, GRPO (G = 8, 128) exhibit severe sensitivity explosion at the boundaries (pt → 0, 1). (b) Empirical Stability: Standard GRPO suffers from drastic gradient norm spikes (left) and severe Pass@1 collapse (right). Incorporating PIPO effectively stabilizes training.",
+      "page": 3,
+      "index": 2,
+      "width": 963,
+      "height": 261
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00860v1/fig-003.webp",
+      "caption": "Table 5: Hyperparameter settings for standard Group-relative methods (GRPO, GSPO, DAPO) and their PIPO-enhanced versions",
+      "page": 23,
+      "index": 3,
+      "width": 972,
+      "height": 463
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00860v1/fig-004.webp",
+      "caption": "Table 1: Main Results on Mathematical Reasoning. We report Pass@1 accuracy (%) for Qwen3-4B-Base and Qwen3-8B-Base. PIPO is applied on top of three baselines: GRPO, GSPO, and DAPO",
+      "page": 9,
+      "index": 4,
+      "width": 968,
+      "height": 215
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00860v1/fig-005.webp",
+      "caption": "Figure 3: Comparison of training dynamics. (a-b) Accuracy evolution on 4B and 8B models. (c-d) Response length evolution. PIPO (solid lines) consistently outperforms baselines (dashed lines) and promotes sustained reasoning chain growth.",
+      "page": 9,
+      "index": 5,
+      "width": 964,
+      "height": 225
+    }
+  ]
+}

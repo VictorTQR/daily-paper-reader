@@ -1,0 +1,142 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-001.webp",
+      "caption": "Figure 2: A Dec-POMDP unrolled as a dynamic decision network over three time steps. At each time step t, the environment state st evolves according to the transition model st+1 ∼ T (· | st, at) under the joint action at, yielding a global reward rt and individual observations ot+1 ∼ O(· | st+1, at) for each agent m ∈ M. Each agent selects its action based on its local action–observation history ht m.",
+      "page": 6,
+      "index": 1,
+      "width": 992,
+      "height": 491
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-002.webp",
+      "caption": "Figure 4: Left: Payoff matrix for the Climb Game with two agents, each choosing from three actions. The joint action (a1, a1) yields the optimal reward of 11 [31]. Right: Best performance of MADRL algorithms aggregated over 30 training instances in the Climb Game played repeatedly for 25 time steps [33]. The optimal return is 11 × 25 = 275.",
+      "page": 11,
+      "index": 2,
+      "width": 1038,
+      "height": 341
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-003.webp",
+      "caption": "Figure A.12: SARSOP convergence plots. All settings timeout after 48 hours, before upper and lower bounds converge. We observe sharp drops in the number of alpha vectors in the 1-out-of-4 and 2-out-of-4 systems, indicating significant pruning.",
+      "page": 30,
+      "index": 3,
+      "width": 923,
+      "height": 456
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-004.webp",
+      "caption": "Table A.4: Hyperparameters of single- and multi-agent DRL algorithms used across all k-out-of-n systems, and the Climb Game. However, in the Climb Game, we train off-policy algorithms for 100,000 episodes.",
+      "page": 30,
+      "index": 4,
+      "width": 1040,
+      "height": 641
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-005.webp",
+      "caption": "Figure 1: In multi-component systems, joint state, action, and observation spaces grow exponentially with the number of components, rendering single-agent approaches intractable. Dec-POMDPs address this curse of dimensionality by decentralizing control and are commonly solved using multi-agent DRL methods. Left: Scalability of solution approaches. The curved boundaries illustrate the approximate, relative scalability of POMDP and Dec-POMDP solution approaches as these spaces increase. The ( ) indicates the approximate size of the systems studied in this work, where single-agent methods remain tractable and allow direct comparison with multi-agent approaches. Right: Agent-centric paradigms. Single-agent approaches are intrinsically centralized because a single agent possesses all information during training and execution. In contrast, multi-agent approaches, such as CTDE, relax decentralization during training by allowing agents to share information, but agents must learn to execute actions independently at execution/inference.",
+      "page": 2,
+      "index": 5,
+      "width": 1044,
+      "height": 474
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-006.webp",
+      "caption": "Figure A.11: Learning curves of nine algorithms in all infinite-horizon k-out-of-4 systems summarized using 10 training instances. For offpolicy algorithms, the performance is evaluated every 5,000 episodes during training, and for on-policy algorithms, we evaluate performance every 1M timesteps. Costs are normalised with respect to the SARSOP Monte Carlo mean, and the curves show the median performance across seeds, with shaded regions indicating the interquartile range (IQR).",
+      "page": 29,
+      "index": 6,
+      "width": 1030,
+      "height": 855
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-007.webp",
+      "caption": "Table 1: Summary of single- and multi-agent DRL algorithms shown in Figure 3. The Actor columns describe the policy, when present, with Input indicating the information available to the policy and Output indicating whether actions are produced jointly, a, or per agent, am. The Critic / Value Function columns analogously report the information available to the value estimator and whether it outputs a single centralized value (e.g., Q(h, a), V(h)) or per-agent values (e.g., Qm(hm, am)). Centralized denotes access to global state or joint observations and actions, whereas Local denotes access only to an agent’s own observation or action–observation history.",
+      "page": 10,
+      "index": 7,
+      "width": 1036,
+      "height": 345
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-008.webp",
+      "caption": "Table B.5: Two-agent matrix game used to analyze value decomposition. (a) shows a generic two-agent reward matrix. (b) shows its representation under value decomposition, where each agent chooses between doing nothing (DN) and repairing (Rep.). (c) and (d) specify reward structures for parallel and series systems respectively, parameterized by repair costs c1, c2 and a large failure penalty c f , under the assumption that all components are initially in a failed state. These cases highlight how redundancy alters optimal coordination and exposes limitations of value factorization methods.",
+      "page": 33,
+      "index": 8,
+      "width": 893,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-009.webp",
+      "caption": "Figure 6: Belief space plots. Using the best-performing training instance of each algorithm, we visualize the learned policies over the belief space. Specifically, we show the actions taken over 100 Monte Carlo rollouts of 20 time steps in the 1-out-of-4 system. Each rollout begins from the initial belief b0 = (0.6, 0.4, 0) indicated with a blue dot (•). The SARSOP baseline, JAC, and DDQN coordinate repairs across components 1 and 2 and use inspections to keep beliefs updated; they let components 3 and 4 drift toward failure to optimally exploit redundancy. Decentralized algorithms, such as DCMAC, IACC-PS, MAPPO-PS, IPPO-PS, learn a structured coordination of components 1 and 2 (e.g., periodic repairs to eliminate non-stationarity), yet these policies remain suboptimal as detailed in Table 2.",
+      "page": 18,
+      "index": 9,
+      "width": 794,
+      "height": 1193
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-010.webp",
+      "caption": "Table A.3: The expected costs corresponding to the best checkpoint for each of the 10 training instances, reported in ascending order, across all algorithms and k-out-of-4 systems. These values correspond to the data summarized in the box plots shown in Figure 5.",
+      "page": 28,
+      "index": 10,
+      "width": 782,
+      "height": 1286
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-011.webp",
+      "caption": "Figure 3: An overview of MADRL algorithms for managing a (four-component) reliability system. Algorithms are classified by training–execution paradigms: centralized training centralized execution (CTCE), centralized training decentralized execution (CTDE), and decentralized training decentralized execution (DTDE), reflecting increasing decentralization and information constraints. Bottom labels indicate the underlying formulation framework (POMDP, MPOMDP, Dec-POMDP). Suffix PS denotes parameter sharing across agents.",
+      "page": 8,
+      "index": 11,
+      "width": 998,
+      "height": 481
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-012.webp",
+      "caption": "Figure 7: A sample rollout of the best IACC-PS policy in the 1-out-of-4 system for 40 time steps. Interestingly, agent 1 chooses a repair action every 5 and 7 time steps, and agent 2 chooses repairs every 5 time steps, even though neither observes the time step, and both are purely based on their individual components’ beliefs.",
+      "page": 19,
+      "index": 12,
+      "width": 1024,
+      "height": 434
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-013.webp",
+      "caption": "Figure A.14: Ablation studies. Performance of MADRL algorithms and heuristic baselines are reported relative to the (near-)optimal SARSOP baseline. The n = 4 system with κ = 3 and mobilization cost = 4 (main text, Figure 5) serves as the base case. In the following ablations, only the specified environment parameters are varied, while algorithm hyperparameters and evaluation procedures remain unchanged. Blue arrows (↑) indicate entries that exceed the plotted y-axis limits. Panel A: We test robustness by ablating the reward model, reducing the failure penalty factor from κ = 3 to κ = 1.5 and setting mobilization costs to 0, on the n = 4 system across all k. Panel B We ablate the number of components by considering an n = 3 system (with κ = 3 and mobilization cost 0) across all k. Panel C We further ablate the number of components by considering an n = 2 system (with κ = 3 and mobilization cost 0) across both values of k. Results confirm consistent performance trends, showing that our findings are not limited to a specific reward model.",
+      "page": 32,
+      "index": 13,
+      "width": 1026,
+      "height": 730
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-014.webp",
+      "caption": "Figure A.10: Learning curves of CTCE, CTDE, and DTDE algorithms on the Climb Game. Performance is evaluated periodically during training and shown as median cost across seeds, with shaded regions indicating the interquartile range. In this one-step environment, the initial episode is excluded from best-checkpoint selection, since random initializations can yield the optimal action before any learning occurs.",
+      "page": 27,
+      "index": 14,
+      "width": 918,
+      "height": 438
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-015.webp",
+      "caption": "Figure A.9: Sub-optimal JAC policy in the 1-out-of-4 system. While the optimal JAC and SARSOP policies intervene on components 1 and 2 to maintain system functionality, this learned policy only involves agent 2 taking intervention actions, and all other agents always choosing do-nothing.",
+      "page": 27,
+      "index": 15,
+      "width": 921,
+      "height": 422
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-016.webp",
+      "caption": "Figure A.13: Empirical validation of our MAPPO-PS, QMIX-PS, and IPPO-PS implementations using EPyMARL [33] across all k-out-of-4 systems. Here, we juxtapose the performance of our implementation with the EPyMARL equivalent. Similar to Figure 5, we summarize the performance over 10 training runs, with costs normalized using the SARSOP Monte Carlo mean from Table 2. Note that we also used 100,000 Monte Carlo rollouts for the EPyMARL evaluations.",
+      "page": 31,
+      "index": 16,
+      "width": 1024,
+      "height": 503
+    },
+    {
+      "url": "assets/figures/arxiv/2603.11884v1/fig-017.webp",
+      "caption": "Figure 5: Box plots summarize algorithm performance across k-out-of-4 systems, aggregated over 10 training instances. The results are normalized using the expected cost of the (near-)optimal SARSOP policy (Table 2), allowing comparison across varying redundancy levels. Most decentralized algorithms perform near-optimally in series configurations (k = n), but deviate from the (near-)optimal SARSOP baseline as redundancy increases, with the largest performance drop observed in the parallel configurations (k = 1).",
+      "page": 16,
+      "index": 17,
+      "width": 1026,
+      "height": 538
+    }
+  ]
+}

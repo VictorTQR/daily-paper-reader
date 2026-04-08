@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.22384v2/fig-001.webp",
+      "caption": "Figure 1: A general adaptive cognitive pacing loop. While instantiated here in reinforcement learning, the same structure applies to agents that dynamically allocate computation, planning, or tool use.",
+      "page": 6,
+      "index": 1,
+      "width": 410,
+      "height": 360
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22384v2/fig-002.webp",
+      "caption": "Table 2: Efficiency scores η (18) for the full ATCPG model, ablated variants (averaged over 3 seeds), the fixed-interval baseline (averaged over 5 seeds), and TemporalController as a privileged upper bound. ∆ is the relative change versus the full model.",
+      "page": 14,
+      "index": 2,
+      "width": 977,
+      "height": 826
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22384v2/fig-003.webp",
+      "caption": "Table 4: Spatial ablation: ATCPG state-only vs. joint spatio-temporal embedding on a shared 500-tick trajectory. Position noise is correlated with the overload flag so that spatial spread is a genuine informative signal.",
+      "page": 18,
+      "index": 3,
+      "width": 954,
+      "height": 662
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22384v2/fig-004.webp",
+      "caption": "Table 6: Cross-domain conceptual mapping for Adaptive Cognitive Pacing.",
+      "page": 20,
+      "index": 4,
+      "width": 614,
+      "height": 198
+    },
+    {
+      "url": "assets/figures/arxiv/2603.22384v2/fig-005.webp",
+      "caption": "Table 3: Head-to-head comparison on a shared 500-tick environment. TC directly observes the overload flag ot (privileged, same run as the TC† row in Table 2); ATCPG infers load geometrically from future embeddings (blind). The +72.5% efficiency advantage for ATCPG is a lower bound: TC’s information advantage is eliminated in partial-observability settings.",
+      "page": 16,
+      "index": 5,
+      "width": 640,
+      "height": 479
+    }
+  ]
+}

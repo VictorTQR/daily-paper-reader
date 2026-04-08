@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.28900v1/fig-001.webp",
+      "caption": "Fig. 4. Snapshot of high-density sUAS traffic under the robust policy at corruption rate R “ 0.35. Aircraft (triangles) traverse structured routes through waypoints, with separation buffers shown as circles. Yellow indicates aircraft approaching loss of separation; green indicates nominal separation status. Labels display flight ID, speed (knots), and altitude (ft). Despite adversarial GPS perturbations, all aircraft maintain safe separation.",
+      "page": 7,
+      "index": 1,
+      "width": 512,
+      "height": 256
+    },
+    {
+      "url": "assets/figures/arxiv/2603.28900v1/fig-002.webp",
+      "caption": "Fig. 1. An en-route airspace setting for sUAS package delivery. WP = WayPoint. The UASs flying in this airspace need to maintain safe separation when they are impacted by degraded or spoofed GPS signal. The network includes two routes that first cross at WP 1 (in red), then merge later at WP 7 (light red). Each route spans about 10 km, illustrating a compact yet realistic urban scenario for sUAS operations.",
+      "page": 1,
+      "index": 2,
+      "width": 462,
+      "height": 364
+    }
+  ]
+}

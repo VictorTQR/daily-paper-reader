@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15125v1/fig-001.webp",
+      "caption": "Table 4. MEMFLOW results on open-source LLM across frameworks. We report the minimal contrasts (Retrieval=Strong vs. OFF) under the same controlled configurations as the main evaluation. ISR denotes injection success rate and ASR denotes attack success rate.",
+      "page": 21,
+      "index": 1,
+      "width": 495,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15125v1/fig-002.webp",
+      "caption": "Figure 1. Comparison between the standard execution path and our proposed attack. (a) Existing: Standard Path, where the LLM agent invokes tools (A, B, and C) in a predefined, benign sequence to generate correct outputs. (b) Ours: Memory Control Flow Attack, where the agent retrieves malicious context from memory, leading to a reordered workflow (A→ D→ C) that skips critical steps (Tool B) and ultimately produces a malicious output.",
+      "page": 2,
+      "index": 2,
+      "width": 1017,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15125v1/fig-003.webp",
+      "caption": "Table 1. Definition of Attack Families. OVERRIDE and ORDER capture two forms of control-flow deviations: tool-choice overrides and reordered workflows. In contrast, M-SCOPE, PERSIST, and RELAPSE characterize whether a deviation, once observed, propagates across tasks (cross-task propagation), how long it endures (long-horizon persistence), and how resistant it is to mitigation (mitigation resistance).",
+      "page": 4,
+      "index": 3,
+      "width": 1008,
+      "height": 560
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15125v1/fig-004.webp",
+      "caption": "Figure 2. Overview of MEMFLOW. MEMFLOW is a evaluation framework that standardizes MCFA trials with an injection→auditing protocol, logging tool-call trajectories and computing the attack success rate.",
+      "page": 5,
+      "index": 4,
+      "width": 1017,
+      "height": 346
+    }
+  ]
+}

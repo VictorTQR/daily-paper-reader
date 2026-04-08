@@ -1,0 +1,1084 @@
+Title: Robust Regularized Policy Iteration under Transition Uncertainty
+
+URL Source: https://arxiv.org/pdf/2603.09344v1
+
+Published Time: Wed, 11 Mar 2026 00:44:50 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# Robust Regularized Policy Iteration under Transition Uncertainty 
+
+Hongqiang Lin 1, Zhenghui Fu 2, Weihao Tang 1, Pengfei Wang 1, Yiding Sun 3, Qixian Huang 4(B), and Dongxu Zhang 3(B) 
+
+> 1
+
+Zhejiang University  
+
+> 2
+
+Northwestern Polytechnical University  
+
+> 3
+
+Xi’an Jiaotong University  
+
+> 4
+
+Sun Yat-sen University 
+
+Abstract. Offline reinforcement learning (RL) enables data-efficient and safe policy learning without online exploration, but its performance often degrades under distribution shift. The learned policy may visit out-of-distribution state-action pairs where value estimates and learned dynamics are unreliable. To ad-dress policy-induced extrapolation and transition uncertainty in a unified frame-work, we formulate offline RL as robust policy optimization, treating the tran-sition kernel as a decision variable within an uncertainty set and optimizing the policy against the worst-case dynamics. We propose Robust Regularized Policy Iteration (RRPI), which replaces the intractable max-min bilevel objective with a tractable KL-regularized surrogate and derives an efficient policy iteration pro-cedure based on a robust regularized Bellman operator. We provide theoretical guarantees by showing that the proposed operator is a γ-contraction and that iter-atively updating the surrogate yields monotonic improvement of the original ro-bust objective with convergence. Experiments on D4RL benchmarks demonstrate that RRPI achieves strong average performance, outperforming recent baselines including percentile-based methods such as PMDB on the majority of environ-ments while remaining competitive on the rest. Moreover, RRPI exhibits robust behavior. The learned Q-values decrease in regions with higher epistemic uncer-tainty, suggesting that the resulting policy avoids unreliable out-of-distribution actions under transition uncertainty. 
+
+Keywords: Offline reinforcement learning · policy optimization · epistemic un-certainty 
+
+## 1 Introduction 
+
+Reinforcement learning (RL) has become a key ingredient of modern decision-making systems, driving breakthroughs in complex domains such as strategic game playing, embodied intelligence, and large language model reasoning by optimizing long-horizon policies from interaction data [26, 15, 34, 27]. Despite these successes, standard online RL typically relies on trial-and-error exploration, a process that can be prohibitively costly in high-stakes real-world applications [5, 9]. This has driven growing interest in offline RL [11], which aims to learn high-performing policies solely from pre-collected datasets without additional environment interaction.  
+
+> arXiv:2603.09344v1 [cs.AI] 10 Mar 2026 2H.Lin et al.
+
+The central difficulty of offline RL is distribution shift: the learned policy may query state-action pairs that lie outside the support of the dataset. In such out-of-distribution (OOD) regions, value estimates can suffer from severe extrapolation errors, closely tied to epistemic uncertainty induced by limited coverage [16]. To mitigate these failures, existing methods either adopt conservative value learning that explicitly down-weights OOD actions [10, 32, 7, 31] or leverage uncertainty estimates to steer the policy away from high-uncertainty regions [33, 22]. However, recent evidence suggests that such mechanisms may be overly conservative and can sacrifice performance even in well-supported regions [19]. More fundamentally, these approaches typically plan under a single learned dynamics model and thus do not directly capture uncertainty in the tran-sition dynamics itself. In this work, we pursue a robust policy optimization perspective [20]. Instead of treating the learned dynamics as a point estimate, we regard the transition model as a decision variable that lies in an uncertainty set of plausible kernels, and we seek a policy that maximizes performance under the worst-case dynamics in this set [1]. This formulation incorporates dynamics uncertainty directly into the objective and yields a principled alternative to heuristic uncertainty penalties. Nevertheless, the induced max-min objective leads to a challenging bilevel optimization problem, whose exact solu-tion is often computationally prohibitive in practical offline RL pipelines. To address this, we propose Robust Regularized Policy Iteration (RRPI), which introduces a KL-regularized surrogate objective and an associated robust regularized Bellman operator, enabling an efficient iterative algorithm with theoretical guarantees. 
+
+– Building on the robust formulation, RRPI naturally accounts for transition uncer-tainty and provides worst-case guarantees. By introducing a regularizer, RRPI de-rives a surrogate objective that can be solved iteratively, thereby avoiding the pro-hibitive cost of directly solving the original max–min bilevel problem. 
+
+– We provide theoretical results showing that optimizing the surrogate objective im-proves the original robust objective, and that the RRPI iterates converge under mild conditions. 
+
+– Empirically, RRPI surpasses recent state-of-the-art baselines on D4RL benchmarks and exhibits strong robustness. In particular, the learned policy attains lower returns in regions with higher epistemic uncertainty, indicating that RRPI avoids unreliable out-of-distribution behaviors under transition uncertainty. This work belongs to the family of model-based offline RL methods, which first learn a transition model from the offline dataset and then perform policy optimization by planning or dynamic programming under the learned dynamics. In contrast to ap-proaches that plan under a single estimated model, we adopt a robust perspective and optimize against an uncertainty set over transition kernels. 
+
+## 2 Related work and background 
+
+2.1 Related work 
+
+Offline RL learns a policy solely from a fixed dataset, and its core challenge arises from distributional shift: the learned policy may query state-action pairs that are poorly Robust Regularized Policy Iteration under Transition Uncertainty 3
+
+covered by the data, making value estimates unreliable [11, 21] and leading to extrapo-lation error [3, 18]. Uncertainty in offline RL is often characterized as epistemic uncer-tainty induced by limited data support, which differs from aleatoric uncertainty origi-nating from stochastic environment dynamics and observation noise [6, 4]. To mitigate the epistemic uncertainty, some efforts adopt conservative value learning that penalizes OOD actions [10, 32, 7, 31], regularized policy updates that constrain deviations from the behavior policy [29, 39, 37], and explicit uncertainty estimation via ensembles or Bayesian methods [23, 6, 22]. In contrast to prior methods, we cast offline RL as ro-bust optimization over an uncertainty set, which incorporates dynamics uncertainty di-rectly without explicit uncertainty estimation. In this formulation, the dynamics model is treated as a variable rather than a fixed quantity. This method avoids heuristic penal-ties on OOD action values and does not require constraining the learned policy to re-main close to the behavior policy. Building on this, we develop an iterative policy opti-mization algorithm with theoretical convergence guarantees to an optimal solution. 
+
+2.2 Background Markov Decision Process (MDP). A Markov decision process (MDP) is defined by the tuple M = ( S, A, p, r, ρ 0, γ ), where S and A denote the state and action spaces, respectively. The transition kernel p(· | s, a ) ∈ ∆(S) specifies the distribution over next states given (s, a ), where ∆(·) denotes the probability simplex. The reward function is 
+
+r : S × A → R, ρ0 is the initial-state distribution, and γ ∈ (0 , 1) is the discount factor. The goal is to learn a policy π(· | s) ∈ ∆(A) that maximizes the expected discounted return: 
+
+η(π, p ) = E
+
+> ρ0,π,p
+
+ ∞X
+
+> t=0
+
+γtr(st, a t)
+
+
+
+. (1) 
+
+Model-Based Offline RL. In offline RL, we perform policy optimization using only a fixed dataset D collected by an unknown behavior policy. A nominal dynamics model 
+
+ˆp is typically learned by maximizing the log-likelihood: 
+
+E
+
+> (st,a t,r t+1 ,s t+1 )∼D
+
+ log ˆ p(st+1 , r t+1 | st, a t). (2) Subsequently, an offline RL algorithm can be applied to a composite dataset D ∪
+
+Dmodel , where Dmodel contains synthetic transitions generated by rolling out ˆp.
+
+Robust MDP. Robust MDPs model transition uncertainty by treating the dynamics 
+
+p as a decision variable rather than a fixed estimate. Given an uncertainty set P that contains plausible transition kernels, robust MDP seeks a policy that maximizes perfor-mance under the worst-case dynamics in P [1]. Concretely, the robust optimal policy is obtained by solving the following max-min problem: 
+
+π∗ = arg max  
+
+> π∈Π
+
+min  
+
+> p∈P
+
+η(π, p ). (3) 4 H.Lin et al. s a 𝜏 0                 
+
+> 𝜏 1
+> 𝜏 2
+> Return
+> 𝑅 (𝜏 1)
+> 𝑅 (𝜏 0)
+> 𝑅 (𝜏 2)
+> 𝑅 (𝜏 2)>𝑅 𝜏 0>𝑅 (𝜏 1)
+> Fig. 1. Illustration of robust optimization. We roll out different dynamics models from the uncer-tainty set Pto obtain three trajectories τ0,τ1, and τ2, whose returns satisfy R(τ2)> R (τ0)>R(τ1). Accordingly, we optimize with respect to the worst-case trajectory τ1(i.e., R(τ1)).
+
+We denote the corresponding robust return by J(π) = min p∈P η(π, p ). This objective provides a principled way to hedge against model misspecification. In particular, when a policy visits state–action pairs with limited data coverage, the learned dynamics model can extrapolate and lead to compounding errors over rollouts. Optimizing η(π, ˆp) for a point estimate ˆp can therefore be brittle under distribution shift. In contrast, the robust objective explicitly accounts for adverse, yet plausible, transitions, yielding policies that are less sensitive to transition errors. The modeling power and conservatism of robust MDPs depend critically on how 
+
+P is constructed. A common assumption is rectangularity , where P factorizes across states or state-action pairs, enabling the inner minimization to decompose locally and making robust dynamic programming tractable. While convenient, rectangular sets can be overly conservative in high-dimensional problems since they allow independent worst-case perturbations at each (s, a ). In practice, P is often built from function ap-proximation, for example by using model ensembles or confidence regions around a learned dynamics model, which capture epistemic uncertainty induced by limited data support. Unlike standard offline RL methods that optimize the return under a single learned dynamics (implicitly assuming the model is accurate), the robust formulation explicitly optimizes against transition uncertainty. As a result, it naturally down-weights actions whose long-term consequences are highly sensitive to transition errors, which is espe-cially desirable in offline settings. Figure 1 illustrates the robust optimization viewpoint. 
+
+## 3 Methods 
+
+In this section, we first present our policy optimization algorithm and then describe its implementation details. 
+
+3.1 Robust regularized policy optimization 
+
+Directly optimizing Eq. (3) is computationally inefficient, as it requires accurately eval-uating the inner subproblem before computing a policy gradient to guide the outer-loop update. To improve efficiency, we draw inspiration from TRPO [24] and construct a sur-rogate objective bη(π, p, μ ). The surrogate is designed to satisfy two key requirements: (i) bη(π, p, μ ) is tractable to optimize with standard policy optimization method, and Robust Regularized Policy Iteration under Transition Uncertainty 5
+
+(ii) improving the surrogate objective yields a monotonic improvement in the original objective η(π, p ). We define bη(π, p, μ ) as 
+
+bη(π, p, μ ) = E
+
+> ρ0,π,p
+
+ ∞X
+
+> t=0
+
+γt(r(st, a t) − α log πμ )
+
+
+
+, (4) where α > 0 is the regularization coefficient and μ is the reference policy. Replacing the objective in Eq. (3) with bη(π, p, μ ) yields a surrogate max-min prob-lem. To solve it, we introduce the following robust regularized Bellman operator: 
+
+T Q(s, a ) = r(s, a ) + γV (s′), (5) where 
+
+V (s′) = min  
+
+> p∈P
+
+Ep
+
+
+
+α log Eμ exp 
+
+ 1
+
+α Q(s′, a ′)
+
+ 
+
+. (6) We next analyze theoretical properties of the operator T .
+
+Theorem 1. The robust regularized Bellman operator T is a γ-contraction mapping under the ∥ · ∥ ∞ norm. Starting from any initial action-value function Q : S × A →
+
+R and repeatedly applying T , the resulting sequence converges to a fixed point Q∗.Moreover, the optimal robust policy for the surrogate objective bη(π, p, μ ) is given by 
+
+π∗(a|s) ∝ μ(a|s) exp 
+
+ 1
+
+α Q∗(s, a )
+
+
+
+. (7) 
+
+Remark 1. The operator in Eq. (5) is closely related to KL-regularized dynamic pro-gramming. In particular, for any next-state distribution induced by dynamics model p,the term α log Ea′∼μ(·| s′) [exp ( Q(s′, a ′)/α )] is the convex conjugate of the KL diver-gence and corresponds to eliminating the inner maximization over policies in 
+
+max 
+
+> π
+
+
+
+E
+
+> a′∼π(·| s′)
+
+[Q(s′, a ′)] − αD KL (π(·| s′) ∥ μ(·| s′)) 
+
+
+
+.
+
+Consequently, the induced optimal policy in Eq. (12) takes a Boltzmann form that is absolutely continuous with respect to the reference policy μ. Moreover, the contraction factor remains γ because the log -exp mapping is non-expansive under ∥ · ∥ ∞ when 
+
+α > 0, and the minimization over p ∈ P preserves monotonicity. The regularization coefficient α controls the strength of regularization. Smaller α makes the update more greedy with respect to Q∗, while larger α yields a more conservative update that stays closer to μ. This perspective helps explain why RRPI can be stabilized by keeping successive policies close in KL, while still allowing the algorithm to gradually move toward the soft-greedy solution implied by the robust regularized Bellman operator. Although the operator T enables efficient optimization of the surrogate objective 
+
+bη(π, p, μ ), the surrogate generally differs from the original return η(π, p ). The follow-ing theorem characterizes how iteratively updating the reference policy along the opti-mization trajectory links improvements in the surrogate problem to monotonic progress on the original robust objective. 6 H.Lin et al. 
+
+Algorithm 1 Robust Regularized Policy Iteration 
+
+Require: Dataset D, model ensemble size N .1: Initialization: Randomly initialize Q-function Qθ (s, a ) and policy πϕ(a|s). Initialize tar-get Q-function Qθ′ (s, a ) and reference policy μϕ′ (a|s) with θ′ ← θ, ϕ′ ← ϕ. Randomly initialize N dynamics models {pνi (s′|s, a )}Ni=1 , forming the model ensemble. 2: Train each transition dynamics model pνi (s′|s, a ) to maxmize: 
+
+E
+
+> (st,a t,r t+1 ,s t+1 )∼D
+
+[log pνi (st+1 , r t+1 |st, a t)] .
+
+3: for i = 1 , 2, · · · , G do 
+
+4: Perform policy evaluation using Eq. (5) and update Qθ to approximate the optimal action-value function. 5: Perform policy improvement using Eq. (10) and update the policy πϕ(a|s).6: Update target Q-function and reference policy μ.7: end for 
+
+8: Return: πϕ.
+
+Theorem 2. Starting from any stochastic initial policy π0 : S → ∆(A) with full sup-port (i.e., π0(a|s) > 0 for all (s, a ) ∈ S × A), we generate a sequence {πi}i≥0 by repeatedly solving the robust sregularized ubproblem with the reference policy set to the previous iterate: 
+
+πi+1 ∈ arg max  
+
+> π∈Π
+
+min  
+
+> p∈P
+
+bη(π, p, μ = πi). (8) 
+
+Then the sequence monotonically improves the original objective J(π) = min p∈P η(π, p )
+
+in the sense that J(πi+1 ) ≥ J(πi) for all i ≥ 0. Furthermore, the sequence converges to an optimal robust policy for the original (non-regularized) problem: for any state 
+
+s and actions a, a ′ ∈ A satisfying lim i→∞ Qπi 
+
+> P
+
+(s, a ) > lim i→∞ Qπi 
+
+> P
+
+(s, a ′), we have 
+
+πi(a | s)/π i(a′ | s) → ∞ as i → ∞ , where Qπi 
+
+> P
+
+denotes the action-value function under the worst-case dynamics in P .Remark 2. Theorem 4 provides a formal link between optimizing the regularized sur-rogate bη(π, p, μ ) and improving the original objective J(π) = min p∈P η(π, p ). A key ingredient is the reference-policy update μ = πi, which makes each subproblem a local improvement step around the current iterate. This improvement step mirrors the role of trust regions while accounting for worst-case transition uncertainty through the inner minimization over p ∈ P . The requirement that π0 has full support ensures that all sub-sequent iterates admit a well-defined regularization term log πμ (with μ = πi) and pre-vents irrevocably assigning zero probability to actions. This is important in robust set-tings, where an action that is suboptimal under nominal dynamics may become optimal under a different adversarial model in P . The ratio condition πi(a|s)/π i(a′|s) → ∞ 
+
+whenever the limiting action-value of a exceeds that of a′ indicates that the sequence becomes increasingly greedy with respect to the limiting Q-function, thereby recover-ing an optimal robust policy of the original problem in the limit. Robust Regularized Policy Iteration under Transition Uncertainty 7
+
+Table 1. Performance comparison on D4RL datasets. Scores are normalized as (score −
+
+random )/(expert − random ) and presented as mean ± standard deviation. Our results are av-eraged across 4 random seeds. Dataset CQL DMG EPQ MOReL RAMBO PMDB AMG RRPI HalfCheetah-Random 31.3 ±3.5 28.8 ±1.3 33.0 ±2.4 38.9 ±1.8 39.5 ±3.5 37.8 ±0.2 45.4 ±2.8 35.5 ±0.5 HalfCheetah-Medium 46.9 ±0.4 54.9 ±0.2 67.3 ±0.5 60.7 ±4.4 77.9 ±4.0 75.6 ±1.3 72.2 ±0.6 75.2 ±0.7 HalfCheetah-Expert 97.3 ±1.1 95.9 ±0.3 107.2 ±0.2 8.4 ±11.8 79.3 ±15.1 105.7 ±1.0 89.4 ±26.4 90.7 ±1.1 HalfCheetah-Medium-Expert 95.0 ±1.4 91.1 ±4.2 95.7 ±0.3 80.4 ±11.7 95.4 ±5.4 108.5 ±0.5 103.7 ±0.2 105.3 ±1.7 HalfCheetah-Medium-Replay 45.3 ±0.3 51.4 ±0.3 62.0 ±1.6 44.5 ±5.6 68.7 ±5.3 71.7 ±1.1 67.6 ±3.4 74.4 ±0.7 HalfCheetah-Full-Replay 76.9 ±0.9 79.9 ±1.2 85.3 ±0.7 70.1 ±5.1 87.0 ±3.2 90.0 ±0.8 86.3 ±1.7 83.7 ±0.9 Hopper-Random 5.3 ±0.6 20.4 ±10.4 32.1 ±0.3 38.1 ±10.1 25.4 ±7.5 32.7 ±0.1 32.7 ±0.2 35.0 ±0.6 Hopper-Medium 61.9 ±6.4 100.6 ±1.9 101.3 ±0.2 84.0 ±17.0 87.0 ±15.4 106.8 ±0.2 107.4 ±0.6 109.4 ±0.6 Hopper-Expert 106.5 ±9.1 111.5 ±2.2 112.4 ±0.5 80.4 ±34.9 50.0 ±8.1 111.7 ±0.3 102.3 ±11.9 114.8 ±0.9 Hopper-Medium-Expert 96.9 ±15.1 110.4 ±3.4 108.8 ±5.2 105.6 ±8.2 88.2 ±20.5 111.8 ±0.6 112.7 ±0.3 111.9 ±0.3 Hopper-Medium-Replay 86.3 ±7.3 101.9 ±1.4 97.8 ±1.0 81.8 ±17.0 99.5 ±4.8 106.2 ±0.6 104.4 ±0.4 106.6 ±0.3 Hopper-Full-Replay 101.9 ±0.6 106.4 ±1.1 108.5 ±0.6 94.4 ±20.5 105.2 ±2.1 109.1 ±0.2 108.5 ±0.7 108.6 ±0.2 Walker2d-Random 5.4 ±1.7 4.8 ±2.2 23.0 ±0.7 16.0 ±7.7 0.0 ±0.3 21.8 ±0.1 22.2 ±0.2 23.7 ±0.6 Walker2d-Medium 79.5 ±3.2 92.4 ±2.7 87.8 ±2.1 72.8 ±11.9 84.9 ±2.6 94.2 ±1.1 93.2 ±1.1 97.5 ±0.7 Walker2d-Expert 109.3 ±0.1 114.7 ±0.4 109.8 ±1.0 62.6 ±29.9 1.6 ±2.3 115.9 ±1.9 5.5 ±1.3 111.2 ±0.4 Walker2d-Medium-Expert 109.1 ±0.2 114.4 ±0.7 112.0 ±0.6 107.5 ±5.6 56.7 ±39.0 111.9 ±0.2 114.9 ±0.3 115.7 ±1.4 Walker2d-Medium-Replay 76.8 ±10.0 89.7 ±5.0 85.3 ±1.0 40.8 ±20.4 89.2 ±6.7 79.9 ±0.2 95.6 ±2.1 96.4 ±1.0 Walker2d-Full-Replay 94.2 ±1.9 97.5 ±4.6 107.4 ±0.6 84.8 ±13.1 88.3 ±4.9 95.4 ±0.7 99.9 ±3.6 107.3 ±0.4 
+
+3.2 Implementations 
+
+Algorithm 1 summarizes the proposed procedure. We parameterize the action-value function Qθ and the policy πϕ with neural networks. Constructing a suitable uncer-tainty set P is nontrivial in practice: it must be rich enough to cover model errors while remaining computationally tractable for the inner minimization. In our implementation, we approximate P using a learned dynamics model ensemble, where each transition model pνi parameterizes a Gaussian distribution over next states and rewards [33, 8, 6]. Specifically, for each (s, a ), the ensemble induces a set of plausible next-state dis-tributions and thus a tractable approximation of an uncertainty set. We instantiate the inner minimization by selecting, among the ensemble members, the transition model that yields the smallest one-step robust target in the Bellman backup. This worst-case member approximation serves as a computationally lightweight proxy to robust dy-namic programming over P and directly penalizes state-action pairs where the mod-els disagree. Intuitively, when the dataset provides poor coverage, different ensemble members extrapolate differently, effectively enlarging the uncertainty set and causing the robust backup to propagate pessimistic value estimates. In contrast, in well-covered regions the ensemble predictions concentrate, and the robust backup reduces to near-nominal evaluation. For policy evaluation, we update Qθ by minimizing the Bellman residual 
+
+L1(θ) = ω1 E
+
+(s,a )∼D
+
+Qθ (s, a ) − T Qθ (s, a ) 2
+
++ ω2 E
+
+(s,a,s ′)∼Dmodel 
+
+Qθ (s, a ) − T Qθ (s, a ) 2,
+
+(9) where ω1 and ω2 denote the sampling weights for transitions drawn from the offline dataset and the model-generated buffer, respectively. 8 H.Lin et al. 
+
+During policy improvement, we update πϕ by minimizing a KL divergence between the current policy and an unnormalized Boltzmann target induced by the critic, 
+
+L2(ϕ) = E
+
+> s∼D∪Dmodel
+
+"
+
+DKL π∗(·| s), πϕ(·| s)
+
+!# 
+
+, (10) where π∗(·| s) = πϕ′ (·| s) exp   1 
+
+> α
+
+Qθ (s, ·) /Z ϕ′ (s) denotes the Boltzmann target, πϕ′ is the reference policy, and Zϕ′ (s) = R 
+
+> A
+
+πϕ′ (a|s) exp   1 
+
+> α
+
+Qθ (s, a ) da is the correspond-ing partition function. This KL objective can be viewed as a practical instantiation of Eq. (12): it drives πϕ toward the soft-greedy policy induced by Qθ while keeping the update close to πϕ′ , thereby improving stability in offline training. Additionally, we find that clipping the Qθ , that is, constraining it to be upper-bounded by a constant  
+
+> 11−γ
+
+, helps prevent overestimation in the early stage of training and thereby stabilizes the update process. The algorithm involves computing expectations. We approximate them using Monte Carlo estimators. Concretely, we use standard Monte Carlo sampling for expectations over states, and importance sampling for expectations over actions [6]. We perform importance sampling by drawing actions from the current policy πϕ:
+
+Eπϕ′
+
+
+
+exp   1
+
+α Q(s, a )
+
+= Eπϕ
+
+ πϕ′
+
+πϕ
+
+exp   1
+
+α Q(s, a )
+
+≈ 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+ πϕ′
+
+πϕ
+
+exp   1
+
+α Q(s, a )
+
+.
+
+(11) Intuitively, because the model ensemble captures most of the available informa-tion about the environment and we explicitly optimize against worst-case dynamics, sampling actions from the current policy encourages exploration without introducing additional approximation bias, which in turn improves performance. 
+
+## 4 Experimental Results 
+
+In this section, we evaluate RRPI on standard offline RL benchmarks [2] with three complementary goals. First, we assess overall performance against strong baselines to verify the effectiveness of the proposed robust objective. Second, we analyze uncer-tainty estimation to examine whether the learned policy behaves conservatively in high-uncertainty regions, which is critical under distribution shift in offline settings. Third, we conduct ablation studies to isolate the contribution of the worst-case optimization and validate that robustness is essential for the gains. 
+
+4.1 Performance 
+
+We compare our method with a broad set of state-of-the-art baselines, including model-free algorithms such as CQL [10], DMG [17], and EPQ [14], as well as model-based approaches including MOReL [8], RAMBO [23], PMDB [6], and ADM [13]. As shown Robust Regularized Policy Iteration under Transition Uncertainty 90 1 2 3 4 5 
+
+> Steps ×10 5
+> -2
+> -2
+> -1
+> -0
+> 0
+> Uncertainty
+
+halfcheetah-medium       
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> Q-value 012345
+> Steps ×10 5
+> -2
+> -1
+> 0
+> 1
+> Uncertainty
+
+halfcheetah-random       
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Q-value 012345
+> Steps ×10 5
+> -2
+> -1
+> 0
+> 1
+> Uncertainty
+
+halfcheetah-expert       
+
+> 0
+> 20
+> 40
+> Q-value 012345
+> Steps ×10 5
+> -2
+> -1
+> 0
+> 1
+> Uncertainty
+
+halfcheetah-expert             
+
+> 0
+> 20
+> 40
+> Q-value 012345
+> Steps ×10 5
+> -2
+> -1
+> -0
+> 0
+> 0
+> 1
+> Uncertainty
+> halfcheetah-medium-replay
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Q-value 012345
+> Steps ×10 5
+> -2
+> 0
+> 2
+> Uncertainty
+
+walker2d-random       
+
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> Q-value 012345
+> Steps ×10 5
+> -4
+> -2
+> 0
+> 2
+> Uncertainty
+
+walker2d-medium-expert       
+
+> 0
+> 20
+> 40
+> 60
+> Q-value 012345
+> Steps ×10 5
+> -4
+> -2
+> 0
+> 2
+> Uncertainty
+
+walker2d-full-replay      
+
+> 0
+> 10
+> 20
+> 30
+> Q-value 01234
+> Steps ×10 5
+> -5
+> -4
+> -3
+> -2
+> Uncertainty
+
+hopper-medium      
+
+> 0
+> 20
+> 40
+> Q-value 01234
+> Steps ×10 5
+> -5
+> -4
+> -3
+> Uncertainty
+
+hopper-medium-replay      
+
+> 0
+> 20
+> 40
+> 60
+> Q-value 01234
+> Steps ×10 5
+> -6
+> -5
+> -4
+> -3
+> -2
+> Uncertainty
+
+hopper-medium-expert      
+
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> Q-value 01234
+> Steps ×10 5
+> -5
+> -4
+> -3
+> -2
+> Uncertainty
+
+hopper-full-replay 
+
+> 0
+> 20
+> 40
+> 60
+> Q-value
+
+Fig. 2. Evolution of the learned Q-values and predictive uncertainty for encountered state–action pairs during training. For a given (s, a ), uncertainty is quantified as the log standard deviation of next-state predictions over the model ensemble. 
+
+in Table 1, the proposed method achieves the best average performance on D4RL bench-marks [2]. Reference scores are taken from the original papers and [6] when available; for methods without reported numbers (e.g., ADM and DMG), we reproduce results by following the hyperparameter settings from the respective publications. In particular, compared with PMDB, our method outperforms it on 11 out of 18 environments and remains competitive on the remaining 7. This result suggests that robust optimization can provide better resilience under extreme transition perturbations than approaches that target percentile-based performance. We attribute the strong performance to two factors. First, the robust objective ex-plicitly optimizes against transition uncertainty, which mitigates compounding model bias when the learned policy induces state-action distributions that deviate from the dataset. Second, the regularized policy updates improve training stability by preventing overly aggressive policy shifts, enabling the algorithm to more effectively exploit lim-ited high-quality data. These properties are reflected by the consistently strong results on the “medium,” “medium-expert,” and “full-replay” datasets. 
+
+4.2 Uncertainty Estimation 
+
+Although RRPI does not require an explicit uncertainty penalty during training, the proposed robust formulation induces an implicit sensitivity to epistemic uncertainty via the inner minimization over the uncertainty set P . To make this effect measurable, we report an ensemble-based uncertainty proxy along trajectories generated by the learned policy. Concretely, for each encountered state-action pair (s, a ), we evaluate all models in the learned dynamics ensemble and compute the standard deviation of the predicted 10 H.Lin et al.                           
+
+> Table 2. Ablation study results. We report the percentage drop in score ( ↓) and the fold change in standard deviation (shown as ↑/↓). The symbol “x” denotes the multiplicative factor (e.g., ↑10x indicates a ten-fold increase).
+> Dataset HalfCheetah Hopper Walker2d
+> Random ↓7.4% ( ↑7.4x) ↓71.9% ( ↑1.4x) ↓4.3% ( ↑2.5x) Medium ↓12.4% ( ↑3.9x) ↓10.9% ( ↑16.1x) ↓17.1% ( ↑17.1x) Expert ↓1.2% ( ↑2.2x) ↓5.3% ( ↑7.1x) ↓4.1% ( ↑6.3x) Medium-Expert ↓7.8% ( ↑2.4x) ↓10.3% ( ↑33.7x) ↓14.7% ( ↑2.7x) Medium-Replay ↓10.7% ( ↑2.3x) ↓9.1% ( ↑25.3x) ↓31.5% ( ↑3.8x) Full-Replay ↓4.6% ( ↑4.2x) ↓7.8% ( ↑18.1x) ↓17.1% ( ↑19.0x)
+
+next states. This scalar summarizes model disagreement and serves as a practical indi-cator of epistemic uncertainty in model-based offline RL [33]. Uncertainty traces and evolving learned Q-values are shown in Figure 2. Empirically, two patterns emerge: uncertainty spikes coincide with sharp drops in 
+
+Q(s, a ), and the learned policy progressively avoids high-uncertainty regions, yield-ing a smoother Q-landscape. We attribute this phenomenon to the interaction between worst-case dynamics selection and regularized policy improvement. When the ensem-ble exhibits high disagreement at (s, a ), the uncertainty set contains plausible mod-els that predict substantially different next states and rewards. The inner minimization then selects an adverse (yet plausible) transition within P , reducing the robust Bellman backup at (s, a ) and propagating pessimism to predecessor states. The subsequent KL-regularized policy update limits abrupt distributional shifts while still preferring actions with higher robust Q-values, causing the learned policy to progressively down-weight uncertain actions over iterations. In contrast to heuristic uncertainty penalties, the re-duced values in high-disagreement regions here arise directly from optimizing a princi-pled worst-case objective, providing a coherent explanation for the observed coupling between uncertainty spikes and Q-value drops. 
+
+4.3 Ablation Study 
+
+To isolate the effect of robust optimization, we conduct an ablation study in which we remove the worst-case model selection. Specifically, instead of optimizing against the worst-case model in the uncertainty set, the ablated variant randomly samples a sin-gle dynamics model from the uncertainty set and performs rollouts under this sampled model. As shown in Table 2, the ablated variant’s significant performance degradation validates the robust formulation in RRPI. We attribute this degradation to the inability of random model selection to consis-tently expose the policy to adverse transitions. Without the inner worst-case optimiza-tion, the learned policy can overfit to benign models in the ensemble and become brittle when evaluated under more challenging dynamics, leading to reduced returns and in-creased variance. Robust Regularized Policy Iteration under Transition Uncertainty 11 
+
+## 5 Conclusions 
+
+We study robust model-based offline reinforcement learning by casting transition dy-namics as a decision variable within an uncertainty set and optimizing policies against worst-case dynamics. To make this robust formulation practical, we propose Robust Regularized Policy Iteration (RRPI), which replaces the intractable max-min bilevel objective with a tractable KL-regularized surrogate and solves it via iterative policy evaluation and improvement. Our main contributions are threefold. First, we propose a robust regularized Bellman operator and derive a corresponding soft-greedy policy update that admits efficient im-plementation. Second, we establish theoretical guarantees for the operator’s contraction and fixed-point properties, as well as the policy iteration’s monotonic improvement and convergence. Third, experiments on D4RL benchmarks demonstrate that RRPI achieves strong performance and improves robustness compared with recent baselines. Moving forward, we aim to tighten the theoretical-empirical gap in uncertainty esti-mation and explore the integration of multimodal observations (e.g., vision [25, 35, 38, 36]) into the RRPI framework to handle increasingly complex decision-making tasks. 
+
+## References 
+
+1. Dong, J., Li, J., Wang, B., Zhang, J.: Online policy optimization for robust markov decision process. In: Uncertainty in Artificial Intelligence (2024) 2. Fu, J., Kumar, A., Nachum, O., Tucker, G., Levine, S.: D4rl: Datasets for deep data-driven reinforcement learning. arXiv (2020) 3. Fujimoto, S., Meger, D., Precup, D.: Off-policy deep reinforcement learning without explo-ration. In: Proceedings of the 36th International Conference on Machine Learning (2019) 4. Ghosh, D., Ajay, A., Agrawal, P., Levine, S.: Offline RL policies should be trained to be adaptive. In: International Conference on Machine Learning (2022) 5. Gottesman, O., Johansson, F., Komorowski, M., Faisal, A., Sontag, D., Doshi-Velez, F., Celi, L.A.: Guidelines for reinforcement learning in healthcare. Nature medicine (2019) 6. Guo, K., Yunfeng, S., Geng, Y.: Model-based offline reinforcement learning with pessimism-modulated dynamics belief. In: Advances in Neural Information Processing Systems (2022) 7. Huang, L., Dong, B., Zhang, W.: Efficient offline reinforcement learning with relaxed con-servatism. IEEE Transactions on Pattern Analysis and Machine Intelligence (2024) 8. Kidambi, R., Rajeswaran, A., Netrapalli, P., Joachims, T.: Morel: Model-based offline rein-forcement learning. In: Advances in Neural Information Processing Systems (2020) 9. Kumar, A., Singh, A., Ebert, F., Nakamoto, M., Yang, Y., Finn, C., Levine, S.: Pre-training for robots: Offline rl enables learning new tasks from a handful of trials. arXiv (2022), https://arxiv.org/abs/2210.05178 10. Kumar, A., Zhou, A., Tucker, G., Levine, S.: Conservative q-learning for offline reinforce-ment learning. In: Advances in Neural Information Processing Systems (2020) 11. Levine, S., Kumar, A., Tucker, G., Fu, J.: Offline reinforcement learning: Tutorial, review, and perspectives on open problems. arXiv (2020), https://arxiv.org/abs/2005.01643 12. Li, A., Li, J., Zhang, D., Wu, W., Zhao, J., Qiang, Y.: Synergy through integration of digital cognitive tests and wearable devices for mild cognitive impairment screening. Frontiers in Human Neuroscience 17 , 1183457 (2023) 12 H.Lin et al. 13. Lin, H., Xu, Y.Y., Sun, Y., Zhang, Z., Li, Y.C., Jia, C., Ye, J., Zhang, J., Yu, Y.: Any-step dynamics model improves future predictions for online and offline reinforcement learning. In: The Thirteenth International Conference on Learning Representations (2025) 14. Lin, Q., Liu, Z., Mo, D., Yu, C.: An offline adaptation framework for constrained multi-objective reinforcement learning. In: Advances in Neural Information Processing Systems (2024) 15. Liu, Y., Liu, F., Zhu, H.: Optimized supervised control of stochastic timed discrete event systems using supervisory control theory and reinforcement learning. In: International Con-ference on Artificial Neural Networks. pp. 402–414 (2025) 16. Lu, C., Ball, P., Parker-Holder, J., Osborne, M., Roberts, S.J.: Revisiting design choices in offline model based reinforcement learning. In: International Conference on Learning Rep-resentations (2022) 17. Mao, Y., Wang, Q., Qu, Y., Jiang, Y., Ji, X.: Doubly mild generalization for offline reinforce-ment learning. In: Advances in Neural Information Processing Systems (2024) 18. Park, K., Lee, Y.: Model-based offline reinforcement learning with lower expectile q-learning. In: International Conference on Learning Representations (2025) 19. Park, S., Frans, K., Levine, S., Kumar, A.: Is value learning really the main bottleneck in offline rl? In: Advances in Neural Information Processing Systems (2024) 20. Pinto, L., Davidson, J., Sukthankar, R., Gupta, A.: Robust adversarial reinforcement learning. In: International Conference on Machine Learning. pp. 2817–2826 (2017) 21. Prudencio, R.F., Maximo, M.R., Colombini, E.L.: A survey on offline reinforcement learn-ing: Taxonomy, review, and open problems. IEEE Transactions on Neural Networks and Learning Systems (2023) 22. Qiao, Z., Lyu, J., Jiao, K., Liu, Q., Li, X.: Sumo: Search-based uncertainty estimation for model-based offline reinforcement learning. Proceedings of the AAAI Conference on Artifi-cial Intelligence (2025) 23. Rigter, M., Lacerda, B., Hawes, N.: Rambo-rl: Robust adversarial model-based offline rein-forcement learning. In: Advances in Neural Information Processing Systems (2022) 24. Schulman, J., Levine, S., Abbeel, P., Jordan, M., Moritz, P.: Trust region policy optimization. In: International Conference on Machine Learning (2015) 25. Sun, Y., Cheng, H., Lu, C., Li, Z., Wu, M., Lu, H., Zhu, J.: Hyperpoint: Multimodal 3d foundation model in hyperbolic space. Pattern Recognit. (2026) 26. Sutton, R.S., Barto, A.G.: Reinforcement Learning: An Introduction. A Bradford Book, Cambridge, MA, USA (2018) 27. Team, G., Wang, B., Ni, C., Huang, G., Zhao, G., Li, H., Li, J., Lv, J., Liu, J., Feng, L., Yu, M., Li, P., Deng, Q., Liu, T., Zhou, X., Chen, X., Wang, X., Wang, Y., Li, Y., Nie, Y., Li, Y., Zhou, Y., Ye, Y., Liu, Z., Zhu, Z.: Gigabrain-0.5m*: a vla that learns from world model-based reinforcement learning (2026) 28. Wang, Y., Zhang, D., Li, Y., Jiao, W., Wang, G., Zhao, J., Qiang, Y., Li, K.: Enhancing power grid resilience with blockchain-enabled vehicle-to-vehicle energy trading in renewable en-ergy integration. IEEE Transactions on Industry Applications 60 (2), 2037–2052 (2023) 29. Wu, Y., Tucker, G., Nachum, O.: Behavior regularized offline reinforcement learning. ArXiv (2019) 30. Xue, Y., Zhang, D., Jia, L., Yang, W., Zhao, J., Qiang, Y., Wang, L., Qiao, Y., Yue, H.: Integrating image and gene-data with a semi-supervised attention model for prediction of kras gene mutation status in non-small cell lung cancer. Plos one 19 (3), e0297331 (2024) 31. Yeom, J., Jo, Y., Kim, J., Lee, S., Han, S.: Exclusively penalized q-learning for offline rein-forcement learning. In: Advances in Neural Information Processing Systems. Curran Asso-ciates, Inc. (2024) Robust Regularized Policy Iteration under Transition Uncertainty 13 32. Yu, T., Kumar, A., Rafailov, R., Rajeswaran, A., Levine, S., Finn, C.: Combo: Conserva-tive offline model-based policy optimization. In: Advances in Neural Information Processing Systems (2021) 33. Yu, T., Thomas, G., Yu, L., Ermon, S., Zou, J.Y., Levine, S., Finn, C., Ma, T.: Mopo: Model-based offline policy optimization. In: Advances in Neural Information Processing Systems (2020) 34. Zhang, D., Lin, H., Sun, Y., Wang, P., Wang, Q., Yang, N., Zhu, J.: Not all queries need deep thought: Coficot for adaptive coarse-to-fine stateful refinement. arXiv preprint arXiv:2603.08251 (2026) 35. Zhang, D., Sun, Y., Li, P., Liu, Y., Lin, H., Xu, H., Mu, X., Lin, L., Yan, W., Yang, N., et al.: Pointcot: A multi-modal benchmark for explicit 3d geometric reasoning. arXiv preprint arXiv:2602.23945 (2026) 36. Zhang, D., Sun, Y., Tan, C., Yan, W., Yang, N., Zhu, J., Zhang, H.: Chain-of-thought com-pression should not be blind: V-skip for efficient multimodal reasoning via dual-path anchor-ing. arXiv preprint (2026) 37. Zhang, D., Yang, N., Zhu, J., Yang, J., Xin, M., Tian, B.: Ascot: An adaptive self-correction chain-of-thought method for late-stage fragility in llms. arXiv preprint (2025) 38. Zhang, D., Zhu, J., Li, S., Yan, W., Xu, H., Fan, P., Lu, H.: Igasa: Integrated geometry-aware and skip-attention modules for enhanced point cloud registration. IEEE Transactions on Circuits and Systems for Video Technology (2026) 39. Zhang, Z., Tan, X.: Adaptive reward shifting based on behavior proximity for offline rein-forcement learning. In: Proceedings of the Thirty-Second International Joint Conference on Artificial Intelligence (2023) 
+
+## A Proofs 
+
+Theorem 3. The robust regularized Bellman operator T is a γ-contraction mapping under the ∥ · ∥ ∞ norm. Starting from any initial action-value function Q : S × A → R
+
+and repeatedly applying T , the resulting sequence converges to a unique fixed point 
+
+Q∗. Moreover, the optimal robust policy for the surrogate objective bη(π, p, μ ) is given by 
+
+π∗(a|s) ∝ μ(a|s) exp 
+
+ 1
+
+α Q∗(s, a )
+
+
+
+. (12) 
+
+Proof. Let Q1, Q 2 : S × A → R be arbitrary. For any state s′, define 
+
+fQ(s′) = α log Ea′∼μ(·| s′) exp 
+
+ 1
+
+α Q(s′, a ′)
+
+
+
+.
+
+For a fixed pair (s, a ), we have 
+
+|T Q1(s, a ) − T Q2(s, a )| = γ min  
+
+> p∈P
+
+Ep[fQ1 ] − min  
+
+> p∈P
+
+Ep[fQ2 ] .
+
+A basic property of the minimum gives 
+
+min  
+
+> i
+
+xi − min  
+
+> i
+
+yi ≤ max  
+
+> i
+
+|xi − yi|.14 H.Lin et al. 
+
+Applying this to the finite or compact set P (or by a straightforward extension to a family of expectations) yields 
+
+|T Q1(s, a ) − T Q2(s, a )| ≤ γ max  
+
+> p∈P
+
+Ep[fQ1 − fQ2 ]
+
+≤ γ max  
+
+> p∈P
+
+Ep fQ1 − fQ2
+
+≤ γ max  
+
+> s′
+
+|fQ1 (s′) − fQ2 (s′)|.
+
+We now bound |fQ1 (s′) − fQ2 (s′)|. Let ϵ = ∥Q1 − Q2∥∞. For any a′,
+
+Q1(s′, a ′) ≤ Q2(s′, a ′) + ϵ. 
+
+Then, we have 
+
+exp 
+
+ 1
+
+α Q1(s′, a ′)
+
+
+
+≤ eϵ/α exp 
+
+ 1
+
+α Q2(s′, a ′)
+
+
+
+.
+
+Taking expectation with respect to μ and then the logarithm gives 
+
+α log EμeQ1/α ≤ α log  eϵ/α EμeQ2/α  = α log EμeQ2/α + ϵ. 
+
+The reverse inequality follows similarly by swapping Q1 and Q2. Consequently, 
+
+|fQ1 (s′) − fQ2 (s′)| ≤ ϵ. 
+
+Thus for all (s, a ),
+
+|T Q1(s, a ) − T Q2(s, a )| ≤ γ∥Q1 − Q2∥∞,
+
+and taking the supremum over (s, a ) yields ∥T Q1 − T Q2∥∞ ≤ γ∥Q1 − Q2∥∞. Hence 
+
+T is a γ-contraction. By the Banach fixed-point theorem, there exists a unique fixed point Q∗ satisfying T Q∗ = Q∗.We first recall the well-known duality relation 
+
+α log Ea′∼μ exp 
+
+ 1
+
+α Q(s′, a ′)
+
+
+
+= max 
+
+> π(·| s′)
+
+n
+
+Ea′∼π [Q(s′, a ′)] − αD KL 
+
+ π∥μo
+
+,
+
+and the maximiser is attained at 
+
+π∗(a′|s′) ∝ μ(a′|s′) exp 
+
+ 1
+
+α Q(s′, a ′)
+
+
+
+. (*) For any policy π, define the robust regularized action-value function Qπ 
+
+> P
+
+as the unique fixed point of the operator 
+
+T π Q(s, a ) = r(s, a ) + γ min  
+
+> p∈P
+
+Es′∼p
+
+h
+
+Ea′∼π
+
+Q(s′, a ′) − α log π(a′|s′)
+
+μ(a′|s′)
+
+i
+
+.
+
+One easily verifies that T π is also a γ-contraction (the proof follows the same steps as for T , using the fact that the term inside the expectation is a function of s′ only). Therefore Qπ 
+
+> P
+
+is well defined and satisfies the Bellman equation 
+
+Qπ 
+
+> P
+
+(s, a ) = r(s, a ) + γ min  
+
+> p∈P
+
+Es′∼p
+
+h
+
+Ea′∼π
+
+Qπ 
+
+> P
+
+(s′, a ′) − α log π(a′|s′)
+
+μ(a′|s′)
+
+i
+
+.Robust Regularized Policy Iteration under Transition Uncertainty 15 
+
+Now let Q∗ be the fixed point of T and define π∗ by (*). By the duality relation, 
+
+α log EμeQ∗/α = Ea′∼π∗ [Q∗(s′, a ′)] − αD KL (π∗∥μ) ∀s′.
+
+Substituting this into T Q∗ = Q∗ gives 
+
+Q∗(s, a ) = r(s, a )+ γ min  
+
+> p∈P
+
+Es′∼p
+
+h
+
+Ea′∼π∗ [Q∗(s′, a ′)] −αD KL (π∗∥μ)
+
+i
+
+= T π∗
+
+Q∗(s, a ).
+
+Hence Q∗ is a fixed point of T π∗
+
+; by uniqueness, Q∗ = Qπ∗ 
+
+> P
+
+.Take an arbitrary policy π. From the duality relation we have the inequality 
+
+α log EμeQπ  
+
+> P/α
+
+≥ Ea′∼π [Qπ 
+
+> P
+
+(s′, a ′)] − αD KL (π∥μ).
+
+Applying this pointwise yields 
+
+T Qπ 
+
+> P
+
+(s, a ) ≥ r(s, a ) + γ min  
+
+> p∈P
+
+Es′∼p
+
+h
+
+Ea′∼π [Qπ 
+
+> P
+
+(s′, a ′)] − αD KL (π∥μ)
+
+i
+
+= T π Qπ 
+
+> P
+
+(s, a ) = Qπ 
+
+> P
+
+(s, a ).
+
+Thus T Qπ 
+
+> P
+
+≥ Qπ 
+
+> P
+
+componentwise. Because T is monotone (if Q1 ≥ Q2 then T Q1 ≥T Q2) and a contraction, iterating T starting from Qπ 
+
+> P
+
+gives an increasing sequence that converges to the unique fixed point Q∗; consequently Q∗ ≥ Qπ 
+
+> P
+
+everywhere. Finally, for the initial state distribution ρ0 we have 
+
+ˆη(π∗, p ∗, μ ) = Eρ0,π ∗
+
+h
+
+Q∗(s0, a 0) − αD KL (π∗∥μ)
+
+i
+
+≥ Eρ0,π 
+
+h
+
+Qπ 
+
+> P
+
+(s0, a 0) − αD KL (π∥μ)
+
+i
+
+= ˆ η(π, p π , μ ),
+
+where p∗ and pπ denote the worst-case transitions inside P for π∗ and π respectively. Since π is arbitrary, π∗ attains the maximum of the robust regularized objective. 
+
+Theorem 4. Starting from any stochastic initial policy π0 : S → ∆(A) with full sup-port (i.e., π0(a|s) > 0 for all (s, a ) ∈ S × A), we generate a sequence {πi}i≥0 by repeatedly solving the robust sregularized ubproblem with the reference policy set to the previous iterate: 
+
+πi+1 ∈ arg max  
+
+> π∈Π
+
+min  
+
+> p∈P
+
+bη(π, p, μ = πi). (13) 
+
+Then the sequence monotonically improves the original objective J(π) = min p∈P η(π, p )
+
+in the sense that J(πi+1 ) ≥ J(πi) for all i ≥ 0. Furthermore, the sequence converges to an optimal robust policy for the original (non-regularized) problem: for any state 
+
+s and actions a, a ′ ∈ A satisfying lim i→∞ Qπi 
+
+> P
+
+(s, a ) > lim i→∞ Qπi 
+
+> P
+
+(s, a ′), we have 
+
+πi(a | s)/π i(a′ | s) → ∞ as i → ∞ , where Qπi 
+
+> P
+
+denotes the action-value function under the worst-case dynamics in P .Proof. Let Ji := J(πi) = min p∈P η(πi, p ). By definition, πi+1 maximizes the worst-case regularized return, hence 
+
+min  
+
+> p∈P
+
+ˆη(πi+1 , p, π i) ≥ min  
+
+> p∈P
+
+ˆη(πi, p, π i).16 H.Lin et al. 
+
+For π = πi the KL-regularization term vanishes, so 
+
+ˆη(πi, p, π i) = η(πi, p ) for every p, 
+
+and consequently 
+
+min  
+
+> p∈P
+
+ˆη(πi, p, π i) = min  
+
+> p∈P
+
+η(πi, p ) = Ji.
+
+Thus we have 
+
+min  
+
+> p∈P
+
+ˆη(πi+1 , p, π i) ≥ Ji. (A) On the other hand, because the KL divergence is non-negative, 
+
+ˆη(πi+1 , p, π i) ≤ η(πi+1 , p ) for every p, 
+
+and taking the minimum over p preserves the inequality: 
+
+min  
+
+> p∈P
+
+ˆη(πi+1 , p, π i) ≤ min  
+
+> p∈P
+
+η(πi+1 , p ) = Ji+1 . (B) Combining (A) and (B) yields Ji ≤ Ji+1 for all i, establishing monotonic improvement. For each iteration i, let Q∗ 
+
+> i
+
+= Qπi 
+
+> P
+
+denote the action-value function obtained from the robust regularized Bellman operator with reference policy πi; this is the unique fixed point of the operator Tπi defined in Theorem 1. Theorem 1 also gives the form of the optimal policy for the subproblem: 
+
+πi+1 (a|s) ∝ πi(a|s) exp 
+
+ 1
+
+α Q∗ 
+
+> i
+
+(s, a )
+
+
+
+. (*) We know that {J(πi)} is a non-decreasing sequence bounded above (the return is bounded under the usual assumptions), therefore it converges. Consequently, the value functions {Q∗ 
+
+> i
+
+} converge pointwise to some limit ¯Q. Now fix a state s and two actions 
+
+a, a ′ such that ¯Q(s, a ) > ¯Q(s, a ′). Set δ = ¯Q(s, a ) − ¯Q(s, a ′) > 0 and choose ε = δ/ 4.Since Q∗ 
+
+> i
+
+→ ¯Q pointwise, there exists an index N such that for all i ≥ N ,
+
+|Q∗ 
+
+> i
+
+(s, a ) − ¯Q(s, a )| < ε, |Q∗ 
+
+> i
+
+(s, a ′) − ¯Q(s, a ′)| < ε. 
+
+Then for every i ≥ N ,
+
+Q∗ 
+
+> i
+
+(s, a ) − Q∗ 
+
+> i
+
+(s, a ′) ≥ ( ¯Q(s, a ) − ε) − ( ¯Q(s, a ′) + ε) = δ − 2ε = δ
+
+2 > 0.
+
+Let c = δ/ 2 > 0, we have Q∗ 
+
+> i
+
+(s, a ) − Q∗ 
+
+> i
+
+(s, a ′) ≥ c for all i ≥ N .From the update rule (∗) we obtain a recurrence for the ratio of the policy probabil-ities: πi+1 (a|s)
+
+πi+1 (a′|s) = πi(a|s)
+
+πi(a′|s) exp 
+
+ Q∗ 
+
+> i
+
+(s, a ) − Q∗ 
+
+> i
+
+(s, a ′)
+
+α
+
+
+
+.
+
+Applying this repeatedly for i = N, N + 1 , . . . , k − 1 yields 
+
+πk(a|s)
+
+πk(a′|s) = πN (a|s)
+
+πN (a′|s) exp 1
+
+α
+
+> k−1
+
+X
+
+> i=N
+
+ Q∗ 
+
+> i
+
+(s, a ) − Q∗ 
+
+> i
+
+(s, a ′)!
+
+≥ πN (a|s)
+
+πN (a′|s) exp 
+
+ (k − N )cα
+
+
+
+.Robust Regularized Policy Iteration under Transition Uncertainty 17 
+
+Because π0 has full support and the updates preserve positivity, πN (a|s) > 0 and 
+
+πN (a′|s) > 0, hence the initial ratio πN (a|s)  
+
+> πN(a′|s)
+
+is a finite positive number. Letting k →∞, the exponential factor tends to infinity, and therefore 
+
+πk(a|s)
+
+πk(a′|s) → ∞ .
+
+This shows that in the limit the policy concentrates all probability mass on actions with the highest limiting value, which is exactly the behaviour of an optimal robust policy for the original problem. 
+
+## B Broader Impacts and Real-World Applicability 
+
+While this work primarily evaluates Robust Regularized Policy Iteration within stan-dard continuous control benchmarks such as D4RL, the core motivation of mitigating extrapolation error under transition uncertainty extends to various safety-critical do-mains where online trial-and-error is strictly prohibitive. In many real-world complex systems, reliable decision-making must rely entirely on static, pre-collected datasets. For instance, in decentralized energy management, optimizing policies for enhanc-ing power grid resilience through blockchain-enabled vehicle-to-vehicle energy trad-ing must be conducted offline to prevent potential cascading failures [28]. The neces-sity for robust, worst-case bounded offline optimization is equally critical in healthcare and precision medicine, where diverse data modalities must be integrated to form reli-able diagnostic policies without exposing patients to untested interventions. Such data-driven applications range from synergizing digital cognitive tests with wearable devices for mild cognitive impairment screening [12], to developing semi-supervised attention models that integrate image and gene-data for predicting KRAS gene mutation status in non-small cell lung cancer [30]. Ultimately, adapting robust offline RL frameworks like RRPI to handle these high-stakes, multimodal environments represents a crucial next step for deploying trustworthy AI systems in the real world.

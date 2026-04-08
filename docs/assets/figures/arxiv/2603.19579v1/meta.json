@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.19579v1/fig-001.webp",
+      "caption": "Table 1: Evaluation results for all algorithms. The experiments are based on 7 MuJoCo environments. Both the average and standard deviation of the HV and SP metrics are reported. The modified PFA is difficult to apply to the 3-objective task and is not tested on Hopper-3. All data are based on 6 independent runs.",
+      "page": 6,
+      "index": 1,
+      "width": 1032,
+      "height": 444
+    }
+  ]
+}

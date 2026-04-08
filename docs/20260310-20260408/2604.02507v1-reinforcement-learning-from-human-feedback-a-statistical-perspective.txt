@@ -1,0 +1,478 @@
+Title: Reinforcement Learning from Human Feedback: A Statistical Perspective
+
+URL Source: https://arxiv.org/pdf/2604.02507v1
+
+Published Time: Mon, 06 Apr 2026 00:09:32 GMT
+
+Number of Pages: 36
+
+Markdown Content:
+# Reinforcement Learning from Human Feedback: A Statistical Perspective 
+
+# Pangpang Liu ∗ Chengchun Shi † Will Wei Sun ‡
+
+Abstract 
+
+Reinforcement learning from human feedback (RLHF) has emerged as a central frame-work for aligning large language models (LLMs) with human preferences. Despite its practical success, RLHF raises fundamental statistical questions because it relies on noisy, subjective, and often heterogeneous feedback to learn reward models and optimize policies. This survey provides a statistical perspective on RLHF, focus-ing primarily on the LLM alignment setting. We introduce the main components of RLHF, including supervised fine-tuning, reward modeling, and policy optimization, and relate them to familiar statistical ideas such as Bradley-Terry-Luce (BTL) model, latent utility estimation, active learning, experimental design, and uncertainty quan-tification. We review methods for learning reward functions from pairwise preference data and for optimizing policies through both two-stage RLHF pipelines and emerg-ing one-stage approaches such as direct preference optimization. We further discuss recent extensions including reinforcement learning from AI feedback, inference-time algorithms, and reinforcement learning from verifiable rewards, as well as benchmark datasets, evaluation protocols, and open-source frameworks that support RLHF re-search. We conclude by highlighting open challenges in RLHF. An accompanying GitHub demo https://github.com/Pangpang-Liu/RLHF_demo illustrates key compo-nents of the RLHF pipeline. 
+
+Key Words: Large language models, pairwise preference learning, policy optimization, reinforcement learning from human feedback. 
+
+> ∗
+
+Department of Biostatistics, Yale University. 
+
+> †
+
+Department of Statistics, London School of Economics and Political Science. 
+
+> ‡
+
+Mitch Daniels School of Business, Purdue University. Email: sun244@purdue.edu. Corresponding author. 
+
+1
+
+> arXiv:2604.02507v1 [stat.ML] 2 Apr 2026
+
+# 1 INTRODUCTION 
+
+Recent advances in large language models (LLMs) have led to remarkable improvements in natural language understanding. Modern models are capable of performing a wide range of tasks, including dialogue, summarization (Stiennon et al., 2020), coding assistance (Chen et al., 2021), complex reasoning (Shao et al., 2024), and more. A key ingredient behind these advances is a two-stage training paradigm. The first stage, pre-training, exposes the model to large-scale text corpora to acquire world knowledge and learn to generate coherent language via autoregressive next-token prediction. However, models trained purely in this manner may produce responses that are unhelpful, misleading, or unsafe. This limitation motivates a second, post-training stage that aligns model behavior with human preferences, which has become a central problem in the development of modern AI systems. Reinforcement learning from human feedback has emerged as one of the most influential approaches to address this challenge. In RLHF, human feedback is used to guide the optimization of model behaviors. Instead of relying on predefined reward functions, the framework learns a reward model that approximates human judgments, and then optimizes the language model with respect to this learned reward. This paradigm has played a central role in the development of the landmark LLM InstructGPT (Ouyang et al., 2022). From a statistical perspective, RLHF raises a series of fundamental questions. Human feedback is inherently noisy, subjective, and heterogeneous across annotators. Modeling such feedback requires tools from latent-variable modeling and preference learning. In addition, the data collection process often involves adaptive querying or active learning, which connects RLHF with experimental design. The learned reward models must generalize from limited and potentially biased observations, raising issues related to uncertainty quantification, robustness, and distribution shift. These challenges highlight the need for a principled statistical framework for understanding RLHF systems. This survey is intended as a tutorial-style introduction for researchers in statistics, machine learning, and related quantitative fields. Rather than attempting an exhaustive review of all RLHF algorithms, we focus on the LLM alignment setting and present RLHF through a statistical lens, emphasizing its foundation in noisy pairwise comparative data. Pairwise preference data serve as a unifying object connecting reward modeling, policy optimization, and modern evaluation. Throughout the paper, we emphasize the core quantities that recur across the pipeline: contexts, responses, comparison labels, latent rewards, and optimized 2policies, and use a running example based on the prism-alignment dataset (Kirk et al., 2024) to keep the notation concrete. This perspective provides a bridge for statisticians entering LLM alignment by linking RLHF terminology to standard statistical ideas and highlighting how training and evaluation share a common paired-comparison structure, including connections to arena-style model comparison. To support accessibility and reproducibility, the survey is accompanied by a GitHub demo https://github.com/Pangpang-Liu/RLHF_demo that illustrates an end-to-end preference-based alignment pipeline. Finally, we outline a research agenda tailored to statistics, emphasizing sample efficient estimation, experimental design, heterogeneity, uncertainty quantification, and robustness. The remainder of this paper is organized as follows. Section 2 introduces background and preliminaries on reinforcement learning and human feedback. Section 3 reviews the two-stage RLHF. Section 4 discusses the one-stage preference optimization. Section 5 introduces the statistical challenges in RLHF. Section 6 discusses the extensions of RLHF. Section 7 summarizes benchmark datasets, implementation platforms, and evaluation frameworks. Finally, Section 8 discusses open challenges and future research directions. 
+
+# 2 BACKGROUND AND PRELIMINARIES 
+
+This section introduces the basic concepts and notations used throughout the paper, including pre-trained language models, a running example of pairwise human feedback, and the reinforcement learning foundations. 
+
+# 2.1 Transformer 
+
+Modern RLHF methods are typically applied to large language models based on the Trans-former architecture (Vaswani et al., 2017). These models are first trained on large-scale text corpora using self-supervised objectives such as next-token prediction. Pre-training allows the model to acquire general linguistic patterns, factual knowledge, and reasoning abilities. The Transformer architecture relies on the self-attention mechanism to model dependencies between tokens in a sequence. Given an input sequence s = ( s1, . . . , s k), the model produces contextualized token representations by computing attention weights between all token pairs. This design enables efficient parallel computation and allows the model to capture long-range dependencies in text. A language model, with parameters θ, learns to predict the next token 
+
+st given the preceding context s<t . The probability of a sequence is modeled autoregressively 3as pθ(s) = Qkt=1 pθ(st | s<t ). The model is trained by minimizing the negative log-likelihood of the observed sequences: bθ = arg min θ Es∼D [− log pθ(s)] , where D denotes the training dataset. For reward modeling, the Transformer also provides a feature representation for the prompt-response pair. Let ϕ(x, y) denote a representation extracted from the transformer, for example the final hidden state of a special end-of-sequence token, a pooled hidden state, or another task-specific summary of the sequence [x; y]. A reward head then maps this representation to a scalar score, r(x, y) = η⊤ϕ(x, y), where η denotes reward-model parameters. This is the key bridge between the pretrained transformer and the statistical models used later in RLHF: next-token prediction defines the policy π, while the learned representation ϕ(x, y)
+
+provides a high-dimensional feature map for latent utility modeling. Table 1 displays the dimension of the feature representation ϕ(x, y) from selected LLMs. Table 1: Dimension of the feature representation ϕ(x, y) from selected LLMs. Model Dimension Model Dimension Model Dimension GPT-2 (small) 768 GPT-2 (medium) 1024 GPT-2 (large) 1280 GPT-3 (175B) 12,288 LLaMA 7B 4096 LLaMA 13B 5120 LLaMA 70B 8192 Mistral 7B 4096 Mixtral 8x7B 4096 T5-base 768 T5-large 1024 Flan-T5-XXL 4096 
+
+# 2.2 A Running Example from PRISM 
+
+To keep notation fixed throughout the paper, Table 2 shows a running example based on the 
+
+PRISM dataset (Kirk et al., 2024), which contains pairwise human feedback on responses from multiple LLMs. Table 2: Pairwise preference examples in PRISM . The preferred answer is bolded.               
+
+> Query First Answer Second Answer Do you know who the south African pres-ident is? Flan-t5-xxl: Jacob Zuma Gpt-4: As of my last up-date, Cyril Ramaphosa is the President of South Africa. However, political positions can change, and it’s always good to verify with the latest sources for the most current information .
+
+This table naturally introduces the objects used throughout the survey. A query or prompt is denoted by x. The preferred response is denoted by yw and the less preferred response by yl.4The reward model uses a representation ϕ(x, y) extracted from the underlying transformer to assign a latent score r(x, y). In pairwise reward modeling, the observed preference label depends on the reward difference r(x, yw) − r(x, yl).
+
+# 2.3 Reinforcement Learning 
+
+Reinforcement learning (RL) studies how an agent interacts with an environment to maximize cumulative rewards. A standard formulation is the Markov Decision Process (MDP), defined by the tuple (X , Y, P, r, γ ), where X is the state space, Y is the action space, P (x′|x, y) is the transition probability, r(x, y) is the reward function, and γ ∈ (0 , 1) is a discount factor (Sutton and Barto, 2018). A policy π(y|x) specifies the probability of selecting action y
+
+given state x. The goal of RL is to find a policy that maximizes the expected discounted cumulative reward 
+
+E
+
+h ∞X
+
+> t=0
+
+γtr(xt, yt)
+
+i
+
+.
+
+In the context of large language models, the prompt can be viewed as the state and the generated response as the action. Given a prompt x and a generated response y, a policy 
+
+π(y|x) defines the probability of producing response y. The reward function evaluates the quality of the response with respect to the prompt. Many RLHF methods simplify the full MDP formulation and treat alignment as a contextual bandit problem (Zhu et al., 2023; Liu et al., 2024), where each prompt is independent and the objective becomes 
+
+max  
+
+> π
+
+Ex∼ρ, y∼π(·| x)r(x, y),
+
+where ρ denotes the distribution of x.To help readers with a statistical background, we provide a compact translation between RLHF terminology and familiar statistical concepts. A prompt x can be viewed as a covariate, a completion y as a structured output drawn from a conditional distribution π(y|x), and a preference label yw ≻ yl as a noisy comparative outcome reflecting an underlying latent utility. The reward model r(x, y) corresponds to a latent scoring function inferred from pairwise comparisons, while policy optimization can be interpreted as a regularized risk maximization problem (see (Equation 2)), where the Kullback-Leibler penalty serves as a form of regularization that constrains π to stay close to a reference policy. This perspective provides a direct bridge between RLHF and classical statistical frameworks. 53 TWO-STAGE RLHF 
+
+# 3.1 Overview of RLHF Frameworks 
+
+From a statistical perspective, RLHF can be viewed as a preference learning problem in which a latent reward function is inferred from noisy and potentially heterogeneous human preferences. In this setting, human feedback provides partial observations of an underlying utility function that characterizes desirable model behaviors. Modern LLM training typically follows a three-stage pipeline (Ouyang et al., 2022), illustrated in Figure 1. 
+
+Supervised fine-tuning (SFT). The process begins with a pretrained language model that is fine-tuned on high-quality human demonstrations. Given a dataset of prompt–response pairs (x, y), supervised learning is used to train a policy π that imitates human-written ideal responses. This stage teaches the model basic instruction-following behavior and desired response style, such as helpfulness, fluency, and format compliance, and therefore provides a strong initialization for subsequent alignment. However, SFT alone has important limitations. First, it requires high-quality labeled re-sponses, which are expensive and time-consuming to collect at scale. Second, it is inherently static: once trained on a fixed demonstration dataset, it does not naturally adapt to evolving user preferences or new alignment criteria without additional retraining. Third, many impor-tant alignment properties, such as safety, politeness, harmlessness, tone, or creativity, are difficult to specify as a single “correct” response for supervised learning. In many cases, it is much easier for humans to compare two candidate responses than to write an ideal answer from scratch. 
+
+Reward model training. These limitations motivate the next stage of RLHF. Instead of requiring annotators to generate perfect responses, we collect preference data by asking them to compare multiple model-generated outputs. These pairwise comparisons provide a more scalable and flexible signal about relative quality. They are then used to train a reward model r(x, y) that predicts the relative utility of candidate responses. In this way, reward modeling converts human comparative judgments into a learned objective that can guide further policy improvement beyond imitation learning alone. 
+
+Policy optimization. Finally, reinforcement learning is used to optimize the policy with respect to the learned reward model. Algorithms such as Proximal Policy Optimization (PPO) (Schulman et al., 2017) are commonly used to maximize the expected reward while maintaining proximity to the original policy through regularization. The resulting policy 6produces responses that better align with human preferences. 
+
+Figure 1: RLHF pipeline for aligning large language models This pipeline has become the standard two-stage RLHF framework for aligning large language models with human values and forms the foundation for many subsequent developments discussed in this survey. At the same time, alternative one-stage preference optimization methods have been proposed that avoid explicit reward model training, most notably Direct Preference Optimization (DPO) (Rafailov et al., 2023). We discuss two-stage approaches in Section 3 and one-stage methods in Section 4 
+
+# 3.2 Reward Learning from Human Feedback 
+
+Reward modeling is a central component of RLHF. In the standard RLHF pipeline, a reward model is first learned from human feedback and then used as a surrogate objective for policy optimization. From a statistical perspective, this can be viewed as a supervised learning problem in which pairwise human preferences serve as labels, and the goal is to infer a latent reward function that captures relative response quality. Recall that X denotes the space of contexts (e.g., prompts or questions) and Y denotes the space of actions (e.g., answers or completions). For each context–action pair (x, y) ∈ X × Y ,there is an unobserved reward measuring the quality of response y for prompt x. This latent utility is represented by a reward function r(x, y). Because the reward is not directly 7observed, it must be inferred indirectly from pairwise human preference feedback. To obtain such information, RLHF typically adopts a pairwise comparison framework. Human annotators are asked to compare two candidate responses generated for the same context. For a triple (x, yw, yl), where yw and yl denote the preferred and non-preferred responses, respectively, we model the probability of preference as P(yw ≻ yl | x). A standard assumption is that this probability depends only on the difference in latent rewards. One widely used model is the Bradley-Terry-Luce (BTL) model (Bradley and Terry, 1952): 
+
+P(yw ≻ yl | x) = er(x,yw )
+
+er(x,yw ) + er(x,yl) = σ r(x, yw) − r(x, yl), (1) where σ(z) = 1 /(1 + e−z ) is the sigmoid function. This model implies that responses with larger latent rewards are more likely to be preferred, and it also makes clear that only reward differences are statistically identifiable from pairwise data. Suppose we observe n preference samples D = {(xi, yw,i , yl,i )}ni=1 . Under the BTL model, the reward function can be estimated by maximizing the empirical log-likelihood 
+
+brn = arg max 
+
+> r
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+log σ(r(xi, yw,i ) − r(xi, yl,i )) .
+
+Thus, reward learning fits a latent utility model from pairwise comparison data. To make this objective concrete, one typically imposes a parametric structure on the reward function. For example, consider a linear reward model 
+
+rη(x, y) = η⊤ϕ(x, y),
+
+where ϕ(x, y) is a feature representation derived from the transformer architecture (see Section 2.1). Then rη(x, yw) − rη(x, yl) = η⊤ ϕ(x, yw) − ϕ(x, yl), so the estimation problem becomes a logistic regression on feature differences. In particular, the parameter η may be estimated by 
+
+bη = arg max 
+
+> η
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+log σ η⊤ϕ(xi, yw,i ) − ϕ(xi, yl,i ) .
+
+This formulation also clarifies the identifiability issue. Since the likelihood depends only on reward differences, the model is identifiable only through relative rewards. In particular, if the feature map contains a constant component, then shifting all rewards by the same amount leaves the likelihood unchanged. More generally, only those directions of η that affect reward differences can be identified from pairwise comparisons. In practice, one therefore 8imposes a normalization constraint or interprets the learned reward model only through the relative comparisons and rankings that it induces. In modern LLM-based RLHF, the reward model is often implemented by taking a pretrained language model, removing its final output layer, and adding a scalar prediction head (Ziegler et al., 2019). The resulting parameters are then trained end-to-end by stochastic gradient methods over minibatches of pairwise comparisons. 
+
+# 3.3 Proximal Policy Optimization 
+
+Once a reward model has been learned from human feedback, it serves as a surrogate objective for improving the policy. The next step in the RLHF pipeline is therefore to update the language model so that it assigns higher probability to responses with larger inferred reward, while avoiding overly aggressive departures from the behavior learned during supervised fine-tuning. Among the various reinforcement learning algorithms used for this purpose, Proximal Policy Optimization (PPO) (Schulman et al., 2017) has become one of the most widely adopted methods in RLHF. In the LLM setting, the policy π(· | x) represents a conditional distribution over responses given a prompt x. If r(x, y) denotes the learned reward model and ρ denotes the prompt distribution, then a natural policy optimization objective is to maximize the expected reward 
+
+max  
+
+> π
+
+Ex∼ρ, y∼π(·| x)r(x, y).
+
+However, directly optimizing this objective can lead to unstable training and undesirable behavior, especially when the learned reward model is imperfect. In particular, the policy may drift too far from the supervised fine-tuned model and exploit weaknesses of the reward model rather than genuinely improving alignment. To mitigate this issue, RLHF commonly introduces a regularization term that keeps the optimized policy close to a reference policy πref , typically the supervised fine-tuned model. This leads to the KL-regularized objective 
+
+max  
+
+> π
+
+Ex∼ρ
+
+Ey∼π(·| x)r(x, y) − τ DKL 
+
+ π(· | x) ∥ πref (· | x) , (2) where DKL denotes the Kullback–Leibler divergence and τ > 0 controls the strength of regularization. This penalty discourages the optimized policy from deviating too far from the reference model and helps stabilize learning when the reward model is noisy or misspeci-fied. 9The objective in (Equation 2) defines the target of policy improvement, while PPO provides a practical algorithm for approximately solving it. PPO is a policy-gradient method that improves stability by restricting the size of each policy update, typically through clipped importance ratios relative to the previous policy. In RLHF, this means that the language model is updated gradually so that it increases the likelihood of high-reward responses without changing too abruptly from one iteration to the next. In practice, the policy is optimized using sampled prompts and model-generated responses, together with reward scores from the learned reward model and an additional value function used to reduce variance in policy-gradient estimation. PPO became the dominant policy optimization method in early large-scale RLHF systems because it could incorporate learned reward signals while controlling policy drift. It was used in formative work on text generation and summarization (Ziegler et al., 2019), in InstructGPT (Ouyang et al., 2022), and in subsequent systems for training helpful and harmless assistants (Bai et al., 2022a). PPO-based RLHF also remains an important baseline in modern open-source alignment pipelines, including LLaMA 2 (Touvron et al., 2023). Despite its empirical success, PPO-based RLHF has several limitations. First, it depends critically on the quality of the learned reward model: if the reward model is misspecified, the policy may exploit its weaknesses, leading to reward hacking. Second, the KL regularization introduces its own bias–variance and optimization tradeoffs, and its tuning can materially affect the final behavior of the model (Xiao et al., 2025). Third, PPO is computationally expensive because it requires repeated on-policy sampling, policy updates, and value-function estimation. These limitations have motivated increasing interest in alternative one-stage preference optimization methods which we discuss next. 
+
+# 4 ONE-STAGE PREFERENCE OPTIMIZATION 
+
+In contrast to the two-stage RLHF pipeline, one-stage preference optimization methods update the policy directly from comparative feedback without explicitly fitting a separate reward model. These methods have attracted growing interest because they often simplify training and avoid the computational overhead of reward-model fitting and reinforcement learning. We begin with Direct Preference Optimization (DPO), which can be derived from the same KL-regularized objective that underlies standard RLHF. We then discuss broader preference-based policy optimization frameworks that relax or generalize DPO’s assumptions and provide a more direct treatment of learning from pairwise comparisons. 10 4.1 Direct Preference Optimization 
+
+Rather than first estimating a reward model and then optimizing the policy with PPO, DPO (Rafailov et al., 2023) directly updates the policy using preference data. Its key insight is that, under the KL-regularized RLHF objective, the optimal policy admits a closed-form representation in terms of the reward function. This creates an explicit bridge between reward-based RLHF and direct likelihood-based learning from preference comparisons. Recall the KL-regularized policy optimization objective (Equation 2) from Section 3. For each prompt x, the optimizer of this objective function takes the Gibbs form 
+
+π∗(y | x) = 1
+
+Z(x)πref (y | x) exp 
+
+ 1
+
+τ r(x, y)
+
+
+
+,
+
+where Z(x) = P 
+
+> y
+
+πref (y | x) exp( r(x, y)/τ ) is the normalizing constant. Rearranging gives 
+
+r(x, y) = τ log π∗(y | x)
+
+πref (y | x) + τ log Z(x).
+
+Thus, up to the additive normalizing term τ log Z(x), the reward is represented by the log-density ratio between the optimized policy and the reference policy. This representation becomes especially useful in pairwise preference modeling. Since the Bradley–Terry–Luce (BTL) model depends only on reward differences, the normalizing term cancels when comparing two responses yw and yl for the same prompt x. Defining β = 1 /τ ,we obtain 
+
+r(x, yw) − r(x, yl) = 1
+
+β
+
+
+
+log π(yw | x)
+
+πref (yw | x) − log π(yl | x)
+
+πref (yl | x)
+
+
+
+.
+
+Substituting this expression into the BTL model yields 
+
+P(yw ≻ yl | x) = σ
+
+
+
+β
+
+
+
+log π(yw | x)
+
+πref (yw | x) − log π(yl | x)
+
+πref (yl | x)
+
+ 
+
+.
+
+Therefore, given a preference dataset D = {(xi, yw,i , yl,i )}ni=1 , DPO estimates the policy by minimizing the empirical binary cross-entropy loss 
+
+min 
+
+> π
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+− log σ
+
+
+
+β
+
+
+
+log π(yw,i | xi)
+
+πref (yw,i | xi) − log π(yl,i | xi)
+
+πref (yl,i | xi)
+
+ 
+
+. (3) In this sense, DPO can be interpreted as maximum likelihood estimation under a BTL preference model, where latent reward differences are parameterized implicitly through policy log-ratios rather than through an explicit reward model. 11 Compared with standard two-stage RLHF, DPO removes the separate reward-modeling stage and avoids on-policy reinforcement learning, making it substantially simpler to implement. At the same time, it inherits important modeling assumptions: in particular, it relies on a scalar latent-utility representation of preferences and on the BTL link between reward differences and pairwise comparison probabilities. Recent work has begun to clarify the statistical consequences of these assumptions. For example, Shi et al. (2025) analyzes the performance difference between RLHF and DPO through a suboptimality gap decomposition, separating representation error from statistical error. More broadly, emerging theory studies finite-sample estimation error, model misspecification, and the comparative statistical efficiency of one-stage and two-stage alignment methods. For example, recent work establishes finite-sample and suboptimality guarantees for private and robust DPO-style methods (Zhou et al., 2025a), and studies misspecification and robustness in both direct and reward-based preference optimization (Gopalan et al., 2025; Ye et al., 2025). These results suggest that the relative merits of DPO and two-stage RLHF depend on model expressiveness, data availability, and misspecification. Explicit reward modeling can be advantageous when sample efficiency or robustness to misspecification is a primary concern, whereas DPO is most attractive when the policy parameterization can adequately capture the underlying preference structure. 
+
+# 4.2 Generalized Preference-Based Policy Optimization 
+
+Although DPO eliminates explicit reward-model training, it still relies on a specific parametric link between pairwise preferences and policy log-ratios. This raises a broader question: can we optimize policies directly from comparative feedback under weaker or more general assumptions? Recent work addresses this question by developing generalized preference-based policy optimization frameworks that treat preference comparisons themselves, rather than scalar rewards, as the primitive learning signal. These approaches depart from classical RLHF by formulating policy learning directly in terms of preference probabilities. Rather than assuming that all pairwise comparisons are generated by a latent scalar reward through the Bradley–Terry model, they allow more flexible preference representations and broader objective classes. This is useful when the scalar-reward assumption is too restrictive or when robustness to model misspecification is a primary concern. One representative framework is due to Azar et al. (2024), who define the total preference of 12 a policy π over another policy π′ as 
+
+P(π ≻ π′) = Ex∼ρ
+
+Ey∼π(·| x), y′∼π′(·| x)P(y ≻ y′ | x) . (4) This quantity measures how often responses sampled from π are preferred to responses sampled from π′ under the prompt distribution. Based on this comparison-based view, they propose the objective 
+
+max  
+
+> π
+
+Ex∼ρ, y∼π(·| x), y′∼πref (·| x) [Ψ( P(y ≻ y′ | x))] − τ DKL (π∥πref ), (5) where Ψ : [0 , 1] → R is a nondecreasing transformation. This framework encompasses a broad family of objectives that trade off preference improvement against deviation from a reference policy. A useful feature of this formulation is that it recovers several familiar RLHF objectives as special cases. In particular, Azar et al. (2024) show that when Ψ( q) = log  q/ (1 − q) and the BTL model holds, the resulting optimal policy coincides with those obtained from the PPO objective and from DPO. This gives a unifying perspective: PPO, DPO, and related methods can all be viewed as different implementations of policy learning from pairwise comparative information under specific structural assumptions. Building on this line of work, Xu et al. (2025a) propose DRPO, a doubly robust preference optimization method that improves robustness to misspecification. Their estimator remains consistent if either the preference model or the reference-policy model is correctly specified, and the corresponding suboptimality gap depends on a second-order product of estimation errors rather than first-order error accumulation. Other extensions similarly aim to relax the assumptions of vanilla DPO. For example, Gallego (2024) refine DPO using synthetic preference data, while Wu et al. (2025) develop distributionally robust variants that explicitly optimize against worst-case preference perturbations. Taken together, these works point toward a broader class of preference-based optimization methods that emphasize robustness, flexibility, and direct learning from comparative feedback. 
+
+# 5 STATISTICAL CHALLENGES IN RLHF 
+
+We now turn to the statistical challenges that underlie the aforementioned RLHF methods. From a statistical perspective, RLHF is not only an optimization pipeline but also a data-analysis problem built on noisy, subjective, and adaptively collected preference data. This section highlights several statistical issues: heterogeneity in human feedback, uncertainty quantification and inferential guarantees for reward models, data-efficient feedback collection 13 through active learning, and robustness to misspecification and reward hacking. Taken together, these topics address four fundamental questions: whose preferences are being modeled, how reliably the resulting reward model can be estimated, how feedback should be collected most efficiently, and how estimation errors propagate once the learned reward is used for policy optimization. 
+
+# 5.1 Heterogeneous Human Feedback 
+
+We begin with heterogeneity, since it enters at the data-generation stage and therefore shapes all subsequent modeling and optimization steps. The preference model in Equation 1 implicitly assumes homogeneous feedback, meaning that all annotators share the same latent preference mechanism. In other words, regardless of who provides the label, the observed comparison is assumed to follow the same probability model. In practice, however, RLHF datasets are typically collected from many annotators who may differ in expertise, attention, values, and consistency (Park et al., 2024; Zeng et al., 2024). As a result, preference data are often heterogeneous rather than homogeneous. Ignoring this heterogeneity can bias reward estimation and ultimately produce policies that are poorly aligned with the intended target population (Zhong et al., 2024; Chakraborty et al., 2024). A common way to model such variation is through annotator-specific rationality parameters. Several studies (Jeon et al., 2020; Barnett et al., 2023; Hao et al., 2023; Freedman et al., 2025) introduce a parameter β ∈ R that measures annotator reliability or expertise. Under this formulation, the preference probability is 
+
+P (yw ≻ yl | x, β ) = eβr (x,yw )
+
+eβr (x,yw ) + eβr (x,yl) = σ β{r(x, yw) − r(x, yl)}.
+
+Larger values of β correspond to annotators whose choices more closely track the latent reward ordering. While useful, this model summarizes annotator heterogeneity through a single scalar parameter that is fixed across all contexts. This can be restrictive in practice, since the same annotator may be highly reliable on some types of prompts but much less reliable on others. To address this limitation, Liu et al. (2024) allow rationality to vary across context types, while Liu et al. (2025a) model it as a function of annotator-specific covariates such as demographic or background information. More broadly, several recent works (Lee et al., 2024b; Zhong et al., 2024; Park et al., 2024; Wang et al., 2025a) develop personalized reward models that tailor 14 utility representations to individual annotators or subpopulations. For example, under the personalized reward model of Lee et al. (2024b), 
+
+P (yw ≻ yl | x, Θ) = es⊤Θϕ(x,yw )
+
+es⊤Θϕ(x,yw ) + es⊤Θϕ(x,yl) ,
+
+where s denotes annotator-side information and Θ is a low-rank coefficient matrix. For statistics, the central challenge is not merely to fit a richer model, but to decide what target should be estimated in the first place. Should the goal be an average utility, a subgroup-specific utility, a personalized utility, or a robust aggregate? Under what conditions are such targets identifiable from sparse, noisy, and conflicting comparisons? These questions connect RLHF to hierarchical modeling, random-effects paired-comparison models, and fairness-aware aggregation. They are especially relevant for datasets such as PRISM , where user-level variation is a scientific signal rather than a nuisance (Kirk et al., 2024). 
+
+# 5.2 Active Learning 
+
+Once heterogeneity is acknowledged, the next question is how to collect preference data efficiently. Human feedback is expensive, and annotators differ in reliability, so data collection should not be treated as a passive preprocessing step. Instead, RLHF naturally gives rise to an adaptive experimental design problem: which comparisons should be queried, and from which annotators, in order to maximize information about the reward model? From a statistical perspective, active learning in RLHF can be viewed as a sequential design problem in which each queried comparison is chosen to improve the accuracy of the estimated reward model under a limited annotation budget. To make this concrete, suppose the parameterized reward model is rη(x, y) = η⊤ϕ(x, y), and preferences follow a BTL model. For a candidate comparison q = ( x, y1, y2), let 
+
+∆ϕ(q) = ϕ(x, y1) − ϕ(x, y2), pη(q) = σ η⊤∆ϕ(q).
+
+Then the contribution of query q to the Fisher information matrix has the form 
+
+Iη(q) = pη(q) 1 − pη(q) ∆ϕ(q)∆ ϕ(q)⊤.
+
+This expression makes clear that informative comparisons are those for which the feature contrast ∆ϕ(q) is large and the comparison probability is not too close to 0 or 1, since queries with nearly deterministic outcomes contribute little information. 15 Several works study conversation selection, where the goal is to choose the most informative prompts and candidate responses for annotation. Approaches based on optimal design (Zhan et al., 2023; Mukherjee et al., 2024; Scheid et al., 2024) select a batch of comparisons to maximize a design criterion applied to the accumulated information matrix 
+
+max  
+
+> Q
+
+Φ X
+
+> q∈Q
+
+Iη(q)
+
+!
+
+,
+
+where Φ could be a D-optimality criterion such as Φ( M ) = log det (M ). These methods are attractive because they connect RLHF directly to classical optimal design, but they often rely on local approximations to the reward model. Since preference learning is typically nonlinear and the reward model itself may be estimated from a deep network, the quality of these local approximations has not been fully studied. A complementary line of work uses uncertainty-based acquisition rules. Instead of optimizing a design criterion explicitly, these methods prioritize comparisons whose labels would be most informative under the current confidence region. A generic rule is 
+
+qt+1 = arg max 
+
+> q∈C t
+
+At(q),
+
+where Ct is the pool of available comparisons and At(q) is an acquisition score. Common choices include posterior variance, At(q) = Var t(r(x, y1) − r(x, y2)) , predictive entropy, or expected information gain (Das et al., 2024; Ji et al., 2024; Melo et al., 2024; Fang et al., 2024). These methods are especially natural when reward learning is viewed as sequential inference under a limited annotation budget, since they adapt sampling to the current uncertainty of the model. In addition to selecting informative comparisons, RLHF may also benefit from selecting informative annotators. Teacher-selection methods (Daniels-Koch and Freedman, 2022; Barnett et al., 2023; Freedman et al., 2025) formalize this problem by querying annotators whose expertise is expected to be most useful for reward learning. A common formulation augments the preference model with an annotator-specific rationality parameter βj , so that for annotator j,
+
+P(y1 ≻ y2 | x, j ) = σ(βj {r(x, y1) − r(x, y2)}) .
+
+Under this model, the informativeness of a query depends not only on the candidate comparison but also on which annotator is asked to label it. This leads naturally to a joint design problem over comparison–annotator pairs, 
+
+(qt+1 , j t+1 ) = arg max 
+
+> (q,j )∈C t×J
+
+At(q, j ),
+
+16 where At(q, j ) may again be based on Fisher information, posterior variance, or expected information gain. Most existing formulations model teachers as Boltzmann-rational agents with heterogeneous rationality parameters (Lee et al., 2021), but many assume that annotator expertise is constant across contexts. To address both types of adaptivity simultaneously, Liu et al. (2024) propose a dual active learning framework that jointly selects conversations and annotators using a D-optimal design criterion. More broadly, this line of work suggests that RLHF is as much a sequential design problem as it is a prediction problem. The central statistical question is not only how to estimate a reward model from observed comparisons, but also how to allocate limited feedback strategically so that the resulting model is as informative, robust, and sample-efficient as possible. 
+
+# 5.3 Uncertainty Quantification 
+
+After preference data have been collected and a reward model has been fitted, the next question is how much confidence one should place in the resulting estimates. Uncertainty quantification is therefore the natural inferential counterpart to reward modeling. In RLHF, it is important not only for scientific interpretation, but also for downstream decisions such as active querying, model comparison, and risk-sensitive policy optimization. From a statistical perspective, the main challenge is that reward learning is based on noisy pairwise comparisons, often collected adaptively and under heterogeneous annotators, so inferential guarantees must account for both dependence and model misspecification. A natural starting point is the classical Bradley–Terry–Luce (BTL) model. If items i and j
+
+have latent scores θi and θj , then the pairwise win probability is modeled as 
+
+P(i ≻ j) = eθi
+
+eθi + eθj = σ(θi − θj ).
+
+Given observed comparisons, the maximum likelihood estimator bθ is obtained by maximizing the corresponding log-likelihood. Classical and recent works (Simons and Yao, 1999; Han et al., 2020; Gao et al., 2023a; Liu et al., 2023; Fan et al., 2025) study the asymptotic distribution of such estimators and derive confidence intervals for contrasts such as θi − θj or for induced ranking quantities. A generic asymptotic statement takes the form 
+
+√n (bθ − θ⋆) d
+
+−→ N  0, I (θ⋆)−1 ,
+
+where I(θ⋆) is the Fisher information matrix under the comparison design. These provide a basis for Wald-type confidence intervals and hypothesis tests, and they make explicit how inferential accuracy depends on the connectivity and balance of the comparison graph. 17 More recent work extends this logic to covariate-assisted paired-comparison models (Fan et al., 2024a,b), where the comparison probability depends not only on item identities but also on contextual features. For example, if 
+
+P(y1 ≻ y2 | x) = σ η⊤{ϕ(x, y1) − ϕ(x, y2)} ,
+
+then inference targets the parameter η, or functionals derived from it, rather than a fixed vector of item scores. In such settings, uncertainty quantification typically proceeds through asymptotic normality of bη, √n (bη − η⋆) d
+
+−→ N (0 , Σ⋆) ,
+
+together with plug-in covariance estimators. The key methodological idea is that once pairwise preference learning is cast as a generalized linear model on feature differences, one can transfer tools from semiparametric inference, debiasing, and high-dimensional covariance estimation to construct confidence intervals for reward contrasts and ranking functionals. However, these classical and covariate-assisted settings still differ from RLHF in an important way. Standard ranking models usually compare a fixed collection of items with static latent scores, whereas RLHF involves context-dependent comparisons among dynamically generated responses. In other words, the object of interest is no longer just a finite-dimensional score vector, but a contextual reward function r(x, y), defined over prompt–response pairs. This makes uncertainty quantification substantially more difficult, since the same model may produce many candidate outputs for the same prompt, and the comparison structure depends jointly on the prompt distribution, the policy, and the annotation mechanism. This distinction has motivated new inferential frameworks for LLM evaluation and contextual reward learning. Several recent papers (Wang et al., 2025b; Lu et al., 2025; Li and Li, 2025; Zhang et al., 2025) develop uncertainty-aware procedures for ranking LLMs from human preference data, typically by estimating a global score for each model together with a confidence interval or confidence set. The key logic in these works is to combine pairwise-comparison models with uncertainty estimates for leaderboard quantities such as win rates, ability gaps, or overall ranks. In contrast, RLHF often requires uncertainty quantification at the level of the contextual reward itself. To address this, Liu et al. (2025a) study contextual reward models in nonconvex settings and derive statistical guarantees for estimating reward differences when multiple outputs are generated for each prompt. From a statistical perspective, uncertainty quantification in RLHF is therefore tied to three intertwined questions: what object is being estimated, what dependence structure 18 is induced by the data-collection process, and how inference should propagate through downstream optimization. Depending on the application, uncertainty may be attached to a reward parameter, a pairwise win probability, a model ranking, or a policy value. In addition, comparisons may be collected adaptively, prompts may be highly nonuniform, and annotators may be heterogeneous. Developing inferential methods that remain valid under these complications remains largely open, and is central to turning RLHF from a heuristic alignment pipeline into a statistically interpretable framework. 
+
+# 5.4 Reward Hacking 
+
+The final challenge concerns what happens after the estimated reward model is fed back into policy optimization. The previous subsections focused on how to estimate a reward model from noisy and heterogeneous comparisons, and how to quantify the resulting uncertainty. Reward hacking asks a different question: even if the reward model fits the observed preference data well, what guarantees do we have once it is used as an optimization target? In RLHF, this issue is central because the learned reward is not the ultimate object of interest; it is only a surrogate for the underlying utility that the policy is meant to optimize. To formalize this distinction, let u(x, y) denote the true but unobserved utility, and let 
+
+br(x, y) denote the learned reward model estimated from preference data. Policy optimization then produces a policy 
+
+bπ ∈ arg max  
+
+> π
+
+Ex∼ρ
+
+Ey∼π(·| x)br(x, y) − τ DKL 
+
+ π(· | x) ∥ πref (· | x) . (6) The statistical difficulty is that the optimized policy is chosen to maximize the proxy reward 
+
+br, whereas the true target is the unknown utility u. Reward hacking occurs when optimization drives the policy toward responses that achieve high predicted reward under br but do not achieve correspondingly high true utility under u.From this perspective, reward hacking can be viewed as a problem of decision-making under model misspecification. A useful way to express this is to write u(x, y) = br(x, y) + ε(x, y),where ε(x, y) represents reward-model error. If optimization selects by(x) ∈ arg max y br(x, y),then the relevant quantity is not merely average estimation error, but the utility gap evaluated at the optimizer, namely u(x, by(x)) − max y u(x, y). Even when br is accurate on average over observed comparisons, optimization can concentrate on regions where ε(x, y) is systematically large and positive, thereby amplifying estimation error into large policy regret. The problem is further complicated by adaptivity. Once the policy is optimized against br,19 the distribution of generated responses changes, so the policy may place mass on outputs that were rare or entirely absent in the original preference dataset. In other words, if the reward model is trained under one distribution P0 of prompt–response pairs but the optimized policy induces a shifted distribution Pbπ, then good predictive performance under P0 does not guarantee good behavior under Pbπ. This distribution shift resembles feedback loops in adaptive data analysis, off-policy decision-making, and selective inference. Empirically, reward hacking can manifest as repetitive, overly verbose, or stylistically exag-gerated outputs that score well under the reward model but are judged poorly by humans (Pan et al., 2022; Wen et al., 2025). These examples make clear that held-out accuracy on pairwise comparisons is not, by itself, sufficient to guarantee good downstream alignment. What matters is not only whether the reward model predicts existing labels well, but also whether it remains reliable in the parts of the output space that optimization will actively seek out. This viewpoint also suggests why robustness methods are valuable. One practical mitigation strategy is to use reward ensembles, replacing a single predictor br by an aggregate ¯r(x, y) = 
+
+M −1 PMm=1 brm(x, y), so that the optimized policy is less sensitive to the idiosyncratic error of any one reward model (Eisenstein et al., 2024; Rame et al., 2024; Ahmed et al., 2024; Coste et al., 2024). More generally, robust approaches optimize a pessimistic or uncertainty-aware objective (Liu et al., 2025a), for example by replacing br(x, y) with br(x, y) − λs (x, y), where 
+
+s(x, y) is an uncertainty or sensitivity score and λ > 0 controls the degree of conservativeness. Such formulations aim to penalize regions where the reward estimate is less trustworthy, thereby reducing the incentive to exploit model errors. More broadly, reward hacking highlights a central tension in RLHF: the objective is first estimated from data and then optimized adaptively. The main challenge is therefore not only estimation, but also understanding how estimation error propagates through optimization. Characterizing this error amplification, identifying conditions under which proxy optimization remains safe, and designing objectives that are robust to misspecification remain among the most important open problems in the statistical foundations of RLHF. 
+
+# 6 EXTENSIONS OF RLHF 
+
+We now discuss three extensions of the RLHF framework. Reinforcement learning from AI feedback (RLAIF) replaces human labels with AI-generated feedback. Best-of-N (BoN) 20 sampling moves alignment to inference time by reranking candidate outputs. Reinforcement learning from verifiable rewards (RLVR) replaces subjective preferences with externally checkable rewards. 
+
+# 6.1 Reinforcement Learning from AI Feedback 
+
+A main limitation of standard RLHF is the cost of large-scale human annotation. RLAIF addresses this by replacing human evaluators with capable language models that produce pairwise preferences or scalar scores. The goal is to approximate human evaluation at much lower cost. One influential example is Constitutional AI (Bai et al., 2022b). Its training has two stages. First, a helpful-only model generates responses y to prompts x, critiques them using a set of constitutional principles, and then revises them. These revisions are used for supervised fine-tuning. Second, the model generates two candidate responses, and an AI evaluator selects the preferred one. These AI-generated labels are then used to train a reward model or directly optimize the policy. Statistically, RLAIF replaces the human comparison probability Phuman (y1 ≻ y2 | x) with an AI proxy PAI (y1 ≻ y2 | x). The key question is how well the proxy matches human judgment, and how its bias affects downstream learning. Later work studies how close AI feedback can get to human feedback (Lee et al., 2024a). Results suggest that RLAIF can match RLHF on tasks such as summarization and dialogue while scaling much more cheaply. In domain-specific settings, Chen et al. (2025) use GPT-4o to provide binary reward signals for medical-answer correctness. More recently, Xia et al. (2026) study how to combine abundant but biased AI labels with limited high-quality human data, and establish recovery guarantees for human-aligned preferences. Despite its scalability, RLAIF inherits many RLHF concerns. Bias, overconfidence, or distribution shift in the AI judge can distort the alignment objective. For this reason, many systems still use some human supervision to anchor quality (Xu et al., 2025b). This also motivates a broader question: if reward models or judges are available at inference time, can they improve outputs without retraining the policy? 
+
+# 6.2 Best-of-N Sampling 
+
+One answer is to move alignment from training time to inference time. Best-of-N (BoN) sampling (Stiennon et al., 2020; Nakano et al., 2022; Gao et al., 2023b; Jinnai et al., 2024; Gui et al., 2024; Liu et al., 2025b; Chow et al., 2025) generates multiple responses and selects 21 the one with the highest predicted reward. Thus, BoN uses the reward model as a reranker rather than as a training objective. Given a prompt x, the policy samples y1, . . . , yN ∼ π(· | x) and returns 
+
+y∗ = arg max   
+
+> i∈{ 1,...,N }
+
+r(x, yi).
+
+As N grows, the chance of sampling a strong response increases. Statistically, this is a Monte Carlo search for a high-reward output under the policy. BoN has clear advantages. It is simple, needs no extra training, and can be added to almost any model. It also works naturally with PPO-based RLHF and one-stage methods such as DPO. But BoN also sharpens the same misspecification issue seen in reward-based RLHF. If the reward model is flawed, choosing the top-scoring response can worsen reward hacking rather than reduce it. Larger N may increase this risk by making it easier to find outputs that exploit model errors. Recent theory studies this tradeoff. Ichihara et al. (2025) analyze regularized BoN methods that temper reward maximization. Aminian et al. (2025) study regret relative to an optimal KL-regularized policy, showing how performance depends on the number of samples, reward-model accuracy, and the reference policy. 
+
+# 6.3 Reinforcement Learning from Verifiable Rewards 
+
+Recent work studies reinforcement learning from verifiable rewards (RLVR, Lambert et al., 2025). Here, candidate responses are scored by task-specific checkers, executors, or external tools rather than by humans or learned reward models. RLVR is especially useful for tasks such as math and coding, where correctness can often be checked automatically. A prominent example is group relative policy optimization (GRPO, Shao et al., 2024), used in systems such as DeepSeekMath and DeepSeek-R1 (Guo et al., 2025). In these settings, the reward is often a deterministic or nearly deterministic verifier signal v(x, y) ∈ { 0, 1}.Compared with RLHF, this changes the statistical problem. The main difficulty is no longer estimating a latent reward from noisy preferences, but exploring a large response space under sparse task-dependent rewards. This difference matters. In RLHF, uncertainty comes mainly from noisy and heterogeneous human feedback, leading to issues of identifiability, estimation error, and misspecification. In RLVR, the reward is often less noisy, but positive signals may be rare. The problem is 22 therefore closer to bandit learning with sparse rewards, rare-event estimation, and difficult exploration. Recent works (e.g., Chu et al., 2025; Liu et al., 2025c; Zheng et al., 2025; Zhou et al., 2026) study these methods from both optimization and statistical perspectives. At the same time, RLVR applies only when outputs can be objectively verified. Even then, such rewards usually capture only a narrow notion of quality. They do not directly encode broader goals such as helpfulness, safety, tone, or style. For this reason, RLVR is best viewed as complementary to RLHF rather than a replacement: verifiable rewards are powerful when external checking is available, while RLHF remains necessary for subjective or context-dependent tasks. 
+
+# 7 BENCHMARK DATA AND EVALUATION 
+
+Implementation of RLHF relies on three main components: preference datasets, software platforms, and evaluation protocols. Since this survey emphasizes the statistical role of pairwise preference data, we focus primarily on the publicly available PRISM dataset and the 
+
+TRL platform, and only briefly mention several other widely used datasets and tools. 
+
+# 7.1 Benchmark Datasets 
+
+Preference datasets are central to RLHF because they replace ground-truth outputs with comparative judgments over model responses. A typical sample consists of a prompt together with two candidate responses and a label indicating which response is preferred. These comparisons are then used to train reward models or directly optimize policies. Among currently available datasets, PRISM (Kirk et al., 2024) is especially relevant for a statistical treatment of RLHF. The dataset was designed to study how preferences over language model outputs vary across users and cultural settings. It contains large-scale human– AI interactions from 1,500 participants across 75 countries, covering responses from 21 different LLMs. In addition to preference or rating data, PRISM records user-level metadata such as demographic and sociocultural attributes. This makes it particularly useful for studying heterogeneous feedback, personalized reward modeling, and subgroup-specific alignment. In contrast to datasets that treat user variation as noise, PRISM makes such variation an explicit object of study. Other datasets are also widely used in RLHF research. For example, hh-rlhf (Bai et al., 2022a) is an early and influential human-labeled pairwise preference dataset for helpful 23 and honest dialogue, while UltraFeedback (Cui et al., 2024) uses large-scale AI-generated feedback to provide a broader and cheaper source of preference supervision. 
+
+# 7.2 RLHF Platforms 
+
+To support reproducible and scalable RLHF training, several open-source frameworks have been developed. These platforms provide implementations of the main alignment stages, including supervised fine-tuning, reward modeling, and preference optimization. Among them, TRL (von Werra et al., 2020) is one of the most widely used libraries for post-training language models. It supports methods such as PPO, DPO, and GRPO within the Hugging Face ecosystem. Other commonly used frameworks include trlX (Havrilla et al., 2023), which provides infrastructure for RLHF training, and DeepSpeed-Chat (Yao et al., 2023), which implements an end-to-end large-scale RLHF pipeline. To make these ideas con-crete, we provide a small demonstration at https://github.com/Pangpang-Liu/RLHF_demo ,built on TRL , that illustrates core RLHF training steps under both PPO and DPO. 
+
+# 7.3 Evaluations 
+
+Evaluation remains one of the hardest parts of RLHF because alignment is multi-dimensional: models may differ in correctness, helpfulness, safety, reasoning, factuality, tone, and cultural appropriateness. Human evaluation remains the gold standard, but it is expensive and difficult to scale. As a result, many modern benchmarks rely partly or fully on LLM-as-a-judge protocols (Gu et al., 2024). For this survey, the most relevant evaluation paradigm is arena-style pairwise comparison. In this setting, two models respond to the same prompt, and either human judges or strong LLM judges choose the preferred output. If model m produces response y(m) and model 
+
+m′ produces response y(m′) for prompt x, then one may model the comparison outcome as 
+
+P m ≻ m′ | x = σ(∆ m,m ′ (x)) , where ∆m,m ′ (x) is a prompt-specific utility gap. Classical BTL models arise as a special case when this gap is prompt independent. This view makes clear that LLM evaluation is closely connected to the same pairwise-comparison framework used in RLHF training. It also exposes several statistical challenges: comparison designs are highly unbalanced, model quality is prompt dependent, and judge behavior may itself be biased or heterogeneous. As a result, leaderboard construction naturally raises questions of contextual modeling, uncertainty quantification, calibration, and multiple comparisons. Existing systems such as Prometheus-Eval , Preference Proxy Evaluation, 24 AlpacaEval , and MT-Bench-101 illustrate the diversity of evaluation protocols now in use (Kim et al., 2024; Frick et al., 2025; Li et al., 2023; Bai et al., 2024). For statisticians, the key message is that modern LLM evaluation is not separate from RLHF, but rather another important setting for pairwise preference modeling and inference. 
+
+# 8 FUTURE DIRECTIONS AND OPEN PROBLEMS 
+
+We conclude by highlighting several emerging directions that may warrant further attention. From a statistical perspective, progress in RLHF may depend not only on improved estimation and optimization, but also on deeper consideration of issues such as privacy, fairness, safety, and governance. 
+
+• Privacy and Data Protection. RLHF often relies on sensitive preference data, user interactions, and annotator metadata. This raises privacy questions at several levels: protection of raw human feedback, privacy leakage through aligned models, and the tradeoff between privacy guarantees and alignment quality. Recent work has begun to study differentially private and robust versions of offline RLHF and DPO, showing that privacy constraints can materially affect estimation error and alignment performance (Cho and Sun, 2026). At a broader systems level, recent privacy guidance for LLMs also emphasizes data protection by design and risk management for deployment (Zhou et al., 2025a,b). These developments suggest an important open problem for statistics: how to quantify privacy-utility tradeoffs in preference learning and policy optimization, especially under adaptive querying and heterogeneous users. 
+
+• Fairness, Pluralism, and Population Alignment. Another emerging challenge is fairness. Standard RLHF often aggregates preferences into a single reward signal, but this can systematically favor majority groups or dominant value systems. Recent work on reward fairness in RLHF proposes fairness-aware regularization and reward adjustments to promote more equitable alignment outcomes, while broader studies of preference alignment argue that models should go beyond a single notion of harmlessness or helpfulness and better reflect pluralistic values (Ouyang et al., 2025). Related empirical work also shows that preference alignment does not automatically improve all trustworthiness dimensions and may even worsen some of them, including stereotypical bias and privacy behavior (Li et al., 2025). For statisticians, this raises fundamental questions about estimands: should RLHF target average preferences, subgroup-specific preferences, Pareto-efficient compromises, or explicitly fairness-constrained objectives? 25 • Safety Guarantees and High-Confidence Alignment. Most current RLHF methods optimize average preference-based objectives, but safety-critical applications may require stronger guarantees than average-case improvement. Recent work on high-confidence safe RLHF seeks to provide probabilistic guarantees that harmful responses remain below a target threshold while preserving helpfulness (Chittepu et al., 2025). This points to a broader research agenda at the intersection of RLHF and statistical decision theory: how should one construct confidence-calibrated alignment procedures, certify safe deployment under uncertainty, and balance utility against risk in high-stakes settings? Such questions are likely to become increasingly important as aligned LLMs are deployed in domains such as healthcare, education, and decision support. 
+
+• Evaluation, Governance, and Auditing. A final challenge is how aligned models should be evaluated and audited after training. Earlier sections discussed uncertainty-aware evaluation and arena-style pairwise comparison, but future work may also need post-deployment monitoring, subgroup auditing, and accountability benchmarks. Recent work moves in this direction: Ojewale et al. (2026) propose audit trails for LLMs, while Dong et al. (2026) show that combining labeled outcomes with pairwise signals can improve statistical efficiency and ranking precision. Since aligned models may behave differently across domains, populations, and trustworthiness dimensions, evaluation is not just a one-time benchmark but an ongoing monitoring problem. Developing methods for continual auditing, subgroup-aware monitoring, efficient comparative evaluation, and transparent reporting remains an important open direction. 
+
+# References 
+
+Ahmed, A. M., Rafailov, R., Sharkov, S., Li, X., and Koyejo, S. (2024), “Scalable Ensembling For Mitigating Reward Overoptimisation,” in ICLR 2024 Workshop on Mathematical and Empirical Understanding of Foundation Models .Aminian, G., Shenfeld, I., Asadi, A. R., Beirami, A., and Mroueh, Y. (2025), “Best-of-N through the Smoothing Lens: KL Divergence and Regret Analysis,” in ES-FoMo III: 3rd Workshop on Efficient Systems for Foundation Models .Azar, M. G., Guo, Z. D., Piot, B., Munos, R., Rowland, M., Valko, M., and Calandriello, D. 26 (2024), “A general theoretical paradigm to understand learning from human preferences,” in International Conference on Artificial Intelligence and Statistics , PMLR, pp. 4447–4455. Bai, G., Liu, J., Bu, X., He, Y., Liu, J., Zhou, Z., Lin, Z., Su, W., Ge, T., Zheng, B., et al. (2024), “Mt-bench-101: A fine-grained benchmark for evaluating large language models in multi-turn dialogues,” in Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 7421–7454. Bai, Y., Jones, A., Ndousse, K., Askell, A., Chen, A., DasSarma, N., Drain, D., Fort, S., Ganguli, D., Henighan, T., et al. (2022a), “Training a helpful and harmless assistant with reinforcement learning from human feedback,” arXiv preprint arXiv:2204.05862 .Bai, Y., Kadavath, S., Kundu, S., Askell, A., Kernion, J., Jones, A., Chen, A., Goldie, A., Mirhoseini, A., McKinnon, C., et al. (2022b), “Constitutional AI: Harmlessness from AI feedback,” arXiv preprint arXiv:2212.08073 .Barnett, P., Freedman, R., Svegliato, J., and Russell, S. (2023), “Active Reward Learning from Multiple Teachers,” in The AAAI Workshop on Artificial Intelligence Safety .Bradley, R. A. and Terry, M. E. (1952), “Rank analysis of incomplete block designs: I. The method of paired comparisons,” Biometrika , 39, 324–345. Chakraborty, S., Qiu, J., Yuan, H., Koppel, A., Manocha, D., Huang, F., Bedi, A., and Wang, M. (2024), “MaxMin-RLHF: Alignment with Diverse Human Preferences,” in International Conference on Machine Learning , PMLR, pp. 6116–6135. Chen, J., Cai, Z., Ji, K., Wang, X., Liu, W., Wang, R., and Wang, B. (2025), “Towards Medical Complex Reasoning with LLMs through Medical Verifiable Problems,” in Findings of the Association for Computational Linguistics: ACL 2025 , eds. Che, W., Nabende, J., Shutova, E., and Pilehvar, M. T., Vienna, Austria: Association for Computational Linguistics, pp. 14552–14573. Chen, M., Tworek, J., Jun, H., Yuan, Q., Pinto, H. P. D. O., Kaplan, J., Edwards, H., Burda, Y., Joseph, N., Brockman, G., et al. (2021), “Evaluating large language models trained on code,” arXiv preprint arXiv:2107.03374 .27 Chittepu, Y., Metevier, B., Schwarzer, W., Hoag, A., Niekum, S., and Thomas, P. S. (2025), “Reinforcement Learning from Human Feedback with High-Confidence Safety Constraints,” 
+
+arXiv preprint arXiv:2506.08266 .Cho, Y. H. and Sun, W. W. (2026), “Privacy-Preserving Reinforcement Learning from Human Feedback via Decoupled Reward Modeling,” arXiv preprint arXiv:2603.22563 .Chow, Y., Tennenholtz, G., Gur, I., Zhuang, V., Dai, B., Kumar, A., Agarwal, R., Thiagara-jan, S., Boutilier, C., and Faust, A. (2025), “Inference-Aware Fine-Tuning for Best-of-N Sampling in Large Language Models,” in The Thirteenth International Conference on Learning Representations .Chu, X., Huang, H., Zhang, X., Wei, F., and Wang, Y. (2025), “Gpg: A simple and strong reinforcement learning baseline for model reasoning,” arXiv preprint arXiv:2504.02546 .Coste, T., Anwar, U., Kirk, R., and Krueger, D. (2024), “Reward Model Ensembles Help Mitigate Overoptimization,” in The Twelfth International Conference on Learning Repre-sentations .Cui, G., Yuan, L., Ding, N., Yao, G., He, B., Zhu, W., Ni, Y., Xie, G., Xie, R., Lin, Y., Liu, Z., and Sun, M. (2024), “ULTRAFEEDBACK: Boosting Language Models with Scaled AI Feedback,” in Forty-first International Conference on Machine Learning .Daniels-Koch, O. and Freedman, R. (2022), “The Expertise Problem: Learning from Special-ized Feedback,” in NeurIPS ML Safety Workshop .Das, N., Chakraborty, S., Pacchiano, A., and Chowdhury, S. R. (2024), “Active Preference Optimization for Sample Efficient RLHF,” arXiv preprint arXiv:2402.10500 .Dong, Z., Zhang, Z., Zhou, Y., Jin, C., Wu, R., and Zhang, L. (2026), “Evaluating LLMs When They Do Not Know the Answer: Statistical Evaluation of Mathematical Reasoning via Comparative Signals,” arXiv preprint arXiv:2602.03061 .Eisenstein, J., Nagpal, C., Agarwal, A., Beirami, A., D’Amour, A. N., Dvijotham, K. D., Fisch, A., Heller, K. A., Pfohl, S. R., Ramachandran, D., Shaw, P., and Berant, J. (2024), 28 “Helping or Herding? Reward Model Ensembles Mitigate but do not Eliminate Reward Hacking,” in First Conference on Language Modeling .Fan, J., Hou, J., and Yu, M. (2024a), “Covariate Assisted Entity Ranking with Sparse Intrinsic Scores,” arXiv preprint arXiv:2407.08814 .Fan, J., Hou, J., and Yu, M. (2024b), “Uncertainty quantification of MLE for entity ranking with covariates,” Journal of Machine Learning Research , 25, 1–83. Fan, J., Lou, Z., Wang, W., and Yu, M. (2025), “Ranking inferences based on the top choice of multiway comparisons,” Journal of the American Statistical Association , 120, 237–250. Fang, H. et al. (2024), “Efficiently Acquiring Human Feedback with Bayesian Deep Ranking for Preference Learning,” in Proceedings of the 2024 Conference on Uncertainty in Natural Language Processing .Freedman, R., Svegliato, J., Wray, K., and Russell, S. (2025), “Active teacher selection for reinforcement learning from human feedback,” arXiv preprint arXiv:2310.15288 .Frick, E., Li, T., Chen, C., Chiang, W.-L., Angelopoulos, A. N., Jiao, J., Zhu, B., Gonzalez, J. E., and Stoica, I. (2025), “How to Evaluate Reward Models for RLHF,” in The Thirteenth International Conference on Learning Representations .Gallego, V. (2024), “Refined direct preference optimization with synthetic data for behavioral alignment of llms,” in International Conference on Machine Learning, Optimization, and Data Science , Springer, pp. 92–105. Gao, C., Shen, Y., and Zhang, A. Y. (2023a), “Uncertainty quantification in the Bradley– Terry–Luce model,” Information and Inference: A Journal of the IMA , 12, 1073–1140. Gao, L., Schulman, J., and Hilton, J. (2023b), “Scaling laws for reward model overoptimiza-tion,” in International Conference on Machine Learning , PMLR, pp. 10835–10866. Gopalan, A., Chowdhury, S. R., and Banerjee, D. (2025), “Why DPO is a Misspecified Estimator and How to Fix It,” arXiv preprint arXiv:2510.20413 .29 Gu, J., Jiang, X., Shi, Z., Tan, H., Zhai, X., Xu, C., Li, W., Shen, Y., Ma, S., Liu, H., et al. (2024), “A survey on LLM-as-a-judge,” The Innovation .Gui, L., Garbacea, C., and Veitch, V. (2024), “BoNBoN Alignment for Large Language Models and the Sweetness of Best-of-n Sampling,” in The Thirty-eighth Annual Conference on Neural Information Processing Systems .Guo, D., Yang, D., Zhang, H., Song, J., Wang, P., Zhu, Q., Xu, R., Zhang, R., Ma, S., Bi, X., et al. (2025), “DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning,” Nature , 645, 633–638. Han, R., Ye, R., Tan, C., and Chen, K. (2020), “Asymptotic theory of sparse Bradley–Terry model,” The Annals of Applied Probability , 30, 2491–2515. Hao, B., Jain, R., Lattimore, T., Van Roy, B., and Wen, Z. (2023), “Leveraging demonstrations to improve online learning: Quality matters,” in International Conference on Machine Learning , PMLR, pp. 12527–12545. Havrilla, A., Zhuravinskyi, M., Phung, D., Tiwari, A., Tow, J., Biderman, S., Anthony, Q., and Castricato, L. (2023), “trlX: A Framework for Large Scale Reinforcement Learning from Human Feedback,” in Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , eds. Bouamor, H., Pino, J., and Bali, K., Singapore: Association for Computational Linguistics, pp. 8578–8595. Ichihara, Y., Jinnai, Y., Morimura, T., Abe, K., Ariu, K., Sakamoto, M., and Uchibe, E. (2025), “Evaluation of Best-of-N Sampling Strategies for Language Model Alignment,” 
+
+Transactions on Machine Learning Research .Jeon, H. J., Milli, S., and Dragan, A. (2020), “Reward-rational (implicit) choice: A unifying formalism for reward learning,” Advances in Neural Information Processing Systems , 33, 4415–4426. Ji, K., He, J., and Gu, Q. (2024), “Reinforcement Learning from Human Feedback with Active Queries,” arXiv preprint arXiv:2402.09401 .30 Jinnai, Y., Morimura, T., Ariu, K., and Abe, K. (2024), “Regularized best-of-N sampling to mitigate reward hacking for language model alignment,” in ICML 2024 Workshop on Models of Human Feedback for AI Alignment .Kim, S., Suk, J., Longpre, S., Lin, B. Y., Shin, J., Welleck, S., Neubig, G., Lee, M., Lee, K., and Seo, M. (2024), “Prometheus 2: An open source language model specialized in evaluating other language models,” in Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , pp. 4334–4353. Kirk, H. R., Whitefield, A., Rottger, P., Bean, A. M., Margatina, K., Mosquera-Gomez, R., Ciro, J., Bartolo, M., Williams, A., He, H., et al. (2024), “The PRISM alignment dataset: What participatory, representative and individualised human feedback reveals about the subjective and multicultural alignment of large language models,” Advances in Neural Information Processing Systems , 37, 105236–105344. Lambert, N., Morrison, J., Pyatkin, V., Huang, S., Ivison, H., Brahman, F., Miranda, L. J. V., Liu, A., Dziri, N., Lyu, X., et al. (2025), “Tulu 3: Pushing Frontiers in Open Language Model Post-Training,” in Second Conference on Language Modeling .Lee, H., Phatale, S., Mansoor, H., Mesnard, T., Ferret, J., Lu, K. R., Bishop, C., Hall, E., Carbune, V., Rastogi, A., and Prakash, S. (2024a), “RLAIF vs. RLHF: Scaling Rein-forcement Learning from Human Feedback with AI Feedback,” in Forty-first International Conference on Machine Learning .Lee, K., Smith, L. M., and Abbeel, P. (2021), “PEBBLE: Feedback-Efficient Interactive Reinforcement Learning via Relabeling Experience and Unsupervised Pre-training,” in 
+
+International Conference on Machine Learning , PMLR, pp. 6152–6163. Lee, S. J., Sun, W. W., and Liu, Y. (2024b), “Low-rank contextual reinforcement learning from heterogeneous human feedback,” arXiv preprint arXiv:2412.19436 .Li, A. J., Krishna, S., and Lakkaraju, H. (2025), “More RLHF, More Trust? On The Impact of Preference Alignment On Trustworthiness,” in The Thirteenth International Conference on Learning Representations .31 Li, X. and Li, S. (2025), “Efficient Inference for Covariate-adjusted Bradley-Terry Model with Covariate Shift,” arXiv preprint arXiv:2503.18256 .Li, X., Zhang, T., Dubois, Y., Taori, R., Gulrajani, I., Guestrin, C., Liang, P., and Hashimoto, T. B. (2023), “AlpacaEval: An Automatic Evaluator of Instruction-following Models,” 
+
+https://github.com/tatsu-lab/alpaca_eval .Liu, P., Lu, J., and Sun, W. W. (2025a), “Uncertainty Quantification for Large Language Model Reward Learning under Heterogeneous Human Feedback,” arXiv preprint arXiv:2512.03208 .Liu, P., Shi, C., and Sun, W. W. (2024), “Dual active learning for reinforcement learning from human feedback,” arXiv preprint arXiv:2410.02504 .Liu, Y., Fang, E. X., and Lu, J. (2023), “Lagrangian inference for ranking problems,” 
+
+Operations research , 71, 202–223. Liu, Y., Yao, Z., Min, R., Cao, Y., Hou, L., and Li, J. (2025b), “Pairjudge RM: Perform best-of-N sampling with knockout tournament,” arXiv preprint arXiv:2501.13007 .Liu, Z., Chen, C., Li, W., Qi, P., Pang, T., Du, C., Lee, W. S., and Lin, M. (2025c), “Understanding R1-Zero-Like Training: A Critical Perspective,” in Second Conference on Language Modeling .Lu, N., Fang, E. X., and Lu, J. (2025), “Contextual Online Uncertainty-Aware Preference Learning for Human Feedback,” arXiv preprint arXiv:2504.19342 .Melo, L. C. et al. (2024), “Deep Bayesian Active Learning for Preference Modeling in Language Models,” in Advances in Neural Information Processing Systems .Mukherjee, S., Lalitha, A., Kalantari, K., Deshmukh, A., Liu, G., Ma, Y., and Kveton, B. (2024), “Optimal Design for Human Preference Elicitation,” in The Thirty-eighth Annual Conference on Neural Information Processing Systems .Nakano, R., Hilton, J., Balaji, S., Wu, J., Ouyang, L., Kim, C., Hesse, C., Jain, S., Kosaraju, V., Saunders, W., et al. (2022), “Webgpt: Browser-assisted question-answering with human feedback,” arXiv preprint arXiv:2112.09332 .32 Ojewale, V., Suresh, H., and Venkatasubramanian, S. (2026), “Audit Trails for Accountability in Large Language Models,” arXiv preprint arXiv:2601.20727 .Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., et al. (2022), “Training language models to follow instructions with human feedback,” Advances in neural information processing systems , 35, 27730–27744. Ouyang, S., Hu, Y., Chen, G., Li, Q., Zhang, F., and Liu, Y. (2025), “Towards Reward Fairness in RLHF: From a Resource Allocation Perspective,” in Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics .Pan, A., Bhatia, K., and Steinhardt, J. (2022), “The Effects of Reward Misspecification: Mapping and Mitigating Misaligned Models,” in International Conference on Learning Representations .Park, C., Liu, M., Kong, D., Zhang, K., and Ozdaglar, A. E. (2024), “RLHF from Heteroge-neous Feedback via Personalization and Preference Aggregation,” in ICML 2024 Workshop on Theoretical Foundations of Foundation Models .Rafailov, R., Sharma, A., Mitchell, E., Manning, C. D., Ermon, S., and Finn, C. (2023), “Direct Preference Optimization: Your Language Model is Secretly a Reward Model,” in 
+
+Thirty-seventh Conference on Neural Information Processing Systems .Rame, A., Vieillard, N., Hussenot, L., Dadashi, R., Cideron, G., Bachem, O., and Ferret, J. (2024), “WARM: On the Benefits of Weight Averaged Reward Models,” in Forty-first International Conference on Machine Learning .Scheid, A., Boursier, E., Durmus, A., Jordan, M. I., Ménard, P., Moulines, E., and Valko, M. (2024), “Optimal design for reward modeling in RLHF,” arXiv preprint arXiv:2410.17055 .Schulman, J., Wolski, F., Dhariwal, P., Radford, A., and Klimov, O. (2017), “Proximal policy optimization algorithms,” arXiv preprint arXiv:1707.06347 .Shao, Z., Wang, P., Zhu, Q., Xu, R., Song, J., Bi, X., Zhang, H., Zhang, M., Li, Y., Wu, 33 Y., et al. (2024), “Deepseekmath: Pushing the limits of mathematical reasoning in open language models,” arXiv preprint arXiv:2402.03300 .Shi, R., Song, M., Zhou, R., Zhang, Z., Fazel, M., and Du, S. S. (2025), “Understanding the Performance Gap in Preference Learning: A Dichotomy of RLHF and DPO,” arXiv preprint arXiv:2505.19770 .Simons, G. and Yao, Y.-C. (1999), “Asymptotics when the number of parameters tends to infinity in the Bradley-Terry model for paired comparisons,” The Annals of Statistics , 27, 1041–1060. Stiennon, N., Ouyang, L., Wu, J., Ziegler, D., Lowe, R., Voss, C., Radford, A., Amodei, D., and Christiano, P. F. (2020), “Learning to summarize with human feedback,” Advances in neural information processing systems , 33, 3008–3021. Sutton, R. S. and Barto, A. G. (2018), Reinforcement Learning: An Introduction , MIT Press. Touvron, H., Martin, L., Stone, K., Albert, P., Almahairi, A., Babaei, Y., Bashlykov, N., Batra, S., Bhargava, P., Bhosale, S., et al. (2023), “Llama 2: Open foundation and fine-tuned chat models,” arXiv preprint arXiv:2307.09288 .Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., and Polosukhin, I. (2017), “Attention is all you need,” Advances in neural information processing systems , 30. von Werra, L., Belkada, Y., Tunstall, L., Beeching, E., Thrush, T., Lambert, N., Huang, S., Rasul, K., and Gallouédec, Q. (2020), “TRL: Transformers Reinforcement Learning,” . Wang, T., Gui, D., Hu, Y., Lin, S., and Zhang, L. (2025a), “MPO: An Efficient Post-Processing Framework for Mixing Diverse Preference Alignment,” arXiv preprint arXiv:2502.18699 .Wang, Z., Han, Y., Fang, E. X., Wang, L., and Lu, J. (2025b), “Confidence Diagram of Nonparametric Ranking for Uncertainty Assessment in Large Language Models Evaluation,” 
+
+arXiv preprint arXiv:2412.05506 .34 Wen, J., Zhong, R., Khan, A., Perez, E., Steinhardt, J., Huang, M., Bowman, S. R., He, H., and Feng, S. (2025), “Language Models Learn to Mislead Humans via RLHF,” in The Thirteenth International Conference on Learning Representations .Wu, J., Xie, Y., Yang, Z., Wu, J., Chen, J., Gao, J., Ding, B., Wang, X., and He, X. (2025), “Towards Robust Alignment of Language Models: Distributionally Robustifying Direct Preference Optimization,” in The Thirteenth International Conference on Learning Representations .Xia, X., Xia, Z., Zhang, L., and Cai, Z. (2026), “A Statistical Framework for Alignment with Biased AI Feedback,” arXiv preprint arXiv:2602.08259 .Xiao, J., Li, Z., Xie, X., Getzen, E., Fang, C., Long, Q., and Su, W. J. (2025), “On the algorithmic bias of aligning large language models with RLHF: Preference collapse and matching regularization,” Journal of the American Statistical Association , 120, 2154–2164. Xu, E., Ye, K., Zhou, H., Zhu, L., Quinzan, F., and Shi, C. (2025a), “Doubly Robust Alignment for Large Language Models,” in The Thirty-ninth Annual Conference on Neural Information Processing Systems .Xu, Y., Chakraborty, T., Kiciman, E., Aryal, B., Sharma, S., Lu, S., and Chandra, R. (2025b), “RLTHF: Targeted Human Feedback for LLM Alignment,” in International Conference on Machine Learning , PMLR, pp. 69096–69115. Yao, Z., Aminabadi, R. Y., Ruwase, O., Rajbhandari, S., Wu, X., Awan, A. A., Rasley, J., Zhang, M., Li, C., Holmes, C., et al. (2023), “DeepSpeed-Chat: Easy, fast and affordable rlhf training of chatgpt-like models at all scales,” arXiv preprint arXiv:2308.01320 .Ye, K., Zhou, H., Zhu, J., Quinzan, F., and Shi, C. (2025), “Robust Reinforcement Learn-ing from Human Feedback for Large Language Models Fine-Tuning,” arXiv preprint arXiv:2504.03784 .Zeng, D., Dai, Y., Cheng, P., Wang, L., Hu, T., Chen, W., Du, N., and Xu, Z. (2024), “On diversified preferences of large language model alignment,” in Findings of the Association for Computational Linguistics: EMNLP 2024 , pp. 9194–9210. 35 Zhan, W., Uehara, M., Sun, W., and Lee, J. D. (2023), “How to Query Human Feedback Efficiently in RL?” in ICML 2023 Workshop The Many Facets of Preference-Based Learning .Zhang, Y., Belloni, A., Fang, E. X., Lu, J., and Xu, X. (2025), “Fisher Random Walk: Auto-matic Debiasing Contextual Preference Inference for Large Language Model Evaluation,” 
+
+arXiv preprint arXiv:2509.05852 .Zheng, C., Liu, S., Li, M., Chen, X.-H., Yu, B., Gao, C., Dang, K., Liu, Y., Men, R., Yang, A., et al. (2025), “Group sequence policy optimization,” arXiv preprint arXiv:2507.18071 .Zhong, H., Deng, Z., Su, W. J., Wu, Z. S., and Zhang, L. (2024), “Provable multi-party reinforcement learning with diverse human feedback,” arXiv preprint arXiv:2403.05006 .Zhou, H., Ye, K., Xu, E., Zhu, J., Gong, S., and Shi, C. (2026), “Demystifying Group Relative Policy Optimization: Its Policy Gradient is a U-Statistic,” arXiv preprint arXiv:2603.01162 .Zhou, X., Wu, Y., and Orabona, F. (2025a), “A Unified Theoretical Analysis of Private and Robust Offline Alignment: from RLHF to DPO,” arXiv preprint arXiv:2505.15694 .Zhou, X., Wu, Y., Weng, W., and Orabona, F. (2025b), “Square χPO: Differentially Private and Robust χ2-Preference Optimization in Offline Direct Alignment,” in Proceedings of the 42nd International Conference on Machine Learning , PMLR, vol. 267 of Proceedings of Machine Learning Research , pp. 79389–79413. Zhu, B., Jordan, M., and Jiao, J. (2023), “Principled reinforcement learning with human feedback from pairwise or K-wise comparisons,” in International Conference on Machine Learning , PMLR, pp. 43037–43067. Ziegler, D. M., Stiennon, N., Wu, J., Brown, T. B., Radford, A., Amodei, D., Christiano, P., and Irving, G. (2019), “Fine-tuning language models from human preferences,” arXiv preprint arXiv:1909.08593 .36

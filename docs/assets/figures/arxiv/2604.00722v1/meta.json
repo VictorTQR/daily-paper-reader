@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-001.webp",
+      "caption": "Figure 8: Comparison of optimization paradigms in multi-agent systems. While existing methods rely on direct updates (1), shared memory (2), or collective global evaluations (3), LangMARL (4) introduces an explicit individual credit assignment mechanism. This allows the centralized critic to decompose global feedback into agent-specific guidance, facilitating more precise policy optimization in collaborative tasks.",
+      "page": 15,
+      "index": 1,
+      "width": 1032,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-002.webp",
+      "caption": "Figure 2: An Easy-to-Use Toolkit for LangMARL. LangMARL mirrors the syntax and abstractions of classical MARL libraries (e.g., TorchRL), redefining core components in natural language space, making LLM-based multi-agent optimization as straightforward to implement as standard deep RL pipelines.",
+      "page": 2,
+      "index": 2,
+      "width": 1023,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-003.webp",
+      "caption": "Figure 6: Sensitivity analysis of LangMARL components. (a) Performance comparison of various LLM backbones against the best baseline Reflexion. (b-c) Impact of Monte Carlo rollout counts on HumanEval and Pistonball.",
+      "page": 10,
+      "index": 3,
+      "width": 1046,
+      "height": 183
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-004.webp",
+      "caption": "Figure 7: Ablation study on credit assignment.",
+      "page": 10,
+      "index": 4,
+      "width": 496,
+      "height": 242
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-005.webp",
+      "caption": "Table 1: Comparison across prompting and self-evolving paradigms. LangMARL provides the most comprehensive framework by unifying self-evolution, centralized critique, and explicit credit assignment.",
+      "page": 3,
+      "index": 5,
+      "width": 1053,
+      "height": 364
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-006.webp",
+      "caption": "Figure 12: Examples of language-based credit assignment and policy optimization in LangMARL.",
+      "page": 18,
+      "index": 6,
+      "width": 1056,
+      "height": 567
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-007.webp",
+      "caption": "Table 2: Comprehensive Comparison across QA, Reasoning, Coding and Multi-Agent Environments. All reported values represent the mean performance after 5 training iterations using the same backbone LLMs.",
+      "page": 8,
+      "index": 7,
+      "width": 1044,
+      "height": 692
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-008.webp",
+      "caption": "Figure 3: The LangMARL System Pipeline. The framework follows a CTDE paradigm: (i) Language Policy Actors execute decentralized actions, (ii) a Centralized Language Critic assigns trajectory-level causal credits, and (iii) the Language Policy Optimizer updates policies in natural language.",
+      "page": 5,
+      "index": 8,
+      "width": 1038,
+      "height": 441
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00722v1/fig-009.webp",
+      "caption": "Figure 10: Learning curves on Overcooked-AI layouts. Comparison of LangMARL with (orange) and without (blue) credit assignment. Results across five maps show that language-level credit assignment significantly improves mean reward and convergence stability, especially in layouts requiring high-degree coordination (e.g., Coord. Ring and Forced Coord.).",
+      "page": 16,
+      "index": 9,
+      "width": 1042,
+      "height": 200
+    }
+  ]
+}

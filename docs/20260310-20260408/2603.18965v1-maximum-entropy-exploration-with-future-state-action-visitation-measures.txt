@@ -1,0 +1,1040 @@
+Title: Maximum-Entropy Exploration with Future State-Action Visitation Measures
+
+URL Source: https://arxiv.org/pdf/2603.18965v1
+
+Published Time: Fri, 20 Mar 2026 01:32:42 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# Maximum-Entropy Exploration with Future State-Action Visitation Measures 
+
+Adrien Bolland 
+
+adrien.bolland@uliege.be 
+
+Gaspard Lambrechts 
+
+gaspard.lambrechts@uliege.be 
+
+Damien Ernst 
+
+dernst@uliege.be 
+
+University of Liège 
+
+Abstract 
+
+Maximum entropy reinforcement learning motivates agents to explore states and actions to maximize the entropy of some distribution, typically by providing additional intrinsic rewards proportional to that entropy function. In this paper, we study intrinsic rewards proportional to the entropy of the discounted distribution of state-action features visited during future time steps. This approach is motivated by two results. First, we show that the expected sum of these intrinsic rewards is a lower bound on the entropy of the discounted distribution of state-action features visited in trajectories starting from the initial states, which we relate to an alternative maximum entropy objective. Second, we show that the distribution used in the intrinsic reward definition is the fixed point of a contraction operator and can therefore be estimated off-policy. Experiments highlight that the new objective leads to improved visitation of features within individual trajectories, in exchange for slightly reduced visitation of features in expectation over different trajectories, as suggested by the lower bound. It also leads to improved convergence speed for learning exploration-only agents. Control performance remains similar across most methods on the considered benchmarks. 
+
+1 Introduction 
+
+Many challenging tasks where an agent makes sequential decisions have been solved with reinforce-ment learning (RL). Examples range from playing games (Mnih et al., 2015; Silver et al., 2017) to managing energy systems and markets (Boukas et al., 2021; Aittahar et al., 2024). In practice, many RL algorithms are applied in combination with an exploration strategy to achieve high-performance control. These exploration strategies usually consist of providing intrinsic reward bonuses to the agent for achieving certain behaviors. Typically, the bonus enforces taking actions that reduce the uncertainty about the environment (Pathak et al., 2017; Burda et al., 2018; Zhang et al., 2021b), or actions that enhance the variety of states and actions in trajectories (Bellemare et al., 2016; Lee et al., 2019; Guo et al., 2021; Williams and Peng, 1991; Haarnoja et al., 2019). In many of the latter methods, the intrinsic reward function is the entropy of some distribution over the state-action space. Optimizing jointly the reward function of the MDP and the intrinsic reward function is called Maximum Entropy RL (MaxEntRL) and was shown to be effective in many problems. The reward of the MDP was already extended with the entropy of the policy in early algorithms (Williams and Peng, 1991) and was only later called MaxEntRL (Ziebart et al., 2008; Toussaint, 2009). This particular reward regularization provides substantial improvements in the robustness of the resulting policy (Ziebart, 2010; Husain et al., 2021; Brekelmans et al., 2022) and provides a learning objective function with good smoothness and concavity properties (Ahmed et al., 2019; Bolland et al., 2023). Well-known algorithms include soft Q-learning (Haarnoja et al., 2017; Schulman et al., 
+
+Extends and revises work presented at the 18th European Workshop on Reinforcement Learning (EWRL 2025). 
+
+> arXiv:2603.18965v1 [cs.LG] 19 Mar 2026
+
+2017a) and soft actor-critic (Haarnoja et al., 2018, 2019). This MaxEntRL objective nevertheless only rewards the randomness of actions and neglects the influences of the policy on the visited states. In order to enhance exploration, Hazan et al. (2019) were the first to intrinsically motivate agents to visit different states. It led to maximizing the entropy of the discounted state visitation measure and the stationary state visitation measure. For discrete state-action spaces, optimal exploration policies, which maximize the entropy of these visitation measures, can be computed to near optimality with off-policy tabular model-based RL algorithms (Hazan et al., 2019; Mutti and Restelli, 2020; Tiapkin et al., 2023). For continuous state-action spaces, alternative methods rely on k-nearest neighbors to estimate the density of the visitation measure of states (or features built from the states) and compute the intrinsic rewards, which can afterward be optimized with any RL algorithm (Liu and Abbeel, 2021; Yarats et al., 2021; Seo et al., 2021; Mutti et al., 2021). These methods require sampling new trajectories at each iteration; they are on-policy, and estimating the intrinsic reward function is computationally expensive. Some other methods rely on parametric density estimators to reduce the computational complexity and share information across learning steps (Lee et al., 2019; Guo et al., 2021; Islam et al., 2019; Zhang et al., 2021a). This additional function is typically learned by maximum likelihood estimation using batches of truncated trajectories. Alternative methods have adapted this MaxEntRL objective to maximize the entropy of states visited in single trajectories (Mutti et al., 2022; Jain et al., 2024). When large and/or continuous state and action spaces are involved, relying on parametric function approximators is likely the best choice. Nevertheless, existing algorithms are again on-policy. They require sampling new trajectories from the environment at (nearly) every update of the policy, and cannot be applied using a buffer of arbitrary transitions, in batch-mode RL, or in continuing tasks. Furthermore, the discounted visitation measure is more desirable to learn than the stationary one, but may be challenging due to the exponentially decreasing influence of the time step at which states are visited (Islam et al., 2019). The main contribution of this paper is to introduce a MaxEntRL objective relying on a new intrinsic reward function for exploring effectively the state and action spaces, which also alleviates the previous limitations. This intrinsic reward function is the relative entropy of the discounted distribution of state-action features visited during future time steps. We prove two results motivating the MaxEntRL objective. First, this new objective is a lower bound on the MaxEntRL objective previously described, which integrates the marginal visitation distribution of states and actions. Second, the visitation distribution used in the new intrinsic reward function is the fixed point of a contraction operator. The intrinsic reward can therefore efficiently be computed off-policy using N-step state-action transitions and bootstrapping the operator. It is then possible to approximate the intrinsic reward function and learn a policy maximizing the extended rewards with existing RL algorithms. We demonstrate in our experiments how to adapt soft actor-critic (Haarnoja et al., 2018) to optimize the new objective, and we compare the effectiveness of exploration with different maximum entropy objectives. Experiments highlight improved visitation of features within individual trajectories, in exchange for slightly reduced visitation of features in expectation over different trajectories, as suggested by the lower bound. It also leads to improved convergence speed for learning exploration-only agents. Control performance remains similar across most methods on the considered benchmarks. The visitation measure of future states and actions, which we use to extend the reward function in this article, has a well-established history in the development of RL algorithms. It was popularized by Janner et al. (2020), who learned the distribution of future states as a generalization of the successor features (Barreto et al., 2017). They demonstrated that this distribution allows expressing the state-action value function by separating the influence of the dynamics and the reward function, and that it could be learned off-policy by exploiting its recursive expression. Several algorithms have been proposed to learn this distribution, using maximum likelihood estimation (Janner et al., 2020), contrastive learning (Mazoure et al., 2023b), or diffusion models (Mazoure et al., 2023c). These distributions of future states and actions have found applications in goal-based RL (Eysenbach et al., 2020, 2022), in offline pre-training with expert examples (Mazoure et al., 2023a), in model-based RL (Ma et al., 2023), or in planning (Eysenbach et al., 2023). We are the first to integrate them into the MaxEntRL framework for enhancing exploration. In parallel with our work, Mohamed et al. (2025) developed a similar intrinsic reward dependent on the distribution of future states. The manuscript is organized as follows. In Section 2, the RL problem and the MaxEntRL framework are formulated. In Section 3, we introduce and discuss a new MaxEntRL objective. Section 4 details how to learn a model of the conditional state visitation probability that allows estimating this new objective. We finally present experimental results in Section 5 and conclude in Section 6. 22 Background and Preliminaries 
+
+2.1 Markov Decision Processes 
+
+This paper focuses on problems in which an agent makes sequential decisions in a stochastic environment (Sutton and Barto, 2018). The environment is modeled with an infinite-time Markov decision process (MDP) composed of a state space S, an action space A, an initial state distribution 
+
+p0, a transition distribution p, a bounded reward function R, and a discount factor γ ∈ [0 , 1) . Agents interact in this MDP by providing actions sampled from a policy π. During this interaction, an initial state s0 ∼ p0(·) is first sampled before the agent provides, at each time step t, an action at ∼ π(·| st)
+
+leading to a new state st+1 ∼ p(·| st, a t). In addition, after each action at is executed, a reward 
+
+rt = R(st, a t) ∈ R is observed. We denote the expected return of the policy π by 
+
+J(π) = E
+
+> s0∼p0(·)
+> at∼π(·| st)
+> st+1 ∼p(·| st,a t)
+
+" ∞X
+
+> t=0
+
+γtR(st, a t)
+
+#
+
+. (1) An optimal policy π∗ is one with maximum expected return 
+
+π∗ ∈ arg max  
+
+> π
+
+J(π) . (2) 
+
+2.2 Maximum Entropy Reinforcement Learning 
+
+In maximum entropy reinforcement learning (MaxEntRL), an optimal policy π∗ is approximated by maximizing a surrogate objective function L(π), where the reward function from the MDP is extended by an intrinsic reward function. The latter is the (negated relative) entropy of some particular distribution. A general definition of the MaxEntRL objective function is 
+
+L(π) = E
+
+> s0∼p0(·)
+> at∼π(·| st)
+> st+1 ∼p(·| st,a t)
+
+" ∞X
+
+> t=0
+
+γt  R(st, a t) + λR int (st, a t)#
+
+, (3) where this objective depends on the intrinsic reward function Rint . We propose a generic formulation that, to the best of our knowledge, encompasses most existing intrinsic rewards from the literature. Given a feature space Z, a conditional feature distribution qπ : S × A → ∆( Z), depending on the policy π, and a relative measure q∗ ∈ ∆( Z), the MaxEntRL intrinsic reward function is 
+
+Rint (s, a ) = −KL z [qπ (z|s, a )∥q∗(z)] = E  
+
+> z∼qπ(·| s,a )
+
+[log q∗(z) − log qπ (z|s, a )] . (4) Importantly, the intrinsic reward function is (implicitly) dependent on the policy π through the distribution qπ . We define an optimal exploration policy as a policy that maximizes the expected sum of discounted intrinsic rewards only. Note that a policy maximizing L(π) is generally not optimal, due to the potential gap between the optimum of the return J(π) and the optimum of the learning objective L(π). This subject is inherent to exploration with intrinsic rewards (Bolland et al., 2024). MaxEntRL algorithms optimize objective functions as defined in equation (3) depending on some intrinsic reward function that can be expressed as in equation (4) . Each algorithm provides a particular estimate of the intrinsic reward and introduces a particular approach for maximizing the learning objective. Often, pseudo rewards are computed to extend the MDP rewards, which are jointly optimized, typically with (biased) policy gradient algorithms. Many of the existing MaxEntRL algorithms optimize an objective that depends on the entropy of the policy for exploring the action space (Haarnoja et al., 2018; Toussaint, 2009). The feature space is then the action space Z = A, and the conditional feature distribution is the policy qπ (z|s, a ) = π(z|s),for all a. Other algorithms optimize objectives enhancing state space exploration (Hazan et al., 2019; Lee et al., 2019; Islam et al., 2019; Guo et al., 2021). The feature space is the state space Z = S. The conditional feature distribution qπ (z|s, a ) is either the marginal probability of states in trajectories of 
+
+T time steps, or the discounted state visitation measure, for all s and a. In the literature, the relative measure q∗(z) is usually a uniform distribution. 33 MaxEntRL with Visitation Distributions 
+
+3.1 Definition of the MaxEntRL Objective 
+
+In the following, we introduce a new MaxEntRL intrinsic reward based on the conditional state-action visitation probability dπ,γ (¯ s, ¯a|s, a ) and the conditional state visitation probability dπ,γ (¯ s|s, a )
+
+dπ,γ (¯ s, ¯a|s, a ) = (1 − γ)π(¯ a|¯s)
+
+> ∞
+
+X
+
+> ∆=1
+
+γ∆−1pπ
+
+> ∆
+
+(¯ s|s, a ) (5) 
+
+dπ,γ (¯ s|s, a ) = (1 − γ)
+
+> ∞
+
+X
+
+> ∆=1
+
+γ∆−1pπ
+
+> ∆
+
+(¯ s|s, a ) , (6) where pπ 
+
+> ∆
+
+is the transition probability in ∆ time steps with the policy π. The distribution from equation (5) can be factorized as a function of the distribution from equation (6) such that dπ,γ (¯ s, ¯a|s, a ) = 
+
+π(¯ a|¯s)dπ,γ (¯ s|s, a ). The conditional state (respectively, state-action) visitation probability distribution measures the states (respectively, states and actions) that are visited in expectation over infinite trajectories starting from a state and an action. Both distributions generalize the (marginal discounted) state visitation probability measure, also called state occupancy measure (Manne, 1960). 
+
+Definition 3.1. Let us consider the feature space Z and the feature distribution h : S × A → ∆( Z).The intrinsic reward is defined by equation (4), for any relative measure q∗, with the distribution 
+
+qπ (z|s, a ) = 
+
+Z
+
+h(z|¯s, ¯a)dπ,γ (¯ s, ¯a|s, a ) d¯s d ¯a . (7) Optimal exploration policies are here intrinsically motivated to take actions so that the discounted visitation measure of future features is distributed according to q∗ in each state and for each action. It allows selecting features that must be visited during trajectories according to prior knowledge about the problem if any. Alternatively, it allows exploring lower-dimensional feature spaces, or exploring some statistics from the state-action pairs. Existing RL algorithms can be used to compute MaxEntRL policies following Definition 3.1 by computing for each state s and action a the additional (pseudo) reward 
+
+Rint (s, a ) = log q∗(z) − log qπ (z|s, a ) , (8) where z ∼ qπ (·| s, a ). This reward is a single-sample Monte-Carlo estimate of equation (4) , unbiased for fixed qπ . This computation requires sampling features z from the conditional distribution qπ and estimating the probability of these samples qπ (z|s, a ). It can be achieved by solving the integral equation (7) , e.g., numerically by sampling state-action pairs (¯ s, ¯a) ∼ dπ,γ (·, ·| s, a ) and features 
+
+z ∼ h(·| ¯s, ¯a), or learning a model of the conditional feature distribution. Section 4 provides a method for learning such a model off-policy. 
+
+3.2 Relationship with Alternative MaxEntRL Objectives 
+
+Let us consider an MDP without rewards and study exploration policies. We assume for simplicity that the feature distribution is the identity mapping, so that z = (¯ s, ¯a) and that qπ (z|s, a ) = 
+
+dπ,γ (¯ s, ¯a|s, a ) = dπ,γ (¯ s|s, a )π(¯ a|¯s), according to Definition 3.1. This MaxEntRL intrinsic reward function can be compared to one where the conditional distribution is qπ (z|s, a ) = dπ,γ (¯ s, ¯a) = 
+
+dπ,γ (¯ s)π(¯ a|¯s), for all s and a, and where the MaxEntRL objective function simplifies to the entropy of that distribution. Theorem 3.2, shown in Appendix A, relates the two objectives. 
+
+Theorem 3.2. For any policy π and any relative measure q∗, the marginal and conditional visitation measures satisfy 
+
+E  
+
+> s,a ∼dπ,γ (·,·)
+
+[−KL ¯s, ¯a [dπ,γ (¯ s, ¯a|s, a )|| q∗(¯ s, ¯a)]] 
+
+≤ − KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| q∗(¯ s, ¯a)) + L
+
+q
+
+2 KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| ˜dπ,γ (¯ s, ¯a)) ,
+
+where L is a finite constant and ˜dπ,γ (¯ s, ¯a) = Es,a ∼dπ,γ (·,·)[dπ,γ (¯ s, ¯a|s, a )] .
+
+4Let us first assume that ˜dπ,γ (¯ s, ¯a) = dπ,γ (¯ s, ¯a). Then, the left-hand side corresponds to our new objective with R(s, a ) = 0 , which is a lower bound on the entropy of the marginal state-action visitation measure. If dπ,γ (¯ s, ¯a|s, a ) = q∗(¯ s, ¯a) almost everywhere, then the lower bound is zero, and dπ,γ (¯ s, ¯a) = q∗(¯ s, ¯a) almost everywhere as well. It implies that our MaxEntRL objective is a lower bound on the alternative MaxEntRL objective with marginal visitation. Additionally, a policy maximizing our objective also maximizes the alternative objective, when achieving an intrinsic reward of zero. In the limit when the discount factor tends to one γ → 1, this equivalence also holds as the effect of the initial state vanishes and both distributions converge to the stationary visitation distribution, provided it exists. In practice, the bound holds only when ˜dπ,γ (¯ s, ¯a) is close to 
+
+dπ,γ (¯ s, ¯a); it intuitively corresponds to a stationary assumption on the initial states. This result connects MaxEntRL optimizing the entropy of the conditional visitation with MaxEntRL optimizing the entropy of the same distribution marginalized over initial states and actions. It can be straightforwardly extended to relate the conditional and marginal visitation of features, typically such that MaxEntRL algorithms optimizing intrinsic rewards from Definition 3.1 with z = ¯ s maximize lower bounds of MaxEntRL algorithms using the state visitation (Hazan et al., 2019). 
+
+4 Off-policy Learning of Conditional Visitation Models 
+
+4.1 Fixed-Point Properties of Conditional Visitation 
+
+As explained in Section 3.1, the MaxEntRL intrinsic reward function in Definition 3.1 can be computed by sampling from the conditional feature distribution and evaluating the probability of these samples. In this section, we establish useful properties of this conditional distribution. Let us first recall that the conditional state-action visitation distribution accepts a recursive definition (Janner et al., 2020) that is a trivial fixed point of the operator T π from Definition 4.1. 
+
+Definition 4.1. The operator T π is defined over the space of conditional state-action distributions as 
+
+T π q(¯ s, ¯a|s, a ) = (1 − γ)π(¯ a|¯s)p(¯ s|s, a ) + γ E
+
+> s′∼p(·| s,a )
+> a′∼π(·| s′)
+
+[q(¯ s, ¯a|s′, a ′)] .
+
+Theorem 4.2 establishes that the operator T π is a contraction mapping, which implies the uniqueness of its fixed point. Assuming the result of the operator could be computed (or estimated), the fixed point could also be computed by successive application of this operator. It would allow computing the conditional state-action visitation distribution, and later estimating the intrinsic reward function. 
+
+Theorem 4.2. The operator T π is γ-contractive in ¯Ln-norm, where ¯Ln(f )n = sup y
+
+R |f (x|y)|n dx .
+
+Definition 4.3 introduces the operator Pπ that implicitly depends on the feature distribution h. If this distribution is the identity map, then both operators Pπ and T π are equal. 
+
+Definition 4.3. The operator Pπ is defined over the space of conditional feature distributions as 
+
+Pπ q(z|s, a ) = E
+
+> s′∼p(·| s,a )
+> a′∼π(·| s′)
+
+[(1 − γ)h(z|s′, a ′) + γq (z|s′, a ′)] .
+
+Next, we establish in Theorem 4.4 that this operator is also a contraction mapping, such that Theorem 4.2 can be considered a corollary of the present result. The fixed point could again theoretically be computed by successive application of this operator. 
+
+Theorem 4.4. The operator Pπ is γ-contractive in ¯Ln-norm, where ¯Ln(f )n = sup y
+
+R |f (x|y)|n dx .
+
+Finally, we establish in Theorem 4.5 that the unique fixed point of Pπ is the conditional distribution used in the MaxEntRL intrinsic reward from Definition 3.1. Assuming we could approximate this fixed point, we would get a model to compute the reward as in equation (8). 
+
+Theorem 4.5. The unique fixed point of the operator Pπ is 
+
+qπ (z|s, a ) = 
+
+Z
+
+h(z|¯s, ¯a)dπ,γ (¯ s, ¯a|s, a ) d¯s d ¯a . 
+
+The theorems are shown in Appendix B. 54.2 TD Learning of Conditional Visitation Models 
+
+In practice, computing the result of the operator Pπ (and (Pπ )N after N applications) may be intractable when large state and action spaces are at hand or when these spaces are continuous. It furthermore requires having a model of the MDP. A common approach is then to rely on a function approximator qψ to approximate the fixed point. Furthermore, similarly to TD-learning methods (Sutton and Barto, 2018), Theorem 4.4 suggests optimizing the parameters of this model 
+
+qψ to minimize the residual of the operator, measured with an ¯Ln-norm for which the operator is contractive. With this metric, estimating the residual would require estimating the probability of future features; it cannot be trivially minimized by stochastic gradient descent using transitions from the environment. We therefore propose to solve a surrogate minimum cross-entropy problem, in which stochastic gradient descent can be applied afterwards. For any policy π, the fixed point qπ is approximated with a function approximator qψ with parameter ψ optimized to solve 
+
+arg min  
+
+> ψ
+
+E   
+
+> s,a ∼g(·,·)¯z∼(Pπ)Nqψ(·| s,a )
+
+[− log qψ (¯ z|s, a )] , (9) where g is an arbitrary distribution over the state and action space, and where N is any positive integer. This optimization problem is related to minimizing the KL-divergence instead of an ¯Ln-norm (Bishop and Nasrabadi, 2006). Let us make explicit how samples from the distribution (Pπ )N qψ (¯ z|s, a ) can be generated from the MDP. By definition of the operator Pπ , the distribution (Pπ )N qψ (¯ z|s, a ) is the mixture 
+
+(Pπ )N qψ (¯ z|s, a ) = 
+
+
+
+> N
+
+X
+
+> ∆=1
+
+(1 − γ)γ∆−1 E
+
+> s′∼pπ
+> ∆(·| s,a )
+> a′∼π(·| s′)
+
+[h(¯ z|s′, a ′)] 
+
+ + γN E 
+
+> s′∼pπN(·| s,a )
+> a′∼π(·| s′)
+
+[qψ (¯ z|s′, a ′)] =
+
+> ∞
+
+X
+
+> ∆=1
+
+G1−γ (∆) E 
+
+> s′∼pπ
+> ∆′(·| s,a )
+> a′∼π(·| s′)
+
+[bψ (¯ z|s′, a ′, ∆)]  
+
+> ∆′=min(∆ ,N )
+
+, (10) where G1−γ (∆) is the probability of ∆ from a geometric distribution of parameter 1 − γ, and 
+
+bψ (¯ z|s, a, ∆) = 
+
+ h(¯ z|s, a ) ∆ ≤ Nqψ (¯ z|s, a ) ∆ > N (11) Sampling from (Pπ )N qψ (¯ z|s, a ) consists of sampling from the mixture. Let us reformulate the problem in equation (9) highlighting the elements from the mixture and applying importance weighting 
+
+arg min  
+
+> ψ
+
+E   
+
+> s,a ∼g(·,·)∆∼G 1−γ′(·)
+> s′∼pβ
+> ∆′(·| s,a )
+> a′∼π(·| s′)¯z∼bψ(·| s′,a ′,∆)
+
+"
+
+− G1−γ (∆) 
+
+G1−γ′ (∆) 
+
+pπ 
+
+> ∆′
+
+(s′|s, a )
+
+pβ 
+
+> ∆′
+
+(s′|s, a ) log qψ (¯ z|s, a )
+
+# 
+
+> ∆′=min(∆ ,N )
+
+. (12) Importance weighting is applied to the transition probability pπ 
+
+> ∆′
+
+and to the geometric distribution 
+
+G1−γ . It introduces the behavior policy β and a pseudo discount factor γ′. The first allows off-policy learning, and the second helps avoid some elements of the mixture have negligible probabilities, improving results in practice. When β = π or when N = 1 , the second importance ratio simplifies to one; otherwise, it simplifies to a (finite) product of ratios of policies. Learning qψ from samples can be achieved by solving the problem in equation (12) as an intermediate step to existing RL algorithms. First, the objective function is estimated using transitions. Second, this estimate is differentiated, and the parameter ψ is updated by gradient descent steps. In practice, the gradients generated by differentiating this loss function are biased. The influence of the parameter 
+
+ψ on the probability of the sample ¯z is neglected when bootstrapping, i.e., the partial derivative of 
+
+(Pπ )N qψ (¯ z|s, a ) with respect to ψ is neglected, and a target network is used. This is analogous to SARSA and TD-learning strategies (Sutton and Barto, 2018). Furthermore, we suggest neglecting the ratio of transition probabilities, which introduces a dependency of the distribution qψ on the policy β.Finally, the model qψ is used to compute the intrinsic rewards and update the policy. 65 Experiments 
+
+5.1 Experimental Setting 
+
+In this section, we detail the methodology applied to compare the MaxEntRL objectives discussed above. We use a suite of adapted environments for illustration, describe algorithms from the literature adapted to isolate the effect of the choice of objective from algorithmic considerations, and introduce measures to quantify the quality of exploration. 
+
+Environments. Experiments are performed on environments from the Minigrid suite (Chevalier-Boisvert et al., 2023). In the latter, an agent must travel across a grid containing walls and passages in order to reach a goal. The state space is a full observation of the maze, represented with an image, and the agent’s orientation. The agent can take four different actions: turn left, turn right, move forward, or stand still. The need for exploration comes from the sparsity of the reward function, which is zero everywhere and equals one in the state to be reached. 
+
+Exploration strategies. We compare three exploration strategies, i.e., three intrinsic reward func-tions and their corresponding MaxEntRL algorithm. The first exploration strategy motivates agents to perform actions uniformly. The feature space is the action space Z = A, the conditional feature distribution is the policy qπ (z|s, a ) = π(z|s) for all a, and the relative measure q∗ is uniform. The second exploration strategy motivates agents to visit uniformly the grid positions when starting from initial states. Here, the features z ∈ Z are the positions of the agent in the environment, the conditional distribution qπ (z|s, a ) is the discounted visitation measure of features, for all state s and action a, and the relative measure q∗ is uniform. It corresponds to the alternative objective discussed in Section 3.2. The last exploration strategy is the one presented in Section 3.1. Again, the features 
+
+z ∈ Z are the positions of the agent in the environment, and the relative measure q∗ is uniform. 
+
+Algorithms. Existing algorithms can be adapted to optimize the previous MaxEntRL objective by adding the intrinsic reward to the reward from the MDP during policy optimization. In some algorithms, as in ours, it requires learning an additional model of some visitation measure. In this paper we adapted soft actor-critic to incorporate the different intrinsic reward functions. We consider three variants, one for each exploration strategy. First, without additional intrinsic reward, it is already a MaxEntRL algorithm that enforces the entropy of the policy. Second, we adapt the algorithm from Zhang et al. (2021a), using SAC (Haarnoja et al., 2018) instead of PPO (Schulman et al., 2017b) to improve sample efficiency and using a categorical distribution rather than a variational auto-encoder to approximate the visitation measure, which is made possible as the state-action space is discrete. It allows optimizing the approximator without relying on the evidence lower bound. Third, we adapt SAC to incorporate our reward function as discussed previously and detailed in Appendix C. 
+
+Exploration metrics. The last step is to quantify the quality of the exploration policies, which most often consists in measuring the diversity of states (or features). Here we report two such metrics during learning. First, the entropy of features visited by policies 
+
+−KL z (dπ,γ (z)|| q∗(z)) , (13) where dπ,γ (z) = Es,a ∼dπ,γ (·,·)[h(z|s, a )] for all a and s. Second, the conditional entropy of features visited by policies given the initial state, in expectation, 
+
+−Es0∼p0(·) [KL z (dπ,γ (z|s0)|| q∗(z))] , (14) where dπ,γ (z|s0) = Es,a ∼dπ,γ (·,·| s0)[h(z|s, a )] . The first metric measures the diversity in expectation over episodes, whereas the second measures the diversity within individual episodes. The first metric also corresponds to the exploration objectives maximized by the second algorithm. 
+
+5.2 Experimental Results 
+
+The methodology explained above is applied to various environments; further implementation details are given in Appendix D. The evolution of all metrics is reported in Appendix E. We summarize the observations in this section. 7Marginal exploration. Figure 2 in Appendix E illustrates the evolution of the entropy of features visited by policies −KL z (dπ,γ (z)|| q∗(z)) as a function of the learning iterations, when only opti-mizing the intrinsic rewards. We distinguish two situations. First, for some environments, the entropy does not evolve much during learning, and the three exploration strategies perform similarly. This is mostly due to the influence of the initial state distribution. In several environments, the initial position is drawn uniformly at random, such that the entropy of a random policy leads to high feature entropy due to symmetries. Finding optimal policies in such environments is arguably easy, as a large diversity of transitions will be observed without requiring complex MaxEntRL objectives. Second, for other environments, the entropy increases rapidly for the second algorithm, with marginal visitation measures (MV), and for the third algorithm, with conditional visitation measures (CV), and a high-entropy policy results from the optimization. In these environments, MV achieves the highest entropy, followed closely by CV, while SAC performs poorly. It is worth noting that CV converges much faster than MV and eventually challenges its final performance despite optimizing a different objective. The first statement is likely a consequence of the off-policy estimation of the intrinsic reward function, which leads to improved sample efficiency, and the second may be justified by the bound from Theorem 3.2. Here, the environments are apparently more complex to explore, and both advanced strategies allow observing a wide diversity of features in expectation. Figure 1 reports these results for two representative environments. 
+
+Episode exploration. Figure 3 in Appendix E illustrates the evolution of the second metric 
+
+−Es0∼p0(·) [KL z (dπ,γ (z|s0)|| q∗(z))] as a function of the learning iterations, when only optimizing the intrinsic rewards. The metric improves as a function of the learning iterations in most cases. The best performance is systematically achieved with the algorithm using CV, most often followed by, or sometimes challenged by, the algorithm using MV, with SAC as the worst performer. Even in environments with uniform initial positions, motivating agents to explore leads to a larger variety of features visited during individual trajectories. Nevertheless, environments for which MV achieves nearly the same performance as CV often correspond to those where the initial position is constant in each episode. Again, the intrinsic reward we present in this paper converges faster, which we attribute to the improved sample efficiency of the off-policy algorithm. The evolution of the entropy is reported for the same representative environments as before in Figure 1. 
+
+Control policies. The literature sometimes focuses on exploration only, but MaxEntRL usually aims to explore in order to eventually compute a high-performance policy. Figure 4 in Appendix E reports the evolution of the expected return of policies when combining rewards from the environment with intrinsic rewards. In most environments, a sufficiently large weight to environment rewards combined with a large buffer leads to improving return during learning. In some environments, the complex exploration strategies allow learning faster, but no significant improvement was observed for the most favorable hyperparameters. The evolution of the expected return is reported for the same environments as before in Figure 1. 23GoToObject-6x6-N2                 
+
+> Marginal feature entropy
+> 012
+> Trajectory feature entropy
+> 246×10 −1Expected return
+> 0250k 500k 750k 1000k 1250k 1500k 123SimpleCrossingS11N5
+> 0250k 500k 750k 1000k 1250k 1500k 12
+> 0250k 500k 750k 1000k 1250k 1500k 01
+> ×10 −1
+> CV MV SAC
+
+Figure 1: Learning results for two representative environments, selected from Appendix E. The first column represents the evolution of −KL z (dπ,γ (z)|| q∗(z)) , and the second column the evolution of −Es0∼p0(·) [KL z (dπ,γ (z|s0)|| q∗(z))] , when learning exploration policies. The third column represents the evolution of the expected return when learning MaxEntRL control policies. 85.3 Discussion of Experiments 
+
+Experiments highlight that complex MaxEntRL methods are sometimes necessary to achieve better feature space coverage. In particular, our method allows better exploration of features within individual trajectories compared to more standard objectives. A likely justification is that our objective, relying on the conditional entropy, motivates agents to explore in the future, i.e., for the remainder of the trajectory, where alternative objectives are more influenced by the initial states and actions. To the best of our knowledge, it is unclear if there is a best metric to compare exploration strategies, and experiments seem to highlight that exploration is highly environment-dependent. Several phenomena influence the learning of the visitation models. First, when γ is close to one, the learning becomes unstable in practice. We hypothesize that it results from the increased importance of future states. Increasing the parameter N helps mitigate the issue as there is less bootstrapping, reducing the risk of learning a biased target. Second, we neglect some importance weights in practice to reduce variance, which makes qψ partially dependent on the behavior policy β. Bootstrapping still propagates long-term effects of the policy. In practice, regularizing the policy entropy even when using the two complex exploration objectives appeared to be critical to stabilize learning. Finally, we relied on off-policy actor-critic for concreteness, yet the MaxEntRL objective is agnostic to the control backbone, and similar results should hold with other RL methods. We decided to share the same backbone to center the discussion around the MaxEntRL objective but acknowledge that the choice of algorithm may influence practical performance. Also, we observe that our method offers a practical alternative to directly maximizing marginal visitation, but we did not focus on potential theoretical advantages of different exploration objectives. 
+
+6 Conclusion 
+
+In this paper, we presented a new MaxEntRL objective that provides intrinsic reward bonuses proportional to the entropy of the distribution of features built from the states and actions visited by the agent in future time steps. We show that the expected sum of these intrinsic rewards is a lower bound on an alternative maximum entropy objective that uses the marginal distribution of features starting from the initial state. The reward bonus can furthermore be estimated efficiently by sampling from the conditional distribution of visited features, which we proved to be the fixed point of a contraction mapping and which can be learned for any policy using batches of arbitrary transitions. This estimation procedure is easy to implement and can be integrated into existing RL algorithms by augmenting the reward with our intrinsic bonus. It was integrated into an end-to-end off-policy algorithm and benchmarked on several control problems. Experiments show improved feature visitation within individual trajectories and faster convergence for exploration-only agents, while control performance remains similar on the considered benchmarks. This study reminds us that the exploration objective to pursue remains unclear and, in practice, depends on the environment. Future work includes clarifying this question theoretically and empiri-cally. This includes studying the algorithm we presented and benchmarking it in more challenging environments. A key limitation of our algorithm is that the feature space is fixed a priori, and perfor-mance depends on this choice. A potential avenue is to learn it and explore maximum-information state-action feature spaces or reward-predictive feature spaces. Another minor practical limitation is that we estimate the conditional probabilities of future features with a parametric density model trained by minimizing cross-entropy, which restricts the model class, though it still covers mixtures of parametric distributions and normalizing flows. Using other models, such as latent space models or diffusion models, would require adapting the estimation and learning procedure. 
+
+References 
+
+Ahmed, Z., Le Roux, N., Norouzi, M., and Schuurmans, D. (2019). Understanding the impact of entropy on policy optimization. In International Conference on Machine Learning , pages 151–160. PMLR. Aittahar, S., Bolland, A., Derval, G., and Ernst, D. (2024). Optimal control of renewable energy communities subject to network peak fees with model predictive control and reinforcement learning algorithms. arXiv preprint arXiv:2401.16321 .9Barreto, A., Dabney, W., Munos, R., Hunt, J. J., Schaul, T., van Hasselt, H. P., and Silver, D. (2017). Successor features for transfer in reinforcement learning. Advances in neural information processing systems , 30. Bellemare, M., Srinivasan, S., Ostrovski, G., Schaul, T., Saxton, D., and Munos, R. (2016). Unifying count-based exploration and intrinsic motivation. Advances in Neural Information Processing Systems , 29. Bishop, C. M. and Nasrabadi, N. M. (2006). Pattern recognition and machine learning , volume 4. Springer. Bolland, A., Lambrechts, G., and Ernst, D. (2024). Behind the myth of exploration in policy gradients. 
+
+arXiv preprint arXiv:2402.00162 .Bolland, A., Louppe, G., and Ernst, D. (2023). Policy gradient algorithms implicitly optimize by continuation. Transactions on Machine Learning Research .Boukas, I., Ernst, D., Théate, T., Bolland, A., Huynen, A., Buchwald, M., Wynants, C., and Cornélusse, B. (2021). A deep reinforcement learning framework for continuous intraday market bidding. Machine Learning , 110:2335–2387. Brekelmans, R., Genewein, T., Grau-Moya, J., Delétang, G., Kunesch, M., Legg, S., and Ortega, P. (2022). Your policy regularizer is secretly an adversary. arXiv preprint arXiv:2203.12592 .Burda, Y., Edwards, H., Pathak, D., Storkey, A., Darrell, T., and Efros, A. A. (2018). Large-scale study of curiosity-driven learning. arXiv preprint arXiv:1808.04355 .Chevalier-Boisvert, M., Dai, B., Towers, M., de Lazcano, R., Willems, L., Lahlou, S., Pal, S., Castro, P. S., and Terry, J. (2023). Minigrid & miniworld: Modular & customizable reinforcement learning environments for goal-oriented tasks. CoRR , abs/2306.13831. Degris, T., White, M., and Sutton, R. S. (2012). Off-policy actor-critic. arXiv preprint arXiv:1205.4839 .Eysenbach, B., Myers, V., Levine, S., and Salakhutdinov, R. (2023). Contrastive representations make planning easy. In NeurIPS 2023 Workshop on Generalization in Planning .Eysenbach, B., Salakhutdinov, R., and Levine, S. (2020). C-learning: Learning to achieve goals via recursive classification. arXiv preprint arXiv:2011.08909 .Eysenbach, B., Zhang, T., Levine, S., and Salakhutdinov, R. R. (2022). Contrastive learning as goal-conditioned reinforcement learning. Advances in Neural Information Processing Systems ,35:35603–35620. Guo, Z. D., Azar, M. G., Saade, A., Thakoor, S., Piot, B., Pires, B. A., Valko, M., Mesnard, T., Latti-more, T., and Munos, R. (2021). Geometric entropic exploration. arXiv preprint arXiv:2101.02055 .Haarnoja, T., Tang, H., Abbeel, P., and Levine, S. (2017). Reinforcement learning with deep energy-based policies. In International Conference on Machine Learning , pages 1352–1361. PMLR. Haarnoja, T., Zhou, A., Abbeel, P., and Levine, S. (2018). Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. In International conference on machine learning , pages 1861–1870. PMLR. Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., Kumar, V., Zhu, H., Gupta, A., Abbeel, P., et al. (2019). Soft actor-critic algorithms and applications. arXiv preprint arXiv:1812.05905 .Hazan, E., Kakade, S., Singh, K., and Van Soest, A. (2019). Provably efficient maximum entropy exploration. In International Conference on Machine Learning , pages 2681–2691. PMLR. Huang, S., Dossa, R. F. J., Ye, C., Braga, J., Chakraborty, D., Mehta, K., and Araújo, J. G. (2022). Cleanrl: High-quality single-file implementations of deep reinforcement learning algorithms. 
+
+Journal of Machine Learning Research , 23(274):1–18. 10 Husain, H., Ciosek, K., and Tomioka, R. (2021). Regularized policies are reward robust. In 
+
+International Conference on Artificial Intelligence and Statistics , pages 64–72. PMLR. Islam, R., Ahmed, Z., and Precup, D. (2019). Marginalized state distribution entropy regularization in policy optimization. arXiv preprint arXiv:1912.05128 .Jain, A. K., Lehnert, L., Rish, I., and Berseth, G. (2024). Maximum state entropy exploration using predecessor and successor representations. Advances in Neural Information Processing Systems ,36. Janner, M., Mordatch, I., and Levine, S. (2020). Generative temporal difference learning for infinite-horizon prediction. arXiv preprint arXiv:2010.14496 .Kingma, D. P. and Ba, J. L. (2014). Adam: A method for stochastic optimization. arXiv preprint arXiv:1412.6980 .Lee, L., Eysenbach, B., Parisotto, E., Xing, E., Levine, S., and Salakhutdinov, R. (2019). Efficient exploration via state marginal matching. arXiv preprint arXiv:1906.05274 .Liu, H. and Abbeel, P. (2021). Behavior from the void: Unsupervised active pre-training. Advances in Neural Information Processing Systems , 34:18459–18473. Ma, Y. J., Sivakumar, K., Yan, J., Bastani, O., and Jayaraman, D. (2023). Learning policy-aware models for model-based reinforcement learning via transition occupancy matching. In Learning for Dynamics and Control Conference , pages 259–271. PMLR. Manne, A. S. (1960). Linear programming and sequential decisions. Management Science , 6(3):259– 267. Mazoure, B., Bruce, J., Precup, D., Fergus, R., and Anand, A. (2023a). Accelerating exploration and representation learning with offline pre-training. arXiv preprint arXiv:2304.00046 .Mazoure, B., Eysenbach, B., Nachum, O., and Tompson, J. (2023b). Contrastive value learning: Implicit models for simple offline rl. In Conference on Robot Learning , pages 1257–1267. PMLR. Mazoure, B., Talbott, W., Bautista, M. A., Hjelm, D., Toshev, A., and Susskind, J. (2023c). Value func-tion estimation using conditional diffusion models for control. arXiv preprint arXiv:2306.07290 .Mnih, V., Kavukcuoglu, K., Silver, D., Rusu, A. A., Veness, J., Bellemare, M. G., Graves, A., Riedmiller, M., Fidjeland, A. K., Ostrovski, G., et al. (2015). Human-level control through deep reinforcement learning. Nature , 518(7540):529–533. Mohamed, F., Ji, C., Eysenbach, B., and Berseth, G. (2025). Curiosity-driven exploration via temporal contrastive learning. In Workshop on Reinforcement Learning Beyond Rewards@ Reinforcement Learning Conference 2025 .Mutti, M., De Santi, R., and Restelli, M. (2022). The importance of non-markovianity in maximum state entropy exploration. arXiv preprint arXiv:2202.03060 .Mutti, M., Pratissoli, L., and Restelli, M. (2021). Task-agnostic exploration via policy gradient of a non-parametric state entropy estimate. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 35, pages 9028–9036. Mutti, M. and Restelli, M. (2020). An intrinsically-motivated approach for learning highly exploring and fast mixing policies. In Proceedings of the AAAI Conference on Artificial Intelligence ,volume 34, pages 5232–5239. Pathak, D., Agrawal, P., Efros, A. A., and Darrell, T. (2017). Curiosity-driven exploration by self-supervised prediction. In International conference on machine learning , pages 2778–2787. PMLR. Schulman, J., Chen, X., and Abbeel, P. (2017a). Equivalence between policy gradients and soft q-learning. arXiv preprint arXiv:1704.06440 .11 Schulman, J., Wolski, F., Dhariwal, P., Radford, A., and Klimov, O. (2017b). Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 .Seo, Y., Chen, L., Shin, J., Lee, H., Abbeel, P., and Lee, K. (2021). State entropy maximization with random encoders for efficient exploration. In International Conference on Machine Learning ,pages 9443–9454. PMLR. Silver, D., Schrittwieser, J., Simonyan, K., Antonoglou, I., Huang, A., Guez, A., Hubert, T., Baker, L., Lai, M., Bolton, A., et al. (2017). Mastering the game of Go without human knowledge. Nature ,550(7676):354–359. Sutton, R. S. and Barto, A. G. (2018). Reinforcement learning: An introduction . MIT press. Tiapkin, D., Belomestny, D., Calandriello, D., Moulines, E., Munos, R., Naumov, A., Perrault, P., Tang, Y., Valko, M., and Menard, P. (2023). Fast rates for maximum entropy exploration. In 
+
+International Conference on Machine Learning , pages 34161–34221. PMLR. Toussaint, M. (2009). Robot trajectory optimization using approximate inference. In International Conference on Machine Learning , volume 26, pages 1049–1056. Williams, R. J. and Peng, J. (1991). Function optimization using connectionist reinforcement learning algorithms. Connection Science , 3(3):241–268. Yarats, D., Fergus, R., Lazaric, A., and Pinto, L. (2021). Reinforcement learning with prototypical representations. In International Conference on Machine Learning , pages 11920–11931. PMLR. Zhang, C., Cai, Y., Huang, L., and Li, J. (2021a). Exploration by maximizing rényi entropy for reward-free rl framework. In Proceedings of the AAAI Conference on Artificial Intelligence ,volume 35, pages 10859–10867. Zhang, T., Xu, H., Wang, X., Wu, Y., Keutzer, K., Gonzalez, J. E., and Tian, Y. (2021b). Noveld: A simple yet effective exploration criterion. Advances in Neural Information Processing Systems ,34:25217–25230. Ziebart, B. D. (2010). Modeling purposeful adaptive behavior with the principle of maximum causal entropy . PhD thesis, Carnegie Mellon University. Ziebart, B. D., Maas, A. L., Bagnell, J. A., and Dey, A. K. (2008). Maximum entropy inverse reinforcement learning. In Aaai , volume 8, pages 1433–1438. Chicago, IL, USA. 12 A Proof Lower Bound 
+
+Proof Theorem 3.2 Let us assume that all distributions admit continuous, smooth, and strictly posi-tive densities on their support with bounded log-ratios. Let ˜dπ,γ (¯ s, ¯a) = Es,a ∼dπ,γ (·,·)[dπ,γ (¯ s, ¯a|s, a )] .Let us develop using the convexity of KL divergence, positiveness of KL divergence, integral proper-ties and Pinsker’s inequality 
+
+E  
+
+> s,a ∼dπ,γ (·,·)
+
+[KL ¯s, ¯a [dπ,γ (¯ s, ¯a|s, a )|| q∗(¯ s, ¯a)]] = E  
+
+> s,a ∼dπ,γ (·,·)¯s, ¯a∼dπ,γ (·,·| s,a )
+
+
+
+log dπ,γ (¯ s, ¯a|s, a )
+
+q∗(¯ s, ¯a)
+
+
+
+= E  
+
+> s,a ∼dπ,γ (·,·)¯s, ¯a∼dπ,γ (·,·| s,a )
+
+
+
+log dπ,γ (¯ s, ¯a|s, a )
+
+dπ,γ (¯ s, ¯a) + log dπ,γ (¯ s, ¯a)
+
+q∗(¯ s, ¯a)
+
+
+
+≥ E  
+
+> s,a ∼dπ,γ (·,·)¯s, ¯a∼dπ,γ (·,·| s,a )
+
+
+
+log dπ,γ (¯ s, ¯a)
+
+q∗(¯ s, ¯a)
+
+
+
+=
+
+Z
+
+dπ,γ log dπ,γ 
+
+q∗ −
+
+Z
+
+(dπ,γ − ˜dπ,γ ) log dπ,γ 
+
+q∗
+
+= KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| q∗(¯ s, ¯a)) −
+
+Z
+
+(dπ,γ − ˜dπ,γ ) log dπ,γ 
+
+q∗
+
+≥ KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| q∗(¯ s, ¯a)) −
+
+Z
+
+(dπ,γ − ˜dπ,γ ) log dπ,γ 
+
+q∗
+
+≥ KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| q∗(¯ s, ¯a)) − L
+
+Z
+
+dπ,γ − ˜dπ,γ 
+
+≥ KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| q∗(¯ s, ¯a)) − 2 L T V (dπ,γ , ˜dπ,γ )
+
+≥ KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| q∗(¯ s, ¯a)) − L
+
+q
+
+2 KL ¯s, ¯a(dπ,γ (¯ s, ¯a)|| ˜dπ,γ (¯ s, ¯a)) 
+
+13 B Proofs Theorems on Contractions 
+
+Proof Theorem 4.2. This theorem is a particular case of Theorem 4.4, where the feature space 
+
+Z = S × A and the mapping h is a Dirac 
+
+h(z|s, a ) = δ(s,a )(z) .
+
+□
+
+Proof Theorem 4.4. For all conditional distributions p and q
+
+sup 
+
+> s,a
+
+Ln(Pπ p(·| s, a ), Pπ q(·| s, a )) n = sup 
+
+> s,a
+
+Z
+
+|P π p(¯ z|s, a ) − P π q(¯ z|s, a )|n d¯z
+
+= γn sup 
+
+> s,a
+
+Z
+
+E
+
+> s′∼p1(·| s,a )
+> a′∼π(·| s′)
+
+[p(¯ z|s′, a ′) − q(¯ z|s′, a ′)] 
+
+> n
+
+d¯z
+
+≤ γn sup 
+
+> s,a
+
+Z
+
+E
+
+> s′∼p1(·| s,a )
+> a′∼π(·| s′)
+
+[|p(¯ z|s′, a ′) − q(¯ z|s′, a ′)|n] d¯z
+
+= γn sup 
+
+> s,a
+
+E
+
+> s′∼p1(·| s,a )
+> a′∼π(·| s′)
+
+Z 
+
+|p(¯ z|s′, a ′) − q(¯ z|s′, a ′)|n d¯z
+
+
+
+≤ γn sup 
+
+> s,a
+
+sup 
+
+> s′,a ′
+
+Z 
+
+|p(¯ z|s′, a ′) − q(¯ z|s′, a ′)|n d¯z
+
+
+
+= γn sup 
+
+> s′,a ′
+
+Z
+
+|p(¯ z|s′, a ′) − q(¯ z|s′, a ′)|n d¯z
+
+= γn sup 
+
+> s,a
+
+Ln(p(·| s, a ), q (·| s, a )) n
+
+□
+
+Proof Theorem 4.5. The operator Pπ is contractive, which implies that there exists a unique fixed point. Let us apply the operator Pπ to the distribution qπ
+
+Pπ qπ (z|s, a ) = Pπ
+
+Z
+
+h(z|¯s, ¯a)dπ,γ (¯ s, ¯a|s, a ) d¯s d ¯a
+
+= E
+
+> s′∼p(·| s,a )
+> a′∼π(·| s′)
+
+
+
+(1 − γ)h(z|s′, a ′) + γ
+
+Z 
+
+h(z|¯s, ¯a)dπ,γ (¯ s, ¯a|s′, a ′) d¯s d ¯a
+
+ 
+
+=
+
+Z
+
+h(z|¯s, ¯a)
+
+ E
+
+> s′∼p(·| s,a )
+> a′∼π(·| s′)
+
+[(1 − γ)δ¯s, ¯a(s′, a ′) + γd π,γ (¯ s, ¯a|s′, a ′)] 
+
+ d¯s d ¯a
+
+=
+
+Z
+
+h(z|¯s, ¯a)
+
+(1 − γ)π(¯ a|¯s)p(¯ s|s, a ) + γ E
+
+> s′∼p(·| s,a )
+> a′∼π(·| s′)
+
+[dπ,γ (¯ s, ¯a|s′, a ′)] 
+
+ d¯s d ¯a
+
+=
+
+Z
+
+h(z|¯s, ¯a)dπ,γ (¯ s, ¯a|s, a ) d¯s d ¯a
+
+= qπ (z|s, a ) .
+
+□
+
+14 C Soft Actor-Critic with Conditional Visitation Measure 
+
+In the following, we adapt soft actor-critic (Haarnoja et al., 2018), itself an adaptation of off-policy actor-critic (Degris et al., 2012), to include additional intrinsic rewards. In essence, soft actor-critic estimates the state-action value function with a parameterized critic Qϕ, which is learned using expected SARSA (sometimes called generalized SARSA), and updates the parameterized policy πθ
+
+with approximate policy iteration (i.e., off-policy policy gradient), all based on one-step transitions stored in a replay buffer D. The actor and critic loss functions are furthermore extended with the log-likelihood of actions weighted by the parameter λSAC ; it is therefore called soft and considered a MaxEntRL algorithm regularizing the entropy of policies. In the particular case in which λSAC 
+
+equals zero, the algorithm boils down to a slightly revisited implementation of off-policy actor-critic. Soft actor-critic is adapted to MaxEntRL with the intrinsic reward function defined in Section 3.1, as follows. First, N -step transitions are stored in the buffer D instead of one-step transitions. Second, the conditional feature distribution is estimated with a function approximator qψ and learned with stochastic gradient descent. Third, at each iteration of the critic updates, the reward provided by the MDP is extended with the intrinsic reward. Algorithm 1 summarizes the learning steps. Formally, the parameterized critic Qϕ is iteratively updated by performing stochastic gradient descent steps on the loss function 
+
+L(ϕ) = E
+
+> st,a t∼D
+
+h
+
+(Qϕ(st, a t) − y)2i
+
+(15) 
+
+y = λRR(st, a t) + λR int (st, a t) + γ (Qϕ′ (st+1 , a t+1 ′ ) − λSAC log πθ (at+1 ′ |st+1 )) , (16) where at+1 ′ ∼ πθ (·| st+1 ), and where ϕ′ is the target network parameter. Furthermore, the policy πθ is updated by performing gradient descent steps on the loss function 
+
+L(θ) = − E 
+
+> st,a t∼D
+
+[log πθ (at′ |st)A(st, a t′ )] (17) 
+
+A(st, a t′ ) = Qϕ(st, a t′ ) − λSAC log πθ (at′ |st) , (18) where at′ ∼ πθ (·| st).
+
+Algorithm 1 SAC with conditional visitation measure for exploration Initialize the policy πθ , the soft critic Qϕ, and the conditional feature model qψ
+
+Initialize the critic target Qϕ′ and visitation target qψ′
+
+Initialize the replay buffer with N -step transitions 
+
+while Learning do 
+
+Sample transitions from the policy πθ and add them to the buffer 
+
+while Update the visitation model do 
+
+Sample a batch of N -step transitions from the buffer Update the model qψ
+
+end while while Update the critic do 
+
+Sample a batch of N -step transitions from the buffer (use only the 1-step transitions) For each element of the batch sample zt ∼ qψ (·| st, a t)
+
+Estimate the intrinsic reward Rint (st, a t) = log q∗(zt) − log qψ (zt|st, a t)
+
+Perform a stochastic gradient descent step on L(ϕ)
+
+end while 
+
+Sample a batch of N -step transitions from the buffer (use only the 1-step transitions) Perform a stochastic gradient descent step on L(θ)
+
+Update the target parameters with Polyak averaging 
+
+end while 
+
+15 D Implementation Details 
+
+This section aims to clarify the practical implementation and how it differs in practice from the simplified algorithms presented. The agent observes an image that is processed by a convolutional neural network into a state feature. The policy πθ is a forward network that processes this feature and that outputs a categorical distribution over the action representation. The critic Qϕ is a neural network that takes as input the concatenation of the state feature and a linear projection of the action representation and outputs a scalar. In CV, the distribution model qψ is also a neural network that takes the same input as the critic 
+
+Qϕ and outputs a categorical distribution over a one-hot-encoding representation of positions. In MV, the visitation distribution model qψ is a marginal distribution over the same one-hot-encoding representation. The implementation of soft actor-critic differs slightly from that of the original work (Haarnoja et al., 2018). The actor loss equation is based on the log-trick instead of the reparameterization trick, the expected SARSA update of the critic is approximated by sampling, and a single value function is learned, as implemented in CleanRL (Huang et al., 2022). Some last practical choices were made and should be noted. The replay buffer is first filled with tran-sitions collected from the current policy that are replaced afterwards following a FIFO policy during learning iterations. The number of transitions sampled per learning iteration is a hyperparameter. The actor update uses replay time step weights of the form γt−tmin and relies on an optional centering of the soft Q-values, which we refer to as actor centering. During the critic updates, the intrinsic reward is clipped to avoid (negative) reward overshoots when densities are too concentrated. The parameters of all previous models are updated independently using the Adam optimization rule (Kingma and Ba, 2014). 16 E Experimental Results 34
+
+MiniGrid-RedBlueDoors-8x8-v0 
+
+45
+
+MiniGrid-Playground-v0 
+
+34
+
+MiniGrid-ObstructedMaze-Full-v0 
+
+23
+
+MiniGrid-ObstructedMaze-1Dlhb-v0 
+
+45
+
+MiniGrid-MultiRoom-N6-v0 
+
+45
+
+MiniGrid-MultiRoom-N4-S5-v0 
+
+23
+
+MiniGrid-MemoryS13-v0 
+
+23
+
+MiniGrid-MemoryS11-v0 
+
+45
+
+MiniGrid-LockedRoom-v0 
+
+34
+
+MiniGrid-KeyCorridorS6R3-v0 
+
+34
+
+MiniGrid-GoToObject-8x8-N2-v0 
+
+23
+
+MiniGrid-GoToObject-6x6-N2-v0 
+
+34
+
+MiniGrid-GoToDoor-8x8-v0 
+
+45
+
+MiniGrid-FourRooms-v0 
+
+24
+
+MiniGrid-Empty-16x16-v0 
+
+024
+
+MiniGrid-Dynamic-Obstacles-16x16-v0 
+
+0123
+
+MiniGrid-Dynamic-Obstacles-8x8-v0 
+
+45
+
+MiniGrid-DoorKey-16x16-v0 
+
+23
+
+MiniGrid-DoorKey-8x8-v0 
+
+24
+
+MiniGrid-SimpleCrossingS13N1-v0 
+
+024
+
+MiniGrid-SimpleCrossingS15N1-v0 
+
+24
+
+MiniGrid-SimpleCrossingS11N1-v0 
+
+123
+
+MiniGrid-SimpleCrossingS11N5-v0 
+
+23
+
+MiniGrid-BlockedUnlockPickup-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 123
+
+MiniGrid-SimpleCrossingS9N1-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 23
+
+MiniGrid-Unlock-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 23
+
+MiniGrid-UnlockPickup-v0 CV MV SAC 
+
+Figure 2: Evolution of the entropy of the discounted visitation probability measure of the position of the agent on the grid when computing exploration policies (i.e., when neglecting the rewards of the MDP). The entropy is computed empirically with Monte Carlo simulations. For each iteration, the interquartile mean over 6 runs is reported, along with its 95% confidence interval. 17 12
+
+MiniGrid-RedBlueDoors-8x8-v0 
+
+12
+
+MiniGrid-Playground-v0 
+
+012
+
+MiniGrid-ObstructedMaze-Full-v0 
+
+12
+
+MiniGrid-ObstructedMaze-1Dlhb-v0 
+
+12
+
+MiniGrid-MultiRoom-N6-v0 
+
+01
+
+MiniGrid-MultiRoom-N4-S5-v0 
+
+01
+
+MiniGrid-MemoryS13-v0 
+
+01
+
+MiniGrid-MemoryS11-v0 
+
+012
+
+MiniGrid-LockedRoom-v0 
+
+12
+
+MiniGrid-KeyCorridorS6R3-v0 
+
+012
+
+MiniGrid-GoToObject-8x8-N2-v0 
+
+012
+
+MiniGrid-GoToObject-6x6-N2-v0 
+
+012
+
+MiniGrid-GoToDoor-8x8-v0 
+
+12
+
+MiniGrid-FourRooms-v0 
+
+0123
+
+MiniGrid-Empty-16x16-v0 
+
+0123
+
+MiniGrid-Dynamic-Obstacles-16x16-v0 
+
+012
+
+MiniGrid-Dynamic-Obstacles-8x8-v0 
+
+12
+
+MiniGrid-DoorKey-16x16-v0 
+
+12
+
+MiniGrid-DoorKey-8x8-v0 
+
+012
+
+MiniGrid-SimpleCrossingS13N1-v0 
+
+012
+
+MiniGrid-SimpleCrossingS15N1-v0 
+
+12
+
+MiniGrid-SimpleCrossingS11N1-v0 
+
+12
+
+MiniGrid-SimpleCrossingS11N5-v0 
+
+12
+
+MiniGrid-BlockedUnlockPickup-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 12
+
+MiniGrid-SimpleCrossingS9N1-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 12
+
+MiniGrid-Unlock-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 12
+
+MiniGrid-UnlockPickup-v0 CV MV SAC Figure 3: Evolution of the conditional entropy of the discounted visitation probability measure of the position of the agent on the grid when computing exploration policies (i.e., when neglecting the rewards of the MDP). The entropy is computed empirically with Monte Carlo simulations. For each iteration, the interquartile mean over 6 runs is reported, along with its 95% confidence interval. 18 024 
+
+> ×10 −2
+
+MiniGrid-RedBlueDoors-8x8-v0 
+
+−505 ×10 −2 MiniGrid-Playground-v0 
+
+0.00.51.0 
+
+> ×10 −4
+
+MiniGrid-ObstructedMaze-Full-v0 
+
+02 
+
+> ×10 −4
+
+MiniGrid-ObstructedMaze-1Dlhb-v0 
+
+−505 ×10 −2 MiniGrid-MultiRoom-N6-v0 
+
+012 
+
+> ×10 −4
+
+MiniGrid-MultiRoom-N4-S5-v0 
+
+024 
+
+> ×10 −1
+
+MiniGrid-MemoryS13-v0 
+
+024 
+
+> ×10 −1
+
+MiniGrid-MemoryS11-v0 
+
+012 
+
+> ×10 −4
+
+MiniGrid-LockedRoom-v0 
+
+−505 ×10 −2 MiniGrid-KeyCorridorS6R3-v0 
+
+024 
+
+> ×10 −1
+
+MiniGrid-GoToObject-8x8-N2-v0 
+
+246 ×10 −1 MiniGrid-GoToObject-6x6-N2-v0 
+
+012 
+
+> ×10 −1
+
+MiniGrid-GoToDoor-8x8-v0 
+
+0.02.55.07.5 
+
+> ×10 −2
+
+MiniGrid-FourRooms-v0 
+
+0246 ×10 −1 MiniGrid-Empty-16x16-v0 
+
+0246 ×10 −1 MiniGrid-Dynamic-Obstacles-16x16-v0 
+
+0.02.55.07.5 
+
+> ×10 −1
+
+MiniGrid-Dynamic-Obstacles-8x8-v0 
+
+0.02.55.07.5 
+
+> ×10 −4
+
+MiniGrid-DoorKey-16x16-v0 
+
+012 
+
+> ×10 −1
+
+MiniGrid-DoorKey-8x8-v0 
+
+01 
+
+> ×10 −1
+
+MiniGrid-SimpleCrossingS13N1-v0 
+
+0.00.51.0 
+
+> ×10 −1
+
+MiniGrid-SimpleCrossingS15N1-v0 
+
+0123 
+
+> ×10 −1
+
+MiniGrid-SimpleCrossingS11N1-v0 
+
+0.00.51.01.5 
+
+> ×10 −1
+
+MiniGrid-SimpleCrossingS11N5-v0 
+
+0246 
+
+> ×10 −4
+
+MiniGrid-BlockedUnlockPickup-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 0.02.55.07.5 ×10 −1 MiniGrid-SimpleCrossingS9N1-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 0.02.55.07.5 ×10 −1 MiniGrid-Unlock-v0 
+
+0 250k 500k 750k 1000k 1250k 1500k 012 ×10 −2 MiniGrid-UnlockPickup-v0 CV MV SAC Figure 4: Expected return during the policy optimization. The expectation is computed empirically with Monte Carlo simulations. For each iteration, the interquartile mean over 6 runs is reported, along with its 95% confidence interval. 19

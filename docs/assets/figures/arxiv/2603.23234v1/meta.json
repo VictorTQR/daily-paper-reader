@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-001.webp",
+      "caption": "Figure 1. Accuracy on MATH500 dataset with memory from different resources.",
+      "page": 1,
+      "index": 1,
+      "width": 505,
+      "height": 305
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-002.webp",
+      "caption": "Table 1. Performance of Qwen2.5-7B-Instruct– and Qwen2.5-32B-Instruct–based agents on mathematical reasoning and code benchmarks.",
+      "page": 6,
+      "index": 2,
+      "width": 994,
+      "height": 404
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-003.webp",
+      "caption": "Table 4. Illustration of invariant reasoning patterns captured in the summarized memory entries.",
+      "page": 15,
+      "index": 3,
+      "width": 1017,
+      "height": 1027
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-004.webp",
+      "caption": "Table 2. Performance of Llama3-8B-Instruct– and Qwen2.5-32B-Instruct–based agents on mathematical reasoning and code benchmarks.",
+      "page": 7,
+      "index": 4,
+      "width": 993,
+      "height": 333
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-005.webp",
+      "caption": "Figure 3. Case study to compare the trajectories with and without the extracted memory guidance. Left: The contrasted trajectories pairs given a same question and the corresponding extracted memory guidance. Right: Changes in the agent’s output after incorporating the memory guidance. Note: all Key step and Issue are summarized, see full output is in Appendix E.",
+      "page": 7,
+      "index": 5,
+      "width": 917,
+      "height": 406
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-006.webp",
+      "caption": "Figure 8. Full trajectory of the memory-augmented inference",
+      "page": 14,
+      "index": 6,
+      "width": 813,
+      "height": 712
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-007.webp",
+      "caption": "Figure 2. Framework of MEMCOLLAB. Left: Using different agents to generate trajectory pairs for the same task. Middle: Contrasting the trajectory pairs to construct the memory. Right: Augmenting inference-time generation with retrieved memory.",
+      "page": 3,
+      "index": 7,
+      "width": 813,
+      "height": 310
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-008.webp",
+      "caption": "Table 7. Prompt template for task classification used in task-aware retrieval.",
+      "page": 18,
+      "index": 8,
+      "width": 1017,
+      "height": 1291
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-009.webp",
+      "caption": "Figure 7. Full trajectory used for memory summarization",
+      "page": 13,
+      "index": 9,
+      "width": 813,
+      "height": 810
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-010.webp",
+      "caption": "Figure 5. Task-category similarity of error-type distributions on MATH500.",
+      "page": 8,
+      "index": 10,
+      "width": 400,
+      "height": 311
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-011.webp",
+      "caption": "Table 6. Prompt template for contrastive extraction of reusable mathematical reasoning memory.",
+      "page": 17,
+      "index": 11,
+      "width": 1017,
+      "height": 1273
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23234v1/fig-012.webp",
+      "caption": "Table 5. Prompt template for single-model reasoning extraction.",
+      "page": 16,
+      "index": 12,
+      "width": 1017,
+      "height": 486
+    }
+  ]
+}

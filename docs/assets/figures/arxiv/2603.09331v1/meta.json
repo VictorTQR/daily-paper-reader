@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.09331v1/fig-001.webp",
+      "caption": "Figure 6: Training dynamics comparison between the PPO baseline (orange) and Ours (blue). The Reward-Zero variant exhibits substantially smoother value loss, more stable policy updates, and more consistent KL and clipping behavior, indicating improved critic reliability and better-controlled policy optimization. Reward-Zero also shows faster entropy reduction and more stable explained variance, reflecting higher learning efficiency and more reliable advantage estimation throughout training.",
+      "page": 11,
+      "index": 1,
+      "width": 826,
+      "height": 354
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09331v1/fig-002.webp",
+      "caption": "Figure 9: Keyframes from the six benchmark episodes (five task types) at four completion stages (0%, 33%, 66%, 100%). Each row shows one episode; columns correspond to the annotated completion percentages. Tasks range from visually salient changes (top: drawer opening, robot locomotion) to fine-grained manipulation where task-relevant objects are small relative to the scene (bottom: peg insertion, cube stacking).",
+      "page": 15,
+      "index": 2,
+      "width": 806,
+      "height": 773
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09331v1/fig-003.webp",
+      "caption": "Figure 4: The AnymalC-Reach task involves a quadruped robot learning to navigate to a target location. The task requires the agent to understand spatial relationships and adapt its locomotion strategy accordingly. This environment serves as a challenging testbed for evaluating the effectiveness of our Reward-Zero in guiding learning through language-driven implicit rewards.",
+      "page": 10,
+      "index": 3,
+      "width": 790,
+      "height": 206
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09331v1/fig-004.webp",
+      "caption": "Table 1: Tasks in the completion-sense mini benchmark. Each episode contains keyframes at known completion percentages extracted from successful ManiSkill rollouts. Two episodes are included for OpenCabinetDrawer to test consistency across different initial configurations.",
+      "page": 8,
+      "index": 4,
+      "width": 827,
+      "height": 474
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09331v1/fig-005.webp",
+      "caption": "Figure 1: Conceptual comparison of human learning, traditional RL, and the proposed RewardZero. The left panel illustrates how Human Learning is intuitive and implicit, driven by visual matching and a generalized \"Sense of Completion,\" without relying on explicit rewards, mathematical environment models, or exact object world coordinates. The center panel depicts Traditional RL training a simple robotic policy, a rigid and explicit approach that typically requires a hand-crafted reward function, a precise environment model, heavy observation and exact object coordinates to function. The right panel introduces Reward-Zero, our flexible and language-driven method that represents a sophisticated universal reward function. This mechanism uses a general-purpose language embedding-driven implicit reward mechanism to generate a continuous sense-of-completion signal by comparing task and experience embeddings. As shown, Reward-Zero aims to eliminate hand-crafted rewards by relying only on raw language embedding, enhancing generalization across diverse tasks. Zero here signifies the absence of hand-crafted rewards, without explicit reward engineering. This is the Zero step toward more general, adaptable, and scalable RL that can learn from natural language descriptions and raw observations, much like humans do.",
+      "page": 4,
+      "index": 5,
+      "width": 826,
+      "height": 274
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09331v1/fig-006.webp",
+      "caption": "Figure 3: CLIP potential Φ(s) vs. task completion (%) for each benchmark task (CLIP-direct, α = 0.7). OpenCabinetDrawer shows two episodes (solid/dashed) to illustrate consistency across initial configurations. All tasks now use four keyframes at 0%, 33%, 66%, and 100% completion. Tasks with large visual changes show strong monotonic trends; fine-manipulation tasks exhibit smaller potential ranges.",
+      "page": 9,
+      "index": 6,
+      "width": 804,
+      "height": 443
+    }
+  ]
+}

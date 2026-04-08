@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.19453v1/fig-001.webp",
+      "caption": "Figure 1: Iterative LLM policy synthesis framework (Algorithm 1). At each iteration 𝑘 , the LLM Synthesizes (1) a Python policy from the system prompt 𝑝 and previous feedback, which isValidated (2) via AST checks and a smoke test (retrying on failure up to 𝑅 times), Evaluated (3) in 𝑁 -agent self-play, and the results packaged as either sparse or dense Feedback (4).",
+      "page": 2,
+      "index": 1,
+      "width": 502,
+      "height": 326
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19453v1/fig-002.webp",
+      "caption": "Figure 2: Screenshots of the two SSD environments used in our experiments. (a) Gathering: agents (colored markers) navigate a gridworld to collect apples (green cells); apples respawn on a fixed timer and agents may fire tagging beams to temporarily remove rivals. (b) Cleanup: agents operate in two regions: a river accumulating waste (brown) and an orchard where apples grow (green); agents must cooperatively clean the river for apples to regrow. Agents may fire beams (cyan) to tag rivals out.",
+      "page": 6,
+      "index": 2,
+      "width": 506,
+      "height": 311
+    },
+    {
+      "url": "assets/figures/arxiv/2603.19453v1/fig-003.webp",
+      "caption": "Table 1: Results across two SSDs, two LLMs, and three feedback configurations. LLM values show themean over 3×5 independent runs (min–max in parentheses).𝑈 : efficiency (Eq. 1). 𝐸: equality (Eq. 2). 𝑆 : sustainability (Eq. 3). Bold marks the best value per game×model block. Baselines (bottom of each game block) are non-LLM methods for reference.",
+      "page": 4,
+      "index": 3,
+      "width": 732,
+      "height": 465
+    }
+  ]
+}

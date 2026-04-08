@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.14867v1/fig-001.webp",
+      "caption": "Figure 1: Four-Rooms Environment",
+      "page": 6,
+      "index": 1,
+      "width": 502,
+      "height": 243
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14867v1/fig-002.webp",
+      "caption": "Figure 9: Results of n-Zone Building Thermal Control Task on Each Hyperparameter (Learning Rate in {10−1, 10−2, 10−3}). The top figures show the leader’s discounted cumulative reward, and the others show the discounted cumulative values of the four components of the leader’s reward. The return and stability are aimed to be maximized; the costs are aimed to be minimized.",
+      "page": 25,
+      "index": 2,
+      "width": 1047,
+      "height": 1086
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14867v1/fig-003.webp",
+      "caption": "Figure 2: Results on Four-Rooms Task (BatchSize = 100).",
+      "page": 7,
+      "index": 3,
+      "width": 1022,
+      "height": 224
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14867v1/fig-004.webp",
+      "caption": "Figure 6: Four-Rooms Task Results across Different BatchSizes (100, 200, 400, 1000) and Entropy Regularization Parameters β (1× 10−3, 3× 10−3, 5× 10−3). HPGD (ORACLE) uses additional trajectories of size 104 per outer iteration sampled from uniformly distributed initial states.",
+      "page": 18,
+      "index": 4,
+      "width": 1044,
+      "height": 965
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14867v1/fig-005.webp",
+      "caption": "Figure 4: Task Description and Results on ToyMarkovGame.",
+      "page": 8,
+      "index": 5,
+      "width": 449,
+      "height": 503
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14867v1/fig-006.webp",
+      "caption": "Figure 7: Parameter Sensitivity in the Toy Markov Game Task",
+      "page": 19,
+      "index": 6,
+      "width": 1052,
+      "height": 509
+    },
+    {
+      "url": "assets/figures/arxiv/2603.14867v1/fig-007.webp",
+      "caption": "Figure 8: Histogram of the Leader’s Objective Value in the Building Thermal Control Task. This plots the 104 uniformly random leader parameters according to each leader’s discounted cumulative reward under the best response.",
+      "page": 24,
+      "index": 7,
+      "width": 477,
+      "height": 296
+    }
+  ]
+}

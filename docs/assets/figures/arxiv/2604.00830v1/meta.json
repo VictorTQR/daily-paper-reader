@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00830v1/fig-001.webp",
+      "caption": "Table 1: Jericho ID Results. Comparison of single-agent baselines and actor+meta-agent methods on meta-training games. Single-agent baselines are shown at the top for reference; within each meta-agent block, META-TTL improves overall performance over the Naive variant.",
+      "page": 7,
+      "index": 1,
+      "width": 822,
+      "height": 243
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00830v1/fig-002.webp",
+      "caption": "Table 2: Jericho OOD Results. Zero-shot generalization on held-out games, with singleagent baselines shown at the top for reference. META-TTL generally improves performance across all three meta-agent backbones.",
+      "page": 7,
+      "index": 2,
+      "width": 822,
+      "height": 247
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00830v1/fig-003.webp",
+      "caption": "Table 4: WebArena-Lite OOD Results. Zero-shot generalization on out-of-distribution domains, with single-agent baselines shown at the top for reference. META-TTL improves OOD average performance for all meta-model backbones.",
+      "page": 8,
+      "index": 3,
+      "width": 822,
+      "height": 268
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00830v1/fig-004.webp",
+      "caption": "Table 3: WebArena-Lite ID Results. Comparison of single-agent baselines and actor+metaagent methods on in-distribution domains. Within each meta-agent block, META-TTL improves average performance across all meta-agent models.",
+      "page": 8,
+      "index": 4,
+      "width": 820,
+      "height": 263
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00830v1/fig-005.webp",
+      "caption": "Figure 2: Overview of META-TTL. Outer loop (meta-training): A proposer LM reflects and proposes candidate meta-prompts, which are validated locally and globally before entering a per-task expert pool. After training, a single optimized meta-prompt ϕ∗ is selected from this pool. Inner loop (test-time learning): The meta-agent, governed by ϕ∗, observes the actor’s trajectory after each episode and generates verbal feedback that rewrites the actor’s system prompt for the next attempt.",
+      "page": 4,
+      "index": 5,
+      "width": 822,
+      "height": 369
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00830v1/fig-006.webp",
+      "caption": "Figure 3: Per-episode score trajectories on the six Jericho evaluation games. META-TTL exhibits clearer upward trends across episodes than the baselines, supporting W-AUC as a metric of sustained test-time improvement.",
+      "page": 9,
+      "index": 6,
+      "width": 824,
+      "height": 406
+    }
+  ]
+}

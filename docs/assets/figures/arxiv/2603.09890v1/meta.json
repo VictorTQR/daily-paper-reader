@@ -1,0 +1,158 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-001.webp",
+      "caption": "Figure 2: Round-wise changes of three dialogue metrics under different rule templates. Each curve shows the mean value (with 95% confidence interval).",
+      "page": 6,
+      "index": 1,
+      "width": 1043,
+      "height": 525
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-002.webp",
+      "caption": "Table 7:𝑤𝑇 = 1.0,𝑤𝑀 = 1.0,𝑤𝐷 = 1.5",
+      "page": 11,
+      "index": 2,
+      "width": 512,
+      "height": 438
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-003.webp",
+      "caption": "Table 8:𝑤𝑇 = 1.0,𝑤𝑀 = 1.5,𝑤𝐷 = 1.0",
+      "page": 11,
+      "index": 3,
+      "width": 507,
+      "height": 439
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-004.webp",
+      "caption": "Table 3: Overall performance of policies with different weights and rule templates in the Land scenario. The detailed experimental results are presented in Appendix C.",
+      "page": 7,
+      "index": 4,
+      "width": 512,
+      "height": 494
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-005.webp",
+      "caption": "Table 18: Overall performance with adaptive weight setting. Report as mean±std over all agents and all rounds in 𝐿𝑎𝑛𝑑",
+      "page": 14,
+      "index": 5,
+      "width": 515,
+      "height": 565
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-006.webp",
+      "caption": "Table 17: Overall performance of policies of each agent under different Backbone LLMs",
+      "page": 14,
+      "index": 6,
+      "width": 512,
+      "height": 518
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-007.webp",
+      "caption": "Figure 1: The overall framework illustrates the process from an agent’s state representation to action generation, LLM-based action execution, and evaluation.",
+      "page": 3,
+      "index": 7,
+      "width": 1056,
+      "height": 435
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-008.webp",
+      "caption": "Table 16: Performance of policies of each agent after adding two Farmer agents.",
+      "page": 13,
+      "index": 8,
+      "width": 512,
+      "height": 285
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-009.webp",
+      "caption": "Table 13: Ablation Study",
+      "page": 13,
+      "index": 9,
+      "width": 512,
+      "height": 509
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-010.webp",
+      "caption": "Table 15: Heterogeneous: Overall performance of policies with the variant of the backbones. Report as mean±std over all agents and all rounds in 𝐿𝑎𝑛𝑑 scenario.",
+      "page": 13,
+      "index": 10,
+      "width": 512,
+      "height": 438
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-011.webp",
+      "caption": "Table 14: Homogeneous (S1): Overall performance of policies when all backbone LLMs are Qwen3. Report as mean±std over all agents and all rounds in 𝐿𝑎𝑛𝑑 scenario.",
+      "page": 13,
+      "index": 11,
+      "width": 512,
+      "height": 439
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-012.webp",
+      "caption": "Figure 4: Round-wise changes of three dialogue metrics with adaptive weights.",
+      "page": 8,
+      "index": 12,
+      "width": 1043,
+      "height": 258
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-013.webp",
+      "caption": "Table 6: Overall performance of policies comparison between homogeneous (𝑆1) and heterogeneous (𝑆2, 𝑆3) backbone LLMs variants. Results reported as mean±std. Detailed performance is in Appendix E.",
+      "page": 8,
+      "index": 13,
+      "width": 502,
+      "height": 359
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-014.webp",
+      "caption": "Table 11:𝑤𝑇 = 1.0,𝑤𝑀 = 1.0,𝑤𝐷 = 0.5",
+      "page": 12,
+      "index": 14,
+      "width": 512,
+      "height": 440
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-015.webp",
+      "caption": "Table 9:𝑤𝑇 = 1.5,𝑤𝑀 = 1.0,𝑤𝐷 = 1.0",
+      "page": 12,
+      "index": 15,
+      "width": 512,
+      "height": 440
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-016.webp",
+      "caption": "Table 10:𝑤𝑇 = 1.0,𝑤𝑀 = 0.5,𝑤𝐷 = 1.0",
+      "page": 12,
+      "index": 16,
+      "width": 512,
+      "height": 439
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-017.webp",
+      "caption": "Table 12:𝑤𝑇 = 0.5,𝑤𝑀 = 1.0,𝑤𝐷 = 1.0",
+      "page": 12,
+      "index": 17,
+      "width": 515,
+      "height": 588
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-018.webp",
+      "caption": "Figure 5: Ablation Study of Components T, M and D.",
+      "page": 9,
+      "index": 18,
+      "width": 1043,
+      "height": 236
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09890v1/fig-019.webp",
+      "caption": "Table 1: Overall performance of policies under different rule templates on 5 queries over 10-round conversation. Values are the mean ± std of 5 runs experiments. Because Rebuttal and Evid. are binary (0/1), the mean is just the proportion of 1s and the standard deviation can appear large relative to the mean.",
+      "page": 5,
+      "index": 19,
+      "width": 1032,
+      "height": 538
+    }
+  ]
+}

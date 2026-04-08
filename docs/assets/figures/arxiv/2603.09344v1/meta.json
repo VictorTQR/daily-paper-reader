@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.09344v1/fig-001.webp",
+      "caption": "Table 1. Performance comparison on D4RL datasets. Scores are normalized as (score − random)/(expert − random) and presented as mean ± standard deviation. Our results are averaged across 4 random seeds.",
+      "page": 7,
+      "index": 1,
+      "width": 717,
+      "height": 426
+    },
+    {
+      "url": "assets/figures/arxiv/2603.09344v1/fig-002.webp",
+      "caption": "Fig. 2. Evolution of the learned Q-values and predictive uncertainty for encountered state–action pairs during training. For a given (s, a), uncertainty is quantified as the log standard deviation of next-state predictions over the model ensemble.",
+      "page": 9,
+      "index": 2,
+      "width": 703,
+      "height": 393
+    }
+  ]
+}

@@ -1,0 +1,920 @@
+Title: Fully Byzantine-Resilient Distributed Multi-Agent Q-Learning
+
+URL Source: https://arxiv.org/pdf/2604.02791v1
+
+Published Time: Mon, 06 Apr 2026 00:31:10 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Fully Byzantine-Resilient Distributed Multi-Agent Q-Learning 
+
+Haejoon Lee and Dimitra Panagou 
+
+Abstract — We study Byzantine-resilient distributed multi-agent reinforcement learning (MARL), where agents must col-laboratively learn optimal value functions over a compromised communication network. Existing resilient MARL approaches typically guarantee almost sure convergence only to near-optimal value functions, or require restrictive assumptions to ensure convergence to optimal solution. As a result, agents may fail to learn the optimal policies under these methods. To ad-dress this, we propose a novel distributed Q-learning algorithm, under which all agents’ value functions converge almost surely to the optimal value functions despite Byzantine edge attacks. The key idea is a redundancy-based filtering mechanism that leverages two-hop neighbor information to validate incoming messages, while preserving bidirectional information flow. We then introduce a new topological condition for the convergence of our algorithm, present a systematic method to construct such networks, and prove that this condition can be verified in polynomial time. We validate our results through simulations, showing that our method converges to the optimal solutions, whereas prior methods fail under Byzantine edge attacks. 
+
+I. I NTRODUCTION 
+
+Multi-agent reinforcement learning (MARL) has emerged as a powerful extension of reinforcement learning (RL) [1] for learning optimal policies of multiple decision-makers interacting within a shared environment [2]. Within this field, distributed cooperative MARL has gained significant attention. In these scenarios, multiple agents aim to optimize a shared global objective — often expressed as the average of local rewards —– through information sharing with their neighbors in a network [3]–[5]. One of the challenges in these decentralized frameworks is that agents receive local rewards from the environment, making the computation of optimal global value functions impossible without information sharing. To this end, a va-riety of frameworks have been developed. A consensus-based distributed Q-learning (QD-learning) has been pro-posed in [6], enabling agents to asymptotically compute the average of their optimal value functions through exchanges of state-action value estimates. Subsequent work introduced distributed actor-critic frameworks using linear function ap-proximations [3], [7]. To ensure scalability, [4], [5] studied scalable actor-critic algorithms where agents maintain state-action information only for their multi-hop neighbors. Despite these merits, distributed MARL algorithms, just like other distributed algorithms, are highly vulnerable to adversarial attacks that corrupt or share faulty information during their training. In the distributed systems literature, the  
+
+> *This work is supported by the Air Force Office of Scientific Research (AFOSR) under FA9550-23-1-0163 All authors are with the Department of Robotics, University of Michigan, Ann Arbor, MI, USA
+
+{haejoonl, dpanagou }@umich.edu 
+
+Byzantine model defines an omniscient adversary capable of injecting arbitrary errors or disruptions via hardware, software, and communication compromises [8], [9]. Thus, many resilient algorithms have been studied to counter or contain the impacts of Byzantine agents in distributed consensus [9]–[13], optimization [8], [14]–[16], and learn-ing frameworks [17]–[20]. Similarly, Byzantine-resilient dis-tributed MARL has been studied in recent years. Early studies showed that even a single adversarial agent can severely disrupt the learning process in cooperative MARL algorithms [21], [22]. It has been established in [23] that exact evaluation of the honest agents’ average reward is generally impossible under Byzantine attacks. To address this vulnerability, several resilient MARL al-gorithms have been proposed. The QD-learning algorithm from [6] was adapted in [22], [24] to ensure convergence despite Byzantine agents. Other works have utilized linear function approximation to learn Q-values with adversarial attacks [25]–[27]. However, these methods generally only guarantee convergence to near-optimal value functions, and therefore cannot guarantee learning of the true optimal policies. Furthermore, many of these approaches require the communication network to satisfy robustness conditions (e.g., (2 F +1) -robustness). Since verifying such properties is a co-NP-complete problem [28], the application of these ap-proaches to large-scale networks is limited. While [29]–[31] proposed an alternative algorithm that avoids such robustness conditions, they require a trusted central coordinator. In this work, we propose a fully resilient distributed Q-learning algorithm under which agents achieve almost sure convergence to optimal value functions in the presence of Byzantine edge attack, a restricted variant of the Byzantine model, in a decentralized network. By focusing on edge-level adversaries only, we provide stronger learning guarantees than prior work [16], [22], [24], which achieves only near-optimal convergence or requires additional structural as-sumptions on Q-values or local objectives. The key feature of our method is that it relies on redundant two-hop information to verify incoming messages and filter adversarial injections. We prove that under a novel topological condition, this approach ensures almost sure convergence to the optimal solution without any structural assumptions on the problem. 
+
+Contributions: This paper introduces Fully Resilient Distributed Q-learning (FRQD-learning), a decentralized Q-learning algorithm that enables a network of agents to achieve almost sure asymptotic convergence to the optimal value functions despite Byzantine edge attacks. Specifically,  
+
+> •
+
+We integrate consensus-based distributed Q-learning (QD-learning) [6] with a novel filtering mechanism 
+
+> arXiv:2604.02791v1 [cs.MA] 3 Apr 2026
+
+that validates incoming information using two-hop mes-sages, resulting in a Byzantine-resilient algorithm. We show that under a novel topological condition — termed 
+
+(r, r ′)-redundancy — our method guarantees almost sure convergence to the optimal value functions.  
+
+> •
+
+We present systematic constructions of (r, r ′)-redundant graphs and prove (r, r ′)-redundancy can be verified in polynomial-time, unlike the co-NP-complete r-robustness conditions in [22], [26].  
+
+> •
+
+We validate our results through simulations, showing that our method converges to the optimal solutions, whereas prior methods fail to do so under the same Byzantine edge attacks. II. P ROBLEM STATEMENT 
+
+A multiset S is a collection that may contain repeated ele-ments. For simplicity, we abuse notation and use calligraphic symbols to denote both sets and multisets. We denote the cardinality of a (multi)set S as |S| . We denote the sets of non-negative and positive integers as Z≥0 and Z>0. For a multiset S and q ∈ R, we define count( q, S) as the number of occurrences of q in S. We denote the probability and expectation of a probability space (Ω , F, P) by P(·) and E(·).We consider a system of n agents interacting over a simple, undirected, and time-varying communication graph 
+
+G(t) = ( V, E(t)) . The vertex set V = {1, . . . , n } represents the agents, and the edge set E(t) ⊂ V × V denotes a set of communication links between agents at time t. Since the graph is undirected, (i, j ) ∈ E (t) implies that (j, i ) ∈ E (t).For agent i, its one-hop and two-hop neighbor sets at time 
+
+t are denoted by Ni(t) = {j ∈ V | (i, j ) ∈ E (t)} and 
+
+N (2)  
+
+> i
+
+(t) = {j(2) ∈ V | j(2) ∈ N j (t) \ { i}, j ∈ N i(t)}. The extended one-hop neighbor set is Bi(t) = Ni(t)∪{ i}. A path of length k ∈ Z>0 is a sequence of vertices (v0, . . . , v k) such that (vi−1, v i) ∈ E (t) ∀i ∈ { 1, . . . , k }. A graph is connected if there exists a path of any length between any pair of nodes. The environment is modeled as a networked multi-agent Markov Decision Process (MDP) defined by a tuple 
+
+(X , U, P, {ci}ni=1 , γ ). Here, X = {1, . . . , M } is the finite state space, and U is the finite set of control actions. The transition function P : X × U × X → [0 , 1] is given by 
+
+P(xt+1 = x′ | xt = x, ut = u) = puxx ′ , ∀x, x ′ ∈ X , u ∈ U ,
+
+where P 
+
+> x′∈X
+
+puxx ′ = 1 for all x ∈ X and u ∈ U . Each agent 
+
+i has a private random local cost function ci(x, u ), which represents the cost incurred when action u is taken at state x.The global cost is denoted as c(x, u ) = (1 /n ) P 
+
+> i∈V
+
+ci(x, u )
+
+for all x ∈ X and u ∈ U . The constant γ ∈ (0 , 1) is the discount factor. For a stationary control policy π : X → U , where ut =
+
+π(xt), and initial state x, the state process {xπt } evolves as a homogeneous Markov chain with transitions pπ(x) 
+
+> xx ′
+
+. In RL, the goal is to learn a policy π : X → U that minimizes the infinite-horizon discounted global cost 
+
+Vx,π = E
+
+" ∞X
+
+> t=0
+
+γtc(xt, π (xt)) x0 = x
+
+#
+
+. (1) One of the most widely used algorithms is Q-learning algorithm [1], which estimates the optimal state-action value functions (or Q-values) Q∗ = [ Q∗
+
+> x,u
+
+] ∈ R|X ×U| . These val-ues are unique solutions to the Bellman optimality equation 
+
+Q∗ 
+
+> x,u
+
+= E[c(x, u )] + γ X
+
+> x′∈X
+
+puxx ′ min  
+
+> v∈U
+
+Q∗ 
+
+> x′,v
+
+,
+
+where V ∗ 
+
+> x
+
+= min u∈U Q∗ 
+
+> x,u
+
+is the optimal value function for state x ∈ X . We denote the vector of optimal value functions and optimal policies as 
+
+V∗ = V ∗ 
+
+> 1
+
+· · · V ∗
+
+> M
+
+⊤ , π∗(x) ∈ arg min  
+
+> u∈U
+
+Q∗
+
+> x,u
+
+. (2) In the decentralized setting, while each agent i ∈ V
+
+observes the state x ∈ X , action u ∈ U, and its lo-cal cost ci(x, u ), it does not know the costs of others. Hence, agents cannot compute the global cost c(x, u ) = (1 /n ) P 
+
+> i∈V
+
+ci(x, u ) and the optimal value functions 
+
+V ∗ 
+
+> x
+
+= inf 
+
+> π
+
+1
+
+n
+
+X
+
+> i∈V
+
+V ix,π , ∀x ∈ X , (3) where V ix,π denotes the discounted cost of agent i under policy π:
+
+V ix,π = E
+
+" ∞X
+
+> t=0
+
+γtci(xt, π (xt)) | x0 = x
+
+#
+
+. (4) In response, [6] presented the QD-learning algorithm, a distributed variant of Q-learning, that allows each agent to learn the optimal value functions and policies (2) by exchanging its local Q-values. However, the QD-learning algorithm fails in the presence of Byzantine agents — those who represent a broad range of possible faults or adversarial attacks on software, hardware, and communication — as they may deviate arbitrarily from prescribed protocols [8], [9]. Although resilient Q-learning variants [24], [27], [29] have been proposed recently, they only converge to near-optimal value functions in general. In fact, finding the exact optimal value functions in the presence of Byzantine agents is generally impossible [23], making the learning of optimal policies a fundamental challenge. Hence, we focus on a slightly weaker but highly practical adversarial model: 
+
+Definition 1 (F -total Byzantine Edge Attack) . Let there be 
+
+C ∈ Z>0 rounds of communications among agents at time 
+
+t ∈ Z≥0. An edge (i, j ) ∈ E z
+
+> B
+
+(t) ⊂ E (t) is said to be under a 
+
+Byzantine edge attack during the communication round z ∈{1, . . . , C } at time t if the message sent by agent i at round z
+
+is altered arbitrarily or dropped before it is received by agent 
+
+j (and/or vice versa). The network G(t) = ( V, E(t)) is said to be under F -total Byzantine edge attack if |E z
+
+> B
+
+(t)| ≤ F
+
+for all z ∈ { 1, . . . , C } and t ∈ Z.
+
+By definition, we only consider unreliability in communi-cations, unlike many works that focus on scenarios where the nodes themselves are unreliable. Formally, we assume 
+
+Assumption 1. All agents i ∈ V are cooperative, e.g., they follow the same prescribed protocol. We assume that Byzantine edge attackers have limited resources and can compromise only F communications per round of communications . For any attacked edge (i, j ) during round z ∈ {1, . . . , C } at time t, both agents i and j
+
+may receive corrupted information, affecting at most 2F
+
+agents each communication round. This attack type is similar to those studied in [32], [33], and by [24, Prop. 6], this attack can prevent agents from finding the optimal value functions (2). Therefore, our problem of interest is: 
+
+Problem 1. Design a fully resilient distributed algorithm such that, under Assumption 1 and an F -total Byzantine edge attack, every agent i ∈ V finds the optimal value functions V∗ (2) using only local interactions in a time-varying communication graph G(t) = ( V, E(t)) .
+
+We emphasize that by adopting a slightly weaker adver-sarial model than prior works [24], [25], [27], we obtain strictly stronger performance guarantees, namely, almost sure convergence to the exact optimal value functions, under 
+
+F -total Byzantine edge attacks. To this end, we propose the Fully Resilient QD (FRQD)-learning algorithm (Algo-rithm 1), which leverages two-hop information to validate messages through redundancy. We show that our method solves Problem 1 under a novel topological condition (which is given in Theorem 1). III. F ULLY RESILIENT QD -L EARNING 
+
+Before presenting our solution, we first present the QD-learning algorithm [6]. Let each agent i ∈ V maintains a sequence of state-action value functions {Qi(t)} ∈ R|X ×U| 
+
+with components Qix,u (t) for every possible state-action pair (x, u ). Each agent also maintains a sequence of state value functions {Vi(t)} ∈ RM with components V ix (t) = min u∈U Qix,u (t) for x ∈ X . The sequence {Qix,u (t)} evolves in the following rule: 
+
+Qix,u (t + 1) = Qix,u (t) − βx,u (t) X  
+
+> Qj∈P iN(t)
+
+ Qix,u (t) − Qj 
+
+(5) 
+
++αx,u (t)
+
+
+
+ci(xt, ut) + γ min  
+
+> v∈U
+
+Qi 
+
+> xt+1 ,v
+
+(t) − Qix,u (t)
+
+
+
+,
+
+with the multiset PiN (t) = {Qjx,u (t) | j ∈ N i(t)}. The weights are defined as 
+
+αx,u (t) = 
+
+( a 
+
+> (k+1) τ1
+
+if t = Tx,u (k) for some k ≥ 0,
+
+0 otherwise, (6) 
+
+βx,u (t) = 
+
+( b 
+
+> (k+1) τ2
+
+if t = Tx,u (k) for some k ≥ 0,
+
+0 otherwise, (7) where Tx,u (k) denotes the (k + 1) -th sampling instant of state-action pairs (x, u ). We define a, b > 0, τ1 ∈ (1 /2, 1] ,and 0 < τ 2 < τ 1 − 1/(2 + ϵ1), where ϵ1 > 0 is a small constant governing the moment conditions of the local costs (see Assumption 2). It was shown in [6, Thm. 1] that all agents i achieve 
+
+Qi(t) → Q∗ and Vi(t) → V∗ almost surely as t → ∞ 
+
+under the protocol (5) and assumptions [6, M.1-M.5]. We list two of the assumptions below: 
+
+Assumption 2. The probability space (Ω , F, P) is a com-plete probability space with filtration {F t} given by Ft =
+
+σ({xτ , uτ }τ ≤t, {ci(xτ , uτ )}i∈V ,τ ≤t), where σ(·) denotes the smallest σ-algebra with respect to where the random objects are measurable. The conditional probability for the controlled transition of {xt} is P(xt+1 = x′ | F t) = put 
+
+> xtx′
+
+.For all i ∈ V , E[ci(xt, ut) | F t] = E[ci(xt, ut) | xt, ut],which is equal to E[ci(x, u )] on the event {xt = x, ut = u}.Lastly, one-stage costs possess super-quadratic moments, i.e., 
+
+E[( ci(x, u )) 2+ ϵ1 ] < ∞ for all i ∈ V , x ∈ X , and u ∈ U .
+
+Assumption 3. For all state-action pair (x, u ) ∈ X × U and 
+
+k ∈ Z≥0, P(Tx,u (k) < ∞) = 1 .Note Assumptions 2 and 3 are equivalent to [6, M.1 and M.4]. The former implies that the system is a controlled MDP evolving on a complete probability space, where all agents observe the history of past states, controls, and costs up to time t. The requirement for super-quadratic moments on costs is used for the almost sure convergence of our algorithm. The latter requires all state-action pairs to be visited infinitely often, which is standard for Q-learning. While Byzantine resilient variants of QD-learning have been proposed [24], [25], [27], these methods in general only guarantee convergence to the neighborhood of the optimal value functions. This is because the methods rely on each agent i modifying PiN (t) in (5) by filtering extreme neighbor values. Such filtering can induce asymmetric information exchange, effectively resulting in a directed communication network and introducing biases into the update. Under such situation, convergence to the optimal value functions is generally not guaranteed (cf. [22, Remark 3]). 
+
+A. Fully Resilient QD (FRQD)-Learning 
+
+The main novelty of our work lies in how each agent determines PiN (t) in (5) such that the actual induced com-munication remains undirected . This allows us to recover the original QD-learning method of [6] over a different network. Unlike traditional resilient methods that filter extreme values, which inherently breaks the symmetry of information flow, our method utilizes two-hop redundancy-based filtering. From a local perspective, agents cannot directly identify compromised messages from one-hop neighbors. Therefore, our approach leverages the fact that agent i at time t receives messages from the same two-hop neighbor k ∈ N (2)  
+
+> i
+
+(t)
+
+through multiple independent one-hop neighbors (paths). By comparing these redundantly relayed messages, agents can detect and filter out those corrupted by an F -total Byzantine edge attack before incorporating them into the update. In Fully Resilient QD (FRQD)-learning algorithm (Al-gorithm 1), there are six main steps with two rounds of communications. At line 1, agent i ∈ V first receives the data xt, ut, and ci(xt, ut). At line 3, agent i broadcasts its Q-value Qi 
+
+> xt,ut
+
+(t) together with its index i as a tuple 
+
+(Qi 
+
+> xt,ut
+
+(t), i ) to its neighbors j ∈ N i(t) while receiving Algorithm 1: Fully Resilient QD (FRQD)-Learning 
+
+Inputs: Parameter F , initial Qi
+
+> 0
+
+, Vi
+
+> 0
+
+// Receive data  
+
+> 1
+
+Receive state xt, action ut, and cost ci(xt, ut) 
+
+> 2
+
+Initialize multisets Ki(t) = ∅, Ci(t) = ∅, Pi(t) = ∅
+
+// Exchange Q-values with neighbors:  
+
+> 3
+
+Send (Qi 
+
+> xt,ut
+
+(t), i ) to and receive (Qj 
+
+> xt,ut
+
+(t), j ) from neighbors 
+
+// First Filtering:  
+
+> 4
+
+for every received (Qj 
+
+> xt,ut
+
+(t), j ) do  
+
+> 5
+
+if j̸ = i and j appears exactly once among all messages then  
+
+> 6
+
+Ki(t) = Ki(t) ∪ { (Qj 
+
+> xt,ut
+
+(t), j )}
+
+// Relay Q-values of its neighbors:  
+
+> 7
+
+Share Ki(t) with neighbors and collect all received sets into Ci(t) only if Ki(t) contains set of unique indices 
+
+// Second Filtering:  
+
+> 8
+
+for k = 1 to n do  
+
+> 9
+
+Lik(t) = {Qk 
+
+> xt,ut
+
+(t) | (Qk 
+
+> xt,ut
+
+(t), k ) ∈ C i(t)} 
+
+> 10
+
+for each distinct q ∈ L ik(t) do  
+
+> 11
+
+if count( q, Lik(t)) ≥ 3F + 1 then  
+
+> 12
+
+Pi(t) = Pi(t) ∪ { q}
+
+// Update:  
+
+> 13
+
+Update Qi 
+
+> xt,ut
+
+(t + 1) using (5) with PiN (t) = Pi(t) 
+
+> 14
+
+Update V i 
+
+> xt
+
+(t + 1) = min u∈U Qi
+
+> xt,u
+
+(t + 1) (Qj 
+
+> xt,ut
+
+(t), j ) from them. During the first filtering step (lines 4–6), agent i discards any tuple whose index is equal to i or appears more than once among the received messages. Thus, only tuples corresponding to indices that appear exactly once are retained in Ki(t). The agent then shares Ki(t) with its neighbors, allowing the propagation of Q-values from two-hop neighbors (line 7). Also, by lines 4-6, any shared Kj (t)
+
+with duplicate agent indices must be compromised and thus not considered. In the second filtering step (lines 8–12), agent 
+
+i examines all relayed Q-values associated with agent k ∈ V ;it considers a value trustworthy if it appears at least 3F + 1 
+
+times and puts them into the multiset Pi(t). Finally, the values in Pi(t) are used to update Qi 
+
+> xt,ut
+
+(t) according to (5), after which the value function is updated (lines 13–14). 
+
+Remark 1. The FRQD-learning algorithm requires agents relaying their own and their neighbors’ Q-values over two communication rounds. In the first round, each agent sends one scalar to each neighbor ( O(|N i(t)|) communication). In the second round, each agent relays up to |N i(t)|
+
+scalars received from its neighbors and its own, resulting in 
+
+O(|N i(t)|2) communication at worst. Reducing this overhead while preserving the same convergence guarantees (Theo-rem 1) remains a future work. •
+
+Remark 2. Our algorithm uses multi-path redundancy for 
+
+validation and directly incorporates validated two-hop mes-                    
+
+> Fig. 1. Visualizations of (a) graph G(t) = ( V,E(t)) and (b) its 5-2-hop graph G(2) 5(t) = ( V,E(2) 5(t)) at time t. The edge (i, j )∈ E (2) 5(t), since
+> |B i(t)∩ N j(t)| ≥ 5.
+> Fig. 2. (a) (1 ,0) -redundant graph and (b) its 1-2-hop graph.
+
+sages into the update. This differs from works such as [11], [34], which use two-hop messages only to detect and isolate 
+
+malicious agents from updates. Moreover, our approach provides resilience against point-to-point Byzantine commu-nication attacks, whereas these works consider adversaries that only broadcast the same values to all neighbors. •
+
+B. (r, r ′)-redundancy 
+
+Now we present novel topological properties under which FRQD-learning algorithm solves Problem 1. First, we define: 
+
+Definition 2 (r-2-hop Graph) . Let G(t) = ( V, E(t)) be an undirected graph at time t. We define the r-2-hop graph of 
+
+G(t), denoted as G(2)  
+
+> r
+
+(t) = ( V, E(2)  
+
+> r
+
+(t)) , such that an edge 
+
+(i, j ) ∈ E (2)  
+
+> r
+
+(t) if |B i(t) ∩ N j (t)| ≥ r.
+
+An illustrative example of an r-2-hop graph is given in Figure 1. An r-2-hop graph contains an edge (i, j )
+
+if agents i and j share at least r neighbors (including themselves). Equivalently, there are at least r vertex-disjoint paths of length at most 2 connecting them. 
+
+Definition 3 ((r, r ′)-redundant) . Let G(t) = ( V, E(t)) be an undirected graph at time t, and let G(2)  
+
+> r
+
+(t) = ( V, E(2)  
+
+> r
+
+(t)) be its r-2-hop graph. We say that G(t) is (r, r ′)-redundant with 
+
+r > r ′ ≥ 0 at time t if: 
+
+1) G(2)  
+
+> r
+
+(t) is connected, and 
+
+2) for all (i, j ) /∈ E (2)  
+
+> r
+
+(t), |B i(t) ∩ N j (t)| ≤ r′.
+
+Figure 2 visualizes an (r, r ′)-redundant graph and its r-2-hop graph. A graph G(t) is (r, r ′)-redundant if two things hold. First, its r-2-hop graph is connected. Second, for all agent pairs not connected in the r-2-hop graph, they share at most r′ neighbors (including themselves) in the graph G(t).That is, for any i, j ∈ V , they share either at least r or at most r′ neighbors (including themselves). 
+
+Remark 3. The (r, r ′)-redundancy condition quantifies the topological condition required for agents to have symmetric validations of correct messages amidst adversarial commu-nication attacks. The threshold r ensures that for any two agents in the r-2-hop graph, there is sufficient multi-path redundancy (at least r common neighbors) to verify the relayed messages. Conversely, when two agents are not connected in the r-2-hop graph, the number of neighbors they share is bounded by r′. As a result, this prevents Byzantine edge attacks from manipulating relayed messages to create asymmetric validation (e.g., agent i having sufficient redundancy in messages from agent j while the reverse does not hold). This bound therefore is intended to ensure the symmetry of the underlying communication, ensuring convergence to the optimal value functions as described in (2)-(3). •
+
+Lemma 1. Let G(t) = ( V, E(t)) be (r, r ′)-redundant at time t. Then, its r-2-hop graph G(2)  
+
+> r
+
+(t) = ( V, E(2)  
+
+> r
+
+(t)) is connected and undirected at time t.Proof. By Definition 3, G(2)  
+
+> r
+
+(t) is connected. Furthermore, because G(t) is undirected, |B i(t) ∩ N j (t)| = |B j (t) ∩ N i(t)|
+
+for any i, j ∈ V , i̸ = j. Hence, G(2)  
+
+> r
+
+is also undirected. 
+
+C. Sufficient Conditions for the FRQD-Learning 
+
+Before stating our main result (Theorem 1), we first look at the supporting lemmas. 
+
+Lemma 2. Let Assumption 1 hold. Let G(t) = ( V, E(t)) 
+
+be connected, and suppose that each agent i ∈ V runs the FRQD-learning algorithm under an F -total Byzantine edge attack. Then, for any time t ∈ Z≥0, agent i ∈ V , and k ∈V \ { i}, the multiset Lik(t) contains at most 3F values that do not equal to Qk 
+
+> xt,ut
+
+(t), i.e., 
+
+|{ ˜Q ∈ L ik(t) | ˜Q̸ = Qk 
+
+> xt,ut
+
+(t)}| ≤ 3F. (8) 
+
+Proof. By Assumption 1, we know all agents i ∈ V share the true messages (Qi 
+
+> xt,ut
+
+(t), i ) and Ki(t) at lines 3 and 7 of Algorithm 1. Therefore, any messages with values ˜Q̸ =
+
+Qk 
+
+> xt,ut
+
+(t) must have been corrupted by Byzantine attack. At line 3, every agent receives Q-values directly from its neighbors. Since the F -total Byzantine edge attack is bidirectional, at most 2F agents receive a corrupted value 
+
+( ˜Q, k ) where ˜Q̸ = Qk 
+
+> xt,ut
+
+(t). At line 7, each agent relays its neighbors’ Q-values it has received to other neighbors. In the worst case, (i) all 2F agents who received ( ˜Q, k )
+
+from the previous communication round have agent i as their neighbors, and (ii) F additional corrupted ( ˜Q, k ) get relayed to agent i. Therefore, for any k̸ = i, the set Lik(t) contains at most 3F values that do not equal to Qk 
+
+> xt,ut
+
+(t).The lemma establishes that an agent receives at most 3F
+
+corrupted values for every other agent as a result of the two rounds of communication under F -total Byzantine edge attacks (lines 3-7). The bound (8) then guarantees that any value from a specific neighbor appearing at least 3F + 1 
+
+times must be correct (and thus line 11 in Algorithm 1). Now, we present another lemma. Let Sxt,ut (t) =
+
+{Q1 
+
+> xt,ut
+
+(t), . . . , Q n 
+
+> xt,ut
+
+(t)} be the set of Q-values for all agents at state xt and ut at time t.
+
+Lemma 3. Let Assumption 1 hold. Let G(t) = ( V, E(t)) be 
+
+(6 F + 1 , 0) -redundant, and let G(2) 6F +1 (t) be (6 F + 1) -2-hop graph of G(t) at time t. Suppose that each agent i ∈ V runs the FRQD-learning algorithm under an F -total Byzantine edge attack. Then, the following holds: 
+
+Qx,u (t + 1) = Q1
+
+> x,u
+
+(t + 1) · · · Qnx,u (t + 1) ⊤ (9) 
+
+= ((1 − αx,u (t)) In − βx,u (t)Lt) Qx,u (t)+ αx,u (t)νxt,ut (t),
+
+where Lt := L(G(2) 6F +1 (t)) is the Laplacian matrix of 
+
+G(2) 6F +1 (t) and νxt,ut (t) = ν1 
+
+> xt,ut
+
+(t) · · · νn 
+
+> xt,ut
+
+(t)⊤ with 
+
+νi 
+
+> xt,ut
+
+(t) = ci(xt, ut) + γ min v∈U Qi 
+
+> xt+1 ,v
+
+(t).Proof. Our proof is in three parts: (i) we show that (i, j ) ∈E(2) 6F +1 (t) if and only if Qi 
+
+> xt,ut
+
+(t) ∈ P j (t) and Qj 
+
+> xt,ut
+
+(t) ∈Pi(t). (ii) We prove that Pi(t) ⊆ S xt,ut (t) for all i ∈ V and 
+
+t ∈ Z≥0. (iii) We combine (i) and (ii) to complete the proof. 
+
+Part 1a ( = ⇒ ): By Lemma 1, the (6 F + 1) -2-hop graph 
+
+G(2) 6F +1 is connected. Then, for any i ∈ V , there must exist an agent j ∈ V \ { i} such that |N i(t) ∩ B j (t)| ≥ 6F + 1 .By Assumption 1, each agent i ∈ V correctly shares 
+
+(Qi 
+
+> xt,ut
+
+(t), i ) and Ki(t) at lines 3 and 7 of Algorithm 1, respectively. By definition of F -total Byzantine edge attack (where each edge attack affects at most two agents), at least 4F + 1 nodes j′ ∈ N i(t) ∩ B j (t) will correctly have 
+
+(Qi 
+
+> xt,ut
+
+(t), i ) in Kj′
+
+(t) by line 6. Now, (i) because each agent j′ correctly shares Kj′
+
+(t) at line 7 by Assumption 1 and (ii) by definition of F -total Byzantine edge attack, agent 
+
+j will have at least 3F + 1 repetitions of (Qi 
+
+> xt,ut
+
+(t), i ) in 
+
+Cj (t). Hence, we have count( Qi 
+
+> xt,ut
+
+(t), Lji (t)) ≥ 3F + 1 ,which means Qi 
+
+> xt,ut
+
+(t) ∈ P j (t).Since G(2) 6F +1 is undirected by Lemma 1, we conclude that Qj 
+
+> xt,ut
+
+(t) will be in Pi(t) also. Finally, since an edge 
+
+(i′, j ′) exists in E(2) 6F +1 (t) implies |N i′ (t) ∩ B j′ (t)| ≥ 6F + 1 
+
+by definition, we conclude for any (i, j ) ∈ E(2) 6F +1 (t),
+
+Qi 
+
+> xt,ut
+
+(t) ∈ P j (t) and Qj 
+
+> xt,ut
+
+(t) ∈ P i(t).
+
+Part 1b (⇐=) : Assume to the contrary that Qi 
+
+> xt,ut
+
+(t) ∈Pj (t) and Qj 
+
+> xt,ut
+
+(t) ∈ P i(t) but also (i, j ) /∈ E (2) 6F +1 (t).For Qi 
+
+> xt,ut
+
+(t) and Qj 
+
+> xt,ut
+
+(t) to be in Pj (t) and Pi(t),respectively, count( Qi 
+
+> xt,ut
+
+(t), Lji (t)) ≥ 3F + 1 and 
+
+count( Qj 
+
+> xt,ut
+
+(t), Lij (t)) ≥ 3F + 1 . Nevertheless, (i, j ) /∈E(2) 6F +1 (t) implies that |N i(t) ∩ B j (t)| < 6F + 1 and thus 
+
+|N i(t) ∩ B j (t)| = 0 by definition. Since Byzantine edge attacks can manipulate at most 3F values in Lji (t) and Lij (t)
+
+by Lemma 2, we reach a contradiction. 
+
+Part 2: Assume to the contrary that there exist i ∈ V and 
+
+t ∈ Z≥0 such that Pi(t)̸ ⊆ S xt,ut (t). This implies there exists Q′ ∈ P i(t) such that Q′ /∈ S xt,ut (t). For this to happen, count( Q′, Lik(t)) ≥ 3F + 1 has to hold for some 
+
+k ∈ V . This is a contradiction, as Byzantine edge attacks can manipulate at most 3F values Q′ /∈ S xt,ut (t) by Lemma 2. 
+
+Part 3: From Part 1, the existence of an edge (i, j ) in 
+
+E(2) 6F +1 (t) is necessary and sufficient for Qi 
+
+> xt,ut
+
+(t) ∈ P j (t)
+
+and Qj 
+
+> xt,ut
+
+(t) ∈ P i(t). In addition, from Part 2, we know that each agent i ∈ V uses values only in Sxt,ut (t) to update its Qi 
+
+> xt,ut
+
+(t + 1) for all time t. Therefore, this is equivalent to agents i ∈ V sharing Qi 
+
+> xt,ut
+
+(t) to agents in N (2)  
+
+> i, 6F+1
+
+(t) = 
+
+{j ∈ V | (i, j ) ∈ E (2) 6F +1 (t)} before update. Hence, the update step from (5) with PiN (t) = Pi(t) can be rewritten as 
+
+Qix,u (t + 1) =(1 − αx,u (t)) Qix,u (t) + αx,u (t)νi 
+
+> xt,ut
+
+(t)
+
+− βx,u (t) X  
+
+> j∈N (2)
+> i, 6F+1 (t)
+
+ Qix,u (t) − Qjx,u (t) ,
+
+for each x ∈ X and u ∈ U , which completes the proof. Lemma 3 establishes that running the FRQD-learning algorithm on G(t) is mathematically equivalent to executing the standard QD-learning algorithm [6] on the (6 F + 1) -2-hop graph G(2) 6F +1 (t) of G(t) at time step t. Now, we present the main result of our paper: 
+
+Theorem 1. Let Assumption 1-3 hold. If (i) G(t) = ( V, E(t)) 
+
+is (6 F + 1 , 0) -redundant under an F -total Byzantine edge attack, and (ii) each agent i ∈ V runs FRQD-learning algorithm for all t ∈ Z≥0, for each agent i ∈ V ,
+
+P
+
+
+
+lim  
+
+> t→∞
+
+Qi(t) = Q∗
+
+= 1 , (10) 
+
+P
+
+
+
+lim  
+
+> t→∞
+
+Vi(t) = V∗
+
+= 1 . (11) 
+
+Proof. By Lemma 3, Q-value updates through the FRQD-learning algorithm at each time step t is equivalent to (9), where Lt is the Laplacian matrix of the (6 F +1) -2-hop graph of G(t). Since G(t) is (6 F + 1 , 0) -redundant, its (6 F + 1) -2-hop graph is connected and undirected (by Lemma 1), i.e., 
+
+λ2(Lt) > 0, for all t. Furthermore, by Assumption 2-3 and with (6)-(7), [6, Thm. 1] holds, completing our proof. Theorem 1 guarantees that, despite Byzantine edge attacks, all agents converge almost surely to the optimal value functions. This represents a notable improvement over prior works, which in general only guarantee convergence to near-optimal solutions. We empirically support this in Section V. IV. C ONSTRUCTION OF REDUNDANT NETWORK GRAPH 
+
+In the previous section, we have identified (6 F + 1 , 0) -redundancy as the sufficient condition for all agents to learn the optimal value functions V∗ (2). In this section, we present (i) a systematic construction of an (r, r ′)-redundant graph (Proposition 1) and (ii) its computation time (Proposi-tion 2). As the underlying structural requirements are inde-pendent of the learning dynamics, we focus on time-invariant graphs and drop the argument t on a graph throughout this discussion. We first present a systematic method to construct (r, r ′)-redundant graphs for any r and r′:
+
+Proposition 1. Let V = {1, . . . , n } where n > r, and 
+
+Vc = {1, . . . , r } ⊂ V . Then, a graph G = ( V, E) is (r, r ′)-redundant for r > r ′ ≥ 0 if (i) every node in Vc is connected to every other node in Vc and (ii) a node i ∈ V \ V c is connected to all r nodes in Vc.Proof. Here we prove by induction that G is (r, r ′)-redundant for any n ≥ r + 1 .When n = k = r + 1 , every node in V is connected to each other. Then, for any i, j ∈ V such that i̸ = j, |B i ∩Nj | ≥ r. Hence, r-2-hop graph G(2)  
+
+> r
+
+= ( V, E(2)  
+
+> r
+
+) of G is fully connected. Because |B i ∩ N j | ≥ r holds for any i, j ∈ V , G
+
+is (r, r ′)-redundant for any r′ ≥ 0.Now, assume that G is (r, r ′)-redundant for any r′ ≥ 0
+
+with n = k > r +1 . By assumption, G is (r, r ′)-redundant for any r′ ≥ 0 with n = k > r + 1 , which implies |B i ∩ N j | ≥ r
+
+for any i, j ∈ V c ∪ { r + 1 , . . . , k }. Then, if n = k + 1 ,
+
+G is constructed by having agent k + 1 connected to all r
+
+nodes in Vc which are also connected to agents r + 2 , . . . , k .Hence, agent k + 1 also has |B k+1 ∩ N i| ≥ r for any i ∈Vc ∪ { r + 1 , . . . , k }, implying G is (r, r ′)-redundant. While Proposition 1 provides a method to construct (r, r ′)-redundant graphs, the following result establishes that we can verify the redundancy of an arbitrary graph efficiently. 
+
+Proposition 2. Given an r, r ′ ∈ Z≥0 and a communication graph G = ( V, E) with |V| = n, one can verify whether G is 
+
+(r, r ′)-redundant in O(n3)
+
+Proof. Let A be an adjacency matrix of G. Then, ¯A := A2 +
+
+A will contain elements ¯aij that counts the number of shared neighbors between nodes i and j (including node i itself) i.e., 
+
+|B i ∩N j |. Computing ¯A using standard matrix multiplication requires O(n3) operations [35, Sec. 4], and checking all entries adds at most O(n2) operations. Next, to verify that the r-2-hop graph G(2)  
+
+> r
+
+= ( V, E(2)  
+
+> r
+
+) of G is connected, one can perform a Breadth-First Search (BFS), which requires 
+
+O(n + mr ) time, where mr = |E (2)  
+
+> r
+
+| [35, Sec. 22.2]. Therefore, the total required computation is O(n3 + mr ).Since mr ≤  n
+
+> 2
+
+ = O(n2), O(n3 + mr ) = O(n3).Proposition 2 establishes that (r, r ′)-redundancy can be verified efficiently. Compare this with r-robustness [9], whose definition is given below: 
+
+Definition 4 (r-robustness [9]) . A graph G = ( V, E) is r-robust if for every pair of nonempty, disjoint subsets S1, S2 ⊂V, at least one of the subsets contains a node with at least r
+
+neighbors outside itself. That is, there exists a node i ∈ S k
+
+such that |N i \ S k| ≥ r for some k ∈ { 1, 2}.
+
+While (2 F + 1) -robustness provides a sufficient condi-tion for Byzantine-resilient QD-learning in other MARL frameworks [25], [26], [29], determining whether a graph satisfies this property is co-NP-complete and thus computa-tionally expensive [28], [36]. This computational bottleneck renders robustness-based design impractical for large-scale and dynamic networks. In contrast, (r, r ′)-redundancy offers a tractable alternative, making our approach more suitable. 
+
+Remark 4. Studying the precise relationship between (r, r ′)-redundancy and r-robustness is an interesting direction for future work. Nevertheless, we note that the graph constructed in Proposition 1 is at least ⌈ r+1 2 ⌉-robust. The key observation is that the construction contains a fully connected subgraph of size r + 1 , with r of these nodes additionally connected to the remaining nodes. Since a complete graph with n nodes is ⌈ n 
+
+> 2
+
+⌉-robust [9, Lem. 4], and robustness is preserved under the preferential attachment [9, Thm. 5], the claim follows. A formal proof is omitted due to space limitations. •
+
+V. S IMULATIONS 
+
+Here, we validate our method through simulations. Con-sider a system of n = 10 agents ( V = {0, . . . , 9}) with heterogeneous capabilities interacting over a network. There are six different tasks that must be completed sequentially, each requiring a pair of robots. Since robots have different capabilities, their operation costs and performance (proba-bility of completing the task) depend on both the task and assigned robot-pairs. There is no limit on the number of tasks in which each robot may participate. To determine an optimal assignment policy that minimizes the total operation cost, we define the state space X =
+
+{1, . . . , 7}, where states 1, . . . , 6 correspond to the current task and state 7 represents task completion. The control space is defined as U = {(i, j ) | i, j ∈ V , i ̸ = j}, representing the deployment of robot pair. The system starts at the initial state 
+
+x0 = 1 and the terminal state is 7. The controlled transition distributions are defined as 
+
+p(i,j ) 
+
+> xx ′
+
+=
+
+( |i−j||i−j|+x if x′ = x + 1 , 
+
+> x
+> |i−j|+x
+
+if x′ = x, (12) and p(i,j )77 = 1 for all (i, j ) ∈ U . The local cost function for agent i ∈ V is defined as 
+
+ci(x, u ) = 
+
+(
+
+δij (x) if u = ( i, j ),
+
+0 otherwise , (13) where δij (x) is sampled uniformly from the interval [0 , 50] 
+
+at t = 0 and remains fixed for t > 0, with ci(7 , u ) = 0 
+
+for all u ∈ U . Notably, both the transition dynamics (12) and the cost structures (13) are simultaneously state- and pair-dependent. We set the discounting factor γ = 0 .9. The algorithm parameters are chosen as ϵ1 = 10 −4, a = b = 1 /n ,
+
+τ1 = 1 , and τ2 = τ1 − 1/(2 + ϵ1) − ϵ2, where ϵ2 = 10 −4.We compare our method against two algorithms, all eval-uated on the same MDP with identical transition dynamics and costs:  
+
+> •
+
+Oracle: The vanilla QD-learning algorithm [6] in the absence of adversarial attacks. This serves as the ground-truth optimal value functions and policies.  
+
+> •
+
+Baseline: The resilient QD-learning method proposed in [22], [24] without the event-triggering mechanism. In all algorithms, agents interact over a (7 , 0) -redundant communication network G = ( V, E) constructed according to Proposition 1, which is also 4-robust (see Remark 4). Although the simulations are performed on a fixed graph as the Baseline only supports static networks, note our method naturally generalizes to time-varying graphs. We assume the network is under F = 1 -total Byzantine edge attack. Under this attack model, Theorem 1 guarantees that all agents almost surely converge to the optimal value functions using                                                  
+
+> Fig. 3. Performance comparison of our algorithm against the optimal Q-values from the Oracle [6] (no attack) and the Baseline [22] under a 1-total Byzantine edge attack. TABLE I OPTIMAL POLICIES FROM EACH ALGORITHM ACROSS STATES .
+> x= 1 x= 2 x= 3 x= 4 x= 5 x= 6
+> Oracle (0 ,1) (1 ,2) (3 ,6) (0 ,3) (0 ,4) (2 ,3)
+> Baseline (1 ,8) (1 ,2) (3 ,6) (0 ,5) (1 ,8) (0 ,8)
+> Ours (0 ,1) (1 ,2) (3 ,6) (0 ,3) (0 ,4) (2 ,3)
+
+our FRQD-learning algorithm. In contrast, Baseline only ensures convergence to a neighborhood of the optimal value functions [24, Thm. 1]. To simulate a Byzantine edge attack, at each communica-tion round we randomly select F = 1 edge and designate it as adversarial, with its transmitted information being corrupted. Specifically for our algorithm, during the first communication round (line 3 of Algorithm 1), the adversary replaces the transmitted message with an extreme Q-value for agent 0, namely (10000 , 0) . During the second commu-nication round (line 7), the adversary injects the falsified set ˜K = {(10000 , i )}i∈V . In contrast, when simulating the Baseline, agents receiving information via the compromised edge simply receive the value 10000 in place of legitimate neighbor values. Each agent in each algorithm initializes its Q-values ran-domly in the interval [0 , 50] . The evolution of their Q-values for state (task) 1 and actions (robot-pairs) (0 , 1) and (0 , 2) 
+
+is shown in Figure 3. Black solid lines correspond to the optimal Q-values computed by the Oracle, solid colored lines to the Baseline, and dashed lines to our method. The results show that under our method, all agents converge almost surely to the true optimal Q-values, whereas the Baseline fails to do so. Consequently, as highlighted in gray in Table I, all agents under our method identify the true optimal policies for all states (given by the Oracle), whereas agents under the Baseline fail to do so for states x = 1 , 4, 5, 6.VI. C ONCLUSION 
+
+We proposed a Fully Resilient QD-learning (FRQD-learning) algorithm that achieves almost sure convergence to the optimal value functions in distributed multi-agent Q-learning under Byzantine edge attacks. By leveraging a redundancy-based filtering mechanism and the novel topo-logical notion of (r, r ′)-redundancy, our method ensures the induced communication structure remains undirected, thereby recovering the exact convergence properties of the original QD-learning algorithm. For future work, we aim to extend our framework to actor-critic architectures. REFERENCES [1] R. S. Sutton and A. Barto, Reinforcement learning: An introduction .MIT press Cambridge, 1998, vol. 1, no. 1. [2] K. Zhang, Z. Yang, and T. Bas ¸ar, “Multi-agent reinforcement learn-ing: A selective overview of theories and algorithms,” Handbook of reinforcement learning and control , pp. 321–384, 2021. [3] K. Zhang, Z. Yang, H. Liu, T. Zhang, and T. Basar, “Fully decen-tralized multi-agent reinforcement learning with networked agents,” in Proceedings of the 35th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, vol. 80. PMLR, 10–15 Jul 2018, pp. 5872–5881. [4] Y. Lin, G. Qu, L. Huang, and A. Wierman, “Multi-agent reinforcement learning in stochastic networked systems,” in Advances in Neural Information Processing Systems , vol. 34. Curran Associates, Inc., 2021, pp. 7825–7837. [5] G. Qu, A. Wierman, and N. Li, “Scalable reinforcement learning of localized policies for multi-agent networked systems,” in Proceedings of the 2nd Conference on Learning for Dynamics and Control , ser. Proceedings of Machine Learning Research, vol. 120. PMLR, 10–11 Jun 2020, pp. 256–266. [6] S. Kar, J. M. F. Moura, and H. V. Poor, “ QD -learning: A collaborative distributed strategy for multi-agent reinforcement learning through 
+
+consensus + innovations ,” IEEE Transactions on Signal Processing ,vol. 61, no. 7, pp. 1848–1862, 2013. [7] S. Zeng, T. Chen, A. Garcia, and M. Hong, “Learning to coordinate in multi-agent systems: A coordinated actor-critic algorithm and finite-time guarantees,” in Proceedings of The 4th Annual Learning for Dynamics and Control Conference , ser. Proceedings of Machine Learning Research, vol. 168. PMLR, 23–24 Jun 2022, pp. 278–290. [8] L. Su and N. H. Vaidya, “Byzantine-resilient multiagent optimization,” 
+
+IEEE Transactions on Automatic Control , vol. 66, no. 5, pp. 2227– 2233, 2021. [9] H. J. LeBlanc, H. Zhang, X. Koutsoukos, and S. Sundaram, “Resilient asymptotic consensus in robust networks,” IEEE Journal on Selected Areas in Communications , vol. 31, no. 4, pp. 766–781, 2013. [10] S. M. Dibaji, M. Safi, and H. Ishii, “Resilient distributed averaging,” in 2019 American Control Conference (ACC) , 2019, pp. 96–101. [11] L. Yuan and H. Ishii, “Resilient average consensus with adversaries via distributed detection and recovery,” IEEE Transactions on Automatic Control , vol. 70, no. 1, pp. 415–430, 2025. [12] H. Lee and D. Panagou, “Partial resilient leader-follower consensus in time-varying graphs,” in 2026 Annual American Control Conference (ACC) , 2026. [13] ——, “Distributed resilience-aware control in multi-robot networks,” in 2025 IEEE 64th Conference on Decision and Control (CDC) , 2025, pp. 3868–3875. [14] S. Sundaram and B. Gharesifard, “Distributed optimization under adversarial nodes,” IEEE Transactions on Automatic Control , vol. 64, no. 3, pp. 1063–1076, 2019. [15] M. Yemini, A. Nedi´ c, A. J. Goldsmith, and S. Gil, “Resilient dis-tributed optimization for multiagent cyberphysical systems,” IEEE Transactions on Automatic Control , vol. 70, no. 6, pp. 3952–3967, 2025. [16] Y. Zhai, Z.-W. Liu, D. Yue, S. Hu, C. Deng, and L. Ye, “Byzantine-resilient multiagent distributed optimization under redundancy,” IEEE Transactions on Control of Network Systems , vol. 12, no. 4, pp. 2554– 2567, 2025. [17] C. Fang, Z. Yang, and W. U. Bajwa, “Bridge: Byzantine-resilient decentralized gradient descent,” IEEE Transactions on Signal and Information Processing over Networks , vol. 8, pp. 610–626, 2022. [18] Y. Chen, L. Su, and J. Xu, “Distributed statistical machine learning in adversarial settings: Byzantine gradient descent,” vol. 1, no. 2, Dec. 2017. [19] X. Lin, Y. Li, X. Xie, Y. Ding, X. Wu, and C. Ge, “Sf-cabd: Secure byzantine fault tolerance federated learning on non-iid data,” 
+
+Knowledge-Based Systems , vol. 296, p. 111851, 2024. [20] P. Blanchard, E. M. El Mhamdi, R. Guerraoui, and J. Stainer, “Machine learning with adversaries: Byzantine tolerant gradient descent,” in 
+
+Advances in Neural Information Processing Systems , vol. 30. Curran Associates, Inc., 2017. [21] M. Figura, K. C. Kosaraju, and V. Gupta, “Adversarial attacks in consensus-based multi-agent reinforcement learning,” in 2021 Ameri-can Control Conference (ACC) , 2021, pp. 3050–3055. [22] Y. Xie, S. Mou, and S. Sundaram, “Towards resilience for multi-agent qd-learning,” in 2021 60th IEEE Conference on Decision and Control (CDC) , 2021, pp. 1250–1255. [23] Hairi, M. Fang, Z. Zhang, A. Velasquez, and J. Liu, “On the hard-ness of decentralized multi-agent policy evaluation under byzantine attacks,” in 2024 International Symposium on Modeling and Opti-mization in Mobile, Ad Hoc, and Wireless Networks (WiOpt) , 2024, pp. 257–264. [24] Y. Xie, S. Mou, and S. Sundaram, “Communication-efficient and re-silient distributed q-learning,” IEEE Transactions on Neural Networks and Learning Systems , vol. 35, no. 3, pp. 3351–3364, 2023. [25] Z. Wu, H. Shen, T. Chen, and Q. Ling, “Byzantine-resilient decen-tralized policy evaluation with linear function approximation,” IEEE Transactions on Signal Processing , vol. 69, pp. 3839–3853, 2021. [26] J. Yao and X. Gong, “Communication-efficient and resilient distributed deep reinforcement learning for multi-agent systems,” in 2024 IEEE International Conference on Unmanned Systems (ICUS) , 2024, pp. 1521–1526. [27] L. Ye, M. Figura, Y. Lin, M. Pal, P. Das, J. Liu, and V. Gupta, “Resilient multiagent reinforcement learning with function approxi-mation,” IEEE Transactions on Automatic Control , vol. 69, no. 12, pp. 8497–8512, 2024. [28] H. Zhang, E. Fata, and S. Sundaram, “A notion of robustness in com-plex networks,” IEEE Transactions on Control of Network Systems ,vol. 2, no. 3, pp. 310–320, 2015. [29] Y. Lin, S. Gade, R. Sandhu, and J. Liu, “Toward resilient multi-agent actor-critic algorithms for distributed reinforcement learning,” in 2020 American Control Conference (ACC) , 2020, pp. 3953–3958. [30] Q. Lin and Q. Ling, “Robust reward-free actor–critic for cooperative multiagent reinforcement learning,” IEEE Transactions on Neural Networks and Learning Systems , vol. 35, no. 12, pp. 17 318–17 329, 2024. [31] M. Fang, X. Wang, and N. Z. Gong, “Provably robust federated reinforcement learning,” in Proceedings of the ACM on Web Con-ference 2025 , ser. WWW ’25. New York, NY, USA: Association for Computing Machinery, 2025, p. 896–909. [32] B. Bhushan, G. Sahoo, and A. K. Rai, “Man-in-the-middle attack in wireless and computer networking—a review,” in 2017 3rd Inter-national Conference on Advances in Computing, Communication & Automation (ICACCA)(Fall) . IEEE, 2017, pp. 1–6. [33] X. Lei, G. Wen, and M. M. Polycarpou, “Distributed secure consensus tracking for multi-agent systems: From asymptotic to finite-/fixed-time convergence,” IEEE Transactions on Automatic Control , pp. 1–8, 2026. [34] C. N. Hadjicostis and A. D. Dom´ ınguez-Garc´ ıa, “Trustworthy dis-tributed average consensus based on locally assessed trust evaluations,” 
+
+IEEE Transactions on Automatic Control , vol. 70, no. 1, pp. 371–386, 2025. [35] T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein, Introduction to Algorithms, 3rd Edition . MIT Press, 2009. [36] H. Lee and D. Panagou, “Minimal construction of graphs with maximum robustness,” arXiv preprint arXiv:2507.00415 , 2025.

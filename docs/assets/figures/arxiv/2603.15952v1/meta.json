@@ -1,0 +1,126 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-001.webp",
+      "caption": "Figure 2: A failure example of prompting for generation of composition penalties. Even though Agent Rosetta wants to reduce proline content, the penalty block achieves the opposite effect.",
+      "page": 6,
+      "index": 1,
+      "width": 489,
+      "height": 373
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-002.webp",
+      "caption": "Figure 3: Comparison of the performance of different LLMs at generating amino acid compositional penalty blocks with the original RosettaScripts syntax and our simplified syntax.",
+      "page": 6,
+      "index": 2,
+      "width": 489,
+      "height": 373
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-003.webp",
+      "caption": "Table C.2: Summary of results across all 8 PDBs for all methods on fixed-backbone sequence design. We report mean and standard deviation of the best-of-8 median calculated across bootstraps samples in Table C.1.",
+      "page": 38,
+      "index": 3,
+      "width": 1019,
+      "height": 189
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-004.webp",
+      "caption": "Figure D.3: Summary of results for including 1 TRF residue in the core of an input protein. We report the average cost of one run with 30 model queries, the average action success rate, and the fraction of output tokens that were reasoning.",
+      "page": 47,
+      "index": 4,
+      "width": 916,
+      "height": 259
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-005.webp",
+      "caption": "Figure D.4: Illustrations of good and bad designs for inclusion of TRF in the core of a given protein across all 4 PDBs considered in the experiment.",
+      "page": 47,
+      "index": 5,
+      "width": 1019,
+      "height": 629
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-006.webp",
+      "caption": "Figure C.1: The 8 backbone conformations to stabilize with canonical amino acids only.",
+      "page": 29,
+      "index": 6,
+      "width": 917,
+      "height": 521
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-007.webp",
+      "caption": "Figure 8: Summary of results for including 1 TRF residue in the core of an input protein. We report the average cost of one run with 30 model queries, the average action success rate, and the fraction of output tokens that were reasoning.",
+      "page": 10,
+      "index": 7,
+      "width": 489,
+      "height": 250
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-008.webp",
+      "caption": "Figure D.2: The 4 proteins for non-canonical design.",
+      "page": 42,
+      "index": 8,
+      "width": 917,
+      "height": 298
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-009.webp",
+      "caption": "Figure 1: Illustration of our multi-turn agentic system. (A) Schematics of Agent Rosetta’s interaction protocol. (B) Design refinement: the agent chooses the action, and, after the environment returns the action documentation, it generates the action call with its parameters.",
+      "page": 3,
+      "index": 9,
+      "width": 1019,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-010.webp",
+      "caption": "Figure 5: Summary of results for stabilizing backbone conformations with canonical amino acids only. We report the average cost of one run of 30 model queries, the average action success rate, and the fraction of output tokens that were reasoning.",
+      "page": 8,
+      "index": 10,
+      "width": 489,
+      "height": 248
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-011.webp",
+      "caption": "Figure C.3: Summary of median ESMFold RMSD and pLDDT across all 8 target backbone conformations used in this experiment.",
+      "page": 36,
+      "index": 11,
+      "width": 916,
+      "height": 348
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-012.webp",
+      "caption": "Table C.1: Per-PDB results for all methods on fixed-backbone sequence design with canonical amino acids only. For each method, we run 16 independent replicates, and report the best step-wise median and 95% confidence interval across 1000 bootstrap samples of 8 trajectories out of the 16 total. We select the best step in terms of the smallest 5th percentile of the RMSD between the ESMFold predicted fold and the target conformation. To compute step-wise statistics, we only consider designs with pLDDT ≥ 85 to remove outliers.",
+      "page": 36,
+      "index": 12,
+      "width": 1019,
+      "height": 323
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-013.webp",
+      "caption": "Figure C.2: Running best (i.e., over all previous steps) ESMFold RMSD and pLDDT across 1,000 bootstrap samples of 8 trials out of the 16 total.",
+      "page": 36,
+      "index": 13,
+      "width": 1017,
+      "height": 389
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-014.webp",
+      "caption": "Figure C.4: Visualization of the best designs for each method on all backbones used in the fixed-backbone sequence design experiment.",
+      "page": 37,
+      "index": 14,
+      "width": 917,
+      "height": 1202
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15952v1/fig-015.webp",
+      "caption": "Table D.3: Per-PDB results for all methods on inclusion of a TRF residue in the core of an input protein structure. For each method, we filter successful designs, and select the top 10 in order of increasing RMSD between the Rosetta Pose and the native PDB. We validate the fold of the selected designs with AF3, and report RMSD between the predicted fold and the native structure as well as pLDDT. We report average and standard deviation over the top 10 designs. The human baseline is marked as “na” for 8UZL because it fails to include any TRF residues.",
+      "page": 48,
+      "index": 15,
+      "width": 1019,
+      "height": 297
+    }
+  ]
+}

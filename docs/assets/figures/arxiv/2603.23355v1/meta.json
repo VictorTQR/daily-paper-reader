@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-001.webp",
+      "caption": "Figure 5: Training Curves of DPSK-R1-Distill-1.5B with N=1",
+      "page": 11,
+      "index": 1,
+      "width": 1049,
+      "height": 541
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-002.webp",
+      "caption": "Figure 6: The Average Generation Rounds and Average Total Wall-clock Time (h).",
+      "page": 11,
+      "index": 2,
+      "width": 554,
+      "height": 448
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-003.webp",
+      "caption": "Figure 10: Training behavior of TBRM when the reward is fixed to 0. The KL divergence between the current policy and the reference policy does not converge to zero.",
+      "page": 21,
+      "index": 3,
+      "width": 589,
+      "height": 438
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-004.webp",
+      "caption": "Figure 1: Framework of ReVal. By interpreting LLM logits as Q-values, ReVal unifies policy and value within a single model and enables replay-based off-policy updates.",
+      "page": 2,
+      "index": 4,
+      "width": 1011,
+      "height": 381
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-005.webp",
+      "caption": "Figure 11: Comparison of different objectives. (a) Average benchmark performance across training steps. (b) Corresponding gradient norm during training.",
+      "page": 22,
+      "index": 5,
+      "width": 1018,
+      "height": 389
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-006.webp",
+      "caption": "Figure 4: Training curves of DPSK-R1-Distill-1.5B and Qwen2.5-Math-7B. Curves show the accuracy across seven benchmarks (AIME, AIME25, AMC, MATH, Minerva, Olympiad, and GPQA) as well as the average accuracy.",
+      "page": 10,
+      "index": 6,
+      "width": 1049,
+      "height": 1152
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-007.webp",
+      "caption": "Figure 9: Comparison of different reward designs.",
+      "page": 14,
+      "index": 7,
+      "width": 419,
+      "height": 312
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-008.webp",
+      "caption": "Figure 8: Effect of the hyperparameter β. A smaller β leads to a larger KL divergence between the policy and the reference model.",
+      "page": 13,
+      "index": 8,
+      "width": 1045,
+      "height": 390
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-009.webp",
+      "caption": "Figure 7: Comparison of different update frequency of reference model.",
+      "page": 13,
+      "index": 9,
+      "width": 469,
+      "height": 350
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-010.webp",
+      "caption": "Figure 3: Performance under different data reuse frequencies on tasks with varying difficulty levels.",
+      "page": 8,
+      "index": 10,
+      "width": 1007,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-011.webp",
+      "caption": "Figure 2: Performance of GRPO across different difficulty levels.",
+      "page": 4,
+      "index": 11,
+      "width": 407,
+      "height": 302
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23355v1/fig-012.webp",
+      "caption": "Table 1: Evaluation performance (avg@16) comparison across different models and benchmarks.",
+      "page": 9,
+      "index": 12,
+      "width": 894,
+      "height": 330
+    }
+  ]
+}

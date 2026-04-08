@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02006v1/fig-001.webp",
+      "caption": "Table 2: Main results on the embodied AlfWorld task.",
+      "page": 6,
+      "index": 1,
+      "width": 458,
+      "height": 295
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02006v1/fig-002.webp",
+      "caption": "Figure 4: Pass@k of ProCeed and vanilla rollout. The x-axis denotes the number of equivalent vanilla samples in terms of generation. Our method significantly improves exploration efficiency, matching pass@k with less computation. Notably, it exceeds the saturation ceiling of vanilla exploration with a few samples (denoted by stars).",
+      "page": 7,
+      "index": 2,
+      "width": 526,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02006v1/fig-003.webp",
+      "caption": "Figure 2: Comparison between standard independently repeated sampling (a) and ProCeedRL rollouts (b). Left: In vanilla exploration, the model’s suboptimal action may result in irrelevant or misleading observations, which hinder all subsequent reasoning and the exploration of correct samples. Right: In ProCeedRL, a critic actively monitors the planning process. When an adverse action is detected due to faulty reasoning or low-quality returned observations, a refined demonstration replaces it to guide the agent out of the vicious circle in (a) and mitigate the exploration issue.",
+      "page": 3,
+      "index": 3,
+      "width": 921,
+      "height": 184
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02006v1/fig-004.webp",
+      "caption": "Figure 6: Ablation on rewind thresholds (lth). Blue histograms display the critic score distributions, and the orange line shows rollout accuracy for rewinding and refining all steps ≤ lth. While pruning low-scoring steps improves exploration, excessive rewinding at higher thresholds yields diminishing returns and performance degradation.",
+      "page": 8,
+      "index": 4,
+      "width": 868,
+      "height": 233
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02006v1/fig-005.webp",
+      "caption": "Figure 3: The overall workflow of our method with an example. (a) When the agent makes a suboptimal action, the observation reinforces this path and derails subsequent model reasoning, resulting in low exploration efficiency (Sec. 3.2). We employ a process-level critic to identify flawed steps, in which the agent refines its actions and reruns the adverse actions, thereby breaking the vicious circle and improving exploration and reasoning limits (Sec. 3.3). (b) After collecting trajectories with ProCeed rollout, we incorporate them with directly generated samples to form meaningful groups for subsequent policy optimization in (c), as detailedly described in Sec. 3.4.",
+      "page": 4,
+      "index": 5,
+      "width": 940,
+      "height": 544
+    }
+  ]
+}

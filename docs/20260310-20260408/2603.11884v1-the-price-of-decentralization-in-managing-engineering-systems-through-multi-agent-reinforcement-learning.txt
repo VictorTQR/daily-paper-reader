@@ -1,0 +1,1995 @@
+Title: The price of decentralization in managing engineering systems through multi-agent reinforcement learning
+
+URL Source: https://arxiv.org/pdf/2603.11884v1
+
+Published Time: Fri, 13 Mar 2026 00:55:25 GMT
+
+Number of Pages: 36
+
+Markdown Content:
+## The price of decentralization in managing engineering systems through multi-agent reinforcement learning 
+
+Prateek Bhustali a, ∗, Pablo G. Morato a,b , Konstantinos G. Papakonstantinou c, Charalampos P. Andriotis a  
+
+> aFaculty of Architecture and the Built Environment, Delft University of Technology, Delft, 2628 BL, The Netherlands
+> bEngineering Risk Analysis Group, Technical University of Munich, Munich, 80333, Germany
+> cDepartment of Civil &Environmental Engineering, The Pennsylvania State University, University Park, PA, 16802, USA
+
+Abstract 
+
+Inspection and maintenance (I&M) planning involves sequential decision making under uncertainties and incom-plete information, and can be modeled as a partially observable Markov decision process (POMDP). While single-agent deep reinforcement learning provides approximate solutions to POMDPs, it does not scale well in multi-component systems. Scalability can be achieved through multi-agent deep reinforcement learning (MADRL), which decentralizes decision-making across multiple agents, locally controlling individual components. However, this decentralization can induce cooperation pathologies that degrade the optimality of the learned policies. To ex-amine these e ff ects in I&M planning, we introduce a set of deteriorating systems in which redundancy is varied sys-tematically. These benchmark environments are designed such that computation of centralized (near-)optimal poli-cies remains tractable, enabling direct comparison of solution methods. We implement and benchmark a broad set of MADRL algorithms spanning fully centralized and decentralized training paradigms, from value-factorization to actor-critic methods. Our results show a clear e ff ect of redundancy on coordination: MADRL algorithms achieve near-optimal performance in series-like settings, whereas increasing redundancy amplifies coordination challenges and can lead to optimality losses. Nonetheless, decentralized agents learn structured policies that consistently outperform optimized heuristic baselines, highlighting both the promise and current limitations of decentralized learning for scalable maintenance planning. 
+
+Keywords: Multi-component deteriorating systems; Inspection and maintenance planning; Multi-agent deep rein-forcement learning; Decentralized partially observable Markov decision processes 
+
+1. Introduction 
+
+Large-scale infrastructure systems, such as electricity grids, road networks, and communication systems, are essential to societal function and their sustained reliability depends on e ff ective long-term management through inspection and maintenance planning (I&M). Partially observable Markov decision processes (POMDPs) provide a systematic formulation for I&M planning for such engineering systems under performance, data, and degradation uncertainties. POMDPs address several challenges inherent to the problem, such as stochastically changing com-ponent properties, partial observability of damage states, and long planning horizons [1–7]. In multi-component systems, exact solutions to POMDPs are generally computationally intractable, motivating a variety of approximate approaches to I&M planning. These include (i) heuristics that parameterize the policy space using risk-based or condition-based rules to keep the search space tractable [8, 9], (ii) online planning methods that perform approx-imate belief-space lookahead using an environment simulator, such as partially observable Monte Carlo planning    
+
+> ∗Corresponding author.
+> Email address: p.bhustali@tudelft.nl (Prateek Bhustali)
+> arXiv:2603.11884v1 [cs.MA] 12 Mar 2026 Single-Agent Approaches Multi-Agent Approaches Number of agents (M) Formulation Framework Solution Framework
+> POMDP Centralized training decentralized execution (CTDE) Decentralized training decentralized execution (DTDE) Centralized training centralized execution (CTCE) Multi-agent DRL Single-agent DRL (SADRL) Point-based value iteration (PBVI) Partially observable Monte Carlo planning (POMCP) M > 1 M = 1
+> POMDP size of state space size of action space Dec-POMDP PBVI POMCP SADRL systems studied in this work Mean-Field Approaches Heuristics MADRL Dec-POMDP PBVI for Dec-POMDPs Multi-agent A* scalability
+
+Figure 1: In multi-component systems, joint state, action, and observation spaces grow exponentially with the number of components, rendering single-agent approaches intractable. Dec-POMDPs address this curse of dimensionality by decentralizing control and are com-monly solved using multi-agent DRL methods. Left : Scalability of solution approaches. The curved boundaries illustrate the approximate, relative scalability of POMDP and Dec-POMDP solution approaches as these spaces increase. The ( ) indicates the approximate size of the systems studied in this work, where single-agent methods remain tractable and allow direct comparison with multi-agent approaches. 
+
+Right : Agent-centric paradigms. Single-agent approaches are intrinsically centralized because a single agent possesses all information dur-ing training and execution. In contrast, multi-agent approaches, such as CTDE, relax decentralization during training by allowing agents to share information, but agents must learn to execute actions independently at execution /inference. 
+
+(POMCP) [10], and (iii) o ffl ine planning methods that approximate optimal behavior over the belief space, includ-ing point-based value iteration methods (PBVI) [11, 12] or deep reinforcement learning (DRL) [13–16]. However, for multi-component systems, the joint state-, action-, and observation-spaces grow exponentially 
+
+with the number of components, rendering near-optimum POMDP solutions intractable for large-scale real-world I&M planning problems. To alleviate this curse of dimensionality, decentralized POMDPs (Dec-POMDPs) ex-tend the POMDP framework by designating an agent for each component or subsystem. This decentralization 
+
+eff ectively renders the problem as a cooperative multi-agent task. Similarly, this central idea is applied to solution methods, giving rise to multi-agent DRL (MADRL) [17, 18]. Mean-field approaches, such as mean-field reinforce-ment learning [19], extend this idea further to large agent populations by modeling interactions between individual agents and macroscopic population statistics. Figure 1 highlights the relative scalability of di ff erent solution ap-proaches, from single-agent, point-based POMDP solvers to MADRL. While exact and heuristic search methods, such as PBVI-based approaches for Dec-POMDPs [20] and multi-agent A* [21], extend planning and search-based techniques to the multi-agent setting, they remain limited to small problem instances due to the exponential growth of the joint action and belief spaces. In contrast, MADRL relaxes optimality guarantees in exchange for improved scalability. Following the success of MADRL, several works within I&M planning have adopted this paradigm to address scalability [22–29]. While decentralization relaxations in reinforcement learning alleviate scalability challenges, they can also in-troduce pathologies related to multi-agent learning, such as shadowed equilibria, environment non-stationarity, Pareto-selection issues, and multi-agent credit assignment issues, which can impede the convergence to optimal policies [30, 31]. These learning pathologies give rise to what we term as the price of decentralization : the loss in optimality incurred when decentralized control is used to achieve scalability in multi-agent decision-making prob-2lems. As the underlying reward model and environment dynamics influence the strengths of these pathologies [31], their e ff ect on the learned policies in I&M planning problems remains to be understood. To systematically under-stand these implications, we contrast the three main MADRL paradigms: centralized training centralized execution (CTCE), centralized training decentralized execution (CTDE), and decentralized training decentralized execution (DTDE). Existing works benchmark the performance of MADRL algorithms [24, 32, 33], [24] doing so in relatively large scales (up to 100 components). However, their evaluation relies on heuristic baselines that o ff er no guarantees of optimality. We further show that such heuristics can misrepresent algorithmic performance, as their e ff ectiveness varies with the problem setting. This work builds on [34] by introducing new environments and a broader set of MADRL agents to examine multi-agent learning pathologies in I&M planning. A detailed comparison with existing benchmarks and solution approaches is provided in Subsection 1.1. To address these limitations in tracing the price of decentralization, we introduce benchmark environments based on the k-out-of-n:G system, focusing on a system with n = 4 components while varying the redundancy pa-rameter k from 1 (parallel) to n (series) [35]. These environments capture key characteristics of real-world deterio-rating systems while remaining tractable for centralized algorithms. They include deterioration dynamics (modeled using upper-triangular matrices), redundancy, inspection and repair actions, partial observability of damage states, and heterogeneous components. In these environments, agents must jointly plan actions to minimize long-term inspection and maintenance costs over an infinite horizon. We adopt a discounted infinite-horizon formulation. This avoids the explicit time augmentation required to use finite-horizon variants with discounted infinite-horizon solvers. These formulations typically encode the timestep in the state, which multiplies the state space by the planning horizon and increases planning complexity. To verify consistency of our findings, we also study smaller systems, with n = 2 and n = 3 components, defined analogously as subsets of the n = 4 system. As shown in Fig-ure 1, the small system sizes place the problem within the tractable regime of single-agent methods, allowing us to compute (near-)optimal solutions with SARSOP [12], a point-based POMDP solver with performance guarantees, and rigorously contrast the performance of DRL algorithms and heuristics. Using this framework, we assess the optimality of commonly used MADRL algorithms, including value-based and actor–critic, as well as on-policy and off -policy approaches. We find that performance remains close to optimal in series and series-like systems; however, as redundancy increases (i.e., lower k) the performance of decentralized agents begins to deviate from the optimal, resulting in optimality losses. To further verify this trend, we conduct ablations that remove mobilization costs, i.e., fixed costs incurred when initiating an intervention, and vary the failure penalties, i.e., costs incurred upon system fail-ure, where we observe the same e ff ect. As such, we provide insights into key limitations of current MADRL approaches in the I&M context and provide a benchmark for diagnosing these challenges, informing the develop-ment of more e ff ective algorithms. To complement the empirical findings, we analyze a simplified I&M matrix game that isolates the coordination structure induced by redundancy. This analysis shows that methods based on value decomposition, which approximate joint action values as (monotonically) additive combinations of per-agent values, can be suboptimal in the presence of redundancy. Although derived in a single-step setting, it provides intu-ition for why such methods may struggle in systems with redundancies. Finally, despite the known pathologies of decentralized learning, coordinated behavior can still emerge in structured settings. When managing the 1-out-of-4 system, where optimal performance is more di ffi cult to achieve, decentralized agents learn a periodic maintenance strategy, replacing components at regular intervals without access to global time. This suggests that decentralized policies can, in some cases, approximate centralized solutions in simple and structured ways. The main contributions of this work can be summarized as follows: 
+
+• We systematically compare the three main multi-agent learning paradigms and show that while decentral-ization achieves near-optimal performance in series and series-like systems, increasing redundancy induces coordination challenges that can lead to optimality losses. 
+
+• We introduce benchmark environments for I&M planning with (near-)optimal baselines. The benchmarks are 3based on k-out-of-n systems with n = 4 components and varying k ∈ { 1, 2, 3, 4} and capture key features of real-world systems, including deterioration, redundancy, inspection and repair actions, partial observability, and component heterogeneity. 
+
+• We provide open-source benchmark environments, (near-)optimal baselines, and DRL implementations, en-abling reproducible comparisons across the proposed benchmarks. Our benchmark environments, algorithm implementations, baselines, and trained models for reproducing the results of this paper are publicly available at github.com/prateekbhustali/price-of-decentralization .
+
+1.1. Related work 
+
+To devise inspection and maintenance planning policies, conventional approaches use policy search within predefined policy subspaces. Exhaustive search over the feasible policy space is infeasible even for small problems. These subspaces are defined by heuristics such as risk-based thresholds, periodic inspection, or condition-based maintenance [8, 9, 36]. However, these heuristics are often shown to be outperformed by DRL methods and may exclude the optimal policy from the searched policy subspaces. Decentralized approximations of centralized policies have shown promising results in benchmark problems [33, 37, 38]. On the one hand, many recent works in I&M planning address the scalability challenge by articulating the problem as a Dec-POMDP and solving it with MADRL algorithms [22, 24–27, 39]. For example, [22] alleviates the exponential growth of the policy output by assuming conditional independence of actions given the current action-observation history of agents (or joint beliefs). On the other hand, works such as [7] introduce a component-wise POMDP formulation. It decomposes the system-level decision problem into per-component POMDPs while retaining system-level dependencies (e.g., mobilization costs). This decomposition enables the use of POMDP solution methods shown in Figure 1. Prior comparisons of MADRL algorithms across the CTCE, CTDE, and DTDE paradigms for solving Dec-POMDPs can be found in [32]. They benchmarked MADRL algorithms on problems with relatively small state /action spaces and investigated policy gradient methods. [40] studies the role of centralized critics and their advantages over decentralized critics. They also demonstrate theoretically and empirically the shortcomings of training using centralized critics. More recently, [33] extensively benchmarked MADRL algorithms, both value-based and policy gradient-based, on a diverse set of environments. In contrast, this work benchmarks MADRL algorithms across CTCE, CTDE, and DTDE paradigms while comparing against (near-)optimal baselines. Moreover, we examine the e ff ect of redundancy in multi-agent cooperation in the context of I&M planning. To examine the e ffi cacy of MADRL algorithms specifically for I&M planning, [24] benchmarks the perfor-mance of state-of-the-art CTDE and DTDE algorithms in large-scale systems with up to 100 components. While they address I&M planning at this scale, their evaluation relies on heuristic baselines that o ff er no guarantees on optimality. Moreover, their study does not specifically examine the role of redundancy in shaping multi-agent learning performance. Recent work by [34] provides an initial study of centralized versus decentralized MADRL formulations for I&M planning in k-out-of-n systems. We further build on this work by introducing new benchmark environments and contrasting a broader set of DRL agents to study multi-agent coordination challenges in I&M planning. [34] also only focused on a finite-horizon k-out-of-5 systems solved using o ff -policy DRL algorithms and compared against heuristic baselines. In contrast, we introduce here infinite-horizon k-out-of-n systems with n ∈ { 2, 3, 4},establish (near-)optimal baselines, and evaluate both o ff -policy and on-policy algorithms. We further show that heuristic solutions need to be carefully interpreted, since they can misrepresent general algorithmic performance, as their e ff ectiveness varies with the problem setting. 
+
+2. Background: Formulation and solution frameworks 
+
+In this section, we briefly outline the mathematical frameworks leveraged in this work and concretely connect these frameworks to the I&M problem in Section 4. 42.1. Partially Observable Markov Decision Process (POMDP) 
+
+POMDPs are a framework for modeling sequential decision-making in stochastic environments under partial observability. They are defined by the tuple ⟨S , A, T, R, Ω, O, tH , γ, ρ 0⟩, where S is the state space, A is the action space, T : S × A × S → [0 , 1] is the transition model, R : S × A → R is the reward model, Ω is the observation space, O : S × A × Ω → [0 , 1] is the observation model, tH ∈ N0 ∪ {∞} is the time horizon, γ ∈ [0 , 1] is the discount factor, and ρ0 is the initial distribution over states [41, 42]. The solution to a POMDP is an optimal policy π∗ that maximizes the expected sum of (discounted) rewards 1:
+
+π∗ ∈ arg max 
+
+> π
+
+J(π), J(π) B E
+
+ 
+
+> tH−1
+
+X
+
+> t=0
+
+γtR(st, at)
+
+s0 ∼ ρ0,
+
+at ∼ π(· | ht),
+
+st+1 ∼ T (· | st, at),
+
+ot+1 ∼ O(· | st+1, at)
+
+
+
+. (1) The policy maps the agent’s action–observation history h to the action(s) a ∈ A. It can be deterministic, a = π(h), or stochastic, a ∼ π(h). Although this initialization is often left implicit in POMDP formalisms, to make the history definition well-defined at t = 0, we introduce a null action a−1 B ϕ < A and an initial observation o0 ∼ O0(· | s0), so that h0 B ⟨a−1, o0⟩. When we have access to transition and observation models, we can apply Bayes’ rule to succinctly summarize h into a probability measure called belief, b, representing uncertainty over the state space. This can e ff ectively transform the POMDP into a belief-MDP [44]. We denote the initial belief by b0 B ρ0. For POMDPs with discrete states, the belief is a vector representing the probability over states, denoted by ⃗ b. In this case, the belief about being in state s′ ∈ S when we receive an observation o after taking an action a is: 
+
+ba,o(s′) = O (o | s′, a) Ps∈S T (s′ | s, a) b(s)Pr( o |⃗ b, a) , (2) where Pr( o |⃗ b, a) is a normalizing constant. Since beliefs are a su ffi cient statistic summarizing the action-observation history, policies can map the belief space B to actions, π : B → Pr( A). 
+
+2.2. Point-based POMDP solvers 
+
+The principles of dynamic programming enable o ffl ine planning (also known as background planning) for MDPs when closed-form transition and reward models are available, T : S × A × S → [0 , 1] and R : S × A → R,respectively [45]. When extended to POMDPs with known observation models, the problem can be reformulated as a belief MDP, where each belief is a probability distribution over system states. Although the belief space is continuous, its value function is convex and can be represented as the upper envelope of a finite set of linear functions, known as α-vectors. Each α-vector corresponds to a conditional plan and defines a linear function over the belief space. In principle, this representation allows exact value iteration ; however, it is computationally infeasible for large problems, due to the exponential growth in the number of α-vectors [46]. Point-based value iteration (PBVI), a class of approximate POMDP solvers, mitigates this curse of dimension-ality using two key ideas. First, it represents the value function over a finite subset of belief space points. Second, it optimizes the value function approximation using point-based backups at those beliefs [46]. Prominent PBVI solvers include Perseus [11], HSVI [47], and SARSOP [12]. Since, in general, a queried belief may not coin-cide with one of the beliefs backed up during o ffl ine planning, a look-ahead search can refine action selection by evaluating the one-step consequences at that belief. In this work, we use SARSOP (short for successive approximations of the reachable space under optimal poli-cies) to obtain near-optimal baselines. Unlike other solvers that approximate only a lower bound VL(⃗ b), SARSOP   
+
+> 1In finite-horizon settings, γcan be set to 1. However, sometimes a discount factor is also specified in the finite-horizon case to model the e ff ect of inflation [43]. To avoid confusion, such e ff ects can be subsumed into the reward model.
+
+5Agent 1 Agent M . . . 
+
+> action-observation history of agent up to time
+> copy
+> ...
+> Dec-POMDP :
+> (joint policy)
+> (joint action) dummy action before
+> (joint observation)
+
+Figure 2: A Dec-POMDP unrolled as a dynamic decision network over three time steps. At each time step t, the environment state st
+
+evolves according to the transition model st+1 ∼ T (· | st, at) under the joint action at, yielding a global reward rt and individual observations 
+
+ot+1 ∼ O(· | st+1, at) for each agent m ∈ M . Each agent selects its action based on its local action–observation history htm.
+
+also maintains an upper bound on the value function [12]; when these bounds converge, they yield the optimal value VL(⃗b) ≤ V∗(⃗ b). SARSOP returns a finite set of discrete α-vectors Γ B {⃗ α1,⃗ α 2, . . . ,⃗ α ζ }, each labeled with an action. The lower-bound approximation and the corresponding greedy policy, which selects the action associated with the maximizing vector, are given by: 
+
+VL(⃗ b) = max 
+
+> α∈Γ
+
+X
+
+> s∈S
+
+α(s) b(s), and πΓ
+
+> greedy
+
+(⃗b) = action 
+
+arg max 
+
+> α∈Γ
+
+X
+
+> s∈S
+
+α(s) b(s)
+
+ . (3) While VL(⃗ b) provides strong baselines for V∗(⃗ b), it is computed from backups on a finite set of beliefs that aims to approximate the optimally reachable belief space R∗(b0). Therefore, πΓ
+
+> greedy
+
+(⃗ b) might not yield optimal actions for ⃗
+
+b < R∗(b0) or when SARSOP has not converged. To mitigate these limitations, we improve the SARSOP policy with a one-step look-ahead search, which serves as a (near-)optimal baseline as follows (refer to [41] for further details): 
+
+πΓ
+
+> look-ahead
+
+(⃗b) = arg max 
+
+> a
+
+" X
+
+> s∈S
+
+R(s, a) b(s) + γ
+
+X
+
+> o∈Ω
+
+P(o |⃗ b, a) VL(⃗ ba,o)
+
+#
+
+, (4) where P(o |⃗ b, a) = Ps∈S b(s)
+
+ Ps′∈S T (s′ | s, a) O(o | s′, a)
+
+
+
+is the probability of observing o ∈ Ω after taking action a ∈ A when the current belief is ⃗ b. Since the true state is unknown, we average over all possible current states s weighted by b(s). We then marginalize over all possible future transitions s′ in which o might be observed. For each s, the system transitions to the next state s′ with probability T (s′ | s, a). ⃗ ba,o denotes the updated belief obtained via Equation (2). 
+
+2.3. Decentralized Partially Observable Markov Decision Process (Dec-POMDP) 
+
+Dec-POMDPs extend the POMDP framework to multi-agent systems, enabling scalability through decentral-ization [48, 49]. We illustrate the Dec-POMDP rolled out as a dynamic decision network over three time steps in 6Figure 2. In this setting, agents act cooperatively, guided by a common reward signal to jointly maximize the ex-pected return. It is defined by the tuple ⟨M , S , A, T, R, Ω, O, tH , γ, ρ 0⟩, where M B {1, . . . , M} is the set of agents, 
+
+S is the state space, A B Qm∈M Am is the joint action space, T : S × A × S → [0 , 1] is the transition model, 
+
+R : S × A → R is the reward model, Ω B Qm∈M Ωm is the joint observation space, O : S × A × Ω → [0 , 1] is the joint observation model, tH ∈ N0 ∪ {∞} is the time horizon, γ ∈ [0 , 1] is the discount factor, and ρ0 is the initial distribution over states. To solve a Dec-POMDP, we seek an optimal joint policy, π∗, that maximizes the expected sum of discounted rewards: 
+
+π∗ ∈ arg max 
+
+> π
+
+J(π), J(π) B arg max 
+
+> π
+
+E
+
+ 
+
+> tH−1
+
+X
+
+> t=0
+
+γtR(st, at)
+
+s0 ∼ ρ0,
+
+atm ∼ πm(· | htm), ∀m ∈ M ,
+
+st+1 ∼ T (· | st, at),
+
+ot+1 ∼ O(· | st+1, at)
+
+
+
+, (5) where the joint policy π B ⟨π1, . . . , π M ⟩ is a set of decentralized agent policies, and at B ⟨at
+
+> 1
+
+, . . . , atM ⟩ ∈ A is the joint action. The agent policy m maps its individual action-observation history hm ∈ Hm to actions am ∈ Am. It can be deterministic am = πm(hm) or stochastic am ∼ πm(hm). Analogous to POMDPs, we initialize each agent’s history at t = 0 with a null action, a−1 
+
+> m
+
+B ϕ < Am, and an initial observation, o0 ∼ O0(· | s0), so that h0 
+
+> m
+
+B ⟨a−1 
+
+> m
+
+, o0
+
+> m
+
+⟩.
+
+2.3.1. Multi-agent POMDP (MPOMDP) 
+
+An MPOMDP is a special instance of a Dec-POMDP in which all agents always share their observations and past actions, allowing a common internal representation of joint action-observation histories h ∈ H or joint beliefs 
+
+b B ⟨⃗ b1, . . . ,⃗ bM ⟩ ∈ B between agents [49]. However, agents learn decentralized policies, mapping the shared representation to individual actions πm : H → Am. Since policies are factored agent-wise, this mitigates the exponential growth of the action space, but its scalability is limited by the dimensionality of H.
+
+3. Multi-agent Deep Reinforcement Learning (MADRL) 
+
+Dec-POMDPs are hard to solve optimally as they require reasoning over the joint policy space that grows exponentially with the number of agents [49]. To alleviate the curse of dimensionality, MADRL extends single-agent DRL by decentralizing decision-making across multiple agents. This extension is orthogonal to the native algorithmic classification in single-agent RL, such as model-based /model-free, value-based /actor-critic-based, or on /off -policy, and thus, many algorithmic variants that combine those dimensions exist. In this work, we focus on model-free approaches, including actor–critic and value-based methods, and cover both on-policy and o ff -policy algorithms. 
+
+3.1. Paradigms and algorithms 
+
+MADRL approaches aim to achieve scalability through decentralization of global information and /or joint ac-tions. To alleviate the coordination di ffi culties arising from information decentralization, some algorithms assume access to centralized information, such as joint states /observations, joint actions, only during training but not during execution /deployment. A classification of algorithms based on information available during training and execution gives rise to three paradigms discussed below. An overview of algorithms corresponding to each paradigm studied in this work is shown in Figure 3, and a summary of corresponding formulation frameworks is presented in Table 1. 
+
+3.1.1. Centralized Training Centralized Execution (CTCE) 
+
+In this paradigm, agents assume access to centralized information during training and execution. A single, centralized agent learns a joint policy π, mapping the joint action-observation history (or joint beliefs) to the joint /factorized action space, π : H → A. It becomes "multi-agent" only when the action space is factorized while the observations remain centralized (in an MPOMDP fashion). The following algorithms convert the Dec-POMDP into a POMDP, and therefore do not scale. 7Joint Actor Critic                     
+
+> [JAC] Deep Centralized Multiagent Actor Critic [DCMAC]
+> Independent Actor Centralized
+> Critic [IACC-PS] or Multi-Agent PPO [MAPPO-PS ]
+> Independent Actor
+> Critic [IAC-PS] or Independent PPO [IPPO-PS]
+> Double Deep Q
+> Networks [DDQN]
+> Value decomposition with monotonic mixing [QMIX-PS]
+> Value Decomposition Networks [VDN-PS]
+> POMDP MPOMDP Dec-POMDP
+> :belief of agent
+> : action space of agent
+> (joint belief)
+> 𝛑
+> max max max max
+> 𝛑
+> max max max max
+> Centralized Training Centralized Execution (CTCE) DTDE Centralized Training Decentralized Execution (CTDE)
+> :one-hot index of agent
+> : Mixer network
+> (joint action space) :Value under policy
+> :Action-value under policy A canonical 4-component reliability system connecting source and destination source destination
+
+Figure 3: An overview of MADRL algorithms for managing a (four-component) reliability system. Algorithms are classified by train-ing–execution paradigms: centralized training centralized execution (CTCE), centralized training decentralized execution (CTDE), and decentralized training decentralized execution (DTDE), reflecting increasing decentralization and information constraints. Bottom labels indicate the underlying formulation framework (POMDP, MPOMDP, Dec-POMDP). Su ffi x PS denotes parameter sharing across agents. 
+
+• Joint double DQN (DDQN), a single-agent value-based DRL algorithm as introduced in [50]. It maps the joint action-observation history (or global beliefs) to the action-values of the discrete joint action space 2,
+
+Qθ : H × A → R.
+
+• Joint actor-critic (JAC), a single-agent actor-critic algorithm where the actor learns a stochastic policy π(a |
+
+h; θ) mapping the joint action-observation history (or beliefs) to joint actions, and a centralized critic Vπ(h; ϕ)learns the value function under that joint policy. The per-sample policy gradient gθ for this algorithm is proportional to: 
+
+gθ ∝ ∇ θlog π(a | h; θ). (6) We deliberately write π(a | h; θ), instead of the usual πθ(a | h), to highlight the conditional dependence on parameters θ, which will become important in the following algorithms. The following algorithm converts the Dec-POMDP into an MPOMDP by relaxing the assumption of joint action spaces and exploiting the factored action space to improve scalability. 
+
+• Deep centralized multi-agent actor-critic (DCMAC) learns a single parameter-shared actor that outputs a factorized joint policy, π(a | h; θ) = QMm=1 π(am | h; θ), mapping the joint action-observation history h to per-agent action distributions. Following Equation (6), the per-sample policy gradient for DCMAC algorithm is summarized as follows [22, 51]: 
+
+gθ ∝ ∇ θ
+
+" MX
+
+m=1
+
+log π(am | h; θ)
+
+#
+
+. (7) The underlying assumption is that the actions are conditionally independent given h and shared parameters θ.Here, parameter sharing implies the same neural network parameters θ are used for all agents, as illustrated 
+
+> 2
+
+In practice, we typically learn an equivalent mapping Qθ : H → R|A| (as shown in Figure 3). 
+
+8in Figure 3. Note that it is also possible to parameterize actors independently, as in deep decentralized multi-agent actor-critic (DDMAC) [23]. This variant learns M separate actor policies {πm(am | h; θm)}Mm=1 that still condition on the joint action-observation history h, but use agent-specific parameters {θm} instead of a shared 
+
+θ.
+
+3.1.2. Centralized Training Decentralized Execution (CTDE) 
+
+In this paradigm, algorithms learn to coordinate during training by being conditioned on centralized informa-tion, such as joint states, joint observations, joint actions, etc. However, during execution, each agent selects actions using only its local information. 
+
+• Independent actor centralized critic (IACC), a multi-agent actor-critic algorithm where agents learn a stochas-tic policy πm(am | hm; θm) guided by a global /centralized critic Vπ(h; ϕ) during training [40]. Conceptually, IACC can be seen as the CTDE analog of DDMAC, and [25] refers to IACC as DDMAC-CTDE. Recall that in DDMAC, each actor conditions on the joint history h. This joint-history input requires a neural net-work whose input dimension grows with the number of components, which becomes prohibitive at scale. IACC /DDMAC-CTDE alleviates this by conditioning each actor only on its local history hm. To further im-prove parameter e ffi ciency and implicitly aid coordination, IACC can share policy parameters θ among actors, but use a one-hot encoded agent index Im to enable the agents to learn distinct polices, πm = π(am | hm, Im; θ)3.We call this variant IACC-PS. 
+
+• Multi-agent proximal policy optimization (MAPPO) is similar to IACC-PS in that it uses decentralized stochastic policies trained with a centralized value function. Each agent learns a policy πm = π(am | hm; θm)via PPO updates using the clipped surrogate objective [37]: 
+
+LCLIP (θm) = Eτ∼πold 
+
+hmin rtm(θm) At, clip( rtm(θm), 1 − ϵ, 1 + ϵ) Ati , (8) where τ = (s0, a0, o1, s1, . . . ) is a trajectory generated by the sampling process in Equation (5) under the behavior policy πold . πold  
+
+> m
+
+denotes the behavior policy used to collect trajectories, and rt(θm) B πm(atm|htm;θm)  
+
+> πold
+> m(atm|htm;θm)
+
+is the importance weight that measures how the updated policy changes the probability of the sampled action relative to πold  
+
+> m
+
+. The term At is the generalized advantage estimate [14], computed using the centralized value function. Clipping stabilizes updates by preventing large policy shifts. Similar to IACC-PS, the parameter-sharing variant, MAPPO-PS, uses a single network conditional on the agent index to learn distinct behaviors for each agent. 
+
+• Value decomposition networks (VDN) is a multi-agent value-based algorithm that represents the joint action-value Q(h, a), defined over the joint action–observation history h and joint action a, as a sum of individual agent utilities Qm(hm, am; θm). The joint action-value is approximated as a linear combination of the agents’ utilities [52]: 
+
+Q(h, a) ≈
+
+> M
+
+X
+
+> m=1
+
+Qm(hm, am; θm). (9) VDN assumes that there exists a decomposition such that the joint greedy action can be recovered by inde-pendently maximizing each agent’s utility function, i.e., the individual-global-max (IGM) property holds: arg max 
+
+> a∈A
+
+Q(h, a) =
+
+*
+
+arg max 
+
+> a1
+
+Q1(h1, a1), . . . , arg max 
+
+> aM
+
+QM (hM , aM )
+
++
+
+. (10) 
+
+> 3When agents have distinct number of actions, the one-hot vectors can be padded with zeros, and invalid action probabilities are set to 0. [33]
+
+9Paradigm Formulation Algorithm Actor (policy-based only) Critic / Value Function Framework Name Type On /Off -policy Input Output Input Output CTCE POMDP (SADRL) DDQN V Off -policy - - Centralized Centralized JAC A+C Off -policy Centralized Centralized Centralized Centralized MPOMDP DCMAC A+C Off -policy Centralized Local Centralized Centralized CTDE Dec-POMDP IACC-PS A+C Off -policy Local Local Centralized Centralized MAPPO-PS A+C On-policy Local Local Centralized Centralized VDN-PS V Off -policy - - Local Local QMIX-PS V Off -policy - - Local Local DTDE Dec-POMDP IAC-PS A+C Off -policy Local Local Local Local IPPO-PS A+C On-policy Local Local Local Local                       
+
+> PS : parameter sharing; A+C: actor–critic; V: value-based. Table 1: Summary of single- and multi-agent DRL algorithms shown in Figure 3. The Actor columns describe the policy, when present, with Input indicating the information available to the policy and Output indicating whether actions are produced jointly, a, or per agent,
+> am. The Critic /Value Function columns analogously report the information available to the value estimator and whether it outputs a single centralized value (e.g., Q(h,a), V(h)) or per-agent values (e.g., Qm(hm,am)). Centralized denotes access to global state or joint observations and actions, whereas Local denotes access only to an agent’s own observation or action–observation history.
+
+The parameter-sharing variant, VDN-PS, uses a single network shared across agents and conditioned on the agent index Im to approximate individual utilities, i.e., Qm(hm, am) = Q(hm, am | Im; θ). 
+
+• Value decomposition with monotonic mixing (QMIX) extends VDN by using monotonic mixing of agents’ utilities, enabling it to represent a superset of centralized action-value function compared to VDN [17, 38]. QMIX uses the global state s (or global beliefs ( b)) along with the utilities to compute Q(h, a). The parameter-sharing variant, QMIX-PS, is similar to VDN-PS. 
+
+3.1.3. Decentralized Training Decentralized Execution (DTDE) 
+
+• Independent actor-critic (IAC) is a multi-agent actor-critic algorithm where agents learn a stochastic policy 
+
+πm(am | hm; θm) guided by a local /decentralized critic Vπm (hm; ϕm) during training. In the parameter sharing variant (IAC-PS), the policies are modeled identically to IACC-PS, and the critics share parameters ( ϕ) as 
+
+Vπm = Vπ(hm | Im; ϕ) to represent the individual value functions. 
+
+• Independent proximal policy optimization (IPPO) is similar to IAC-PS in that each agent learns its own decentralized policy using local observations and rewards, without centralized training. Each agent indepen-dently optimizes a stochastic policy πm = π(am | hm; θm) using the clipped surrogate objective as defined in Equation (8) for MAPPO. However, unlike MAPPO, the advantage estimate for agent m, Atm, is computed using its own local value function and does not use a centralized value function [53]. Like IAC-PS, we can expedite learning by sharing parameters across actors and critics. We call this variant IPPO-PS. 
+
+3.2. Multi-agent learning pathologies 
+
+On the one hand, MADRL enables scalability through decentralization. On the other hand, this decentralization has a price, as multi-agent cooperation pathologies may impede the learning of optimal policies. Key known pathologies are listed below [30, 31]: 
+
+• Non-stationarity problem: From the perspective of a decentralized agent, even a stationary environment ap-pears non-stationary due to the actions of other agents in the environment. Additionally, since agents explore independently, one agent’s exploratory actions can perturb the others’ learning signals, further encumbering learning. 10 Agent 1 
+
+a1 a2 a3
+
+> Agent 2
+
+a1 11 ∗ −30 0
+
+a2 −30 7 6
+
+a3 0 0 5DDQN JAC DCMAC IACC-PS MAPPO-PS QMIX-PS VDN-PS IAC-PS IPPO-PS       
+
+> Algorithm
+> 120
+> 140
+> 160
+> 180
+> 200
+> 220
+> 240
+> 260
+> 280
+> Returns
+> CTCE (POMDP)
+> CTCE (MPOMDP)
+> CTDE (Dec-POMDP)
+> DTDE (Dec-POMDP)
+> optimal = 275
+> mean
+> Figure 4: Left: Payo ff matrix for the Climb Game with two agents, each choosing from three actions. The joint action ( a1,a1) yields the optimal reward of 11 [31]. Right: Best performance of MADRL algorithms aggregated over 30 training instances in the Climb Game played repeatedly for 25 time steps [33]. The optimal return is 11 ×25 =275.
+
+• Pareto-selection problem: When multiple Pareto-optimal policies exist, agents must pick actions according to the same optimal policy because a mix of Pareto-optimal policies may not be optimal. For example, consider two optimal joint policies: π∗ 
+
+> 1
+
+= ⟨left , left ⟩ and π∗ 
+
+> 2
+
+= ⟨right , right ⟩. If agents select these policies independently, their actions can mismatch, producing π = ⟨left , right ⟩, which may not be optimal. 
+
+• Shadowed equilibria: An optimal equilibrium is said to be shadowed when a unilateral deviation from it has a lower reward /high penalties than from a sub-optimal equilibrium. Due to the dependence on the actions of other agents, the optimal equilibrium becomes unattractive in favor of a safe sub-optimal equilibrium [54]. The reward 11 in the Climb Game in Figure 4 is an example of a shadowed equilibrium. 
+
+Climb Game. A canonical example that illustrates the shadowed equilibria pathology is the Climb Game introduced by [31]. It involves two agents, each with three actions, receiving rewards based solely on their joint action, as shown in the payo ff matrix in Figure 4. The agents do not receive any observations and must learn to disentangle the rewards through repeated interaction. The optimal reward (11) is shadowed by penalties (-30) when an agent unilaterally deviates from the optimum. 
+
+4. Multi-agent I &M environments 
+
+4.1. Problem statement 
+
+As introduced in Section 2.3, the Dec-POMDP framework formalizes decentralized sequential decision-making under uncertainty. In the context of I&M planning, it provides a structured way to model multi-component or multi-subsystem engineering systems, where decentralized agents must act based on local observations and coordinate to manage deterioration and minimize long-term inspection /maintenance costs. It encapsulates a deteriorating engineering system where: 
+
+• M B {1, . . . , M} is the set of agents acting on components (or subsystems); 
+
+• S B ×m∈M S m ∪ S g is the discrete /continuous joint state space. It is often an aggregation of deterioration properties S m of the components, such as damage state, deterioration rates, etc., and global features S g, such as time, resource availability, etc.; 11 • A B ×m∈M Am denotes the joint action space, with Am representing the set of component-level actions avail-able to an agent m (e.g., do-nothing, inspection, repair, replacement, or decommissioning); 
+
+• T : S × A × S → [0 , 1] denotes the Markovian transition model summarizing the dynamics of system deterioration and the e ff ect of the intervention actions [39, 55]. If components deteriorate independently, 
+
+T (s, a, s′) can simply be decomposed component-wise, and when deterioration is correlated or dependent, it can be decomposed into factorized representations by reconstructing the underlying dynamic Bayesian network [56]; 
+
+• C : S × A → R denotes the cost model summarizing the costs associated with joint intervention actions, risk, revenue, system failure, etc; 
+
+• Ω B ×m∈M Ωm denotes the set of joint observations representing the signals we obtain from inspections and monitoring systems about the joint state of the system. It could be as simple as indicating whether the system is functional. Similar to system states, it can also be decomposed component-wise when observations are independent; 
+
+• O : Ω × A × S → [0 , 1] is the observation model summarizing the accuracy of observations under each intervention action; 
+
+• tH ∈ N0 ∪ {∞} is the (in)finite horizon over which the system must be maintained; 
+
+• γ ∈ [0 , 1] specifies the trade-o ff between prioritizing current vs future costs; 
+
+• ρ0 is the initial distribution over states. The goal is to find an optimal joint policy that minimizes the expected sum of costs over the given horizon. We rewrite Equation (5) as a minimization problem as follows: 
+
+π∗ ∈ arg min 
+
+> π
+
+J(π) = arg min 
+
+> π
+
+E
+
+ 
+
+> tH−1
+
+X
+
+> t=0
+
+γtC(st, at)
+
+s0 ∼ ρ0,
+
+atm ∼ πm(· | htm), ∀m ∈ M ,
+
+st+1 ∼ T (· | st, at),
+
+ot+1 ∼ O(· | st+1, at)
+
+
+
+. (11) 
+
+4.2. k-out-of-n infinite-horizon environments 
+
+To study the e ff ect of redundancy on the price of decentralization in multi-agent decision-making, we require environments with realistic system dynamics and cost models. In I&M planning, cost models reflect long-term costs and delayed outcomes, which influence learning and the emergence of multi-agent pathologies. The k-out-of-
+
+n system allows us to model the core features of deterioration and maintenance, and vary redundancy in a controlled and systematic manner. A k-out-of-n:G system, a common archetype of deteriorating engineering systems, operates as long as at least 
+
+k out of its n components remain functional. This system includes two special cases: k = n, which corresponds to a series system where all components must function for the system to operate, and k = 1, representing a parallel system where the operation of any single component is su ffi cient for the system to function [35, 57]. We focus on a system with n = 4 components, where each component is managed by a dedicated agent, resulting in M = n. Vary-ing the redundancy parameter k from 1 (parallel) to n (series) yields the family of k-out-of-n environments studied in this work. The n = 4 system serves as the base case, as it is the largest configuration supported by SARSOP, to obtain (near-)optimal baselines, while still capturing the essential features of deterioration and maintenance. Sys-tems with n ∈ { 2, 3}, defined analogously as subsets of the base case, are also studied and reported in Appendix A.4 alongside ablation studies to verify consistency across di ff erent system sizes and reward specifications. In the fol-lowing, we define all component-level parameters (transition models, costs, and observation models) for the n = 4system; the smaller systems use consistent subsets of these definitions. 12 State and Action spaces. The state space of each component S m represents its possible damage states and is defined as S m B {s1 = no-damage , s2 = major-damage , s3 = failure }. Similarly, the actions available for each component are given by Am B {a1 = do-nothing , a2 = repair , a3 = inspect }.
+
+Transition models. Components have unique, independent, and stationary deterioration models 
+
+T (s′ 
+
+> m
+
+| sm, do-nothing /inspect) = T do-nothing /inspect  
+
+> m
+
+. The synthetic transition models described below reflect the key features of a deterioration model: they are upper-triangular (indicating that a component’s state cannot improve without repair) and have unit probability at the terminal state (signifying that failure is an absorbing state):  
+
+> Tdo-nothing /inspect 1
+
+
+
+0.82 0.18 0.00.0 0.87 0.13 0.0 0.0 1.0
+
+ 
+
+> Tdo-nothing /inspect 2
+
+
+
+0.72 0.28 0.00.0 0.78 0.22 0.0 0.0 1.0
+
+ 
+
+> Tdo-nothing /inspect 3
+
+
+
+0.79 0.21 0.00.0 0.85 0.15 0.0 0.0 1.0
+
+ 
+
+> Tdo-nothing /inspect 4
+
+
+
+0.72 0.28 0.00.0 0.78 0.22 0.0 0.0 1.0
+
+.
+
+Components can be restored to the no-damage state by the repair action, which succeeds with probabilities 
+
+{0.95 , 0.9, 0.98 , 1} for the four components, respectively. The transition model for the repair action for each com-ponent T rm(s′ 
+
+> m
+
+| sm, repair) is defined as:  
+
+> Trepair 1
+
+
+
+1 0 00.95 0.05 00.95 0 0.05 
+
+ 
+
+> Trepair 2
+
+
+
+1 0 00.9 0.1 00.9 0 0.1
+
+ 
+
+> Trepair 3
+
+
+
+1 0 00.98 0.02 00.98 0 0.02 
+
+ 
+
+> Trepair 4
+
+
+
+1 0 01 0 01 0 0
+
+.
+
+The transition model for each component can be summarized as follows: 
+
+Tm B
+
+
+
+T do-nothing /inspect  
+
+> m
+
+, if a = do-nothing or inspect ,
+
+T repair  
+
+> m
+
+× T do-nothing /inspect  
+
+> m
+
+, if a = repair . (12) 
+
+Cost models. The cost model consists of two parts: component-level costs (repair and inspection), and system-level costs (risk and mobilization). Repair and inspection costs are unique for each component and are given by: 
+
+{50 , 30 , 80 , 90 } and {5, 3, 8, 4}, respectively. In the n = 4 system, taking actions incurs a mobilization cost cmob = 4, which incentivizes independent agents to coordinate the timing of interventions. Results for variations without mobilization costs (with n ∈ { 2, 3, 4}) are reported in Appendix A.4. Finally, the system-level risk is defined as 
+
+c f × p f , where the cost of failure is c f = Pnm=1 repair_reward m × κ. We fix the failure penalty factor, κ = 3, while Pnm=1 repair_reward m depends on the number of components n. The probability of system failure p f is computed using the closed-form expression for k-out-of-n systems [57]. 
+
+Observation models. Every agent has a unique observation accuracy with which it perceives the damage state of the component during inspection. The observation accuracies for each component are 0 .8, 0.85 , 0.9, 0.9, respectively. Furthermore, the failure state is not fully observable, and has failure observation accuracies of 0 .95 , 0.9, 0.98 , 1, respectively. The observation model for inspection for each component Oinspect  
+
+> m
+
+B Om(om | sm, inspection), and no inspection Odo-nothing /repair  
+
+> m
+
+B Om(om | sm, {do-nothing, repair }) are given as follows, 
+
+> Oinspect 1
+
+
+
+0.8 0.2 00.1 0.8 0.10 0.05 0.95 
+
+
+
+> Oinspect 2
+
+
+
+0.85 0.15 00.075 0.85 0.075 0 0.1 0.9
+
+
+
+> Oinspect 3
+
+
+
+0.9 0.1 00.05 0.9 0.05 0 0.02 0.98 
+
+
+
+> Oinspect 4
+
+
+
+0.9 0.1 00.05 0.9 0.05 0 0 1
+
+
+
+> Odo-nothing /repair
+> m
+
+
+
+1/3 1/3 1/31/3 1/3 1/31/3 1/3 1/3
+
+.
+
+13 Initial belief, time horizon, and discount factor. All components have the same initial belief, b0 = (0 .6, 0.4, 0) and the system must be maintained for an infinite number of time steps, using the infinite-horizon objective in Equation (11) with a discount factor γ = 0.8. This infinite-horizon formulation avoids modeling time in the state, preventing linear growth in the state space and allowing us to scale to multiple components using the point-based solver, SARSOP, to obtain (near-)optimal baselines. During training, each episode is truncated at 50 time steps to stabilize learning under infinite-horizon discounting, as the returns become negligible (0 .850 ≈ 10 −5). Since the policy is stationary, inference is limited to 20 time steps to reduce computational cost. Performance is evaluated using the discounted sum of returns. 
+
+5. Experimental setup 
+
+In our experiments, we examine how redundancy impacts coordination and learning in decentralized multi-agent settings. To this end, we benchmark several MARL algorithms spanning CTCE, CTDE, and DTDE on the Climb Game and on the k-out-of-n environments described in the previous sections. Performance is measured by the expected discounted return (or cost) J from Equation (11) and the variability across random seeds. To interpret the results, we compare against (near-)optimal SARSOP policies and an optimized heuristic baseline. To validate these findings robustly, we perform ablations that remove mobilization costs and vary the failure penalty factor κ,confirming that the trends persist across reward specifications. 
+
+5.1. Evaluation protocol 
+
+We follow the evaluation protocol outlined in [33, 58], training each algorithm for a fixed computational budget and periodically evaluating performance using Monte Carlo rollouts on the objective J in Equation (5) (or Equa-tion (11) for k-out-of-n systems). O ff -policy algorithms are trained for N = 100 ,000 episodes in the Climb Game and N = 50 ,000 episodes in k-out-of-n systems, with evaluation every I = 5,000 episodes. On-policy algorithms (MAPPO-PS, IPPO-PS) are trained for 20 million time steps in k-out-of-n environments and 10 million time steps in the Climb Game, with evaluation every 1 million time steps. Each evaluation uses 100,000 Monte Carlo rollouts. A large number of rollouts is necessary as the objective J exhibits high variance [24]. At the end of training, we obtain η = NI evaluations, which we use to plot the learning curves. During evaluation, we set the exploration (epsilon in epsilon-greedy) to 0, and use sampling to query stochastic policies. The best evaluation J∗ = max {J1, . . . , Jη} (min. for objective in Equation (11)) represents the performance of that training instance. Furthermore, the consistency of the algorithm is measured by training several instances of each algorithm by varying neural network parameter initializations and environment conditions using random seeds. 
+
+5.2. Environments, baselines, and learning details Climb Game. Following [33], we set up a repeated matrix game over 25 time steps to assess the performance of the various MADRL algorithms. Since the optimal reward is 11, the optimal full-horizon return is 11 × 25 = 275. We provide a constant input of zero to the neural networks, and in the case of multi-agent algorithms with parameter sharing, the neural network is additionally provided with agent IDs as input. We assess the performance of all algorithms over 30 random seeds. 
+
+k-out-of-n environments. During training, each episode is truncated after 50 time steps, which practically su ffi ces to approximate an infinite-horizon problem as explained in Section 4. Since truncation is due to a time limit rather than an absorbing terminal state, the continuation value at the final step is in general nonzero. Accordingly, when computing returns and advantages, we bootstrap at the truncation boundary using the critic. This is in contrast to true terminations, such as in finite-horizon settings, where the bootstrap value is set to zero. During inference, we evaluate the performance over 20 time steps using 100,000 Monte Carlo rollouts. During both training and inference, we report the expected discounted returns. Performance is assessed on 10 random seeds for each algorithm. In these environments, agents only receive beliefs over component damage states as input. Time 14 steps are omitted from the input since policies are stationary in infinite-horizon environments. For multi-agent algorithms with parameter sharing, agent IDs are additionally provided. The hyperparameters for all algorithms are tuned on the 3-out-of-4 system, and are listed in Appendix A.4. 
+
+SARSOP baseline. To evaluate the performance of MADRL algorithms in the infinite-horizon environments, we establish a (near-)optimal baseline using SARSOP [12], an o ffl ine planning algorithm to solve POMDPs. The SARSOP policy is further improved using one-step look-ahead (see Section 2.2 for details). We evaluate the perfor-mance using 100,000 Monte Carlo rollouts, and also use it to contrast DRL policies in belief-space plots. SARSOP also provides upper and lower bounds on expected returns, which we report along with the Monte Carlo returns. In this work, we used an existing Julia implementation of SARSOP, with POMDPs specified in the POMDPs.jl 
+
+framework [59]. This allowed us to model the k-out-of-n systems directly in Julia and obtain (near-)optimal poli-cies while maintaining consistency with the environments used to train the DRL algorithms. Convergence plots for SARSOP for the k-out-of-4 systems are shown in Figure A.12. 
+
+Heuristic baseline. We evaluate an inspection–repair heuristic defined by three parameters: (i) the inspection in-terval, which sets the periodicity of inspections after which repair actions may be triggered, (ii) the number of components inspected at each interval, with priority given to those with the highest estimated failure probabilities, and (iii) the repair threshold, which specifies the minimum observed damage level at inspection that triggers repair. The search space is obtained by varying each parameter across its admissible range: inspection intervals from 1 up to 20, number of inspected components from 1 up to n, and repair thresholds across the number of damage states. For each parameter combination, we compute the discounted return using 100,000 Monte Carlo rollouts and report the best-performing heuristic as a baseline for comparison. 
+
+5.3. Ablations and validation 
+
+In addition to the n = 4 base system, we study smaller systems with n = 2, 3, defined as consistent subsets of the base case by reusing the first two or three components, respectively (including their deterioration, cost, and observation parameters). These systems exclude mobilization costs to isolate the e ff ect of redundancy on coordination. We also conduct an ablation with an alternate reward model, where the failure penalty factor is reduced from κ = 3 to κ = 1.5. For clarity of exposition, these additional results, reported in Appendix A.4, show that the main findings hold across di ff erent system sizes and reward specifications, confirming that the observed trends are not artifacts of a particular cost structure. Furthermore, we validate our MADRL implementations by comparing a subset of algorithms—QMIX-PS, MAPPO-PS, and IPPO-PS, against the open-source MARL library EPyMARL [33] (see Appendix A.3 for details). Our benchmark environments, algorithm implementations, baselines, and trained models for reproducing the results of this paper are publicly available at github.com/prateekbhustali/price-of-decentralization .
+
+6. Results and discussion 
+
+Following the evaluation protocol outlined in the previous section, the box plots in Figures 4 and 5 show the best performance over ten training runs (random seeds) for each DRL algorithm. In Figure 5, we normalize results with respect to the (near-)optimal SARSOP baseline to enable comparison across system configurations. In Tables 2 and A.3, the LBound is an approximate lower bound on costs, and UBound is the upper bound on costs computed through the point-based backups. In addition, we report the heuristic baseline (relative to SARSOP) for comparison. This reinforces the need for (near-)optimal baselines such as SARSOP, which provide a principled ground-truth reference for evaluation, as heuristic performance varies across problem settings and cannot reliably assess algorithmic performance. 15 1-out-of-4 system 
+
+(parallel configuration) 
+
+2-out-of-4 system 3-out-of-4 system 4-out-of-4 system 
+
+(series configuration)    
+
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Normalized cost:  (x baseline )
+> baseline
+> decentralization decentralization decentralization decentralization
+> increasing redundancy
+> CTCE (POMDP)
+> CTCE (MPOMDP)
+> CTDE (Dec-POMDP)
+> DTDE (Dec-POMDP)
+> SARSOP Monte Carlo mean (baseline)
+> SARSOP (LBound, UBound)
+> 95% CI
+> Heuristic mean
+> mean
+
+Figure 5: Box plots summarize algorithm performance across k-out-of-4 systems, aggregated over 10 training instances. The results are normalized using the expected cost of the (near-)optimal SARSOP policy (Table 2), allowing comparison across varying redundancy levels. Most decentralized algorithms perform near-optimally in series configurations ( k = n), but deviate from the (near-)optimal SARSOP baseline as redundancy increases, with the largest performance drop observed in the parallel configurations ( k = 1). 
+
+Learning curves. We plot learning curves using the periodic evaluations performed during training, as described in the previous section. Each point on the curve corresponds to the average return /costs obtained from evalua-tion episodes conducted every I environment steps, yielding η = NI total evaluations. These curves illustrate the agent’s performance progression over time in the Climb Game and all k-out-of-4 environments in Figure A.10 and Figure A.11, respectively, in Appendix A.1. 
+
+Belief space plots. In Figure 6, we analyze the best-performing polices using the belief space for the k-out-of-4 systems. They serve as a lens for contrasting the (near-)optimal SARSOP baseline, centralized DRL policies, and decentralized MADRL policies. In these plots, each 2D simplex represents the belief over 3 states, ex-pressed in barycentric coordinates, where the vertices correspond to the damage states {s1 = no-damage , s2 =
+
+major-damage , s3 = failure }. At the vertices, the damage state is perfectly known (no uncertainty over the damage state); however, the uncertainty increases as we move towards the interior and is maximum at the centroid. On the belief space, we plot the actions taken by the agent(s) over 100 Monte Carlo rollouts starting from the given initial belief b0. If no repair actions are taken, components slowly drift towards the failed state ( s3 = failure). 
+
+6.1. CTCE algorithms JAC and DDQN 
+
+The SADRL approaches, JAC and DDQN, learn centralized joint policies and consistently achieve the optimal return in the Climb Game, as shown in Figure 4. Their performance remains near-optimal across most k-out-of-4 systems, as shown in Figure 5 and Table 2. Notably, JAC exhibits suboptimal behavior in the 1-out-of-4 system, evident from the bimodal distribution in Figure 5. To substantiate this further, we report performance across all 10 random seeds in Table A.3 in Appendix A.1. In the 1-out-of-4 system, the worst-performing JAC instance (seed 10), the learned joint policy maintains only component 2, while SARSOP and optimal JAC policies maintain both 16 k-out-of-4 systems 1-out-of-4 system 2-out-of-4 system 3-out-of-4 system 4-out-of-4 system SARSOP (LBound, UBound) (43.67, 51.82) (113.19, 141.76) (272.84, 309.06) (727.36, 755.52) Expected return 50.41 (50.31, 50.51) 138.59 (138.25, 138.93) 303.93 (303.18, 304.68) 747.54 (745.92, 749.15) Heuristic Expected return 70.19 (70.12, 70.25) 159.32 (159.01, 159.63) 358.51 (357.44, 359.57) 913.03 (911.36, 914.70)                                      
+
+> CTCE
+> DDQN 50.81 (50.71, 50.90) 141.70 (141.48, 141.92) 312.61 (311.86, 313.36) 750.20 (748.62, 751.77) JAC 50.89 (50.81, 50.98) 143.66 (143.38, 143.94) 311.95 (311.20, 312.70) 749.90 (748.34, 751.46) DCMAC 53.83 (53.75, 53.92) 144.45 (144.22, 144.69) 311.37 (310.57, 312.17) 749.57 (747.99, 751.16)
+> CTDE
+> IACC-PS 53.58 ‡146.39 (146.10, 146.68) 310.48 (309.68, 311.28) 748.78 (747.21, 750.35) MAPPO-PS 52.66 (52.60, 52.72) 148.16 (147.87, 148.46) 312.95 (312.14, 313.77) 749.34 (747.76, 750.92) QMIX-PS 56.71 (56.62, 56.79) 144.31 (144.03, 144.58) 309.16 (308.38, 309.94) 747.53 (745.96, 749.09) VDN-PS 58.18 (58.08, 58.27) 148.93 (148.67, 149.20) 309.25 (308.48, 310.01) 746.64 (745.07, 748.21)
+> DTDE IAC-PS 57.90 (57.77, 58.02) 146.67 (146.38, 146.96) 312.59 (311.77, 313.41) 756.81 (755.22, 758.40) IPPO-PS 56.46 ‡155.12 (154.88, 155.36) 315.77 (314.96, 316.58) 754.02 (752.44, 755.60)
+
+Table 2: Best performance of single and multi-agent DRL algorithms across k-out-of-4 systems over 10 training instances. Reported values are expected costs, computed as discounted costs via Monte Carlo rollouts, with 95% confidence intervals in brackets. SARSOP, using one-step look-ahead, serves as the near-optimal baseline. SARSOP expected costs shown in bold are also used to normalize results in Figure 5. Entries marked with ( ‡) correspond to deterministic periodic repair policies and exhibit negligible variance. 
+
+components 1 and 2. This is visualized in a policy rollout in Figure A.9 in Appendix A.1. In contrast, DDQN exhibits greater stability in performance and is also more parameter-e ffi cient to train, as reported in Table A.4. 
+
+DCMAC 
+
+In the Climb Game, DCMAC consistently converges to a suboptimal policy that selects the reward-7 action, yielding a return of 25 × 7 = 175. This, arguably, stems from how DCMAC factorizes the joint policy as π(a | h) =
+
+QMm=1 πm(am | h) (Equation 7) to address the curse of dimensionality. Following Equation 6, the per-sample joint policy gradient update for JAC in the Climb Game is: 
+
+gθ = ∇θ
+
+h log π(a2 | a1; θ)
+
+| {z } 
+
+> conditioned on a1
+
++ log π(a1; θ)i · A , (JAC) (13) where A is the joint advantage. Since there are no observations or states, h is omitted. In contrast, DCMAC assumes conditional independence of actions given the policy parameters, i.e., π(a2 | a1; θ) = π(a2; θ), and thus following Equation 7: 
+
+gθ = ∇θ
+
+h log π2(a2; θ)
+
+| {z } 
+
+> independent of a1
+
++ log π1(a1; θ)i · A , (DCMAC) (14) which updates each agent’s action probability independently with the same advantage estimate. We posit that this conditional independence assumption contributes to the observed performance gap. Despite these limitations, DCMAC generally performs well in the series and series-like configurations in the k-out-of-4 systems. However, performance tends to become suboptimal in the presence of redundancies, suggesting that access to centralized information alone is insu ffi cient to fully resolve coordination challenges induced by redundancy. For example, in the 1-out-of-4 system, the best-performing instance of DCMAC consistently maintains only component 2, as shown in the belief space plot in Figure 6. This mirrors the behavior of suboptimal JAC instances. In contrast, SARSOP, JAC, and DDQN maintain both components 1 and 2, leading to marginally lower costs as reported in Table 2. Overall, as seen in the box plots in Figure 5, DCMAC can generally provide reasonable approximations of centralized policies, and exhibits greater consistency across k-out-of-4 systems compared to the CTDE algorithms. 17 Figure 6: Belief space plots. Using the best-performing training instance of each algorithm, we visualize the learned policies over the belief space. Specifically, we show the actions taken over 100 Monte Carlo rollouts of 20 time steps in the 1-out-of-4 system. Each rollout begins from the initial belief b0 = (0 .6, 0.4, 0) indicated with a blue dot ( •). The SARSOP baseline, JAC, and DDQN coordinate repairs across components 1 and 2 and use inspections to keep beliefs updated; they let components 3 and 4 drift toward failure to optimally exploit redundancy. Decentralized algorithms, such as DCMAC, IACC-PS, MAPPO-PS, IPPO-PS, learn a structured coordination of components 1 and 2 (e.g., periodic repairs to eliminate non-stationarity), yet these policies remain suboptimal as detailed in Table 2. 
+
+18 0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40                                                                 
+
+> time
+> 0
+> 1
+> 2
+> damage-state
+> Component 1
+> 0246810 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40
+> time
+> 0
+> 1
+> 2
+> damage-state
+> Component 3
+> 0246810 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40
+> time
+> 0
+> 1
+> 2
+> damage-state
+> Component 2
+> 0246810 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40
+> time
+> 0
+> 1
+> 2
+> damage-state
+> Component 4
+> 0% 25% 50% 75% 100%
+> mobilisation
+> repair
+> inspect
+> risk
+> 3.7
+> 33.9
+> 0.0
+> 17.4
+> Episode cost: 54.976
+> 0
+> 0.04
+> system  pf
+> 0
+> 0.04
+> system  pf
+> 0
+> 0.04
+> system  pf
+> 0
+> 0.04
+> system  pf
+> 0.0
+> 0.5
+> 1.0
+> belief
+
+1-out-of-4 system  
+
+> (parallel configuration)
+> Behavior policy: IACC-PS
+> Baseline policy: SARSOP
+> (baseline policy actions on top with green background)
+> do-nothing
+> repair
+> inspect
+> damage state
+> system pf
+> system-failure
+
+Figure 7: A sample rollout of the best IACC-PS policy in the 1-out-of-4 system for 40 time steps. Interestingly, agent 1 chooses a repair action every 5 and 7 time steps, and agent 2 chooses repairs every 5 time steps, even though neither observes the time step, and both are purely based on their individual components’ beliefs. 
+
+6.2. CTDE algorithms IACC-PS and MAPPO-PS 
+
+Similar to DCMAC, IACC-PS often converges to a suboptimal equilibrium with reward 7 in the Climb Game, achieving a return of 25 × 7 = 175. The centralized critic is unable to e ffi ciently guide coordination, as agents update policies independently with the same advantage estimate. Instances achieving optimal performance are outliers. In the 1-out-of-4 system, we make two key observations in the policy realization of the best IACC-PS instance in Figure 7. First, only agents 1 and 2 take intervention actions, while agents 3 and 4 remain inactive (as their components are more costly to maintain) to exploit the redundancy in the system. Secondly, agent 1 chooses to repair every 5 and 7 time steps, whereas agent 2 chooses to repair every 5 time steps. Although agents do not observe the global time step, they appear to infer the temporal structure implicitly [60]. With no inspection actions, belief updates are fully deterministic under the stationary deterioration model. Moreover, purely repair-based policies eliminate non-stationarity, mitigating a key multi-agent learning pathology, and lead to expected costs with negligible variance as shown in Table 2. In particular, agents 1 and 2 appear to construct a cooperative strategy: (i) they forgo inspection, unlike the SARSOP policy, to maintain exact belief state tracking; (ii) they adopt a time-based repair policy; and (iii) they alternate repairs among each other to avoid simultaneous failures, thereby minimizing system-level risk. The repair periodicity arises from the structure of the induced Markov chain over beliefs: T πm
+
+> m
+
+ b′ 
+
+> m
+
+| bm
+
+ = Pam∈Am πm (am | bm) Tm
+
+ b′ 
+
+> m
+
+| bm, am
+
+, whose dynamics govern the regular repair patterns observed in the policy realization. We exemplify this further using the belief space plots in Figure 6. Clearly, components 3 and 4 always drift towards the failed state since they are never repaired. In contrast to the other policies, the belief space of IACC-PS is very sparsely occupied, even over 100 policy realizations. Periodic repair actions, when combined with a stationary deterioration model, induce a deterministic Markov chain in the belief space. This is also reflected in the constant cost observed across evaluation episodes, as reported in Table 2. MAPPO-PS, the on-policy counterpart of IACC-PS, also fails to reach the optimal returns in the Climb Game. In the 1-out-of-4 system, MAPPO-PS achieves the best performance among decentralized agents. While worse than DCMAC on average, it produces an outlier that outperforms DCMAC when comparing best instances. As shown in the belief space plot in Figure 6, it learns a periodic repair policy for component 2 (like IACC-PS), unlike IACC-PS, it uses both inspections and repairs to maintain component 1. Together, these results show how 19 Climb Game                                             
+
+> Agent 1
+> a1a2a3
+> Agent 2  a111 ∗-30 0
+> a2-30 76
+> a3005
+> VDN-PS Decomposition
+> Q1(a1)Q1(a2)Q1(a3)-4.18 -7.35 6.31
+> Q2(a1)-4.76 -8.95 -12.11 1.55
+> Q2(a2)-0.33 -4.51 -7.67 5.99
+> Q2(a3)-0.77 -4.95 -8.11 5.55
+> QMIX-PS Decomposition
+> Q1(a1)Q1(a2)Q1(a3)-0.13 -5153.65 -2.88
+> Q2(a1)1.19 11.10 -9.54 1.65
+> Q2(a2)-5412.35 -9.54 -9.54 -9.54
+> Q2(a3)-1.66 1.73 -9.54 1.59
+> Figure 8: Value decompositions for the Climb Game. Left: Climb Game rewards. Middle and right: value decompositions learned by the best-performing instances of VDN-PS and QMIX-PS, respectively. Tables show estimated joint action-values, with rows and columns corresponding to the agents’ local actions; orange entries denote the greedy joint action. While VDN-PS assigns the correct maximum to the optimal joint action ( a3,a2), its linear factorization misrepresents other action utilities. QMIX-PS, despite its monotonic mixing constraint, also misrepresents joint utilities, with optimal performance occurring only in outlier cases.
+
+decentralized approximations may converge to structured coordination strategies, but remain suboptimal compared to centralized policies, particularly in redundant systems. Consistent patterns are also observed in the additional studies with n ∈ { 2, 3} and with an alternate reward model (Appendix A.4). 
+
+VDN-PS and QMIX-PS 
+
+The value factorization algorithms VDN-PS and QMIX-PS are unable to correctly capture the joint utility of agents’ actions in the Climb Game. As shown in Figure 4, VDN-PS can reach a maximum return of 25 × 6 = 150 by correctly estimating the return of joint action ( a3, a2), but Figure 8 shows that its linear factorization does not predict the return of other action combinations correctly. QMIX-PS, though theoretically more expressive due to its monotonic factorization, also incorrectly factorizes utilities; some instances achieve the optimal return, but only as outliers where the greedy action coincidentally aligns with the optimum [17]. Thus, both methods demonstrate fundamental limitations in factorizing utilities, even in this simple setting. As shown in Figure 5, VDN-PS and QMIX-PS achieve optimal performance in the series (4-out-of-4) and series-like (3-out-of-4) systems. We posit that the inductive bias of value factorization—decomposing the joint value into agent-wise contributions—aligns with the structure of series and series-like systems, where most or all components must function simultaneously. However, in the 2-out-of-4 and 1-out-of-4 (parallel) systems, the inductive bias of value factorization is insu ffi cient, as the problem structure is no longer well approximated by additive utilities. This misalignment likely leads to suboptimal performance in redundant systems. We provide intuition for this behavior in Appendix B, where we prove that for a single-state, non-sequential matrix game, linear and monotonic value decompositions perform optimally in a series configuration due to their inductive bias, but are suboptimal for a parallel configuration. 
+
+6.3. DTDE algorithms IAC-PS and IPPO-PS 
+
+In the Climb Game, IPPO-PS performs similarly to its CTDE counterpart MAPPO-PS. This aligns with the the-oretical findings of [40], which show that both centralized and decentralized critics marginalize over other agents, explicitly in the centralized case and implicitly in the decentralized one. The Climb Game is a simplified setting with no state or observation, making such marginalization relatively easy. In the k-out-of-4 systems, IPPO-PS con-sistently underperforms MAPPO-PS. In the 1-out-of-4 case, the best-performing IPPO-PS training instance, similar to MAPPO-PS, converges to a purely periodic repair strategy, as illustrated in Figure 6. Agents 3 and 4 remain inactive and consistently select the do-nothing action, while agents 1 and 2 perform repairs at regular intervals of five time steps, with their schedules staggered across agents. Notably, this coordination emerges despite agents having no explicit access to the timestep and relying solely on local belief states. Nevertheless, the resulting IPPO-PS policy is less e ff ective than the MAPPO-PS policy, as reflected by its higher expected costs in Table 2. IAC-PS, the o ff -policy variant of IPPO-PS, shows high variability across all k-out-of-4 systems, a trend also confirmed in 20 the ablation studies (Appendix A.4). While there are outlier runs that achieve optimal performance in series and series-like configurations, the algorithm rarely learns optimal policies in more di ffi cult settings with redundancies, such as parallel configurations. This is likely due to the o ff -policy nature of IAC-PS, as also noted in [33, 61]. Since updates rely on past experience, suboptimal trajectories can dominate the replay bu ff er if optimal actions are not sampled su ffi ciently. 
+
+7. Conclusions and future work 
+
+Inspection and maintenance planning in large-scale, partially observable engineering systems necessitates de-centralized control to achieve scalability, as centralized approaches become intractable due to the exponential growth of joint state, observation, and action spaces. While multi-agent deep reinforcement learning enables scal-able approximation through decentralized policy learning, it also introduces fundamental learning pathologies, including non-stationarity, multi-agent credit assignment, and coordination failures. These pathologies encumber the learning of optimal policies and give rise to what we term the price of decentralization : the loss in optimality incurred when decentralized control is used to approximate a centralized policy. To examine these challenges in a controlled reliability context, we introduce benchmark environments based on 
+
+k-out-of-n systems with n = 4, varying the redundancy parameter k from series ( k = n) to parallel ( k = 1) configu-rations. By focusing on small systems, where point-based solvers, such as SARSOP, yield (near-)optimal baselines, we enable rigorous comparisons beyond heuristic methods. We find that heuristic baselines vary substantially in eff ectiveness across settings and can misrepresent algorithmic performance when used in isolation. We evaluate the three main decentralization paradigms: (i) centralized training and centralized execution, (ii) centralized train-ing with decentralized execution, and (iii) fully decentralized training and execution, using nine representative algorithms spanning actor–critic and value-based methods under both on-policy and o ff -policy training. Fully cen-tralized methods, such as JAC and DDQN, which have access to complete system information and predict joint actions, often provide near-optimal solutions in small systems but are intractable at larger scales. While decen-tralization approaches promise scalability by distributing decision-making, they perform well mainly in series and series-like systems. Their performance degrades in systems with increased redundancy, with the steepest decline observed in parallel configurations. Notably, DCMAC, which retains access to global information but decentralizes action selection, also exhibits optimality losses as redundancy increases, albeit less severe than those observed for fully decentralized approaches. This suggests that access to centralized information alone is insu ffi cient to fully resolve coordination challenges induced by redundancy. CTDE approaches based on value factorization, such as VDN-PS and QMIX-PS, exhibit a similar trend. In these methods, the additive inductive bias aligns with the prob-lem structure in series and series-like configurations, but performance degrades in redundant systems where joint utilities cannot be captured by such factorizations. We provide analytical intuition for this behavior using a single-state two-agent game. Supporting this interpretation, ablation studies with smaller systems (with n ∈ { 2, 3}) and with an alternate reward model show that the observed trends persist, indicating that they are primarily driven by redundancy rather than other system e ff ects. Although current decentralized algorithms struggle to achieve optimal coordination in systems with redundancies, a defining characteristic of real-world infrastructure, they nonetheless learn structured coordination patterns and provide reasonable approximations of centralized optima. A key direction for future work concerns understanding the robustness of learned coordination mechanisms. As highlighted by recent findings on out-of-trajectory generalization [62], agents’ policies may exploit spurious correlations in the environment to learn coordination, which generalize poorly and lead to brittle behaviors. Acomplementary direction is to develop theoretical insights into the performance of actor–critic algorithms in the presence of redundancy. While we provide a proof of suboptimality for value factorization, recent theoretical work [40] provides a promising foundation for extending such analysis to actor–critic approaches. 21 Acknowledgements 
+
+Prateek Bhustali and Dr. Charalampos P. Andriotis gratefully acknowledge support from the TU Delft AI Labs program. This work used the DelftBlue supercomputer, operated by the Delft High Performance Computing Centre [63]. 
+
+Declaration of generative AI and AI-assisted technologies in the manuscript. 
+
+During the preparation of this manuscript, the author(s) made use of ChatGPT (OpenAI) only for language and text checks, toward improving clarity of presentation and detecting typos. In addition, Codex (OpenAI) was used to support code checks. All outputs generated with the assistance of these tools were reviewed, verified, and edited by the author(s), who take full responsibility for the content of the published article. 
+
+References 
+
+[1] S. Madanat, M. Ben-Akiva, Optimal Inspection and Repair Policies for Infrastructure Facilities, Transporta-tion Science 28 (1) (1994) 55–62. doi:10.1287/trsc.28.1.55 .[2] R. B. Corotis, J. Hugh Ellis, M. Jiang, Modeling of risk-based inspection, maintenance and life-cycle cost with partially observable Markov decision processes, Structure and Infrastructure Engineering 1 (1) (2005) 75–84. doi:10.1080/15732470412331289305 .[3] J. Scharp ff , M. Spaan, L. Volker, M. D. Weerdt, Planning under Uncertainty for Coordinating Infrastructural Maintenance, Proceedings of the International Conference on Automated Planning and Scheduling 23 (2013) 425–433. doi:10.1609/icaps.v23i1.13592 .[4] K. G. Papakonstantinou, M. Shinozuka, Planning structural inspection and maintenance policies via dynamic programming and Markov processes. Part I: Theory, Reliability Engineering and System Safety 130 (2014) 202–213. doi:10.1016/j.ress.2014.04.005 .[5] K. Papakonstantinou, C. P. Andriotis, M. Shinozuka, POMDP and MOMDP solutions for structural life-cycle cost minimization under partial and mixed observability, Structure and Infrastructure Engineering 14 (2018) 869 – 882. doi:10.1080/15732479.2018.1439973 .[6] G. Arcieri, C. Hoelzl, O. Schwery, D. Straub, K. G. Papakonstantinou, E. Chatzi, Bridging POMDPs and Bayesian decision making for robust maintenance planning under model uncertainty: An application to rail-way systems, Reliability Engineering & System Safety 239 (2023) 109496. doi:10.1016/j.ress.2023. 109496 .[7] H. Hu, V. Bansal, S. Zhou, Condition-based maintenance planning for K-out-of-N systems under partial observability, Reliability Engineering & System Safety 267 (2026) 111943. doi:10.1016/j.ress.2025. 111943 .[8] E. Bismut, D. Straub, Optimal adaptive inspection and maintenance planning for deteriorating structural sys-tems, Reliability Engineering & System Safety 215 (2021) 107891. doi:10.1016/j.ress.2021.107891 .[9] J. Luque, D. Straub, Risk-based optimal inspection strategies for structural systems using dynamic Bayesian networks, Structural Safety 76 (June 2017) (2019) 68–80. doi:10.1016/j.strusafe.2018.08.002 .[10] D. Silver, J. Veness, Monte-Carlo Planning in Large POMDPs, in: Advances in Neural Information Processing Systems, Vol. 23, 2010, pp. 2164–2172. 22 [11] M. T. J. Spaan, N. Vlassis, Perseus: Randomized Point-based Value Iteration for POMDPs, Journal of Artifi-cial Intelligence Research 24 (2005) 195–220. doi:10.1613/jair.1659 .[12] H. Kurniawati, D. Hsu, W. Sun Lee, SARSOP: E ffi cient Point-Based POMDP Planning by Approximating Optimally Reachable Belief Spaces, in: Robotics: Science and Systems IV, Robotics: Science and Systems Foundation, 2008. doi:10.15607/RSS.2008.IV.009 .[13] V. Mnih, K. Kavukcuoglu, D. Silver, A. A. Rusu, J. Veness, M. G. Bellemare, A. Graves, M. Riedmiller, A. K. Fidjeland, G. Ostrovski, S. Petersen, C. Beattie, A. Sadik, I. Antonoglou, H. King, D. Kumaran, D. Wierstra, S. Legg, D. Hassabis, Human-level control through deep reinforcement learning, Nature 518 (7540) (2015) 529–533. doi:10.1038/nature14236 .[14] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, O. Klimov, Proximal Policy Optimization Algorithms (Aug. 2017). doi:10.48550/arXiv.1707.06347 .[15] T. Haarnoja, A. Zhou, P. Abbeel, S. Levine, Soft Actor-Critic: O ff -Policy Maximum Entropy Deep Rein-forcement Learning with a Stochastic Actor, in: Proceedings of the 35th International Conference on Machine Learning, Vol. 80 of Proceedings of Machine Learning Research, PMLR, 2018, pp. 1861–1870. [16] M. Gallici, M. Fellows, B. Ellis, B. Pou, I. Masmitja, J. Foerster, M. Martin, Simplifying Deep Temporal Di ff erence Learning, in: International Conference on Learning Representations, Vol. 2025, 2025, pp. 78148– 78190. [17] S. V. Albrecht, F. Christianos, L. Schäfer, Multi-Agent Reinforcement Learning: Foundations and Modern Approaches, MIT Press, 2023. [18] C. Amato, A First Introduction to Cooperative Multi-Agent Reinforcement Learning (Dec. 2024). doi: 10.48550/arXiv.2405.06161 .[19] Y. Yang, R. Luo, M. Li, M. Zhou, W. Zhang, J. Wang, Mean Field Multi-Agent Reinforcement Learning, in: Proceedings of the 35th International Conference on Machine Learning, Vol. 80 of Proceedings of Machine Learning Research, PMLR, 2018, pp. 5571–5580. [20] L. C. MacDermed, C. L. Isbell, Point Based Value Iteration with Optimal Belief Compression for Dec-POMDPs, in: Advances in Neural Information Processing Systems, Vol. 26, 2013, pp. 100–108. [21] W. Koops, S. Junges, N. Jansen, Approximate Dec-POMDP Solving Using Multi-Agent A*, in: Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence, IJCAI-24, International Joint Conferences on Artificial Intelligence Organization, 2024, pp. 6743–6751. doi:10.24963/ijcai.2024/ 745 .[22] C. P. Andriotis, K. G. Papakonstantinou, Managing engineering systems with large state and action spaces through deep reinforcement learning, Reliability Engineering and System Safety 191 (March) (2019) 106483. 
+
+doi:10.1016/j.ress.2019.04.036 .[23] C. P. Andriotis, K. G. Papakonstantinou, Deep reinforcement learning driven inspection and mainte-nance planning under incomplete information and constraints, Reliability Engineering and System Safety 212 (March) (2021) 107551. doi:10.1016/j.ress.2021.107551 .[24] P. Leroy, P. G. Morato, J. Pisane, A. Kolios, D. Ernst, IMP-MARL: a Suite of Environments for Large-scale Infrastructure Management Planning via MARL, in: Advances in Neural Information Processing Systems, Vol. 36, 2023, pp. 53522–53551. 23 [25] M. Saifullah, K. G. Papakonstantinou, C. P. Andriotis, S. M. Sto ff els, Multi-agent deep reinforcement learn-ing with centralized training and decentralized execution for transportation infrastructure management (Jan. 2024). doi:10.48550/arXiv.2401.12455 .[26] P. Do, V.-T. Nguyen, A. Voisin, B. Iung, W. A. F. Neto, Multi-agent deep reinforcement learning-based maintenance optimization for multi-dependent component systems, Expert Systems with Applications 245 (2024) 123144. doi:https://doi.org/10.1016/j.eswa.2024.123144 .[27] D. Lee, J. Song, Risk-informed operation and maintenance of complex lifeline systems using parallelized multi-agent deep q-network, Reliability Engineering & System Safety 239 (2023) 109512. doi:https: //doi.org/10.1016/j.ress.2023.109512 .[28] A. Bhattacharya, M. Saifullah, K. G. Papakonstantinou, District-level bridge networks management with multi-agent reinforcement learning: from theory to real-world application, Structure and Infrastructure Engi-neering 21 (11-12) (2025) 2064–2082. doi:10.1080/15732479.2025.2559150 .[29] G. Arcieri, G. Duthé, C. Muller, D. Haener, K. G. Papakonstantinou, D. Straub, E. Chatzi, Graph-based multi-agent reinforcement learning for railway infrastructure decision support, in: Proceedings of the 14th International Conference on Structural Safety and Reliability (ICOSSAR’25), Los Angeles, CA, USA, 2025. [30] L. Matignon, G. J. Laurent, N. Le Fort-Piat, Independent reinforcement learners in cooperative Markov games: a survey regarding coordination problems, The Knowledge Engineering Review 27 (1) (2012) 1–31. 
+
+doi:10.1017/S0269888912000057 .[31] C. Claus, C. Boutilier, The dynamics of reinforcement learning in cooperative multiagent systems, in: Pro-ceedings of the fifteenth national /tenth conference on Artificial intelligence /Innovative applications of arti-ficial intelligence, AAAI ’98 /IAAI ’98, American Association for Artificial Intelligence, USA, 1998, pp. 746–752. [32] G. Bono, J. S. Dibangoye, L. Matignon, F. Pereyron, O. Simonin, Cooperative Multi-agent Policy Gradient, in: Machine Learning and Knowledge Discovery in Databases, Vol. 11051, Springer International Publishing, 2019, pp. 459–476. doi:10.1007/978-3-030-10925-7_28 .[33] G. Papoudakis, F. Christianos, L. Schäfer, S. V. Albrecht, Benchmarking Multi-Agent Deep Reinforcement Learning Algorithms in Cooperative Tasks, in: Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks, Vol. 1, 2021. [34] P. Bhustali, C. P. Andriotis, Assessing the Optimality of Decentralized Inspection and Maintenance Policies for Stochastically Degrading Engineering Systems, in: Artificial Intelligence and Machine Learning, Vol. 2187, Springer Nature Switzerland, Cham, 2025, pp. 236–254. doi:10.1007/978-3-031-74650-5_13 .[35] K. C. Kapur, Pecht, Michael, Reliability Engineering, 1st Edition, John Wiley & Sons, Inc, 2014. [36] A. Grall, C. Bérenguer, L. Dieulle, A condition-based maintenance policy for stochastically deteriorating systems, Reliability Engineering and System Safety 76 (2) (2002) 167–180. doi:10.1016/S0951-8320(01) 00148-X .[37] C. Yu, A. Velu, E. Vinitsky, J. Gao, Y. Wang, A. Bayen, Y. Wu, The Surprising E ff ectiveness of PPO in Cooperative, Multi-Agent Games, in: Advances in Neural Information Processing Systems, Vol. 35, 2022, pp. 24611–24624. 24 [38] T. Rashid, M. Samvelyan, C. S. de Witt, G. Farquhar, J. Foerster, S. Whiteson, QMIX: Monotonic Value Function Factorisation for Deep Multi-Agent Reinforcement Learning, J. Mach. Learn. Res. 21 (1) (Jan. 2020). [39] F. Molaioni, C. Andriotis, Z. Rinaldi, A dynamic bayesian network approach for multi-component fragility of aging bridges, in: Bridge Maintenance, Safety, Management, Digitalization and Sustainability, CRC Press, 2024, pp. 974–982. [40] X. Lyu, A. Baisero, Y. Xiao, B. Daley, C. Amato, On Centralized Critics in Multi-Agent Reinforcement Learning, Journal of Artificial Intelligence Research 77 (2023) 295–354. doi:10.1613/jair.1.14386 .[41] M. J. Kochenderfer, T. A. Wheeler, K. H. Wray, Algorithms for Decision Making, The MIT Press, Cambridge, Massachusetts, 2022. [42] L. P. Kaelbling, M. L. Littman, A. R. Cassandra, Partially observable Markov decision processes for artificial intelligence, in: KI-95: Advances in Artificial Intelligence, Lecture Notes in Computer Science, Springer, Berlin, Heidelberg, 1995, pp. 1–17. doi:10.1007/3-540-60343-3_22 .[43] V. Dewanto, M. Gallagher, Examining average and discounted reward optimality criteria in reinforcement learning, in: AI 2022: Advances in Artificial Intelligence, Springer International Publishing, Cham, 2022, pp. 800–813. [44] K. J. Åström, Optimal control of Markov processes with incomplete state information, Journal of Mathemat-ical Analysis and Applications 10 (1) (1965) 174–205. doi:10.1016/0022-247X(65)90154-X .[45] M. L. Puterman, Markov Decision Processes: Discrete Stochastic Dynamic Programming, John Wiley & Sons, 2014. doi:10.1002/9780470316887 .[46] G. Shani, J. Pineau, R. Kaplow, A survey of point-based POMDP solvers, Auton Agent Multi-Agent Syst 27 (2013) 1–51. doi:10.1007/s10458-012-9200-2 .[47] T. Smith, R. Simmons, Heuristic Search Value Iteration for POMDPs, in: Proceedings of the 20th Conference on Uncertainty in Artificial Intelligence, UAI ’04, AUAI Press, Arlington, Virginia, USA, 2004, p. 520–527. [48] F. A. Oliehoek, M. T. J. Spaan, N. Vlassis, Optimal and Approximate Q-value Functions for Decentralized POMDPs, Journal of Artificial Intelligence Research 32 (2008) 289–353. doi:10.1613/jair.2447 .[49] F. A. Oliehoek, C. Amato, A Concise Introduction to Decentralized POMDPs, SpringerBriefs in Intelligent Systems, Springer International Publishing, Cham, 2016. doi:10.1007/978-3-319-28929-8 .[50] H. van Hasselt, A. Guez, D. Silver, Deep Reinforcement Learning with Double Q-learning, Proceedings of the AAAI Conference on Artificial Intelligence 30 (1) (Mar. 2016). doi:10.1609/aaai.v30i1.10295 .[51] J. K. Gupta, M. Egorov, M. Kochenderfer, Cooperative Multi-agent Control Using Deep Reinforcement Learning, in: Autonomous Agents and Multiagent Systems, Vol. 10642, Springer International Publishing, Cham, 2017, pp. 66–83. doi:10.1007/978-3-319-71682-4_5 .[52] P. Sunehag, G. Lever, A. Gruslys, W. M. Czarnecki, V. Zambaldi, M. Jaderberg, M. Lanctot, N. Sonnerat, J. Z. Leibo, K. Tuyls, T. Graepel, Value-Decomposition Networks For Cooperative Multi-Agent Learning, in: Proceedings of the 17th International Conference on Autonomous Agents and MultiAgent Systems, AAMAS ’18, 2018, pp. 2085–2087. 25 [53] C. S. de Witt, T. Gupta, D. Makoviichuk, V. Makoviychuk, P. H. S. Torr, M. Sun, S. Whiteson, Is Independent Learning All You Need in the StarCraft Multi-Agent Challenge? (2020). doi:10.48550/arXiv.2011. 09533 .[54] N. Fulda, D. Ventura, Predicting and preventing coordination problems in cooperative Q-learning systems, in: Proceedings of the 20th international joint conference on Artificial intelligence, IJCAI’07, Morgan Kaufmann Publishers Inc., San Francisco, CA, USA, 2007, pp. 780–785. [55] J. M. van Noortwijk, A survey of the application of gamma processes in maintenance, Reliability Engineering & System Safety 94 (1) (2009) 2–21. doi:10.1016/j.ress.2007.03.019 .[56] P. G. Morato, C. P. Andriotis, K. G. Papakonstantinou, P. Rigo, Inference and dynamic decision-making for de-teriorating systems with probabilistic dependencies through Bayesian networks and deep reinforcement learn-ing, Reliability Engineering & System Safety 235 (2023) 109144. doi:10.1016/j.ress.2023.109144 .[57] W. Kuo, M. Zuo, Optimal Reliability Modeling: Principles and Applications. John Wiley & Sons, John Wiley & Sons, Inc., Hoboken, New Jersey, 2003. [58] R. Gorsane, O. Mahjoub, R. de Kock, R. Dubb, S. Singh, A. Pretorius, Towards a Standardised Performance Evaluation Protocol for Cooperative MARL, in: Advances in Neural Information Processing Systems, 2022. [59] M. Egorov, Z. N. Sunberg, E. Balaban, T. A. Wheeler, J. K. Gupta, M. J. Kochenderfer, POMDPs.jl: A Framework for Sequential Decision Making under Uncertainty, Journal of Machine Learning Research 18 (26) (2017) 1–5. [60] B. Deverett, R. Faulkner, M. Fortunato, G. Wayne, J. Z. Leibo, Interval timing in deep reinforcement learning agents, in: Advances in Neural Information Processing Systems, Vol. 32, 2019. [61] R. Lowe, Y. WU, A. Tamar, J. Harb, O. Pieter Abbeel, I. Mordatch, Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments, in: Advances in Neural Information Processing Systems, Vol. 30, 2017. [62] M. Suau, M. T. J. Spaan, F. A. Oliehoek, Bad Habits: Policy Confounding and Out-of-Trajectory Generaliza-tion in RL, Reinforcement Learning Journal 4 (2024) 1711–1732. [63] Delft High Performance Computing Centre (DHPC), DelftBlue Supercomputer (Phase 2), https://www. tudelft.nl/dhpc/ark:/44463/DelftBluePhase2 (2024). 26 Appendix A. Additional results 
+
+Appendix A.1. Additional figures and tables 0 2 4 6 8 10 12 14 16 18 20 
+
+time 
+
+> 0
+> 1
+> 2
+> damage-state
+
+Component 1           
+
+> 0246810 12 14 16 18 20
+
+time 
+
+> 0
+> 1
+> 2
+> damage-state
+
+Component 3           
+
+> 0246810 12 14 16 18 20
+
+time 
+
+> 0
+> 1
+> 2
+> damage-state
+
+Component 2           
+
+> 0246810 12 14 16 18 20
+
+time 
+
+> 0
+> 1
+> 2
+> damage-state
+
+Component 4     
+
+> 0% 25% 50% 75% 100%
+> mobilization
+> repair
+> inspect
+> risk
+> 6.3
+> 19.5
+> 2.8
+> 14.2
+
+Episode cost: 42.796 
+
+> 0
+> 0.03
+> system  pf
+> 0
+> 0.03
+> system  pf
+> 0
+> 0.03
+> system  pf
+> 0
+> 0.03
+> system  pf
+> 0.0
+> 0.5
+> 1.0
+> belief
+
+1-out-of-4 system 
+
+(parallel configuration) 
+
+Behavior policy: JAC 
+
+Baseline policy: SARSOP  
+
+> (baseline policy actions on top with green background)
+> do-nothing
+> repair
+> inspect
+> damage state
+> system pf
+
+Figure A.9: Sub-optimal JAC policy in the 1-out-of-4 system. While the optimal JAC and SARSOP policies intervene on components 1 and 2 to maintain system functionality, this learned policy only involves agent 2 taking intervention actions, and all other agents always choosing do-nothing. 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100% 
+
+% Training timesteps 
+
+0
+
+50 
+
+100 
+
+150 
+
+200 
+
+250 
+
+300 
+
+> Returns
+
+DDQN 
+
+JAC 
+
+DCMAC 
+
+IACC-PS 
+
+MAPPO-PS 
+
+QMIX-PS 
+
+VDN-PS 
+
+IAC-PS 
+
+IPPO-PS 
+
+optimal = 275 
+
+Figure A.10: Learning curves of CTCE, CTDE, and DTDE algorithms on the Climb Game. Performance is evaluated periodically during training and shown as median cost across seeds, with shaded regions indicating the interquartile range. In this one-step environment, the initial episode is excluded from best-checkpoint selection, since random initializations can yield the optimal action before any learning occurs. 
+
+27 Training instances Paradigm Algorithm 1 2 3 4 5 6 7 8 9 10 
+
+1-out-of-4 system (parallel configuration) Baseline SARSOP (MC) 50.41 (50.31, 50.51) 
+
+Heuristic 70.19 (70.12, 70.25) 
+
+CTCE 
+
+DDQN 50.81 50.91 50.99 51.04 51.04 51.06 51.10 51.15 51.23 51.25 JAC 50.89 51.20 51.24 51.30 51.36 51.78 53.78 53.79 53.86 53.87 DCMAC 53.83 53.86 53.87 53.88 53.89 53.96 53.97 53.99 54.00 54.16 
+
+CTDE 
+
+IACC-PS 53.58 54.17 54.17 55.01 55.36 55.64 56.38 56.53 58.44 58.61 MAPPO-PS 52.66 53.95 54.38 54.38 54.39 54.57 54.64 55.12 57.27 61.27 QMIX-PS 56.71 57.63 58.58 59.50 60.02 60.58 62.12 62.84 63.93 64.08 VDN-PS 58.18 58.85 59.59 60.17 60.62 60.75 61.64 61.99 62.94 65.85 
+
+DTDE IAC-PS 57.90 59.47 60.79 61.08 65.07 66.78 66.88 68.45 222.23 222.24 IPPO-PS 56.46 56.48 56.54 56.65 56.67 56.91 56.94 57.08 57.39 57.69 
+
+2-out-of-4 system Baseline SARSOP (MC) 138.59 (138.25, 138.93) 
+
+Heuristic 159.32 (159.01, 159.63) 
+
+CTCE 
+
+DDQN 141.70 142.57 142.62 143.01 143.24 143.41 143.73 143.81 143.88 144.25 JAC 143.66 143.70 143.77 143.88 144.04 144.94 145.20 145.37 145.88 146.53 DCMAC 144.45 144.85 144.86 145.10 145.17 145.66 145.73 151.94 153.02 154.04 
+
+CTDE 
+
+IACC-PS 146.39 147.07 148.50 150.34 152.08 153.79 159.51 160.00 160.39 160.43 MAPPO-PS 148.16 149.24 149.43 149.77 149.77 150.81 153.59 154.60 160.61 176.96 QMIX-PS 144.31 146.57 146.65 146.75 146.83 147.60 149.98 152.71 155.20 155.46 VDN-PS 148.93 149.51 149.76 150.45 151.25 152.31 152.53 152.84 153.89 155.38 
+
+DTDE IAC-PS 146.67 147.08 149.33 150.16 151.70 154.93 157.46 157.95 158.43 172.30 IPPO-PS 155.12 157.33 157.48 157.89 158.79 159.30 159.47 160.11 169.45 170.36 
+
+3-out-of-4 system Baseline SARSOP (MC) 303.93 (303.18, 304.68) 
+
+Heuristic 358.51 (357.44, 359.57) 
+
+CTCE 
+
+DDQN 312.61 313.16 313.45 313.72 314.12 314.48 314.67 314.86 315.41 315.86 JAC 311.95 312.51 312.87 313.71 313.91 314.10 314.47 314.95 316.03 316.75 DCMAC 311.37 311.41 311.89 311.99 312.56 312.65 312.99 313.04 313.06 313.40 
+
+CTDE 
+
+IACC-PS 310.48 310.95 311.07 311.15 311.16 312.00 312.51 313.23 314.22 383.10 MAPPO-PS 312.95 314.38 314.83 314.84 315.03 315.46 315.64 315.90 316.05 317.51 QMIX-PS 309.16 309.29 309.41 309.57 309.62 309.67 309.73 310.23 310.41 310.48 VDN-PS 309.25 309.63 309.65 309.70 309.79 310.01 310.24 310.42 310.96 311.26 
+
+DTDE IAC-PS 312.59 313.02 317.01 326.35 326.62 328.05 339.10 380.90 384.10 386.95 IPPO-PS 315.77 319.74 320.21 320.63 320.69 321.42 323.83 323.86 326.38 332.53 
+
+4-out-of-4 system (series configuration) Baseline SARSOP (MC) 747.54 (745.92, 749.15) 
+
+Heuristic 913.03 (911.36, 914.70) 
+
+CTCE 
+
+DDQN 750.20 750.32 750.91 751.23 751.58 752.27 752.77 752.99 753.11 754.19 JAC 749.90 749.96 750.01 750.04 750.76 750.86 750.98 751.27 751.31 751.64 DCMAC 749.57 749.66 751.18 751.47 752.25 753.03 753.13 753.31 753.82 753.86 
+
+CTDE 
+
+IACC-PS 748.78 749.90 750.39 750.44 751.48 752.82 757.60 757.88 763.93 779.51 MAPPO-PS 749.34 749.94 749.97 750.79 750.93 751.07 751.56 752.33 752.72 754.26 QMIX-PS 747.53 748.12 748.13 748.15 748.25 748.29 748.32 748.47 748.84 749.29 VDN-PS 746.64 747.33 747.83 748.17 748.29 748.52 748.55 748.79 748.80 749.44 
+
+DTDE IAC-PS 756.81 792.81 817.22 854.56 870.68 883.67 908.00 908.67 924.88 938.68 IPPO-PS 754.02 756.72 757.01 758.28 758.72 759.33 759.89 761.67 764.04 764.91 
+
+Table A.3: The expected costs corresponding to the best checkpoint for each of the 10 training instances, reported in ascending order, across all algorithms and k-out-of-4 systems. These values correspond to the data summarized in the box plots shown in Figure 5. 
+
+28 0 20% 40% 60% 80% 100% 
+
+> % Training timesteps
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normalized cost:  (x baseline )
+> baseline
+
+1-out-of-4 system 
+
+(parallel configuration)      
+
+> 020% 40% 60% 80% 100%
+> % Training timesteps
+
+2-out-of-4 system      
+
+> SARSOP MC mean (baseline)
+> SARSOP (LBound, UBound)
+> SARSOP Monte Carlo 95% CI
+> Heuristic mean
+> Heuristic 95% CI
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> 020% 40% 60% 80% 100%
+> % Training timesteps
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normalized cost:  (x baseline )
+> baseline
+
+3-out-of-4 system      
+
+> 020% 40% 60% 80% 100%
+> % Training timesteps
+
+4-out-of-4 system 
+
+(series configuration) Figure A.11: Learning curves of nine algorithms in all infinite-horizon k-out-of-4 systems summarized using 10 training instances. For o ff -policy algorithms, the performance is evaluated every 5,000 episodes during training, and for on-policy algorithms, we evaluate performance every 1M timesteps. Costs are normalised with respect to the SARSOP Monte Carlo mean, and the curves show the median performance across seeds, with shaded regions indicating the interquartile range (IQR). 
+
+29 10 3 10 2 10 1 10 0 10 1
+
+> Time (h)
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> Expected discounted cost
+> Final values
+> (LBound, UBound): (44.56, 51.82)
+> Gap: 7.26 (16.3%)
+> # beliefs: 13580
+> # alpha vectors: 1103
+
+1-out-of-4 system        
+
+> 10 310 210 110 010 1
+> Time (h)
+> 100
+> 120
+> 140
+> 160
+> 180
+> 200
+> Final values
+> (LBound, UBound): (113.73, 141.68)
+> Gap: 27.95 (24.6%)
+> # beliefs: 14136
+> # alpha vectors: 1897
+
+2-out-of-4 system        
+
+> 10 310 210 110 010 1
+> Time (h)
+> 200
+> 250
+> 300
+> 350
+> 400
+> 450
+> Expected discounted cost
+> Final values
+> (LBound, UBound): (274.04, 308.91)
+> Gap: 34.87 (12.7%)
+> # beliefs: 13859
+> # alpha vectors: 2035
+
+3-out-of-4 system        
+
+> 10 310 210 110 010 1
+> Time (h)
+> 600
+> 650
+> 700
+> 750
+> 800
+> 850
+> 900
+> 950
+> Final values
+> (LBound, UBound): (736.82, 755.52)
+> Gap: 18.71 (2.5%)
+> # beliefs: 26746
+> # alpha vectors: 685
+
+4-out-of-4 system  
+
+> SARSOP UBound
+> SARSOP LBound
+> # beliefs # alpha vectors
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 0
+> 250
+> 500
+> 750
+> 1000
+> 1250
+> 1500
+> 1750
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> # beliefs
+> 0
+> 250
+> 500
+> 750
+> 1000
+> 1250
+> 1500
+> 1750
+> # alpha vectors
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 0
+> 250
+> 500
+> 750
+> 1000
+> 1250
+> 1500
+> 1750
+> 2000
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> # beliefs
+> 0
+> 100
+> 200
+> 300
+> 400
+> 500
+> 600
+> 700
+> # alpha vectors
+
+SARSOP Convergence Plots Figure A.12: SARSOP convergence plots. All settings timeout after 48 hours, before upper and lower bounds converge. We observe sharp drops in the number of alpha vectors in the 1-out-of-4 and 2-out-of-4 systems, indicating significant pruning. 
+
+Appendix A.2. Hyperparameters 
+
+Paradigm CTCE CTDE DTDE 
+
+Algorithm DDQN JAC DCMAC IACC-PS MAPPO-PS VDN-PS QMIX-PS IAC-PS IPPO-PS 
+
+Episodes (E) 50,000 - 50,000 -Timesteps (T) E × th = 50 , 000 × 50 = 2.5M 20M 2.5M 20M 
+
+Architecture 
+
+Actor - [12, 64, 64, 81] [12, 32, 32, 12] [7, 32, 32, 3] [7, 64, 64, 3] - - [7, 32, 32, 3] [7, 64, 64, 3] # parameters - 10,257 1,868 1,411 4,867 - - 1,411 4,867 Critic [12, 64, 64, 81] [12, 64, 64, 1] [12, 64, 64, 1] [12, 64, 64, 1] [12, 64, 64, 1] [7, 64, 64, 3] [7, 64, 64, 3] [7, 64, 64, 1] [7, 64, 64, 1] # parameters 10,257 5,057 5,057 5,057 5,057 4,867 4,867 4,737 5,057 # mixer parameters - - - - - - 2945 - -Total # parameters 10,257 15,314 6,925 6,468 9,924 4,867 7,812 6,148 9,924 
+
+Learning 
+
+parallel envs 1 1 1 1 4 1 1 1 4# env steps per learning phase 1 1 1 1 128 1 1 1 128 batch size 64 64 64 64 128x4 = 512 64 64 64 128x4 = 512 # minibatches 1 1 1 1 4 1 1 1 4optimizer Adam Value function coe ffi cient - - - - 0.5 - - - 0.5 Entropy coe ffi cient - - - - 0.01 - - - 0.01 Max. grad norm - - - - 0.5 - - - 0.5 Value loss clipping - - - - True - - - True 
+
+Actor 
+
+initial lr - 1e-4 1e-4 5e-4 2.5e-4 - - 5e-4 2.5e-4 end lr - 1e-5 1e-5 1e-5 2.5e-4 - - 1e-5 2.5e-4 decay: episodes (E) - 10,000 (E) 10,000 (E) 20,000 (E) no-decay - - 10,000 (E) no-decay decay type linear 
+
+Critic (and Mixer) 
+
+initial lr 1e-3 5e-3 5e-3 1e-3 2.5e-4 1e-3 1e-3 1e-3 2.5e-4 end lr 1e-4 5e-4 5e-4 1e-4 2.5e-4 1e-4 1e-4 1e-4 2.5e-4 decay: episodes (E) 10,000 (E) 10,000 (E) 10,000 (E) 20,000 (E) no-decay 10,000 (E) 10,000 (E) 10,000 (E) no-decay decay type linear 
+
+ϵ-greedy strategy 
+
+ϵ-start 1 - 1 -
+
+ϵ-end 0.01 0.01 0.001 0.01 - 0.005 0.005 0.01 -decay episodes 10,000 10,000 20,000 10,000 - 10,000 10,000 20,000 -decay type linear - linear -
+
+Replay Bu ff er timesteps 20,000 20,000 10,000 10,000 - 20,000 20,000 10,000 -
+
+Target Network Reset (Hard) episodes 100 - - - - 100 100 - -
+
+Table A.4: Hyperparameters of single- and multi-agent DRL algorithms used across all k-out-of-n systems, and the Climb Game. However, in the Climb Game, we train o ff -policy algorithms for 100,000 episodes. 
+
+30 Appendix A.3. Empirical validation using EPyMARL 1-out-of-4 system 
+
+(parallel configuration) 
+
+2-out-of-4 system 3-out-of-4 system 4-out-of-4 system 
+
+(series configuration) 
+
+> DDQN
+> MAPPO-PS
+> mappo-EPyMARL
+> QMIX-PS
+> qmix-EPyMARL
+> IPPO-PS
+> ippo-EPyMARL
+> DDQN
+> MAPPO-PS
+> mappo-EPyMARL
+> QMIX-PS
+> qmix-EPyMARL
+> IPPO-PS
+> ippo-EPyMARL
+> DDQN
+> MAPPO-PS
+> mappo-EPyMARL
+> QMIX-PS
+> qmix-EPyMARL
+> IPPO-PS
+> ippo-EPyMARL
+> DDQN
+> MAPPO-PS
+> mappo-EPyMARL
+> QMIX-PS
+> qmix-EPyMARL
+> IPPO-PS
+> ippo-EPyMARL
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Normalized cost:  (x baseline )
+> baseline
+> SARSOP MC mean (baseline)
+> SARSOP (LBound, UBound)
+> Heuristic mean
+> 95% CI
+
+Figure A.13: Empirical validation of our MAPPO-PS, QMIX-PS, and IPPO-PS implementations using EPyMARL [33] across all k-out-of-4 systems. Here, we juxtapose the performance of our implementation with the EPyMARL equivalent. Similar to Figure 5, we summarize the performance over 10 training runs, with costs normalized using the SARSOP Monte Carlo mean from Table 2. Note that we also used 100,000 Monte Carlo rollouts for the EPyMARL evaluations. 
+
+To validate our implementation of MADRL algorithms, we compare the performance of a subset of algorithms (QMIX-PS, MAPPO-PS and IPPO-PS) against EPyMARL [33], a standard MADRL library in Python. For this em-pirical validation, we use the default hyperparameters provided by EPyMARL, without additional tuning. Training and evaluation follow the same protocol outlined in Section 5, including the environment configurations, training horizons, number of seeds, and evaluation procedure. In Figure A.13, we observe the same trend as those reported in Figure 5 across all k-out-of-4 systems. In the series setting, MADRL algorithms are able to obtain (near-)optimal performance, but often fail to cooperate e ff ectively in settings with increasing redundancies. 31 Appendix A.4. Ablation study 
+
+This appendix provides additional ablations that complement the main experiments. They confirm that the conclusions in the main text are robust to changes in system size and reward specification. Here, we report results for smaller systems with n = 2 and n = 3, constructed as consistent subsets of the n = 4 base system, as well as an alternate reward model with a reduced failure penalty. For details see Section 5.3. 1-out-of-4 system 
+
+(parallel configuration) 
+
+2-out-of-4 system 3-out-of-4 system 4-out-of-4 system 
+
+(series configuration) 
+
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Normalized cost:  (x baseline )
+> baseline
+
+increasing redundancy 
+
+Failure penalty factor ( ) = 1.5 
+
+Mobilization cost ( cmob ) = 0 
+
+A
+
+1-out-of-3 system 
+
+(parallel configuration) 
+
+2-out-of-3 system 3-out-of-3 system 
+
+(series configuration) 
+
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Normalized cost:  (x baseline )
+> baseline
+
+increasing redundancy 
+
+Failure penalty factor ( ) = 3 
+
+Mobilization cost ( cmob ) = 0 
+
+B
+
+1-out-of-2 system 
+
+(parallel configuration) 
+
+2-out-of-2 system 
+
+(series configuration) 
+
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+> DDQN
+> JAC
+> DCMAC
+> IACC-PS
+> MAPPO-PS
+> QMIX-PS
+> VDN-PS
+> IAC-PS
+> IPPO-PS
+
+increasing redundancy 
+
+Failure penalty factor ( ) = 3 
+
+Mobilization cost ( cmob ) = 0 
+
+C
+
+CTCE (POMDP) 
+
+CTCE (MPOMDP) 
+
+CTDE (Dec-POMDP) 
+
+DTDE (Dec-POMDP) 
+
+SARSOP MC mean (baseline) 
+
+SARSOP (LBound, UBound) 
+
+Heuristic mean 
+
+95% CI 
+
+mean 
+
+Figure A.14: Ablation studies . Performance of MADRL algorithms and heuristic baselines are reported relative to the (near-)optimal SARSOP baseline. The n = 4 system with κ = 3 and mobilization cost = 4 (main text, Figure 5) serves as the base case. In the following ablations, only the specified environment parameters are varied, while algorithm hyperparameters and evaluation procedures remain unchanged. Blue arrows ( ↑) indicate entries that exceed the plotted y-axis limits. Panel A : We test robustness by ablating the reward model, reducing the failure penalty factor from κ = 3 to κ = 1.5 and setting mobilization costs to 0, on the n = 4 system across all k. Panel B 
+
+We ablate the number of components by considering an n = 3 system (with κ = 3 and mobilization cost 0) across all k. Panel C We further ablate the number of components by considering an n = 2 system (with κ = 3 and mobilization cost 0) across both values of k. Results confirm consistent performance trends, showing that our findings are not limited to a specific reward model. 
+
+32 Appendix B. Value decomposition in a two-agent reliability matrix game 
+
+This appendix shows how the inductive biases of value decomposition methods a ff ect learned policies in redun-dant systems. To examine this, we consider a single-step two-agent matrix game derived from a two component reliability setting. Using the parallel and series reward matrices in Table B.5, we show the greedy joint action induced by VDN and QMIX under the individual global maximization principle. 
+
+Proposition 1 (Limitations of value factorization under redundancy). Consider a two-agent, single-step ma-trix game with agents m ∈ { 1, 2} and action sets A m = {DN , Rep .}, where DN denotes do nothing and Rep . denotes repair. Let r : A1 × A2 → R be the joint reward function, and let c 1, c2 > 0 denote the repair costs of agents 1 and 2, respectively. Let c f > 0 denote a failure penalty satisfying c f ≫ c1, c2. We assume both components are initially failed and must be repaired to avoid the failure penalty. Assume the reward matrix r (a1, a2) is instantiated as either the parallel or series configuration in Table B.5, and that actions are selected according to the individual global maximization (IGM) principle. 
+
+Agent 2 
+
+DN Rep .Agent 1 
+
+DN rDN ,DN rDN ,Rep .
+
+Rep . rRep ., DN rRep ., Rep .
+
+(a) Generic joint reward matrix Agent 2 
+
+Q2(DN ) Q2(Rep .)Agent 1 
+
+Q1(DN ) Q(DN , DN ) Q(DN , Rep .)
+
+Q1(Rep .) Q(Rep ., DN ) Q(Rep ., Rep .)(b) Value decomposition form Agent 2 
+
+DN Rep .Agent 1 
+
+DN −c f −c2
+
+Rep . −c1 −(c1 + c2)(c) Parallel system Agent 2 
+
+DN Rep .Agent 1 
+
+DN −c f −(c f + c2)
+
+Rep . −(c f + c1) −(c1 + c2)(d) Series system        
+
+> Table B.5: Two-agent matrix game used to analyze value decomposition. (a) shows a generic two-agent reward matrix. (b) shows its representation under value decomposition, where each agent chooses between doing nothing ( DN ) and repairing ( Rep .). (c) and (d) specify reward structures for parallel and series systems respectively, parameterized by repair costs c1,c2and a large failure penalty cf, under the assumption that all components are initially in a failed state. These cases highlight how redundancy alters optimal coordination and exposes limitations of value factorization methods.
+
+(a) Under linear value decomposition (VDN), Qtot (a1, a2) = Q1(a1) + Q2(a2),
+
+the induced greedy joint action is (Rep ., Rep .) in both systems. (b) Under monotonic value factorization (QMIX), Qtot (a1, a2) = f (Q1(a1), Q2(a2)) , ∂ f
+
+∂Qm
+
+≥ 0, m = 1, 2,
+
+the induced joint action ordering is identical in both systems. Consequently, both VDN and QMIX align with the optimal coordination structure of series systems, but cannot represent the optimal joint action induced by redundancy in parallel systems. 
+
+Proof 1. We prove parts (a) and (b) separately. 
+
+33 (a) Linear value decomposition (VDN) . Under VDN, the joint action-value function is approximated as Qtot (a1, a2) = Q1(a1) + Q2(a2).
+
+Since this is a single-step game, the Bellman target equals the immediate reward, and learning minimizes the squared residual over all joint actions, 
+
+LVDN =
+
+X
+
+> (a1,a2)∈A1×A2
+
+ Q1(a1) + Q2(a2) − r(a1, a2)2. (B.1) 
+
+Let qDN  
+
+> 1
+
+:= Q1(DN ), qRep . 
+
+> 1
+
+:= Q1(Rep .), qDN  
+
+> 2
+
+:= Q2(DN ), qRep . 
+
+> 2
+
+:= Q2(Rep .),
+
+and abbreviate the rewards as r i j := r(a1 = i, a2 = j) for i ∈ { DN , Rep .}, j ∈ { DN , Rep .}. Then (B.1) expands to 
+
+LVDN =  qDN  
+
+> 1
+
++ qDN  
+
+> 2
+
+− rDN ,DN 
+
+2 +  qDN  
+
+> 1
+
++ qRep . 
+
+> 2
+
+− rDN ,Rep .
+
+2
+
++  qRep . 
+
+> 1
+
++ qDN  
+
+> 2
+
+− rRep ., DN 
+
+2 +  qRep . 
+
+> 1
+
++ qRep . 
+
+> 2
+
+− rRep ., Rep .
+
+2. (B.2) 
+
+Step 1: First-order optimality conditions. At any minimizer, ∇L VDN = 0. Di ff erentiating (B.2) with respect to each variable gives 
+
+∂LVDN 
+
+∂qDN 
+
+> 1
+
+= 0 ⇐⇒ 2qDN  
+
+> 1
+
++ qDN  
+
+> 2
+
++ qRep . 
+
+> 2
+
+= rDN ,DN + rDN ,Rep ., (B.3) 
+
+∂LVDN 
+
+∂qRep .
+
+> 1
+
+= 0 ⇐⇒ 2qRep . 
+
+> 1
+
++ qDN  
+
+> 2
+
++ qRep . 
+
+> 2
+
+= rRep ., DN + rRep ., Rep ., (B.4) 
+
+∂LVDN 
+
+∂qDN 
+
+> 2
+
+= 0 ⇐⇒ qDN  
+
+> 1
+
++ qRep . 
+
+> 1
+
++ 2qDN  
+
+> 2
+
+= rDN ,DN + rRep ., DN , (B.5) 
+
+∂LVDN 
+
+∂qRep .
+
+> 2
+
+= 0 ⇐⇒ qDN  
+
+> 1
+
++ qRep . 
+
+> 1
+
++ 2qRep . 
+
+> 2
+
+= rDN ,Rep . + rRep ., Rep .. (B.6) 
+
+Step 2: Eliminate shared terms to isolate action preferences. Subtract (B.4) from (B.3) :
+
+ 2qDN  
+
+> 1
+
++ qDN  
+
+> 2
+
++ qRep .
+
+> 2
+
+ −  2qRep . 
+
+> 1
+
++ qDN  
+
+> 2
+
++ qRep .
+
+> 2
+
+ =  rDN ,DN + rDN ,Rep .
+
+ −  rRep ., DN + rRep ., Rep .
+
+,
+
+2 qDN  
+
+> 1
+
+− qRep .
+
+> 1
+
+ = rDN ,DN + rDN ,Rep . − rRep ., DN − rRep ., Rep .,
+
+qDN  
+
+> 1
+
+− qRep . 
+
+> 1
+
+= rDN ,DN + rDN ,Rep . − rRep ., DN − rRep ., Rep .
+
+2 . (B.7) 
+
+Similarly, subtract (B.6) from (B.5) :
+
+ qDN  
+
+> 1
+
++ qRep . 
+
+> 1
+
++ 2qDN 
+
+> 2
+
+ −  qDN  
+
+> 1
+
++ qRep . 
+
+> 1
+
++ 2qRep .
+
+> 2
+
+ =  rDN ,DN + rRep ., DN 
+
+ −  rDN ,Rep . + rRep ., Rep .
+
+,
+
+2 qDN  
+
+> 2
+
+− qRep .
+
+> 2
+
+ = rDN ,DN + rRep ., DN − rDN ,Rep . − rRep ., Rep .,
+
+qDN  
+
+> 2
+
+− qRep . 
+
+> 2
+
+= rDN ,DN + rRep ., DN − rDN ,Rep . − rRep ., Rep .
+
+2 . (B.8) 
+
+Steps 3: Parallel and series systems. We now evaluate the expressions (B.7) –(B.8) for both the parallel and series reward structures. Observe first that in both systems the failure penalty satisfies rDN ,DN = −c f , rRep ., Rep . = −(c1 + c2),
+
+34 and, crucially, the di ff erence between asymmetric joint rewards is identical: rRep ., DN − rDN ,Rep . =
+
+
+
+(−c1) − (−c2) = c2 − c1, (parallel) ,
+
+ −(c f + c1) −  −(c f + c2) = c2 − c1, (series) . (B.9) 
+
+As a consequence, the right-hand sides of (B.7) –(B.8) coincide for the two systems. Substituting either reward structure yields qDN  
+
+> 1
+
+− qRep . 
+
+> 1
+
+= rDN ,DN + rDN ,Rep . − rRep ., DN − rRep ., Rep .
+
+2 = c1 − c f
+
+2 , (B.10) 
+
+qDN  
+
+> 2
+
+− qRep . 
+
+> 2
+
+= rDN ,DN + rRep ., DN − rDN ,Rep . − rRep ., Rep .
+
+2 = c2 − c f
+
+2 . (B.11) 
+
+Equivalently, qRep . 
+
+> 1
+
+− qDN  
+
+> 1
+
+= c f
+
+2 − c1 > 0, qRep . 
+
+> 2
+
+− qDN  
+
+> 2
+
+= c f
+
+2 − c2 > 0,
+
+where the inequalities follow from the assumption c f ≫ c1, c2. Thus, under the IGM principle, both agents strictly prefer action Rep ., and the greedy joint action is (Rep ., Rep .) in both the parallel and series systems. This joint action is optimal in the series system but suboptimal in the parallel system, where repairing only one component avoids failure. (b) Monotonic value factorization (QMIX) . QMIX assumes that the joint action–value function factorizes as Qtot (a1, a2) = f (Q1(a1), Q2(a2)) , ∂ f
+
+∂Qm
+
+≥ 0, m = 1, 2, (B.12) 
+
+so that Q tot is monotone in each agent’s individual utility. 
+
+Step 1: Consequence of monotonicity. Fix any action a 2 ∈ A2 of agent 2. If agent 1 prefers action a 1 over a ′
+
+> 1
+
+, i.e., Q1(a1) ≥ Q1(a′
+
+> 1
+
+), (B.13) 
+
+then monotonicity of f implies Qtot (a1, a2) = f (Q1(a1), Q2(a2)) ≥ f (Q1(a′
+
+> 1
+
+), Q2(a2)) = Qtot (a′
+
+> 1
+
+, a2). (B.14) 
+
+Since a 2 was arbitrary, the ordering induced by Q 1 over {DN , Rep .} must hold for every action of agent 2 . An analogous argument applies symmetrically to agent 2. 
+
+Interpretation: under QMIX, each agent’s local action ranking must be globally consistent across all joint actions. 
+
+Step 2: Series system. In a series system, system failure is avoided only if both components are repaired. Hence the optimal joint action is (Rep ., Rep .), which requires Q1(Rep .) > Q1(DN ), Q2(Rep .) > Q2(DN ). (B.15) 
+
+Substituting (B.15) into (B.14) implies Qtot (Rep ., Rep .) ≥ Qtot (DN , Rep .), Qtot (Rep ., Rep .) ≥ Qtot (Rep ., DN ),
+
+and therefore Qtot (Rep ., Rep .) ≥ Qtot (a1, a2) for all (a1, a2) , (Rep ., Rep .).
+
+Thus, QMIX can represent the optimal policy in the series system. 
+
+35 Step 3: Parallel system. In a parallel system, repairing both components is unnecessary and suboptimal; the optimal joint action repairs only the cheaper component , i.e., either (Rep ., DN ) or (DN , Rep .). However, monotonicity enforces a fixed ordering: if Q 1(Rep .) > Q1(DN ), then (Rep ., ·) must be ranked above (DN , ·) for all actions of agent 2. Consequently, (Rep ., Rep .) must be ranked above (DN , Rep .), contradicting the optimal ordering in the parallel system. Therefore, monotonic value factorization aligns naturally with the series system rewards but cannot represent the optimal joint action induced by redundancy in a parallel system. 
+
+36

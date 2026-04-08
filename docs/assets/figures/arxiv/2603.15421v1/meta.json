@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-001.webp",
+      "caption": "Table 1: Overall results on LoCoMo, HotpotQA, and BioASQ across three backbone models. Best results are marked in bold, 2nd-best results are marked in underline.",
+      "page": 6,
+      "index": 1,
+      "width": 835,
+      "height": 554
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-002.webp",
+      "caption": "Table 11: Comparison of generated responses For the query “Which two mystery novels does Tim particularly enjoy writing about?”, only CLAG correctly identifies the two titles mentioned in the dialogue.",
+      "page": 15,
+      "index": 2,
+      "width": 458,
+      "height": 322
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-003.webp",
+      "caption": "Table 8: Hyperparameters used in our CLAG implementation. Unless stated otherwise, all experiments use the values shown above.",
+      "page": 15,
+      "index": 3,
+      "width": 950,
+      "height": 205
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-004.webp",
+      "caption": "Figure 1: Conceptual comparison between existing global memory systems and CLAG. (Left) Traditional approaches manage memories in a single global pool, where topic-mixed updates and retrieval lead to high interference and noise accumulation. (Right) CLAG employs agent-driven clustering to organize memories into semantically coherent neighborhoods. By confining evolution and retrieval to these local clusters, our framework significantly reduces cross-topic interference and enhances memory stability.",
+      "page": 2,
+      "index": 4,
+      "width": 854,
+      "height": 472
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-005.webp",
+      "caption": "Table 3: Detailed experimental results on the LoCoMo dataset across five categories. Results are reported in F1 and BLEU-1 (%). Best results are marked in bold, 2nd-best results are marked in underline.",
+      "page": 7,
+      "index": 5,
+      "width": 902,
+      "height": 508
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-006.webp",
+      "caption": "Table 15: Detailed experimental results on LoCoMo, HotpotQA, and BioASQ: BERT-F1 and METEOR scores. Best results are marked in bold, 2nd-best results are marked in underline.",
+      "page": 18,
+      "index": 6,
+      "width": 902,
+      "height": 473
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-007.webp",
+      "caption": "Table 6: Results on the stronger backbone Qwen3-8B. CLAG remains competitive as model scale increases, achieving the best results on LoCoMo and HotpotQA and the best BLEU-1 on BioASQ. Best results are marked in bold, and second-best results are marked in underline.",
+      "page": 13,
+      "index": 7,
+      "width": 683,
+      "height": 223
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-008.webp",
+      "caption": "Table 4: Retrieval performance analysis across three datasets (Backbone: Qwen3-0.6B). Metrics include Evidence Precision (E-Prec), Recall (E-Recall), F1 (E-F1), Recall at k (R@k), and nDCG@10. Best results are marked in bold, 2nd-best results are marked in underline.",
+      "page": 8,
+      "index": 8,
+      "width": 779,
+      "height": 306
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-009.webp",
+      "caption": "Figure 2: Overview of the proposed CLAG framework. Left: Agentic Routing. An SLM router assigns each incoming memory note mnew to the most relevant cluster using semantic metadata, and updates the corresponding cluster profile P . Middle: Localized Evolution. An evolution agent performs consolidation (e.g., linking, rewriting, strengthening) within the routed cluster to maintain topic-consistent neighborhoods and reduce cross-topic interference. Right: Two-Stage Retrieval. Given a query, CLAG first filters clusters using profile-based selection (Stage 1), then retrieves fine-grained memories only inside the selected clusters (Stage 2), reducing the effective search space and suppressing retrieval noise.",
+      "page": 4,
+      "index": 9,
+      "width": 919,
+      "height": 475
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-010.webp",
+      "caption": "Table 16: Retrieval-quality comparison with GAM and MemoryOS. Best results are marked in bold, and second-best results are marked in underline.",
+      "page": 19,
+      "index": 10,
+      "width": 929,
+      "height": 628
+    },
+    {
+      "url": "assets/figures/arxiv/2603.15421v1/fig-011.webp",
+      "caption": "Table 13: Failure taxonomy for CLAG.",
+      "page": 17,
+      "index": 11,
+      "width": 961,
+      "height": 195
+    }
+  ]
+}

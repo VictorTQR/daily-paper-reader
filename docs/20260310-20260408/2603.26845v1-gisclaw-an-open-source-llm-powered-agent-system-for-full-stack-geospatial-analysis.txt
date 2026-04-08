@@ -1,0 +1,523 @@
+Title: GISclaw: An Open-Source LLM-Powered Agent System for Full-Stack Geospatial Analysis
+
+URL Source: https://arxiv.org/pdf/2603.26845v1
+
+Published Time: Tue, 31 Mar 2026 00:21:24 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# Highlights 
+
+## GISclaw: An Open-Source LLM-Powered Agent System for Full-Stack Geospatial Analysis 
+
+Jinzhen Han, JinByeong Lee, Yuri Shim, Jisung Kim, Jae-Joon Lee 
+
+• An open-source LLM-powered agent system supporting full-stack (vector, raster, tabular) geospatial analysis 
+
+• Systematic comparison of 6 LLMs × 2 architectures across 600 experiment runs achieving up to 96% task success 
+
+• Multi-agent architecture degrades strong models but marginally benefits weak ones—architectural complexity should match model capability 
+
+• A three-layer evaluation protocol addressing the functional equivalence problem in GIS code assessment 
+
+> arXiv:2603.26845v1 [cs.SE] 27 Mar 2026
+
+# GISclaw: An Open-Source LLM-Powered Agent System for Full-Stack Geospatial Analysis 
+
+## Jinzhen Han a, JinByeong Lee a, Yuri Shim b, Jisung Kim c,∗ and Jae-Joon Lee d,∗∗ 
+
+> a
+
+Department of Civil, Architectural & Environment Engineering, Sungkyunkwan University, Suwon, South Korea 
+
+> b
+
+Ministry of the Interior and Safety, South Korea 
+
+> c
+
+School of Geography, University of Leeds, United Kingdom 
+
+> d
+
+Department of Fire Safety Engineering, Jeonju University, Jeonju-si, Republic of Korea 
+
+A R T I C L E I N F O 
+
+Keywords :GIS agent system Large language models Geospatial analysis automation Multi-agent architecture Code generation Open-source 
+
+A B S T R A C T 
+
+The convergence of Large Language Models (LLMs) and Geographic Information Science has opened new avenues for automating complex geospatial analysis. However, existing LLM-powered GIS agents are constrained by limited data-type coverage (vector-only), reliance on proprietary GIS platforms, and single-model architectures that preclude systematic comparisons. We present GISclaw, an open-source agent system that integrates an LLM reasoning core with a persistent Python sandbox, a comprehensive suite of open-source GIS libraries (GeoPandas, rasterio, scipy, scikit-learn), and a web-based interactive interface for full-stack geospatial analysis spanning vector, raster, and tabular data. GISclaw implements two pluggable agent architectures—a Single Agent ReAct loop and a Dual Agent Plan-Execute-Replan pipeline—and supports six heterogeneous LLM backends ranging from cloud-hosted flagship models (GPT-5.4) to locally deployed 14B models on consumer GPUs. Through three key engineering innovations—Schema Analysis bridging the task–data information gap, Domain Knowledge injection for domain-specific workflows, and an Error Memory mechanism for intelligent self-correction—GISclaw achieves up to 96% task success on the 50-task G EO ANALYST BENCH 
+
+benchmark. Systematic evaluation across 600 model–architecture–task combinations reveals that the Dual Agent architecture consistently degrades strong models while providing marginal gains for weaker ones. We further propose a three-layer evaluation protocol incorporating code structure analysis, reasoning process assessment, and type-specific output verification for comprehensive GIS agent assessment. The system and all evaluation code are publicly available. 
+
+## 1. Introduction 
+
+Geographic Information Systems (GIS) underpin spatial decision-making in domains ranging from urban planning and environmental monitoring to disaster response and pub-lic health (SUN et al., 2025). Modern geospatial analysis de-mands proficiency across multiple data modalities—vector geometries for boundaries and infrastructure, raster grids for satellite imagery and elevation models, and tabular attributes for census and sensor data—using specialized toolchains such as ArcGIS, QGIS, and programmatic libraries includ-ing GeoPandas, rasterio, and scipy. This steep technical bar-rier limits accessibility for domain scientists who understand 
+
+what analysis is needed but lack the programming skills to implement how , creating a persistent bottleneck between geospatial questions and actionable answers. The rapid advancement of Large Language Models (LLMs) with strong code generation and reasoning ca-pabilities has opened a promising pathway to bridge this gap through autonomous GIS agents —systems that trans-late natural-language instructions into executable spatial analysis workflows (Li et al., 2025). Li and Ning (2023) formalized this vision as “Autonomous GIS,” demonstrating that GPT-4 could generate and execute spatial analysis code with approximately 80% success. Subsequent systems 
+
+> ∗
+
+Corresponding author 
+
+> ∗∗
+
+Corresponding author 
+
+> ORCID
+
+(s): 
+
+advanced different axes of this vision: GIS Copilot (Akin-boyewa et al., 2025) integrates LLM-guided tool selection within QGIS (86% success on 110 tasks); GeoGPT (Zhang et al., 2023) integrates GPT-3.5 with a GIS tool pool for autonomous spatial data collection and analysis; GeoJ-SON Agents (Luo et al., 2026) compare code-generation vs. function-calling paradigms (97% on 70 tasks); Geo-Colab (Wu et al., 2025) introduces a three-role multi-agent framework with RAG (+7–26% over single-agent baselines); and GTChain (Zhang et al., 2025b) fine-tunes LLaMA-2-7B on synthetic tool-use chains. On the eval-uation side, G EO ANALYST BENCH (Zhang et al., 2025a) provides the most comprehensive GIS benchmark to date (50 expert tasks), complemented by GeoBenchX (Krechetova and Kochedykov, 2025) for multi-step geospatial reasoning and cloud-based benchmarks (Cardille et al., 2025), while metrics research has produced CodeBLEU (Ren et al., 2020), LLM-as-a-Judge (Zheng et al., 2023), and embedding-based similarity (Reimers and Gurevych, 2019)—each capturing complementary aspects of agent quality. Despite these advances, three critical limitations persist across existing systems, all rooted in system design rather than model capability: 
+
+(1) Narrow data-type coverage. Although some sys-tems incorporate basic raster support (e.g., GIS Copilot via QGIS raster tools, GTChain via Kriging/density operators), none provides an integrated workflow that spans vector overlays, raster interpolation, spectral index computation, 
+
+Han et al.: Preprint submitted to Elsevier Page 1 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+and machine learning (clustering, classification) within a single agent execution. 
+
+(2) Platform dependency and limited model diversity. 
+
+Most systems are tightly coupled to a single LLM (typically GPT-4) and often depend on proprietary GIS platforms (Li and Ning, 2023; Akinboyewa et al., 2025). This coupling prevents systematic comparison across model families and precludes deployment in air-gapped or resource-constrained environments where API access is unavailable. 
+
+(3) Fragmented evaluation methodology. Existing metrics— binary task success, CodeBLEU, or single-dimension LLM judging—each capture only one facet of agent quality (Hou et al., 2025; Gramacki et al., 2024), and no prior work unifies them into a coherent multi-layer protocol. The func-tional equivalence problem in GIS code—where a buffer analysis can be correctly implemented via gpd.overlay() ,
+
+> shapely.buffer()
+
+, or gpd.sjoin() , all producing identical outputs—further renders lexical metrics unreliable. To address these system-level gaps, we present GISclaw, an open-source LLM-powered agent system designed for 
+
+full-stack geospatial analysis. GISclaw integrates a persis-tent Python sandbox with comprehensive open-source GIS libraries, three engineered prompt rules that bridge the infor-mation gap between task descriptions and data realities, and two pluggable agent architectures that can be paired with any LLM backend—from cloud APIs to fully offline 14B models on consumer GPUs. Our contributions are as follows: 
+
+• Full-stack, model-agnostic agent system. We design and implement GISclaw, an end-to-end agent system supporting vector, raster, and tabular geospatial anal-ysis through a persistent Python sandbox, pre-loaded open-source GIS libraries, and three domain-specific prompt engineering rules (Schema Analysis, Pack-age Constraint, Domain Knowledge Injection). Unlike prior systems tied to specific platforms or models, GISclaw supports six heterogeneous LLM backends, enabling deployment ranging from cloud APIs to fully offline 14B models on consumer hardware. 
+
+• Architecture–capability matching principle. Through controlled comparison of Single Agent (ReAct) and Dual Agent (Plan-Execute-Replan) architectures within identical infrastructure, we establish that architec-tural complexity should be inversely proportional to model capability —multi-agent overhead degrades strong models while providing marginal benefits only for weaker ones. 
+
+• Three-layer evaluation protocol. We propose a uni-fied evaluation protocol combining code structure analysis (CodeBLEU + API Operation F1), reasoning process assessment (embedding similarity + LLM-as-Judge), and type-specific output verification, ad-dressing the fragmentation of existing single-metric approaches. 
+
+• Empirical design lessons from 600 experiments. 
+
+Systematic evaluation on G EO ANALYST BENCH (Zhang et al., 2025a) across 600 model–architecture–task combinations yields actionable engineering insights: infrastructure-level fixes (data pathing, API state man-agement) improve task success by 400% on interme-diate tasks; code-specialized fine-tuning outperforms raw parameter scaling; and cost-effective open-source models achieve parity with flagship APIs at substan-tially lower cost. Table 1 summarizes how GISclaw compares with ex-isting GIS agent systems. The remainder of this paper is organized as follows: Section 2 details the system architec-ture and methodology; Section 3 introduces the evaluation framework and benchmark; Section 4 presents experimental results and design analysis; Section 5 concludes with future directions. 
+
+## 2. Methodology 
+
+GISclaw is designed around three principles: (1) Plat-form independence : no dependency on proprietary GIS soft-ware, relying exclusively on open-source Python libraries; (2) Model agnosticism : a pluggable LLM interface support-ing cloud APIs and locally deployed models with identi-cal workflows; (3) Domain-aware prompting : engineered prompt rules that inject GIS-specific knowledge to compen-sate for LLMs’ limited geospatial training data. Fig. 1 illustrates the overall system design. 
+
+2.1. System Design 
+
+A fundamental design decision in GISclaw is its com-plete independence from proprietary GIS platforms .Unlike systems that embed LLMs within existing GIS software— e.g. , GIS Copilot (Akinboyewa et al., 2025) couples with QGIS processing tools, and GeoGPT (Zhang et al., 2023) relies on an external GIS tool pool—GISclaw constructs its analytical capabilities entirely from open-source Python libraries. This design choice is motivated by the observation that platform-dependent agents inherit the limitations and licensing constraints of their host soft-ware, restricting reproducibility and deployment flexibility. Moreover, pilot experiments with non-agent, single-pass LLM code generation revealed critical deficiencies—models frequently produced syntactically valid but semantically incorrect GIS code ( e.g. , wrong CRS transforms, inverted raster band indices) that could not self-correct without iterative execution feedback, confirming the necessity of an agent-based architecture with sandbox integration. By building on a self-contained Python ecosystem (Table 2), GISclaw ensures that any analysis expressible in Python— from basic vector overlays to machine learning-based spa-tial prediction—can be executed without external software dependencies. The execution core of GISclaw is a persistent Python sandbox that provides an interactive, Jupyter-like environ-ment where variables and imported libraries persist across execution rounds within a single task. Unlike stateless code-generation approaches that execute monolithic scripts, the   
+
+> Han et al.: Preprint submitted to Elsevier Page 2 of 12
+
+GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+Table 1 
+
+Comparison of GISclaw with existing LLM-powered GIS agent systems.                                                 
+
+> System Data Types Models Architectures Open-Source Tasks Best Success
+> LLM-Geo (Li and Ning, 2023) Vector 1 (GPT-4) Single ✓Case study ∼80% GIS Copilot (Akinboyewa et al., 2025) Vector+Raster 2 (GPT-4/3.5) Single ✓110 86.4% GeoGPT (Zhang et al., 2023) Vector 1 (GPT-3.5) Single No Case study —GeoJSON Agents (Luo et al., 2026) GeoJSON Multiple Multi (2-role) No 70 97.1% GeoColab (Wu et al., 2025) Vector 7Multi (3-role) ✓50 +26.1% GTChain (Zhang et al., 2025b) Vector+Raster 2 (LLaMA/GPT-4) Single (Fine-tuned) ✓Custom +32.5% ‡
+> GISclaw (ours) Vec+Ras+Tab 6SA + DA ✓50 96%
+> ‡Relative improvement over GPT-4 on the GTChain benchmark, not an absolute success rate.
+
+Figure 1: Overview of the GISclaw system architecture. The system accepts natural-language tasks with GIS data (vector, raster, tabular) as input, routes them through a pluggable LLM backend, and executes analysis in a persistent Python sandbox. Two agent architectures—Single Agent (ReAct) and Dual Agent (Plan-Execute-Replan)—are supported, with outputs evaluated via a three-layer protocol. 
+
+sandbox enables the agent to execute incremental code snip-pets, inspect intermediate results, and iteratively refine its approach—a capability critical for exploratory GIS work-flows where each analytical step depends on the results of the previous one. The sandbox pre-loads a comprehensive GIS library stack (GeoPandas, rasterio, numpy, scipy, matplotlib, shapely, scikit-learn) upon initialization, eliminating common ImportError 
+
+failures. A key design choice is an asymmetric output truncation policy : standard output is truncated from the 
+
+front (preserving the most recent data inspection results), while error output is truncated from the tail (preserving the root-cause error message). This strategy is informed by the observation that GIS agents primarily need the latest in-termediate results for decision-making, whereas debugging requires the original error traceback. The sandbox further tracks new variables created in each execution round and enforces a 10-minute per-task timeout to prevent runaway computations. Table 3 summarizes the key design features of the sandbox and their rationale. A central design goal of GISclaw is model agnosti-cism . The system abstracts all LLM interaction through a unified LLMEngine interface, decoupling the agent logic from any specific model provider. This interface supports cloud-hosted APIs, locally served open-weight models, and even quantized models running on a single consumer GPU, enabling deployment scenarios ranging from full cloud to fully air-gapped environments. In practice, we found that different model families exhibit substantial variation in out-put formatting conventions— e.g. , some models wrap code in markdown fences while others emit raw code, and reasoning-specialized models allocate internal “thinking tokens” that 
+
+Han et al.: Preprint submitted to Elsevier Page 3 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis                           
+
+> Table 2
+> Pre-loaded open-source library stack organized by analytical capability. This ecosystem replaces the need for proprietary GIS platforms.
+> Category Libraries Capabilities
+> Vector GeoPandas, shapely, fiona, pyproj Spatial joins, buffer, overlay, CRS transforms Raster rasterio, xarray, rasterstats Band algebra, interpo-lation, zonal statistics Analysis scipy, scikit-learn, libpysal Kriging, clustering, re-gression, spatial auto-correlation Visualization matplotlib, seaborn, geoplot, cartopy Choropleth, heatmaps, multi-panel cartography
+> Table 3
+> Key design features of the persistent Python sandbox.
+> Feature Design Rationale
+> State persistence Variables and imports survive across rounds, enabling incremental exploratory analysis Asymmetric truncation stdout: front-truncated (latest results); stderr: tail-truncated (root-cause er-ror) Variable track-ing New variables logged per round, pro-viding the agent with execution con-text 10-min timeout Prevents runaway computations ( e.g. ,large-scale Kriging on consumer GPUs)
+
+reduce the effective output budget. GISclaw addresses these incompatibilities through provider-specific adapters within the unified interface, allowing any conforming LLM back-end to be plugged in without modifying the agent logic. 
+
+2.2. Domain-Specific Prompt Engineering 
+
+Through iterative development and failure analysis, we identified three prompt engineering rules that are critical for reliable GIS agent performance. The first rule, Schema Analysis , addresses a fundamen-tal information gap between task descriptions and actual data schemas. GIS datasets frequently use abbreviated or domain-specific column names ( e.g. , “ACSHHBPOV” for poverty rate) that LLMs cannot infer from task descriptions alone. To bridge this gap, the system prompt mandates that the agent’s first action must be a data inspection step— printing column names, data types, coordinate reference systems, and sample rows—before generating any analytical code. In ablation experiments, this single rule eliminated column-name guessing errors and significantly improved output quality for the locally deployed 14B model. The second rule, Package Constraint , prevents the agent from generating code that depends on proprietary or unavailable libraries. LLMs trained on GIS corpora frequently produce arcpy code (requiring an ArcGIS license) or reference packages not installed in the sandbox ( e.g. ,
+
+> pykrige
+
+, skimage ). The prompt explicitly redirects the agent to open-source equivalents such as geopandas , rasterio , and 
+
+> scipy.interpolate
+
+.The third rule, High-level Workflow & Domain Knowl-edge Injection , supplies task-specific procedural knowledge that lies beyond the LLM’s parametric capabilities. As noted in the Introduction, domain scientists often understand the logical steps required to solve a problem ( what analysis to perform) but lack the programming proficiency to handle complex spatial data formats ( how to code it). GISclaw accepts a user-provided high-level workflow or domain knowledge as an optional input field and injects it directly into the agent prompt. This positions the Agent as a faithful executor, empowering the human expert to guide the analyt-ical direction while the Agent bridges the implementation gap from conceptual steps to specific GIS library function calls, mitigating step omissions or hallucinations caused by relying solely on the LLM’s intrinsic knowledge. Fig. 1 illustrates a simplified excerpt of the system prompt, showing how these three rules are operationalized. 
+
+2.3. Agent Architectures 
+
+GISclaw implements two pluggable agent architectures that operate on the same sandbox and prompt infrastructure, enabling controlled comparison of their effectiveness across different model capabilities. Fig. 2 illustrates the two archi-tectures. 
+
+Single Agent (SA) follows the ReAct (Yao et al., 2022) paradigm, iteratively generating Thought (natural-language reasoning), Action (Python code for the sandbox), and re-ceiving Observation (execution output or error messages). An ErrorMemory module records error patterns encountered across rounds, preventing the agent from repeating failed ap-proaches and promoting progressive refinement. The agent accumulates all generated code into a consolidated script upon task completion. 
+
+Dual Agent (DA) adopts a Plan-Execute-Replan pipeline with explicit task decomposition. A Planner receives the task instruction, domain knowledge, and data schema (ob-tained via Schema Analysis), then decomposes the task into 3–7 ordered analytical steps. A Worker executes each step within the shared persistent sandbox, with up to 10 self-correction rounds per step. When the Worker fails on a step, the Planner is re-invoked as a Replanner with the failure context to generate a simplified alternative plan that avoids the failed operations; up to 2 replanning cycles are permitted. Both roles share the same underlying LLM and sandbox namespace, ensuring information continuity. Notably, the Replanner is not a separate module but the same Planner invoked with failure-aware context—this keeps the architecture lightweight while enabling adaptive recovery.   
+
+> Han et al.: Preprint submitted to Elsevier Page 4 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis
+
+## 3. Evaluation Framework and Benchmark 
+
+3.1. Benchmark Dataset 
+
+We evaluate GISclaw on G EO ANALYST BENCH (Zhang et al., 2025a), the most comprehensive publicly available benchmark for GIS agent systems. G EO ANALYST BENCH 
+
+comprises 50 expert-designed tasks organized into six an-alytical categories (Table 4), spanning three data modalities (vector, raster, tabular) with an average of 5.8 workflow steps per task. Each task is modeled after a real-world GIS analysis scenario—including flood risk assessment, mineral prospec-tivity mapping, urban heat island analysis, and wildlife cor-ridor optimization—requiring multi-step spatial reasoning, cross-format data integration, and domain-specific parame-ter calibration. This design prioritizes analytical depth over task count: the 50 tasks collectively cover the full spectrum of geospatial operations (overlay, buffer, interpolation, raster algebra, machine learning, network analysis) at a complexity level representative of professional GIS workflows, making the benchmark a rigorous testbed for agent capability despite its moderate size. Across all evaluation experiments, we uniformly inject the “Human Designed Workflow” provided by the benchmark as domain knowledge (see Section 2.2) di-rectly into the evaluation prompt. This setup not only ensures fair comparability among models under identical problem-solving logic but also effectively isolates the vast variance introduced by unconstrained free exploration, thereby truly reflecting the Agent’s ability to comprehend and execute precise professional instructions. 
+
+Gold standard adaptation. A critical contribution of our work is the systematic adaptation of G EO ANALYST -BENCH ’s gold-standard solutions. The original benchmark provides expert-authored reference code written in ArcPy— a Python API tightly coupled with the proprietary ArcGIS platform. Since GISclaw operates entirely on open-source libraries, we manually rewrote all 50 gold-standard solutions using the open-source GIS ecosystem (GeoPandas, rasterio, scipy, scikit-learn), ensuring functional equivalence while eliminating proprietary dependencies. These rewritten solu-tions serve as the reference for all evaluation layers (L1–L3). 
+
+3.2. LLM Backends 
+
+To validate model agnosticism, we evaluate GISclaw with six heterogeneous LLM backends spanning cloud APIs and local deployments (Table 5). Cloud models include two OpenAI models (GPT-5.4 and GPT-4.1), DeepSeek-V3.2 (a cost-effective alternative at significantly lower price), and Google’s Gemini-3-Flash. For offline deployment, we test Llama-3.3-70B on a multi-GPU server and Qwen2.5-Coder-14B on a single consumer RTX 3090 GPU. This selec-tion covers the spectrum from flagship reasoning models to lightweight code-specialized models, enabling systematic comparison of how model capability interacts with system design.                                        
+
+> Table 4
+> GeoAnalystBench task categories with representative ex-amples. Each task includes natural-language instructions, heterogeneous input data, optional domain knowledge, and expert-authored gold-standard code.
+> Category 𝑁 Representative Task
+> Understanding spatial distributions 19 T1: Urban heat island & elderly risk mapping via Kriging interpo-lation Making predictions 8T20: Mineral deposit prediction using Random Forest with raster features Detecting patterns 7T42: Airbnb price clustering via local Moran’s I spatial autocorre-lation Measuring shape & distribution 7T36: Vegetation change detec-tion using SAVI spectral index Determining spa-tial relationships 6T38: Travel-time isochrone com-putation on road networks Optimal locations & paths 3T32: Wildlife corridor optimiza-tion via weighted cost-surface overlay
+> Table 5
+> LLM backends evaluated. Cost is per million tokens (input/out-put). Open-weight models are deployed on local servers at zero marginal cost.
+> Model Backend Cost ($/M) Context
+> Cloud API (pay-per-use)
+> GPT-5.4 OpenAI 2.50 / 15.00 1M GPT-4.1 OpenAI 2.00 / 8.00 1M DeepSeek-V3.2 DeepSeek 0.28 / 0.42 128K Gemini-3-Flash Google AI 0.50 / 3.00 1M
+> Local deployment (zero marginal cost)
+> Llama-3.3-70B Local server Free 128K Qwen2.5-14B Local GPU Free 32K
+
+3.3. Multi-Layer Evaluation Protocol 
+
+To comprehensively assess agent performance beyond binary success rates, we propose a multi-layer evalua-tion protocol that captures complementary aspects of agent quality—from surface-level code fidelity to deep reasoning process and final output correctness (Fig. 3). Individual layer scores are combined into a composite score: 
+
+𝑆 comp = 0 .4⋅𝑅 succ +0 .3⋅𝑄 out +0 .15 ⋅𝐹 api +0 .15 ⋅𝐶 emb (1) where 𝑄 out averages only over successful tasks to avoid double-penalizing failures already captured by 𝑅 succ .
+
+L1: Code Structure. We evaluate syntactic and struc-tural similarity between generated and gold code using four metrics. BLEU-4 (Papineni et al., 2002) computes geometric-mean 𝑛 -gram precision ( 𝑛 = 1…4 ) with brevity   
+
+> Han et al.: Preprint submitted to Elsevier Page 5 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis
+
+penalty: BLEU-4 = BP ⋅ exp 
+
+( 14
+
+∑4 
+
+> 𝑛 =1
+
+log 𝑝 𝑛 
+
+)
+
+(2) where 𝑝 𝑛 denotes clipped 𝑛 -gram precision and BP =min(1 , 𝑒 1− |𝑟 |∕|𝑐 |). ROUGE-L measures the longest common subsequence (LCS): 
+
+𝑅 lcs = |LCS ||𝑟 | , 𝑃 lcs = |LCS ||𝑐 | , 𝐹 lcs = 2𝑅 lcs 𝑃 lcs 
+
+> 𝑅 lcs +𝑃 lcs
+
+(3) 
+
+CodeBLEU (Ren et al., 2020) extends BLEU with code-aware components: CodeBLEU = 14
+
+(𝛼 ngram + 𝛼 wt + 𝛼 syn + 𝛼 df 
+
+) (4) where 𝛼 ngram is standard BLEU-4, 𝛼 wt is keyword-weighted 
+
+𝑛 -gram match (Python keywords receive double weight), 
+
+𝛼 syn is AST subtree match F1, and 𝛼 df is data-flow match F1 based on variable define–use chains. We additionally compute Edit Similarity as 1 − 𝑑 Lev ∕ max( |𝑟 |, |𝑐 |).Critically, we introduce API Operation F1 : extracting GIS-specific operations ( e.g. , spatial_join , buffer , overlay ,
+
+> kriging
+
+) from both generated and reference code via pattern matching, and computing set-level precision, recall, and F1. This metric is robust to the functional equivalence problem, where semantically correct implementations share minimal lexical overlap. 
+
+L2: Reasoning Process. This layer evaluates whether the agent’s analytical reasoning process aligns with expert expectations, using two complementary methods. First, we encode cleaned execution logs and gold references using OpenAI’s text-embedding-3-large model (3072-d) and com-pute cosine similarity: 
+
+𝐶 emb = 𝐞 agent ⋅ 𝐞 gold 
+
+‖𝐞 agent ‖ ⋅ ‖𝐞 gold ‖ (5) This provides a continuous, reference-aligned measure of process quality. Second, we employ an LLM-as-Judge pro-tocol (Zheng et al., 2023): GPT-4o—deliberately excluded from the set of evaluated models to avoid self-assessment bias—scores each execution log on five dimensions (1–5 scale): (i) Task Understanding : correct interpretation and planning; (ii) Data Handling : loading, CRS management, format handling; (iii) Methodology : appropriateness of GIS analysis methods; (iv) Self-Correction : error detection and recovery efficiency; (v) Result Completeness : completeness of final deliverables. The judge receives the task instruc-tion, expert-authored gold code, and the complete execution log, producing per-dimension scores with natural-language justifications. This dual assessment captures both statistical process alignment (embedding) and nuanced qualitative rea-soning evaluation (LLM-as-Judge). Of the two, only 𝐶 emb 
+
+enters the composite score (Eq. 1); the LLM-as-Judge scores serve as a qualitative diagnostic tool for the case-study analysis in Section 4. 
+
+L3: Output Accuracy. Generated outputs are evaluated against gold standards using type-specific methods tailored to the heterogeneous output formats of GIS tasks: 
+
+Visualization outputs (PNG): GPT-4o vision receives both the gold and agent images alongside the task instruc-tion, scoring five cartographic dimensions: Task Comple-tion, Spatial Accuracy, Visual Readability, Cartographic Quality, and Data Integrity (each 1–5), explicitly accepting alternative-but-correct visualization styles. 
+
+Raster outputs (GeoTIFF): evaluated programmatically via CRS match, shape match, pixel-level Pearson correla-tion, and mean relative error against the gold raster, yielding a weighted composite: 𝑠 raster = 0 .2 ⋅ 1shape + 0 .2 ⋅ 1CRS +0.3 ⋅ 𝑓 (𝜌 ) + 0 .3 ⋅ 𝑔 (MRE ), where 𝑓 and 𝑔 are piecewise thresholding functions. 
+
+Tabular outputs (CSV): assessed through column over-lap ratio, row-count match, and average Pearson correlation across shared numeric columns. 
+
+Vector outputs (Shapefile, GeoJSON, GeoPackage): com-pared via feature count match, CRS consistency, and column overlap ratio against the gold reference. All type-specific scores are normalized to [0 , 1] (vision scores are divided by the maximum scale of 5) and averaged across output files to yield a per-task output accuracy score 
+
+𝑄 out .
+
+## 4. Experimental Results and Analysis 
+
+We evaluate GISclaw across all 6 LLM backends (Sec-tion 3.2) × 2 architectures (SA, DA) = 600 experiment runs on G EO ANALYST BENCH . Each task is allocated a 10-minute timeout and a maximum of 50 interaction rounds. The sandbox environment runs Ubuntu with Python 3.12 and the pre-loaded GIS library stack described in Section 2.1. Table 6 presents the comprehensive evaluation results. DeepSeek-V3.2 achieves the highest SA composite score (0.759) with a striking 96% success rate at only $0.50 total cost, while GPT-5.4 leads DA mode (0.685, 88% success) at significantly higher cost. Notably, Qwen-14B and Llama-70B are the only models where DA marginally outperforms SA, validating the principle that architectural complexity should be inversely proportional to model capability . The following subsections analyze each evaluation layer in detail. 
+
+4.1. Quantitative Evaluation Results 
+
+4.1.1. Task success rate and architecture comparison 
+
+Fig. 4 visualizes the SA–DA gap across all models. Strong models suffer general degradation in DA mode (DeepSeek drops from 96% to 32 
+
+4.1.2. Code quality analysis (L1) 
+
+A notable finding from Table 7: Llama-70B achieves the 
+
+lowest CodeBLEU (0.099) but a very high API F1 (0.593) in DA mode. This exposes the systematic bias of CodeBLEU for GIS code—a single task ( e.g. , buffer analysis) can be cor-rectly implemented via gpd.overlay() , shapely.buffer() , or  
+
+> gpd.sjoin()
+
+with manual geometry operations, all yielding equivalent results but sharing minimal lexical overlap. We recommend API F1 as a more reliable metric for GIS code evaluation.   
+
+> Han et al.: Preprint submitted to Elsevier Page 6 of 12
+
+GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+Table 6 
+
+Comprehensive evaluation across all six LLM backends and two architectures. 𝑅 𝑠 : task success rate; 𝑄 out : output accuracy (L3, successful tasks only); 𝐹 api : API operation F1 (L1); 𝐶 emb : embedding cosine similarity (L2); 𝑆 comp : composite score (Eq. 1). Cost is total API expenditure for 50 tasks. Bold = best per architecture. 
+
+Single Agent Dual Agent Model 𝑅 𝑠 𝑄 out 𝐹 api 𝐶 emb 𝑺 comp Cost 𝑅 𝑠 𝑄 out 𝐹 api 𝐶 emb 𝑺 comp Cost 
+
+DeepSeek-V3.2 96% 0.615 0.633 0.638 0.759 $0.50 32% 0.551 0.410 0.603 0.445 $0.80 Gemini-3-Flash 88% 0.632 0.652 0.646 0.736 $0.80 76% 0.506 0.517 0.559 0.617 $1.50 GPT-5.4 90% 0.581 0.603 0.540 0.705 $8.50 88% 0.544 0.515 0.616 0.685 $12.3 GPT-4.1 82% 0.618 0.663 0.560 0.697 $1.20 74% 0.503 0.578 0.628 0.628 $3.40 Llama-3.3-70B 56% 0.406 0.573 0.619 0.525 $0 † 58% 0.371 0.593 0.634 0.527 $0 †
+
+Qwen2.5-14B 52% 0.590 0.535 0.518 0.543 $0 † 61% 0.458 0.602 0.591 0.561 $0 †
+
+> †Open-weight models deployed locally; zero marginal cost.
+
+Table 7 
+
+Code quality metrics across architectures. 
+
+Model CodeBLEU API F1 ROUGE-L 
+
+Dual Agent 
+
+Gemini Flash 0.182 0.517 0.140 
+
+GPT-4.1 0.169 0.578 0.132 Llama-70B 0.099 0.593 0.100 
+
+Single Agent 
+
+GPT-4.1 0.171 0.663 0.143 
+
+Gemini Flash 0.166 0.652 0.138 DeepSeek 0.124 0.633 0.097 
+
+Fig. 5 presents the per-task API F1 distribution, reveal-ing that code similarity is highly task-dependent: simple overlay tasks (T24, T40) score consistently above 0.7 across models, while complex multi-step analyses (T27, T39) show near-zero overlap even for successful completions. 
+
+4.1.3. Reasoning process assessment (L2) 
+
+Fig. 6 presents the execution log embedding similar-ity for each task–model pair. In SA mode, DeepSeek and Gemini Flash maintain consistently high cosine similar-ity ( > 0.6) across most tasks, while in DA mode, the planner–worker decomposition introduces greater process variance—reflected in the wider scatter dispersion. To complement the embedding-based assessment, a GPT-4o LLM-as-Judge evaluates each execution log across five qualitative dimensions (Table 8). DeepSeek dominates all SA dimensions, achieving the highest aggregate score (4.04/5), while GPT-4.1 leads in DA mode (3.36/5). Notably, the Output Quality dimension exhibits the largest SA–DA gap: DeepSeek drops from 4.18 to 1.38 ( Δ = 2 .80 ), con-firming that Dual Agent’s replanning mechanism disrupts successful execution for strong models. 
+
+4.1.4. Output accuracy and composite scores (L3) 
+
+Fig. 7 provides a per-task breakdown of L3 output accu-racy scores across SA mode. The heatmap reveals a bimodal distribution: most tasks cluster near 0.5–1.0 or near 0.0, 
+
+Table 8 
+
+LLM-as-Judge reasoning assessment (1–5 scale). Bold = best per architecture. The five dimensions capture task understand-ing, data handling, methodology, self-correction, and result completeness.                                                                               
+
+> Model Task Data Method Self-Corr. Result Avg.
+> Single Agent
+> DeepSeek 4.14 4.48 3.98 3.44 4.18 4.04
+> Gemini Flash 3.78 4.10 3.42 3.16 3.46 3.58 GPT-5.4 3.28 3.98 3.14 3.12 3.12 3.33 GPT-4.1 3.26 3.62 3.02 2.48 2.76 3.03 Llama-70B 3.04 3.42 2.52 2.64 1.86 2.70 Qwen-14B 2.81 2.94 2.23 2.30 1.66 2.39
+> Dual Agent
+> GPT-4.1 3.66 3.48 3.18 3.46 3.04 3.36
+> GPT-5.4 3.34 3.00 2.96 3.64 2.76 3.14 Gemini Flash 2.94 3.22 2.54 3.10 2.44 2.85 Llama-70B 3.10 2.54 2.40 3.08 1.92 2.61 DeepSeek 3.10 2.76 2.40 3.04 1.38 2.54 Qwen-14B 2.92 2.31 2.24 2.86 1.53 2.37
+
+with few intermediate values, indicating that task success is largely binary once threshold quality is achieved. This binary pattern itself motivates the multi-layer protocol: many “failed” tasks completed over 70% of the required pipeline (correct spatial joins, Moran’s I computation, or GWR fit-ting), yet binary pass/fail scoring cannot capture this partial progress. The composite scores in Table 6 integrate all evalua-tion layers. DeepSeek achieves the highest SA composite (0.759), but undergoes the largest DA degradation ( Δ =+0 .314 ). 
+
+4.2. Case Studies 
+
+We present three categories of case studies that illu-minate the interaction between model capability, domain knowledge, and system design. 
+
+4.2.1. Exceptional performance on complex tasks 
+
+T20 — Mineral deposit prospectivity prediction. This task requires a complete machine learning pipeline: load-ing 11 geological raster layers (geochemistry, geophysics, lithology, structure), extracting pixel-level features, training 
+
+Han et al.: Preprint submitted to Elsevier Page 7 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+a Random Forest classifier on known tin-tungsten deposit locations, generating a full-resolution probability map, and visualizing the prospectivity surface. The pipeline spans raster I/O, nodata handling, feature matrix construction, scikit-learn model fitting, pixel-wise prediction, and geo-referenced output—a representative end-to-end ML-driven geospatial workflow. As shown in Fig. 9, four models (GPT-4.1, GPT-5.4, DeepSeek, Gemini Flash) produce prospectivity maps that faithfully reproduce the spatial pattern of the gold stan-dard, with high-probability zones correctly localized around known deposit clusters. GPT-5.4 additionally reports a model AUC of 0.922 and overlays known deposit points, while DeepSeek annotates the coordinate reference system (GDA94 / MGA zone 55). In contrast, Llama-70B gener-ates a uniform single-color raster, indicating a complete failure in the ML pipeline, and Qwen-14B produces no visualization output. This case demonstrates that strong models can autonomously orchestrate complex multi-step ML workflows—from raw raster data to calibrated predic-tion surfaces—without explicit procedural guidance, while weaker models fail at fundamental stages of the pipeline. 
+
+T34 — Japan rural road accessibility analysis. This multi-step GIS pipeline requires rural area extraction, road buffer construction, population ratio computation, and choro-pleth visualization. Four models score above 0.92, with DeepSeek and Gemini achieving perfect scores (1.00). Fig. 10 shows that successful outputs faithfully reconstruct the spatial accessibility pattern across Japan’s prefectures. 
+
+4.2.2. Parametric domain knowledge gaps 
+
+T07 — Land subsidence flood analysis. This task ex-poses a critical limitation: the gold standard uses a flood depth threshold of ≤ −200 cm, which encodes domain knowledge about projected future sea level rise. All six models instead use the naive threshold elevation < 0,producing outputs that appear correct but significantly over-estimate flood extent. Moreover, several models incorrectly hardcode the CRS as EPSG:4326 instead of the data’s native EPSG:28992, causing the overlay operation to fail silently and producing near-blank visualizations (Fig. 11). 
+
+T08 — Fire station coverage gap analysis. Similarly, the gold standard specifies a 2,500 m service buffer based on fire response time standards, while models select arbitrary values (500–1,000 m), producing “no-service” areas that are 3–5 × larger than the reference (Fig. 12). These cases reveal a qualitative distinction that RAG-based systems cannot resolve: while RAG can supply library documentation, it cannot impart fundamental conceptual 
+
+domain knowledge (e.g., flood depth = sea level − terrain el-evation) or parametric thresholds (e.g., fire-response buffer distances) that human analysts acquire through professional experience. This “conceptual knowledge gap” represents a distinct failure mode from the “API knowledge gap” that retrieval-augmented systems were designed to address.                      
+
+> Table 9
+> Infrastructure-level fixes and their impact on task success. These engineering lessons reveal that system design, not model capability, is the primary bottleneck for GIS agent performance.
+> Category Failure Symptom Fix Applied
+> Data Pathing Nested SHP files cause
+> FileNotFoundError
+> Flatten dataset structure API State rasterio.open()
+> returns areader object; agent calls
+> .astype()
+> Return raw ndarray
+> + metadata dict Memory City-wide grids exceed 10 4cells;
+> overlay OOM Enforce grid-size templates Type Coer-cion String-encoded nu-merics fail during in-terpolation Auto-cast with
+> pd.to_numeric
+
+4.2.3. Infrastructure vs. model capability 
+
+T18 — Quadtree density visualization. All models correctly identify geoplot.quadtree() as the appropriate function, but a compatibility issue between geoplot 0.5.1 and the installed pyproj version causes universal failure. This case demonstrates that some “model failures” are actually 
+
+environmental limitations , underscoring the importance of infrastructure design described in the next section. 
+
+4.3. Design Lessons 
+
+Our 600-experiment evaluation and iterative develop-ment process yield several engineering principles that extend beyond benchmark scores. 
+
+4.3.1. Infrastructure dominates model capability 
+
+A key empirical finding is that the primary bottleneck for GIS agent success is not model reasoning ability but 
+
+infrastructure-level system design . Through iterative fail-ure diagnosis across development versions, we identified and resolved four categories of infrastructure bugs that domi-nated failure cases: After resolving these infrastructure issues, task success on intermediate-difficulty tasks (requiring multi-step spa-tial analysis with raster–vector integration) improved from 20% to 80%—a 400% increase—while simple and complex task categories remained largely unchanged. This dispro-portionate impact demonstrates that the GIS agent design bottleneck lies in the interface between model output and execution environment , not in the model’s reasoning capacity. A complementary finding concerns tool abstraction: tool layers can introduce silent semantic mismatches —errors that produce no exceptions but fundamentally corrupt down-stream computations. In multi-band remote sensing tasks (e.g., T36 SAVI computation), a load_raster helper that internally calls src.read(1) returns only Band 1 as a 2D   
+
+> Han et al.: Preprint submitted to Elsevier Page 8 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis
+
+array (H, W). The agent interprets data[3] as the fourth spectral band, but actually retrieves the fourth pixel row— yielding systematically wrong values without any error mes-sage. GPT-5.4 spent 35 rounds correctly diagnosing “wrong values” but could not identify the root cause hidden in the tool layer. After returning a full 3D array (Bands , H, W)
+
+alongside band metadata, the same model produced a valid GeoTIFF in round 3. This underscores that agent robust-ness critically depends on transparent, semantically un-ambiguous tool interfaces .Two further infrastructure-level failure modes illustrate how behavioral and information constraints operate at the system layer rather than the model layer. First, a visualiza-tion output constraint : in T06 (elk movement analysis), Qwen-14B completed the full pipeline—Convex Hull, KDE, and DBSCAN clustering—but called plt.show() instead of 
+
+> plt.savefig()
+
+, causing all outputs to be saved as empty emergency plots and the task to fail. Adding a single prompt line— NEVER use plt.show(); always use plt.savefig(..., dpi=150, bbox_inches=‘tight’) —reduced the round count from 20 (ceiling) to 12 and elevated the output from an empty file to a correctly rendered cartographic product (eval-uation score: 3.5 → 7.8). This demonstrates that output-format behavioral constraints are as critical as analytical correctness constraints in GIS agent prompting. Second, a file-name guessing failure : across 50 tasks, 8 failures (16%) were attributable solely to incorrect file access—models “auto-corrected” capitalization ( e.g. , Before_Storm.tif 
+
+→ Before_storm.tif ) or inferred names from task seman-tics ( e.g. , instruction mentions “Census Block” → model queries CensusBlock.geojson , actual file is block.geojson ). This behavior reflects models trained on Windows filesys-tems where paths are case-insensitive, causing systematic misjudgment when deployed on case-sensitive Linux envi-ronments. The Schema Analysis rule—mandating list_files() 
+
+as the agent’s first action—eliminates this class of failures by grounding file access in observed reality rather than semantic inference. 
+
+4.3.2. Hard constraints outperform prompt-level constraints 
+
+Small models exhibit a failure pattern we term frustration-induced constraint collapse : after repeated failures, the model abandons system-prompt constraints and falls back on pre-training defaults. In T26 (groundwater vulnerability mapping), Qwen-14B encountered persistent rasterio errors and, by round 17, attempted import arcpy —despite the system prompt explicitly marking it as unavailable. This represents a degradation of instruction-following under frus-tration: the model’s parametric knowledge encodes ArcPy as the correct solution for this task type, and after alternative routes repeatedly failed, it abandoned prompt compliance. Comparing three configurations reveals the severity: (1) Prompt-only : the model attempts import arcpy at round 17, blocking the workflow; (2) Prompt + deduplication : six consecutive import arcpy attempts (rounds 10–15), blocking earlier; (3) Prompt + sandbox-level import interception :zero forbidden imports, 5 self-correction cycles, full pipeline completion. Implementing a sandbox-level import blocker— raising an informative ImportError with suggested alter-natives at execution time—resolves the issue completely. The broader lesson: for resource-constrained models, sandbox-level enforcement is a necessary complement to prompt-level constraints .A related mechanism—code deduplication—reveals a 
+
+precision–recall tradeoff in agent loop control. Dedupli-cation guards effectively prevent “progress amnesia” loops, where the model forgets completed steps and resubmits identical code. In T25 (COVID-19 risk analysis), Qwen-14B resubmitted handle_nan() eight consecutive times; a deduplication alert at round 2 broke the loop and the model successfully advanced to the clustering analysis at round 19. However, deduplication can also prematurely terminate le-gitimate retry attempts. In T28, three consecutive submis-sions of identical GridSearchCV code were terminated as a loop—but these were actually valid execution retries for a computationally expensive hyperparameter search that had timed out. Distinguishing between “stuck in a loop” and “retrying a slow operation” requires semantic understanding of the code’s intent, which simple hash-based deduplication cannot provide. This tradeoff suggests that context-aware deduplication —aware of execution timeout signals—is a worthwhile direction for future agent engineering. 
+
+4.3.3. Two failure modes of self-correction 
+
+The LLM-as-Judge Self-Correction dimension (Table 8) captures aggregate self-correction quality, but our qualita-tive analysis reveals two distinct failure mechanisms with different remediation strategies. 
+
+Type A — Conceptual failure (correct diagnosis impossi-ble): In T33 (flood depth analysis), the model does not under-stand the hydrological formula flood_depth = -(elevation + 200) . Self-correction loops produce the same conceptually wrong formula in every round because the error is at the domain-knowledge level, not the code level. No amount of iterative execution can resolve a conceptual misunderstand-ing. 
+
+Type B — Attentional failure (diagnosis available, cor-rection not applied): In T34, Qwen-14B successfully di-agnosed the problem— print(gdf[’landuse’].unique()) re-vealed the value ’RURAL’ in the execution log—but the next code generation submitted == ’Rural’ (wrong capitalization) again. The correct diagnosis was present in the context window but was not utilized during code generation. This represents limited context utilization efficiency in smaller models: the answer resided in the agent’s own execution history, yet was not referenced. These two failure types call for different interventions: Type A requires richer domain knowledge injection at the task level; Type B may benefit from explicit memory prompting that foregrounds key extracted values before each code-generation step.   
+
+> Han et al.: Preprint submitted to Elsevier Page 9 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis
+
+Type A failures further reveal a conceptual knowledge gap that retrieval-augmented generation (RAG) cannot re-solve. In T33 (flood depth analysis), models consistently applied flood_depth = elevation - rasterized_buildings ,producing outputs numerically close to raw elevation rather than the hydrologically correct flood_depth = -(elevation + 200) . RAG systems can supply library documentation (the “API knowledge gap”), but they cannot impart the physical understanding that flood depth equals the difference between sea level and terrain elevation —a domain insight that hu-man GIS analysts acquire through professional experience, not from code repositories. A related failure mode is task instruction ambiguity : in T25 (COVID-19 risk mapping), a strong model completed the full spatial clustering pipeline but interpreted “create risk maps” as a data output task (saving GeoJSON layers), while the gold standard expected PNG choropleth visualizations. In GIS, the term “map” simultaneously denotes a visual cartographic product and a geospatial data layer—an ambiguity that domain practition-ers resolve implicitly but that models cannot infer without explicit output-format specification. These cases collectively argue for extending Domain Knowledge Injection beyond procedural workflow steps to include output format con-tracts and domain-calibrated physical parameter specifi-cations that ground agent behavior in field-specific conven-tions. 
+
+4.3.4. Local deployment viability and model selection 
+
+Our results demonstrate that fully offline GIS agent de-ployment on consumer hardware is viable, but model selec-tion is a critical and non-obvious design decision. Qwen2.5-Coder-14B running on a single RTX 3090 GPU achieves a 52% end-to-end task success rate—a figure that under-states the model’s actual GIS capability. More diagnosti-cally, Qwen-14B achieves an output quality of 0.590 among successful tasks, comparable to GPT-4.1 (0.618) and sub-stantially above Llama-3.3-70B (0.406). This indicates that 
+
+when Qwen-14B succeeds, its outputs are of comparable professional quality to those of much larger models .Counter-intuitively, Llama-3.3-70B—with 5 × more parameters— does not outperform Qwen2.5-Coder-14B on composite scores (0.525 vs. 0.543). Llama-70B achieves high em-bedding similarity (0.619 in SA), indicating strong seman-tic understanding of GIS concepts and task requirements; yet it produces the lowest output quality (0.406), reveal-ing a pronounced comprehension–execution gap. This lack of selective information extraction —printing only what is needed for the next decision step rather than the entire data structure—is a qualitatively different skill from seman-tic comprehension, and is precisely what code-specialized training provides. For local GIS agent deployment, code-specialized fine-tuning is more impactful than raw pa-rameter scaling. 
+
+The 52% end-to-end success rate, however, should not be interpreted as the ceiling of what a 14B model can contribute in practice. Qualitative analysis of Qwen-14B’s failed exe-cutions reveals that failures are frequently concentrated in the final output assembly stage rather than in the analytical reasoning or spatial computation steps. In T34 (rural road accessibility), Qwen-14B correctly loaded the data, con-structed the road buffer, extracted rural polygons using the correct spatial join sequence, and computed per-prefecture ratios—but produced an incorrectly styled visualization in the final step, causing evaluation failure. In T01 (heat island & elderly risk mapping via Kriging), the model successfully performed data inspection, CRS alignment, and point data preparation, but encountered a numerical precision issue in the Kriging grid resolution step. In T20 (mineral deposit prospectivity), Qwen-14B correctly configured the Random Forest training pipeline and predicted class probabilities; however, it failed to correctly reassemble the prediction ar-ray into a georeferenced GeoTIFF, yielding an empty output file. In each case, the core GIS reasoning—selecting the right analytical method, calling the correct library functions, and interpreting spatial data structures—was demonstrably correct. These observations suggest an alternative deployment paradigm for resource-constrained environments: rather than fully autonomous end-to-end execution, a human-in-the-loop GIS pipeline in which the agent handles structured analytical steps while the user validates and guides the work-flow at key transition points. Under this paradigm, Qwen2.5-Coder-14B on a single consumer GPU functions as a capable GIS coding partner—translating domain-expert knowledge into executable geospatial code, iteratively refining analyses based on execution feedback, and handling the library-level complexity that constitutes the primary technical barrier for domain scientists. This collaborative mode transforms the 52% end-to-end metric into a more relevant measure: the proportion of pipeline stages the model can autonomously complete, which our analysis suggests substantially exceeds 80% for the majority of tasks. 
+
+## 5. Conclusion 
+
+We presented GISclaw, an open-source, model-agnostic LLM agent system for full-stack geospatial analysis. By grounding agent behavior in a persistent Python sandbox pre-loaded with open-source GIS libraries—and by engi-neering three domain-aware prompt rules (Schema Anal-ysis, Package Constraint, Domain Knowledge Injection)— GISclaw achieves up to 96% task success on G EO ANA -
+
+> LYST
+
+BENCH , spanning vector, raster, and tabular geospatial workflows that existing systems cannot support. 
+
+Architectural findings. Controlled comparison of Sin-gle Agent (ReAct) and Dual Agent (Plan-Execute-Replan) architectures across 600 model–architecture–task combina-tions reveals a consistent pattern: multi-agent overhead de-grades all strong cloud models (DeepSeek-V3.2 drops from 96% to 32% success), while providing marginal gains only for weaker local models. The root causes are mechanical— unnecessary replanning that disrupts working solutions, variable name loss across planning boundaries, and a 2.4 ×
+
+round inflation that amplifies failure opportunities. This   
+
+> Han et al.: Preprint submitted to Elsevier Page 10 of 12
+
+GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+establishes a concrete design principle: architectural com-plexity should be inversely proportional to model capability .
+
+Infrastructure as the primary bottleneck. Our iter-ative failure diagnosis reveals that the performance ceil-ing for GIS agents is set not by model reasoning qual-ity but by infrastructure design. Resolving four categories of environment-level bugs—data pathing, API state man-agement, memory limits, and type coercion—produced a 400% improvement in intermediate-task success. Additional failure modes at the behavioral layer—visualization output format, file-name guessing, and code deduplication side effects—further demonstrate that a system’s engineering quality is a first-class determinant of agent performance, independent of the underlying model. 
+
+The knowledge gap hierarchy. Our evaluation identi-fies a hierarchy of knowledge gaps that GIS agents face. The API knowledge gap —unfamiliarity with specific li-brary calls—is addressable through prompt engineering and retrieval augmentation. The parametric knowledge gap —domain-calibrated thresholds such as flood depth cutoffs and fire-station buffer radii—is not recoverable from code cor-pora and produces “false positive” outputs that appear plau-sible but are analytically incorrect. The conceptual knowl-edge gap —physical relationships such as flood depth =−( elevation + 200) , and GIS-specific semantic conventions such as “create maps” implying PNG visualization and not GeoJSON export—lies beyond what any retrieval system can supply and calls for expert-in-the-loop validation or out-put format contracts baked into domain knowledge injection. 
+
+Local deployment and human-in-the-loop pathways. 
+
+Qwen2.5-Coder-14B on a single consumer RTX 3090 achieves 52% end-to-end task success at zero marginal cost, with output quality among successful tasks (0.590) comparable to GPT-4.1 (0.618). Qualitative analysis shows that failures concentrate in final output assembly rather than in core GIS reasoning or spatial computation—indicating that the gap between 14B models and full autonomy is narrower than aggregate metrics suggest. For deployments where cloud APIs are unavailable, a human-in-the-loop collaborative mode—agent handles pipeline stages autonomously while the domain expert validates at key transitions—offers a pragmatic path to capable geospatial AI without proprietary infrastructure. 
+
+Future directions. Near-term priorities include extend-ing GISclaw toward real-time geospatial data streams, in-corporating context-aware deduplication, and adapting agent frameworks for reasoning-specialized models that require expanded token budgets. Longer-term, the conceptual and parametric knowledge gaps identified in this work motivate hybrid architectures coupling LLM code generation with domain knowledge bases that encode field-specific physical models and calibrated parameter ranges—advancing GIS agents from syntactic proficiency toward genuine geoscien-tific reasoning. 
+
+## Acknowledgements 
+
+This study was supported by a grant from the National Research Foundation, Korea (NRF), funded by the Ko-rean government (MSIT) (RS-2026-25474388). This re-search was supported by the 2023-MOIS36-004 (RS-2023-00248092) of the Technology Development Program on Disaster Restoration Capacity Building and Strengthening funded by the Ministry of Interior and Safety (MOIS, Korea). 
+
+## Data Availability 
+
+GISclaw, including all source code, evaluation scripts, and benchmark results, is publicly available at: https:// github.com/geumjin99/GISclaw .
+
+## CRediT authorship contribution statement 
+
+Jinzhen Han: Conceptualization, Methodology, Soft-ware, Validation, Formal analysis, Investigation, Data cura-tion, Writing – original draft, Visualization. JinByeong Lee: 
+
+Investigation, Data curation, Writing – review & editing. 
+
+Yuri Shim: Resources, Writing – review & editing. Jisung Kim: Supervision, Writing – review & editing, Project ad-ministration. Jae-Joon Lee: Supervision, Writing – review & editing, Funding acquisition. 
+
+## References          
+
+> Akinboyewa, T., Li, Z., Ning, H., Lessani, M.N., 2025. Gis copilot: Towards an autonomous gis agent for spatial analysis. International Journal of Digital Earth 18, 2497489. Cardille, J.A., Johnston, R., Ilyushchenko, S., Kartiwa, J., Shamsi, Z., Abraham, M., Azad, K., Ahmed, K., Quick, E.B., Caughie, N., et al., 2025. The cloud-based geospatial benchmark: Challenges and llm evaluation, in: TerraBytes-ICML 2025 workshop. Gramacki, P., Martins, B., Szymański, P., 2024. Evaluation of code llms on geospatial code generation , 54–62. Hou, S., Shen, Z., Liang, J., Jiao, H., Zhao, A., Qing, Y., Peng, D., Gui, Z., Guan, X., Xiang, L., et al., 2025. Can large language models generate geospatial code? Geo-Spatial Information Science , 1–35. Krechetova, V., Kochedykov, D., 2025. Geobenchx: Benchmarking llms in agent solving multistep geospatial tasks , 27–35. Li, Z., Ning, H., 2023. Autonomous gis: the next-generation ai-powered gis. International Journal of Digital Earth 16, 4668–4686. Li, Z., Ning, H., Gao, S., Janowicz, K., Li, W., Arundel, S.T., Yang, C., Bhaduri, B., Wang, S., Zhu, A.X., et al., 2025. Giscience in the era of artificial intelligence: A research agenda towards autonomous gis. Annals of GIS 31, 501–536. Luo, Q., Lin, Q., Xu, L., Wu, S., Mao, R., Wang, C., Feng, H., Huang, B., Du, Z., 2026. Geojson agents: a multi-agent llm architecture for geospatial analysis—function calling vs. code generation. Big Earth Data , 1–55. Papineni, K., Roukos, S., Ward, T., Zhu, W.J., 2002. Bleu: a method for automatic evaluation of machine translation, in: Proceedings of the 40th annual meeting of the Association for Computational Linguistics, pp. 311–318. Reimers, N., Gurevych, I., 2019. Sentence-BERT: Sentence embeddings using Siamese BERT-networks. arXiv preprint arXiv:1908.10084 . Ren, S., Guo, D., Lu, S., Zhou, L., Liu, S., Tang, D., Sundaresan, N., Zhou, M., Blanco, A., Ma, S., 2020. CodeBLEU: a method for automatic evaluation of code synthesis. arXiv preprint arXiv:2009.10297 .
+
+Han et al.: Preprint submitted to Elsevier Page 11 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+SUN, C., LAN, T., WU, Z., SHI, X., CHENG, D., JIANG, S., 2025. Generative artificial intelligence and its applications in cartography and gis: An exploratory review. Journal of Geodesy and Geoinformation Science 8, 74–89. Wu, H., Jiao, H., Hou, S., Liang, J., Shen, Z., Zhao, A., Qing, Y., Jin, F., Guan, X., Gui, Z., 2025. Geocolab: an llm-based multi-agent collaborative framework for geospatial code generation. International Journal of Digital Earth 18, 2569405. Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K.R., Cao, Y., 2022. React: Synergizing reasoning and acting in language models, in: The eleventh international conference on learning representations. Zhang, Q., Gao, S., Wei, C., Zhao, Y., Nie, Y., Chen, Z., Chen, S., Su, Y., Sun, H., 2025a. Geoanalystbench: A geoai benchmark for assessing large language models for spatial analysis workflow and code generation. Transactions in GIS 29, e70135. Zhang, Y., Li, J., Wang, Z., He, Z., Guan, Q., Lin, J., Yu, W., 2025b. Geospatial large language model trained with a simulated environment for generating tool-use chains autonomously. International Journal of Applied Earth Observation and Geoinformation 136, 104312. Zhang, Y., Wei, C., Wu, S., He, Z., Yu, W., 2023. Geogpt: Understanding and processing geospatial tasks through an autonomous gpt. arXiv preprint arXiv:2307.07930 . Zheng, L., Chiang, W.L., Sheng, Y., Zhuang, S., Wu, Z., Zhuang, Y., Lin, Z., Li, Z., Li, D., Xing, E., et al., 2023. Judging llm-as-a-judge with mt-bench and chatbot arena. Advances in neural information processing systems 36, 46595–46623. 
+
+> You are a GIS analyst agent. Solve geospatial analysis tasks step-by-step using tools. ## Basic Guidelines 1. Start by calling list_files to see available data. 2. Load and inspect data (print columns, CRS, shape, head) BEFORE writing analysis code. 3. If unsure about a library API or GIS method, call search_docs to look it up. 4. Save outputs to pred_results/ before finish. 5. NEVER use plt.show(). Always use plt.savefig(..., dpi=150, bbox_inches= 'tight ')## Available Packages (ONLY use these) geopandas, rasterio, shapely, numpy, pandas, scipy, matplotlib, sklearn, xarray, ... NOT available (do NOT import): pykrige, arcpy Alternatives: pykrige -> scipy.interpolate
+
+Listing 1: Simplified excerpt of the GISclaw system prompt (Single Agent mode). 
+
+Figure 2: Comparison of the two agent architectures. (a) Single Agent follows a ReAct loop with Error Memory for self-correction. (b) Dual Agent decomposes tasks via a Planner, executes steps through a Worker, and adaptively replans upon failure. 
+
+L1: Code 
+
+> CodeBLEU
+> API Op. F1
+
+L2: Process 
+
+> Embedding Sim.
+> LLM-as-Judge
+
+L3: Output 
+
+> PNG: Vision
+> TIF: Rasterio
+> CSV/SHP
+
+𝑆 comp qualitative 
+
+Figure 3: Multi-layer evaluation pipeline. Three complementary layers assess code-level fidelity (L1), reasoning process quality (L2), and output correctness (L3), combined into a weighted composite score 𝑆 comp (Eq. 1). Han et al.: Preprint submitted to Elsevier Page 12 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+Figure 4: Task success rate comparison: Single Agent (solid) vs. Dual Agent (hatched). Strong models degrade significantly in DA mode; weaker models show minimal change. 
+
+Figure 5: Per-task API F1 scores (DA architecture). Warm colors indicate higher code-level agreement with gold stan-dards. The task-dependent variance highlights the limitation of aggregate metrics. 
+
+Figure 6: L2: Execution log embedding cosine similarity per task. Each dot represents one model’s reasoning process sim-ilarity to the gold standard. SA (left) shows tighter clustering than DA (right), confirming that strong models follow more gold-aligned reasoning paths without planner overhead. 
+
+Figure 7: L3: Per-task output accuracy scores (SA). Green = high accuracy; red = failure. DeepSeek shows the most uniformly green column. Tasks T18, T27 remain red across most models, indicating intrinsic difficulty. 
+
+Figure 8: Multi-dimensional performance profiles for SA (left) and DA (right) architectures. In SA mode, DeepSeek domi-nates all dimensions; in DA mode, GPT-class models lead but with compressed performance ranges. Han et al.: Preprint submitted to Elsevier Page 13 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+Figure 9: T20: Mineral deposit prospectivity prediction outputs (SA mode). Four strong models accurately reproduce the spatial distribution of tin-tungsten prospectivity, while Llama-70B generates a uniform raster and Qwen-14B fails to produce any visualization. This task requires a complete ML pipeline spanning raster feature extraction, Random Forest training, and georeferenced probability mapping. 
+
+Figure 10: T34: Road accessibility visualization outputs. Top models accurately identify and render prefecture-level accessi-bility patterns across Japan. Han et al.: Preprint submitted to Elsevier Page 14 of 12 GISclaw: LLM-Powered Agent for Geospatial Analysis 
+
+Figure 11: T07: Flood analysis outputs illustrating domain knowledge gaps. The Gold Standard (left) uses a domain-calibrated 
+
+−200 cm threshold, while all models default to 0 cm. Some models further suffer CRS misalignment, producing blank maps. This demonstrates that parametric domain knowledge cannot be acquired from code patterns alone. 
+
+Figure 12: T08: Fire station coverage gap analysis. The Gold Standard (top-left) uses a 2,500 m buffer; all models select smaller radii (500–1,000 m), dramatically overestimating the uncovered area. This illustrates the parametric domain knowledge gap .Han et al.: Preprint submitted to Elsevier Page 15 of 12

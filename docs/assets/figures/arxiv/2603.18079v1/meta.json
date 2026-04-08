@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-001.webp",
+      "caption": "Figure 1: Validation success rate on WebShop (Qwen2.5-1.5B-Instruct). SLEA-RL achieves faster convergence and higher asymptotic performance compared to GiGPO and GRPO. Training curves are included in Appendix E.",
+      "page": 1,
+      "index": 1,
+      "width": 388,
+      "height": 358
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-002.webp",
+      "caption": "Figure 7: System prompts used in the SLEA-RL pipeline. Prompt A augments each step’s observation with retrieved experiences. Prompt B extracts reusable strategies from successful trajectories into the strategy zone E+. Prompt C diagnoses failures and populates the warning zone E−. These prompts enable semantic library evolution without gradient updates.",
+      "page": 15,
+      "index": 2,
+      "width": 950,
+      "height": 1118
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-003.webp",
+      "caption": "Figure 3: Ablation studies on ALFWorld and WebShop (Qwen2.5-7B-Instruct). GRPO is shown as the vanilla RL baseline. (a) Step-level retrieval consistently outperforms task-level retrieval across all subtasks. (b) Removing step-level advantage (ω=0) degrades performance below GRPO on several metrics.",
+      "page": 7,
+      "index": 3,
+      "width": 939,
+      "height": 253
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-004.webp",
+      "caption": "Figure 6: Training dynamics on ALFWorld (left) and WebShop (right) with Qwen2.5-1.5B-Instruct. Top row: training episode success rate. SLEA-RL achieves higher success than GiGPO throughout training, with the gap widening as the experience library matures. Bottom row: mean episode length. SLEA-RL reduces episode length faster, indicating more efficient task completion via experience-guided action selection.",
+      "page": 14,
+      "index": 4,
+      "width": 950,
+      "height": 568
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-005.webp",
+      "caption": "Figure 2: Overview of SLEA-RL compared to standard GRPO. Left: the LLM agent interacts with the environment in a multi-turn loop; an experience library E (comprising strategy zone E+ and warning zone E−) provides step-level guidance. Center: GRPO (top, gray) samples G trajectories without experience augmentation, while SLEA-RL (bottom, orange) retrieves experiences ε(i)t at each step via cluster-indexed lookup over observation clusters C.",
+      "page": 3,
+      "index": 5,
+      "width": 931,
+      "height": 525
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-006.webp",
+      "caption": "Table 4: Performance on ALFWorld and WebShop. We report average success rate (%) for ALFWorld subtasks and overall, and both average score and success rate (%) for WebShop. ∗: results from Feng et al. (2025). Best and second best in bold and underline.",
+      "page": 18,
+      "index": 6,
+      "width": 704,
+      "height": 602
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-007.webp",
+      "caption": "Table 5: Performance on search-augmented QA tasks. SLEA-RL is trained on NQ and HotpotQA. †: in-domain datasets. Best and second best among RL methods in bold and underline.",
+      "page": 18,
+      "index": 7,
+      "width": 796,
+      "height": 482
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-008.webp",
+      "caption": "Figure 5: Validation success rates on ALFWorld (left) and WebShop (right) with Qwen2.5-1.5B-Instruct. Faint traces show raw values; bold lines are smoothed. SLEA-RL achieves faster convergence and higher asymptotic performance than GiGPO and GRPO.",
+      "page": 13,
+      "index": 8,
+      "width": 928,
+      "height": 334
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-009.webp",
+      "caption": "Table 3: SLEA-RL hyperparameter configuration.",
+      "page": 13,
+      "index": 9,
+      "width": 427,
+      "height": 629
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-010.webp",
+      "caption": "Table 1: Performance on ALFWorld and WebShop. We report average success rate (%) for ALFWorld subtasks and overall, and both average score and success rate (%) for WebShop. ∗: results from Feng et al. (2025). Best and second best in bold and underline. The full table including the prompt-based models is included in Appendix I.",
+      "page": 8,
+      "index": 10,
+      "width": 704,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2603.18079v1/fig-011.webp",
+      "caption": "Table 2: Performance on search-augmented QA tasks. SLEA-RL is trained on NQ and HotpotQA. †: in-domain datasets. Best and second best among RL methods in bold and underline.",
+      "page": 8,
+      "index": 11,
+      "width": 796,
+      "height": 297
+    }
+  ]
+}

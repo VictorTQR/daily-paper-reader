@@ -1,0 +1,305 @@
+Title: CALF: Communication-Aware Learning Framework for Distributed Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2603.12543v1
+
+Published Time: Mon, 16 Mar 2026 00:20:08 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# CALF: Communication-Aware Learning Framework for Distributed Reinforcement Learning 
+
+Carlos Purves University of Cambridge 
+
+cp614@cam.ac.uk 
+
+Pietro Li` oUniversity of Cambridge 
+
+pl219@cam.ac.uk 
+
+Abstract 
+
+Distributed reinforcement learning policies face network delays, jitter, and packet loss when deployed across edge devices and cloud servers. Standard RL training assumes zero-latency interaction, causing severe performance degradation under realistic network con-ditions. We introduce CALF (Communication-Aware Learning Framework), which trains policies under realistic network models during simulation. Systematic experiments demon-strate that network-aware training substantially reduces deployment performance gaps com-pared to network-agnostic baselines. Distributed policy deployments across heterogeneous hardware validate that explicitly modelling communication constraints during training en-ables robust real-world execution. These findings establish network conditions as a major axis of sim-to-real transfer for Wi-Fi-like distributed deployments, complementing physics and visual domain randomisation. 
+
+# 1 Introduction 
+
+Reinforcement learning policies deployed across distributed hardware, whether environments run on edge devices and policies execute on remote servers or control is partitioned across heterogen-eous processors, face network delays, jitter, and packet loss in the agent-environment control loop. Yet mainstream RL training assumes synchronous, zero-latency interaction. Standard benchmarks (ALE [1], DeepMind Control Suite [2], OpenAI Gym [3]) presuppose instant obser-vation delivery and immediate action effects, while distributed training systems (IMPALA [4], SEED RL [5]) optimise worker-learner communication but treat agent-environment communic-ation as an implementation detail. Hierarchical policies, which decompose control into modular units for specialisation and skill reuse [6–11], face additional challenges when distributed, as inter-unit communication introduces network delays on top of agent-environment delays. In deployment, these assumptions fail. Observations arrive late or out-of-order; actions are delayed or dropped; jitter creates unpredictable timing. A policy that perfectly balances an inverted pendulum in simulation may fail with 100 ms Wi-Fi latency, even with perfect physics modelling. Sim-to-real transfer has made substantial progress addressing physics and visual mis-match through domain randomisation [12, 13], but network-induced mismatch receives minimal attention despite evidence that actuator dynamics, including timing and response behaviour, are a dominant factor in the sim-to-real gap [14]. Network conditions constitute an orthogonal axis of the reality gap that must be addressed systematically. This paper addresses three research questions: 
+
+RQ1 (Network Impact): How severely do realistic network conditions, including latency, jitter, and packet loss, degrade the performance of policies when trained in idealised, synchron-ous simulations but deployed over real networks with distributed components? 
+
+RQ2 (Network-Aware Training): Can training policies under realistic network condi-tions during simulation (“network-aware training”) close this performance gap? Which network phenomena (latency versus jitter versus loss) are most critical to model? 1
+
+> arXiv:2603.12543v1 [cs.LG] 13 Mar 2026
+
+No Signal Signal Jamming Last Mile LoRa 
+
+> Base
+
+4G 
+
+> Long-range
+> communications
+> systems can provide
+> predictable client-
+> server semantics but
+> with reduced
+> bandwidth.
+> In areas experiencing
+> reduced infrastructure
+> might remove certain
+> communications ability
+> and require entirely
+> autonomous control.
+> Under certain conditions,
+> signal jamming or heavy
+> congestion might affect
+> the ability for autonomous
+> devices to make contact
+> with a server, characterised
+> by unreliable connections,
+> regular failures or high
+> latency.
+> Public
+> infrastructure
+> such as cellular
+> communications
+> systems can be
+> used to facilitate
+> forms of server
+> communication.
+
+Figure 1: Real-world distributed systems employ hybrid communication strategies to maintain operation under varying network conditions. Unmanned aerial vehicles, for instance, choose between multiple communication channels (satellite, radio frequency, optical tether) based on signal quality and operational constraints, defaulting to autonomous operation when no reliable connection exists. This illustrates the challenge CALF addresses: policies must function across heterogeneous network conditions rather than assuming perfect connectivity. We focus on LAN-like scenarios (Wi-Fi, Ethernet); WAN/adversarial scenarios motivate the need for configurable impairments but are not evaluated here. 
+
+RQ3 (Infrastructure): What systems infrastructure is needed to enable reproducible, scalable deployment of distributed RL across heterogeneous edge devices and real networks? We introduce CALF (Communication-Aware Learning Framework), infrastructure for de-ploying and training distributed RL policies across heterogeneous hardware. CALF implements policy units as networked services and transparently injects configurable network impairments (latency, jitter, loss, bandwidth limits) via NetworkShim middleware, enabling the same policy code to run from pure simulation to distributed edge-cloud hardware. Systematic experiments on CartPole and MiniGrid demonstrate that baseline policies suffer severe degradation (40– 80%) when deployed over realistic networks (RQ1), while network-aware training reduces the sim-to-real gap by approximately 4 × for CartPole and 3 × for MiniGrid (RQ2). Ablations reveal that stochastic jitter and packet loss are more detrimental than constant latency. Distributed policy deployments across Raspberry Pi and Desktop hardware validate CALF’s practicality for edge-cloud systems (RQ3). The remainder positions CALF relative to prior work ( §2), describes the framework archi-tecture ( §3), methodology ( §4), and experimental setup ( §5), presents results ( §6), and discusses implications ( §7). 
+
+# 2 Background and Positioning 
+
+2.1 Delays, Packet Loss, and What RL Typically Assumes 
+
+Early work extended the Markov Decision Process framework to include action and observation delays. Katsikopoulos & Engelbrecht [15] showed that fixed k-step delays can be transformed into an equivalent Markov process by augmenting the state with the last k actions or obser-vations. However, this state augmentation causes exponential state-space growth, rendering planning or learning intractable for large delays. Walsh et al. [16] proved an exponential lower 2bound: no algorithm can circumvent this blow-up in the worst case. With stochastic delays, optimal policies must use full history, becoming POMDP-like [15]. Practical RL uses heuristics and algorithmic fixes. Simple strategies include frame stacking (DQN [17] uses the last 4 observations to infer velocity) and action repetition (holding com-mands for k steps). These work for small, fixed delays but fail with variable delays or packet loss. Schuitema et al. [18] proposed delay-aware TD learning that updates the delayed-next-state 
+
+rather than immediate next-state, avoiding state augmentation but remaining sub-optimal for variable delays. Bouteiller et al. [19] introduced Delay-Correcting Actor-Critic (DCAC), which resamples and relabels experience trajectories to correct for random delay distortions. A con-sistent finding is that unmitigated latency severely degrades performance, but training under delays yields robustness. Control theory has extensively studied networked control systems (NCS) [20] where sensors, controllers, and actuators communicate over imperfect networks. Standard compensation strategies include zero-order hold (actuators keep executing previous commands when packets are dropped), time-stamping and sequence numbers (to detect stale or out-of-order packets), Smith predictors (which compensate for known constant delays), and event-triggered control (sending updates only when state error exceeds a threshold). Researchers have derived stability conditions on maximum tolerable delay or dropout rate using Lyapunov methods for linear systems [20]. However, NCS analysis typically applies to linear controllers with analytical models. Deep RL policies are black-box nonlinear functions for which no similar guarantees exist, and systematic application of NCS insights to deep RL remains limited. 
+
+2.2 Sim-to-Real Transfer and Distributed RL: The Missing Network Axis 
+
+Sim-to-real RL focuses overwhelmingly on physics and visual domain randomisation, with min-imal attention to network-induced mismatch. Domain randomisation [12] randomises simulator properties so the real world appears as another random variant, enabling zero-shot transfer for manipulation [12, 21] and locomotion [22]. Alternative approaches include system identifica-tion [23], which iteratively fits simulator parameters to real data, and online adaptation [13], which uses RNNs to adapt to different dynamics. Hwangbo et al. [14] demonstrated spectacular legged locomotion results by carefully modelling actuator dynamics, finding that accurate mod-elling of the Series Elastic Actuator behaviour was a dominant factor in closing the sim-to-real gap for their ANYmal quadruped. However, they treated this as a robot-specific engineering fix rather than general methodology. These works randomise physical dynamics and visual observations but assume perfect timing : either the policy and environment are co-located, or network effects are negligible. Network conditions represent an independent axis of variation , orthogonal to physics and vision. A policy trained with perfect timing in simulation may fail on a real system with 100 ms lag, even if the physics are modelled perfectly. Some sim-to-real practices implicitly touch on network effects (Gaussian noise partially mimics jitter, frame skip reduces effective control frequency), but these are incidental rather than systematic strategies to address network domain shift. Large-scale distributed RL frameworks similarly treat network communication as a cost to minimise, not an object of study. IMPALA [4] separates actors and learners with V-trace off-policy correction to handle policy lag; SEED RL [5] minimises network overhead with fast transport protocols; Sample Factory [24] avoids network communication entirely. These sys-tems address network lag between actor and learner (training infrastructure), whereas CALF addresses network lag between agent and environment (control loop). Frameworks like Gym-Gazebo [25] and Isaac Gym [26] enable training in simulation and deployment on robots, but assume local or fast LAN connections where network delay is incidental, not controlled or meas-ured. 32.3 Edge, Multi-Agent, and Other Network-Aware ML Contexts 
+
+Edge machine learning research focuses primarily on computation and energy constraints, with less attention to communication. Techniques include model compression, quantisation, and distillation to fit policies in limited memory. However, complex vision-based policies will not fit on tiny embedded devices, necessitating splitting or offloading. Neurosurgeon [27] automatically partitions deep neural networks between edge devices and cloud (convolutional layers on edge, fully connected layers on server), achieving 3 × lower latency and energy compared to all-cloud or all-device execution. Multi-agent RL studies how agents learn to communicate under bandwidth limits or delays. Work on emergent communication includes learned continuous communication protocols [28] and communication minimisation via information-theoretic regularisation [29]. However, MARL focuses on agent-to-agent delays, while agent-to-environment delays in single-agent control RL remain less explored. Federated RL addresses network issues in parameter aggregation (training infrastructure), not agent-environment interaction loops (control execution). Hierarchical RL decomposes behaviour into subskills. The Options framework [6] introduced temporally extended actions that execute for multiple steps, enabling higher-level decision-making at slower timescales. If an option runs autonomously for 10 steps, the high-level policy only needs to communicate every 10 steps, making it naturally more robust to moderate network latency. Modern variants include Option-Critic [9], FeUdal Networks [10], and HIRO [11]. However, existing hierarchical RL research typically assumes components are co-located, while distributed deployment across heterogeneous hardware introduces network communication as a first-order constraint. Mature network emulation tools exist (Linux tc netem , Mininet [30], Mahimahi [31]) but are not integrated into RL training loops. In contrast to prior work that modifies algorithms (delay-aware Q-learning, DCAC) or op-timises training infrastructure (IMPALA, SEED RL), CALF modifies the environment to expose realistic network behaviour, an approach that is algorithm-agnostic and extends naturally to heterogeneous edge deployment. By implementing policy units as networked services and trans-parently injecting network impairments, CALF complements existing domain randomisation practices by adding network parameters to the randomisation distribution. Together, these strands of work suggest two requirements for progress: training must experience the same communication pathologies as deployment, and the infrastructure must allow controlled, repro-ducible manipulation of latency, jitter, and loss across real hardware. CALF is designed to meet both. 
+
+# 3 CALF: A Framework for Network-Aware Reinforcement Learn-ing 
+
+CALF decomposes RL workloads into networked services, injects realistic network behaviours at specific communication links, and runs the same configuration across deployment modes from pure simulation to real hardware. 
+
+3.1 Design Goals 
+
+CALF enables network-aware RL research by providing: (1) realistic network conditions (con-figurable latency, jitter, loss distributions; synthetic and trace-based models), (2) deployment parity (same policy code runs from pure simulation to edge hardware), (3) reproducibility (de-terministic network seeds, versioned modules, containerisation), and (4) heterogeneous hardware support (edge devices to cloud servers). CALF is algorithm-agnostic infrastructure compatible with any RL library (Table 1). 4Table 1: CALF design goals and their role in answering research questions.                
+
+> Goal Capability Enables
+> Network Realism Synthetic + trace-based network models Controlled ablations (RQ2), real-istic training Deployment Parity Same code across simulation/hardware Fair comparison of network ef-fects (RQ1) Reproducibility Deterministic seeds, versioning Scientific rigour, exact replica-tion Heterogeneity Edge devices to cloud servers Realistic distributed settings (RQ3)
+
+3.2 Architecture Overview 
+
+CALF realises policies and environments as networked services communicating via message passing. Unlike traditional RL where obs = env.step(action) is a zero-latency function call, CALF implements step() as network communication, thereby enabling both distributed de-ployment and controlled injection of network impairments. Agent Services (policy units), Envir-onment Services, and NetworkShim Services (impairment injectors) compose into policy graphs, with NetworkShims sitting on graph edges to introduce realistic latency, jitter, and loss. CALF includes orchestration and optional cross-network routing; our experiments require only service composition plus impairment injection. The architecture’s key property is deployment parity: the same service configuration runs locally (zero latency), with simulated networks (Network-Shim impairments), or across real hardware (Wi-Fi/Ethernet). Full infrastructure details are available in the accompanying code release. 
+
+3.3 NetworkShim: The Core Mechanism 
+
+NetworkShim is CALF’s primary mechanism for injecting network impairments into the RL loop. It acts as a transparent middlebox sitting between Environment and Agent, delaying or dropping packets according to configured network models. All messages are timestamped to measure and replay latency distributions (latency ms = treceive − tsend ); NetworkShim uses this to inject delay and loss while logging realised conditions. For each packet, NetworkShim simulates loss (drop with probability ploss ) and delay (sampled from configured distributions: max(0 , N (μlatency , σ 2jitter )) for jitter, or a fixed value for constant latency), then forwards the packet after the sampled delay. NetworkShim supports two families of network model. Synthetic models define parametric distributions matching our evaluation conditions: Ethernet-clean (2 ms ± 0.5 ms, 0% loss), 
+
+Wi-Fi-normal (30 ms ± 10 ms, 2% loss), and Wi-Fi-degraded (80 ms ± 40 ms, 10% loss), with latency sampled from normal distributions clipped at zero and loss drawn from a Bernoulli( p). Trace-based models instead enable replay of recorded conditions: a LatencyTracer service cal-culates actual latency from packet timestamps during Real-Wi-Fi evaluation and logs traces, which NetworkShim can then replay during training by sampling delays from the empirical dis-tribution. This allows policies trained on a synthetic Wi-Fi-normal model to be refined using real Wi-Fi traces, or enables controlled experiments comparing conditions such as “Real-Wi-Fi-Home” versus “Real-Wi-Fi-Campus”. Critically, Environment and Agent are unaware of NetworkShim’s existence; they simply experience delayed messages. This transparency enables network-aware training without modi-fying RL algorithms. 53.4 Progressive Deployment Modes 
+
+A key CALF feature is that the same policy and environment code run across a continuum of deployment scenarios (Figure 2). In Mode 1 (Local Sim), the environment and policy reside in the same process and communicate via direct function calls with no network overhead, provid-ing a zero-latency baseline for fast prototyping and comparison (RQ1) at approximately 100K steps/hour for CartPole on the Desktop. In Mode 2 (Sim + Simulated Network), the environ-ment and policy run as separate services with a CALF NetworkShim between them, injecting impairments drawn from a synthetic network model (e.g., Wi-Fi-normal: 30 ms ± 10 ms, 2% loss); this mode is used for network-aware training (RQ2) and achieves approximately 50K steps/hour, slower owing to injected delays. In Mode 3 (Edge Sim), the environment service runs on a Raspberry Pi (or other edge device such as a Jetson) while the policy service runs on the Desktop, communicating over a real network (Ethernet or Wi-Fi); this mode is used for hardware validation and for measuring real network distributions, achieving approximately 20K steps/hour as throughput is limited by the network and Pi CPU. Together, the three modes progressively de-risk deployment: rapid iteration in Mode 1, exposure to realistic delays in Mode 2, and detection of hardware-specific issues in Mode 3. 
+
+3.5 Summary 
+
+This section has described CALF’s three-layer architecture enabling distributed deployment of policy graphs, NetworkShim middleware transparently injecting network impairments on graph edges, and progressive deployment modes ensuring deployment parity from simulation to real hardware. CALF ensures reproducibility through versioned modules, containerisation, and deterministic network seeds (NetworkShim uses fixed RNG seeds for reproducible delay sequences), and all experiments in this paper are reproducible with the accompanying code release. Of the three modes, Mode 2 is the key experimental lever: it isolates the network axis by introducing impairments while holding the environment and policy code fixed. We use Mode 2 to train under controlled stochastic network models, then evaluate transfer to Mode 3 real networks. 
+
+# 4 Network-Aware Training Methodology 
+
+This section describes our RL training protocol and experimental methodology for answering RQ1 (how severely do network conditions degrade performance of distributed policy graphs?) and RQ2 (does network-aware training enable successful policy graph deployment?). 
+
+4.1 Problem Formulation: Delayed MDPs 
+
+In deployment, observations and actions are delayed or dropped, making the policy effectively partially observable: the agent must act on stale information and infer the current state from observation history. We address this via frame stacking (CartPole) or recurrence (MiniGrid) to maintain temporal context. See Section 2 for formal delayed MDP background. 
+
+4.2 Training Regimes: Comparing Network-Awareness 
+
+Table 2 summarises our three training regimes. We train policies under each regime and evaluate all policies on all deployment modes, enabling systematic comparison of network-agnostic versus network-aware training. Network statistics for full network-aware training are measured during pilot runs using LatencyTracer and modelled as N (μ, σ 2) for latency (Wi-Fi-normal: mean 30ms, jitter 10ms), with 2% packet loss. 6Mode 1: Local Sim 
+
+> Zero latency
+> ~100k steps/hr
+
+Policy Env 
+
+Mode 2: Sim + Simulated Net  
+
+> Synthetic network
+> ~50k steps/hr 30ms ± 10ms, 2% Loss
+
+Policy Env 
+
+> Network
+> Shim
+
+Mode 3: Real Hardware + Real Network 
+
+> Real network
+> ~20k steps/hr
+> Real Wi-Fi
+
+Policy Env 
+
+> Desktop Jetson Nano
+
+Figure 2: CALF’s three progressive deployment modes enable incremental validation from pure simulation to distributed deployment. Mode 1 (Local Sim) provides a zero-latency baseline for rapid development with environment and policy co-located. Mode 2 (Sim + Simulated Network) introduces NetworkShim services that inject realistic latency, jitter, and packet loss for network-aware training. Mode 3 (Edge Sim) validates distributed deployment on real hardware (Raspberry Pi for environment, Desktop for policy) communicating over real Wi-Fi/Ethernet networks. This progressive approach ensures that network-aware policies trained in Mode 2 transfer successfully to distributed edge deployment in Mode 3, addressing the network axis of the sim-to-real gap. Regimes differ only in the communication channel; we hold everything else fixed (environ-ment, architecture, training procedure). To prevent the comparison from being confounded by observability, we provide temporal context via memory/stacking, enabling each policy to infer current state from delayed observations regardless of training regime. 
+
+4.3 RL Algorithm: PPO 
+
+We use Proximal Policy Optimization [32] via Stable-Baselines3 [33] as a representative modern RL algorithm. CALF is algorithm-agnostic; others (SAC, DQN) could be trained with identical network configurations. For policy graphs, each unit can employ different algorithms suited to its role. Hyperparameters follow standard settings (see the code release for details). 7Table 2: Training regimes for network-aware evaluation.             
+
+> Regime Mode Impairments Purpose
+> Baseline Mode 1 (local) None Traditional RL (no awareness) Delay-Only Mode 2 50ms fixed latency Constant-delay awareness Full Net-Aware Mode 2 Latency + jitter + loss Full stochastic model
+
+4.4 State Representation for Delay Robustness 
+
+Policy units must infer current state from delayed observations. We employ three strategies depending on task characteristics (Table 3): frame stacking to infer velocities from multiple snapshots, recurrent policies (LSTM) to maintain belief state over variable delays, and action history to track in-flight actions. CartPole uses frame stacking ( k = d + 1 frames for delay d); MiniGrid uses LSTM (necessary for partial observability combined with delays). Table 3: State representation strategies for handling observation delays.          
+
+> Task Representation Rationale
+> CartPole Frame stack k=d+1 Infer velocities under delay MiniGrid LSTM Variable delay + partial observability Ablation + Action history Track in-flight actions
+
+4.5 Evaluation Protocol 
+
+For each trained policy (each seed, each training regime), we evaluate on five deployment modes grouped into two categories: Sim (Sim-Clean [Mode 1, local], Sim+Network [Mode 2, Wi-Fi-normal model]) and Real (Real-Ethernet, Real-Wi-Fi-Normal, Real-Wi-Fi-Degraded [Mode 3 variants, Pi environment + Desktop policy]). Per mode, we run 50 episodes and record episodic return, success rate, and timestamped end-to-end latency. For statistical rigour, we use 10 random seeds per training regime, report mean ± standard deviation across seeds, use paired t-tests to compare full network-aware versus baseline in Real-Wi-Fi-Degraded, and use significance level α = 0 .05. 
+
+# 5 Experimental Setup 
+
+This section specifies environments, agents, hardware platforms, and evaluation metrics for complete reproducibility (G3). 
+
+5.1 Environments 
+
+We select environments that span diverse timing sensitivities, are well-known benchmarks fa-miliar to the community, and remain tractable on modest hardware. CartPole-v1 is a classic inverted-pendulum task in which the agent must balance a pole on a movable cart. The state is 4-dimensional (cart position, cart velocity, pole angle, pole angular velocity), the action space is discrete {left, right }, and the episode terminates when 
+
+|x| > 2.4, |θ| > 12 ◦, or 500 steps are reached, with a reward of +1 per step survived (maximum 500). CartPole is highly timing-sensitive: its unstable dynamics require fast reactions, so delays easily destabilise control, and a 100 ms delay can cut survival time in half. The failure mode is unambiguous (the pole falls), making results straightforward to interpret. MiniGrid DoorKey-8x8 is a gridworld navigation task with a locked door: the agent must find a key, unlock the door, and reach the goal. The observation is a 7 × 7 egocentric view 8(partial observability), the action space is discrete {turn left, turn right, move forward, pick up, toggle }, and the episode terminates upon reaching the goal (success) or after 1000 steps (failure), with a reward of +1 for success and −0.01 per step. MiniGrid is less sensitive to millisecond timing than CartPole but is still affected by delays, as agents may overshoot turns or collide with walls. Its subgoal structure (get key, open door, reach goal) provides a natural hierarchy and demonstrates the potential for decomposition into separate “key policy” and “goal policy” units. 
+
+5.2 Agent Architectures 
+
+For the primary experiments we use flat policies trained with PPO over 10 random seeds per regime. The CartPole policy is a two-hidden-layer multi-layer perceptron (64 units per layer, ReLU activations) producing 2-dimensional action logits from a 4-dimensional observation (or 4 × k when frame-stacked). The MiniGrid policy is a convolutional network that processes the 7 × 7 × 3 observation through two convolutional layers (16 and 32 filters, both 3 × 3), followed by flattening, an LSTM with 128 units, a fully connected layer of 128 units, and 5-dimensional action logits. To demonstrate CALF’s support for distributed hierarchical policies, we additionally test two-level policy graph deployments. The CartPole graph comprises angle-stabiliser and recent-ring units with rule-based switching ( |θ| > 5◦); the MiniGrid graph comprises key-seeking and goal-navigation units with state-based switching ( has key ). Units are trained independently in local simulation with task-specific rewards and then deployed across Pi (edge) and Desktop (cloud) with NetworkShim on inter-unit communication. This demonstrates cross-device exe-cution capability rather than optimal hierarchical decomposition. 
+
+5.3 Hardware and Network Conditions 
+
+Experiments use a Desktop (Intel i7, 32 GB RAM) as policy host and a Raspberry Pi 4 Model B (ARM Cortex-A72, 4 GB RAM) as environment host, representing a heterogeneous edge-cloud deployment. Full specifications are provided in the code release. Three network configurations span the range from ideal to degraded conditions. Ethernet-Clean connects the Desktop and Pi via a physical Ethernet cable, yielding a mean latency of 2 ms, jitter of 0.5 ms, 0.0% loss, and 1 Gbps link capacity. Wi-Fi-Normal places both devices on the same 802.11ac (5 GHz) Wi-Fi network, producing a mean latency of 30 ms, jitter of 10 ms, 2% loss, and approximately 50 Mbps measured throughput. Wi-Fi-Degraded augments Wi-Fi-Normal with additional controlled delay, jitter, and loss injected via Linux 
+
+netem to simulate a congested network, resulting in a mean latency of 80 ms, jitter of 40 ms, and 10% loss (exact configuration in the code release). All network statistics are measured using LatencyTracer during pilot runs and verified across 1000 packet samples; distributions are logged for reproducibility. 
+
+5.4 Evaluation Metrics 
+
+We report episodic return/success rate (task performance) and sim-to-real gap (percentage per-formance drop from Sim-Clean to Real-Wi-Fi-Degraded); latency/loss are measured to validate network conditions. All results use 10 random seeds per regime; we report mean ± standard deviation and use paired t-tests for baseline versus full network-aware comparisons ( α = 0 .05). Complete experimental code, network configurations, and evaluation logs will be released. 96 Results 
+
+Network-aware training substantially improves deployment performance over realistic networks. Ablations reveal that stochastic phenomena (jitter, loss) require explicit modelling, and distrib-uted policy-graph deployments demonstrate cross-device execution capability. 
+
+6.1 Network-Aware Training Improves Real Deployment Performance 
+
+6.1.1 CartPole Results 
+
+Table 4 presents mean episode return (with standard deviation) across 10 random seeds for each training regime and deployment mode. CartPole’s maximum achievable return is 500 (pole balanced for the full episode duration), making performance drops immediately interpretable as failure to maintain balance under network constraints. Table 4: CartPole: Mean Episode Return ( ± std) over 10 seeds. Each cell reports mean performance across seeds, with each seed evaluated over 50 episodes per deployment mode.                                                   
+
+> Training Regime Sim-Clean Sim+Net Real-Eth Wi-Fi-N Wi-Fi-D Baseline 495 ±7310 ±48 288 ±62 173 ±71 92 ±54 Delay-Only 482 ±11 468 ±16 425 ±32 348 ±49 218 ±58 Full Net-Aware 476 ±9472 ±13 458 ±22 442 ±27 378 ±41
+
+Takeaway: Baseline policies collapse under real Wi-Fi; full network-aware training recovers most of the lost performance. Delay-only training helps but is insufficient, as stochastic jitter and loss are the dominant degraders. Baseline policies achieve near-optimal simulation performance (495 ± 7) but collapse under realistic Wi-Fi (92 ± 54 in Wi-Fi-D, an 81.4% drop). Network-aware training substantially closes this gap: Wi-Fi-D performance reaches 378 ± 41 (20.6% drop from Sim-Clean), a 3.95 × re-duction in deployment gap (t(9) = 12 .7, p < 0.001, d = 2 .31). Delay-only training provides intermediate robustness (218 ± 58), demonstrating that constant delays alone are insufficient and that stochastic jitter and packet loss require explicit modelling. Section 6.2 isolates the contributions of latency, jitter, and loss, confirming that variability and packet dropout are the dominant degraders. Real-Ethernet performance (458 ± 22) is similar to Sim+Network (472 ±
+
+13) in this task. 
+
+6.1.2 MiniGrid Results 
+
+Table 5: MiniGrid: Success Rate (% ± std) over 10 seeds. Each cell reports percentage of episodes successfully reaching the goal, with each seed evaluated over 50 episodes per deployment mode.                                                   
+
+> Training Regime Sim-Clean Sim+Net Real-Eth Wi-Fi-N Wi-Fi-D Baseline 94 ±476 ±973 ±11 61 ±13 44 ±16 Delay-Only 91 ±587 ±684 ±777 ±964 ±11 Full Net-Aware 89 ±487 ±585 ±681 ±774 ±9
+
+MiniGrid exhibits similar trends with smaller effect sizes. Baseline training achieves 94% success in Sim-Clean but drops to 44% in Wi-Fi-D (53.2% degradation). Network-aware training achieves 74% (17.0% degradation), a 3.13 × reduction in deployment gap (t(9) = 8 .4, p < 
+
+0.001, d = 1 .87). The smaller magnitude reflects MiniGrid’s discrete gridworld dynamics, which are more forgiving than CartPole’s unstable continuous control. Delay-only training (64%) again 10 Sim-Clean Sim+Net Real-Eth WiFi-N WiFi-D 
+
+> Deployment Mode
+> 0
+> 100
+> 200
+> 300
+> 400
+> 500
+> Mean Episode Return
+> Error bars represent ±1 standard error across 10 seeds
+> CartPole: Performance Across Deployment Modes
+> Baseline
+> Delay-Only
+> Full Net-Aware
+
+Figure 3: CartPole: Performance comparison across deployment modes for each training regime. Full network-aware training maintains robust performance under real network conditions, while baseline training exhibits severe degradation. Delay-only training provides partial robustness, demonstrating the necessity of modelling jitter and packet loss in addition to latency. Error bars represent ±1 std across 10 seeds. falls between baseline and full network-aware, confirming that stochastic phenomena require explicit modelling. 
+
+6.2 Impact of Different Network Pathologies 
+
+The preceding results show that delay-only training provides partial robustness but leaves a substantial residual gap: CartPole delay-only achieves 218 versus full network-aware’s 378 in Wi-Fi-D, a 160-point difference. We hypothesise that this gap arises from stochastic phenomena, namely variability and dropout, rather than from mean latency alone. To test this, we isolate the individual contributions of latency, jitter, and packet loss. We conduct an ablation study training CartPole policies under four conditions: latency-only (constant 50 ms delay), stochastic additional delay (at each step we add a nonnegative random delay ∆ t ∼ max(0 , N (0 , 40 2)) ms; note that clipping makes the realised mean delay positive, isolating variability without imposing a fixed base latency), loss-only (10% packet dropout, zero delay), and combined (full network model). All policies are evaluated on Real-Wi-Fi-Degraded deployment to assess which training condition provides the best robustness to real-world network impairments. Table 6 presents the results. 
+
+Takeaway: Training on variability (jitter) and loss each improves robustness; combining them is best. Stochastic additional delay training (315 ± 47) and packet loss training (308 ± 49) each improve robustness over baseline; combining them performs best (378 ± 41). These findings challenge common simplifications where network effects are modelled as con-stant k-step delays [16, 18]. Stochastic phenomena (jitter, loss) are more detrimental than constant latency and must be explicitly modelled for robust deployment. 11 Table 6: CartPole Ablation: Mean Episode Return in Real-Wi-Fi-Degraded. Ten seeds per training condition, each evaluated over 50 episodes. Training Regime Real-Wi-Fi-Degraded Baseline (none) 92 ± 54 Latency-Only (50 ms) 275 ± 52 Stochastic Add. Delay ( σ=40 ms) 315 ± 47 Loss-Only (10%) 308 ± 49 Combined (full model) 378 ± 41 
+
+6.3 Distributed Policy Graph Deployment 
+
+We include a small demonstration solely to validate that CALF’s infrastructure can execute multi-unit graphs across devices under network impairments; we do not claim optimal hierarch-ical decomposition. These simple two-unit policy graphs (CartPole and MiniGrid) demonstrate cross-device execution capability with modest overhead. 
+
+6.3.1 CartPole Hierarchical Policy Graph 
+
+Table 7 compares distributed policy-graph deployment (angle-stabiliser on Pi, recentring unit on Desktop) against monolithic baselines. Table 7: CartPole Policy Graph: Performance comparison for distributed deployment. All configurations evaluated over Real-Wi-Fi-Normal network. Deployment Configuration Episode Return E2E Latency (p50/p95) Flat (Desktop) 448 ± 28 38 ms / 62 ms Flat (Pi) 472 ± 21 6 ms / 11 ms Hierarchical (Distributed) 465 ± 24 22 ms / 45 ms Hierarchical deployment achieves performance intermediate between baselines (465 vs 448– 472), demonstrating cross-device viability with modest overhead. 
+
+6.3.2 MiniGrid Hierarchical Policy Graph 
+
+Table 8 compares distributed deployment (key-seeking unit on Pi, goal-navigation unit on Desktop) against monolithic baselines. Table 8: MiniGrid Policy Graph: Success rate comparison. All configurations evaluated over Real-Wi-Fi-Normal network. Deployment Configuration Success Rate (%) Flat (Desktop) 77 ± 9Flat (Pi) 82 ± 7Hierarchical (Distributed) 79 ± 8Hierarchical deployment achieves 79% success, comparable to monolithic baselines (77–82%), demonstrating cross-device viability with modest overhead. 12 6.4 Systems Measurements and Infrastructure Viability 
+
+To assess CALF’s practical feasibility for real-world deployment, we measure end-to-end latency and resource utilisation during distributed policy graph execution. These systems measurements address RQ3 (infrastructure requirements) and demonstrate that CALF’s architecture supports responsive control on resource-constrained edge devices while maintaining efficient utilisation of heterogeneous hardware. 
+
+6.4.1 End-to-End Latency 
+
+Table 9 presents latency measurements across network configurations. Latency is measured from environment observation emission to policy action receipt, capturing the full round-trip communication delay. Table 9: End-to-End Latency: Median and 95th percentile latency measured over 1000 environ-ment steps during CartPole policy graph deployment. “Local” indicates co-located environment and policy; “Remote” indicates networked communication. Configuration Latency p50 (ms) Latency p95 (ms) Local (Pi only) 5.2 9.8 Ethernet (Pi ↔ Desktop) 8.7 14.3 Wi-Fi-Normal 34.5 68.2 Real-Wi-Fi-Degraded 82.1 152.7 Local execution on Raspberry Pi achieves sub-10 ms latency at p95, demonstrating that edge devices can support responsive control loops. Ethernet deployment adds minimal overhead (8.7 ms median versus 5.2 ms local), reflecting the low latency and near-zero packet loss of wired connections. Wi-Fi-Normal introduces substantial variability (34.5 ms median, 68.2 ms p95), with p95 latency exceeding median by 2 × due to jitter and occasional retransmissions. Wi-Fi-Degraded exhibits severe tail latency (152.7 ms p95), demonstrating the worst-case conditions against which network-aware training must be robust. Our synthetic Wi-Fi-Normal model ( N (30 , 10 2) ms latency, 2% loss) falls within the meas-ured range (34.5 ms median). Resource utilisation during distributed execution shows balanced workload distribution: Raspberry Pi operates at 52% average CPU with ample headroom for additional workloads; Desktop at 18% CPU, demonstrating that edge devices can handle real-time control while cloud servers have capacity for compute-intensive planning (full measurements in the code release). 
+
+6.5 Summary of Empirical Findings 
+
+Bandwidth is negligible for low-dimensional control at 50 Hz (approximately 2–3 kB/s per unit), but becomes a constraint for vision-based tasks; we leave compression/offloading trade-offs to future work. Across CartPole and MiniGrid experiments, the results consistently demonstrate that: 1. Network-aware training is critical for robust deployment in our evaluated set-tings . Policies trained without network awareness exhibit severe degradation (40–80% performance drop) when deployed over real Wi-Fi networks. Network-aware training re-duces this gap by 3 −4×, enabling practical deployment. 2. Stochastic network phenomena require explicit modelling . Training under con-stant delays alone provides partial robustness, but jitter and packet loss, often ignored in delay-aware RL research, prove equally or more detrimental. The full stochastic network model (latency + jitter + loss) must be included during training. 13 3. CALF supports cross-device policy-graph execution with modest overhead .Two simple decompositions (rule-managed, independently trained units) demonstrate de-ployability across edge and cloud hardware with performance close to flat policies. 4. CALF’s infrastructure is practically viable . End-to-end latency and resource utilisa-tion measurements demonstrate that CALF supports responsive control on edge devices, efficient use of heterogeneous hardware, and scalability to bandwidth-constrained net-works. These findings establish network conditions as a major axis of sim-to-real transfer for dis-tributed RL under Wi-Fi-like conditions (see Section 7 for implications). 
+
+# 7 Discussion 
+
+7.1 Network as an Orthogonal Axis of Sim-to-Real Transfer 
+
+Our work establishes that network conditions constitute an independent dimension of do-main randomisation , orthogonal to physics and visual randomisation. The analogy is direct: just as physics randomisation samples friction ∼ U (0 .3, 0.7) to make policies robust to uncertain surfaces, network randomisation samples latency ∼ N (30 ms , 10 ms 2) to make policies robust to uncertain networks. Both expose the agent to a distribution during training, yielding robustness at deployment. Critically, our ablation (Section 6.2) shows that sampling only a constant delay is analogous to randomising only the mean of a physical parameter while ignoring variance and outliers: robustness comes from exposure to variability and failures. Training on constant 50 ms latency provides partial robustness, but stochastic jitter and packet loss are the dominant degraders, just as ignoring friction variance would leave policies brittle to slippery surfaces despite nominally realistic mean friction. This perspective has important design implications. For distributed control loops over Wi-Fi-like networks, we find network conditions constitute a major axis comparable to physics or visual domain randomisation. A policy trained with perfect timing in simulation may fail on a real system with 100 ms lag, even if the physics are perfectly modelled. Conversely, a network-robust policy may succeed despite physics mismatch. The two axes interact but are conceptually and empirically distinct. We provide a systematic study of network impairments as a deployment variable for dis-tributed RL, supported by a reproducible impairment-injection framework. While prior work has occasionally addressed delays (e.g., Hwangbo et al. [14] modelling actuator dynamics for quadruped robots), these efforts were treated as engineering fixes specific to particular robots rather than general methodologies. CALF provides the infrastructure to make network-aware training systematic, reproducible, and widely accessible for distributed RL systems where policy units communicate over real networks. 
+
+7.2 CALF as a Platform for Future Work 
+
+CALF provides reusable infrastructure that extends beyond the experiments demonstrated in this paper. The framework’s modular architecture and progressive deployment modes sup-port diverse distributed RL research directions, from developing efficient models for resource-constrained edge devices to investigating effect-based hierarchical policy decomposition with physical hardware partitioning. The networking infrastructure enables real-time embodied con-trol applications requiring sub-100 ms end-to-end latency, bridging the gap between theoretical distributed RL frameworks and practical edge-cloud deployments. For the broader research community, CALF enables new research directions. The frame-work will be released as open-source software (with module repository and documentation) to 14 facilitate adoption. Potential applications include standardised benchmarks for network-aware RL using versioned CALF modules, multi-agent extensions where agents communicate over NetworkShim-injected delays, trace-based training using recorded real-world network condi-tions, dynamic offloading where policies learn to partition computation between edge and cloud based on current network state, and integration with advanced RL algorithms (e.g., combining CALF with delay-correcting actor-critic [19] for potentially greater robustness). 
+
+7.3 Limitations 
+
+We acknowledge several limitations that constrain the scope of our conclusions and suggest directions for future work: 
+
+1. Simulated environments. CartPole and MiniGrid are simulated physics environments, not real robots. While this allows us to isolate network effects (orthogonal to physics fidelity), it limits ecological validity. Real robots introduce additional challenges: sensor noise, actuation dynamics, safety constraints, and wear-and-tear that simulations do not capture. Future work should test CALF’s approach on physical systems. 
+
+2. Limited network scenarios. Our experiments focus on LAN-like conditions (Ethernet, Wi-Fi within the same building). We do not evaluate WAN scenarios (multi-hop routing, con-tinental distances), cellular networks (handoff, variable bandwidth), or adversarial conditions (intentional jamming, Byzantine failures). These scenarios exhibit different network character-istics (e.g., cellular has asymmetric latency, WAN has routing-induced jitter) that may require different training strategies. 
+
+3. Simple policy graphs. Our distributed policy graph demonstrations use 2-unit de-compositions with rule-based manager units. We do not explore deep policy graph hierarchies (3+ levels), learned option discovery, or end-to-end training of policy graphs under network constraints. Future work could investigate how hierarchical RL algorithms (Option-Critic [9], HIRO [11]) perform when trained as distributed policy graphs with CALF’s network mod-els, and develop principled methods for training effect-based hierarchical decompositions under network constraints. 
+
+4. Offline training. Our methodology trains policies in simulation with synthetic network models, then deploys on real networks. We do not explore online learning or adaptation under network constraints (e.g., policy continues learning during real deployment, adapting to observed network conditions). Online adaptation could potentially close the remaining sim-to-real gap. 
+
+5. Single-agent focus. CALF currently targets single-agent control RL. Multi-agent scenarios introduce additional complexity: agent-to-agent communication delays, consensus un-der asynchrony, and emergent coordination strategies. Extending CALF to multi-agent RL (MARL) is a natural next step. Despite these limitations, our focus on network effects is orthogonal to physics fidelity. The finding that network-aware training reduces the network reality gap by 3 −4× is expected to generalise to physical robots, though empirical testing is necessary. 
+
+7.4 Future Directions 
+
+The most immediate extension is to richer tasks and physical deployment. Applying CALF to continuous control (MuJoCo locomotion, manipulation), vision-based tasks where high-resolution images force bandwidth and fidelity trade-offs, and physical robotic platforms (quad-rupeds, manipulators, drones) would validate whether network-aware training scales beyond low-dimensional discrete control. Real robots introduce sensor noise, actuation dynamics, and safety constraints that compound network effects. On the networking side, richer models and training distributions would broaden applic-ability. Time-varying conditions (diurnal patterns, congestion events), adversarial networks (jamming, Byzantine faults), and trace-based training using real-world logs from cellular and 15 Wi-Fi deployments would enable training tailored to specific deployment scenarios, such as hospital Wi-Fi versus outdoor construction sites. Trace datasets from network operators could provide realistic, diverse distributions for domain randomisation. A further direction concerns learned decomposition and coordination. End-to-end policy graph training under network constraints raises fundamental questions, including whether hier-archical RL algorithms (Option-Critic, feudal networks) can discover temporally extended op-tions that are naturally robust to delays, and whether policies can learn where to partition computation across devices based on communication costs, deciding which decisions require fresh observations and which tolerate staleness. Extending the framework to multi-agent co-ordination, where network delays affect both agent-environment and agent-agent channels, and to dynamic computation offloading, where policies switch between local inference and cloud offloading based on current network state, would address the full space of distributed RL de-ployment challenges. Together, these directions aim to make network-aware training standard practice for em-bodied AI, just as physics and visual domain randomisation are now standard for sim-to-real transfer. 
+
+# 8 Conclusion 
+
+This paper introduced CALF (Communication-Aware Learning Framework), infrastructure for network-aware distributed reinforcement learning across heterogeneous hardware. CALF ad-dresses a critical gap in distributed RL deployment: network delays, jitter, and packet loss in the agent-environment control loop. Standard RL training assumes synchronous, zero-latency interaction, but real-world distributed deployments, where environments run on edge devices and policies execute on cloud servers or where control is partitioned across heterogeneous pro-cessors, face communication constraints that fundamentally alter interaction dynamics. Hier-archical RL frameworks for temporal abstraction and modular decomposition (options, policy graphs) face additional challenges when distributed, as inter-unit communication compounds agent-environment delays. CALF realises hierarchical policies as networked services communicating via a binary pro-tocol, with NetworkShim middleware transparently injecting realistic network impairments on communication channels. This architecture enables network-aware training: exposing distrib-uted policies to realistic communication conditions during simulation such that they develop robustness to deployment networks. Systematic experiments on CartPole and MiniGrid demon-strated that policies trained without network awareness suffer severe degradation (40–80% per-formance drop) when deployed over realistic Wi-Fi, while network-aware training reduces this gap by approximately 4 × (CartPole) and 3 × (MiniGrid). Critically, stochastic network phe-nomena, in particular jitter and packet loss, prove more detrimental than constant latency, challenging delay-aware RL research that models only fixed delays. Simple two-unit policy graph deployments across Raspberry Pi edge devices and Desktop cloud servers demonstrated the feasibility of cross-device execution with modest overhead. As discussed in Section 7, these findings establish network conditions as an orthogonal axis of sim-to-real transfer, analogous to physics and visual domain randomisation, that must be accounted for in distributed RL deployments where communication introduces unavoidable delays and failures. CALF provides reusable infrastructure that extends beyond the experiments demonstrated here. The framework’s progressive deployment modes (pure simulation, simulation with net-work models, real hardware with real networks) de-risk the path from theoretical hierarchical RL frameworks to production edge-cloud deployments, validating that policies trained with network-awareness transfer successfully to physical systems. By treating network conditions as first-class objects (configurable, loggable, reproducible) rather than hidden implementation 16 details, CALF provides infrastructure for network-aware training in distributed reinforcement learning systems, transforming communication constraints from deployment obstacles into tract-able training objectives. Future work should validate these findings on physical robots, explore richer network scenarios (cellular, WAN, adversarial conditions), investigate end-to-end train-ing of deep hierarchical policies under network constraints, and extend CALF to multi-agent coordination where network delays affect both agent-environment and agent-agent interactions. 
+
+# References 
+
+[1] Marc G. Bellemare, Yavar Naddaf, Joel Veness, and Michael Bowling. The arcade learning environment: An evaluation platform for general agents. Journal of Artificial Intelligence Research , 47:253–279, 2013. [2] Yuval Tassa, Yotam Doron, Alistair Muldal, Tom Erez, Yazhe Li, Diego de Las Casas, David Budden, Abbas Abdolmaleki, Josh Merel, Andrew Lefrancq, et al. DeepMind Control Suite. arXiv preprint arXiv:1801.00690 , 2018. [3] Greg Brockman, Vicki Cheung, Ludwig Pettersson, Jonas Schneider, John Schulman, Jie Tang, and Wojciech Zaremba. OpenAI Gym, 2016. arXiv preprint arXiv:1606.01540. [4] Lasse Espeholt, Hubert Soyer, Remi Munos, Karen Simonyan, Volodymyr Mnih, Tom Ward, Yotam Doron, Vlad Firoiu, Tim Harley, Iain Dunning, et al. IMPALA: Scalable distributed deep-RL with importance weighted actor-learner architectures. In Proceedings of the 35th International Conference on Machine Learning , pages 1407–1416, 2018. [5] Lasse Espeholt, Rapha¨ el Marinier, Piotr Stanczyk, Ke Wang, and Marcin Michalski. SEED RL: Scalable and efficient deep-RL with accelerated central inference. In International Conference on Learning Representations , 2020. [6] Richard S. Sutton, Doina Precup, and Satinder Singh. Between MDPs and semi-MDPs: A framework for temporal abstraction in reinforcement learning. Artificial Intelligence ,112(1-2):181–211, 1999. [7] Ronald Parr and Stuart Russell. Reinforcement learning with hierarchies of machines. In 
+
+Advances in Neural Information Processing Systems 10 , pages 1043–1049, 1998. [8] Thomas G. Dietterich. Hierarchical reinforcement learning with the maxq value function decomposition. Journal of Artificial Intelligence Research , 13:227–303, 2000. [9] Pierre-Luc Bacon, Jean Harb, and Doina Precup. The option-critic architecture. In AAAI Conference on Artificial Intelligence , pages 1726–1734, 2017. [10] Alexander Sasha Vezhnevets, Simon Osindero, Tom Schaul, Nicolas Heess, Max Jaderberg, David Silver, and Koray Kavukcuoglu. FeUdal Networks for hierarchical reinforcement learning. In Proceedings of the 34th International Conference on Machine Learning , pages 3540–3549, 2017. [11] Ofir Nachum, Shixiang Shane Gu, Honglak Lee, and Sergey Levine. Data-efficient hier-archical reinforcement learning. In Advances in Neural Information Processing Systems ,pages 3303–3313, 2018. [12] Josh Tobin, Rachel Fong, Alex Ray, Jonas Schneider, Wojciech Zaremba, and Pieter Ab-beel. Domain randomization for transferring deep neural networks from simulation to the real world. In Proceedings of the 2017 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) , pages 23–30, 2017. 17 [13] Xue Bin Peng, Marcin Andrychowicz, Wojciech Zaremba, and Pieter Abbeel. Sim-to-real transfer of robotic control with dynamics randomization. In International Conference on Robotics and Automation , pages 1–8, 2018. [14] Jemin Hwangbo, Joonho Lee, Alexey Dosovitskiy, Dario Bellicoso, Vassilios Tsounis, Vladlen Koltun, and Marco Hutter. Learning agile and dynamic motor skills for legged robots. Science Robotics , 4(26), 2019. [15] Konstantinos V. Katsikopoulos and Sascha E. Engelbrecht. Markov decision processes with delays and asynchronous cost collection. IEEE Transactions on Automatic Control ,48(4):568–574, 2003. [16] Thomas J. Walsh, Ali Nouri, Lihong Li, and Michael L. Littman. Planning and learning in environments with delayed feedback. In Machine Learning: ECML 2007 , volume 4701 of Lecture Notes in Computer Science , pages 442–453. Springer, 2007. [17] Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Andrei A. Rusu, Joel Veness, Marc G. Bellemare, Alex Graves, Martin Riedmiller, Andreas K. Fidjeland, Georg Ostrovski, Stig Petersen, Charles Beattie, Amir Sadik, Ioannis Antonoglou, Helen King, Dharshan Ku-maran, Daan Wierstra, Shane Legg, and Demis Hassabis. Human-level control through deep reinforcement learning. Nature , 518(7540):529–533, 2015. [18] Erik Schuitema, Lucian Busoniu, Robert Babuska, and Pieter Jonker. Control delay in rein-forcement learning for real-time dynamic systems: A memoryless approach. In IEEE/RSJ International Conference on Intelligent Robots and Systems , pages 3226–3231, 2010. [19] Yann Bouteiller, Simon Ramstedt, Giovanni Beltrame, Christopher Pal, and Jonathan Bi-nas. Reinforcement learning with random delays. In International Conference on Learning Representations , 2021. [20] Jo˜ ao P. Hespanha, Payam Naghshtabrizi, and Yonggang Xu. A survey of recent results in networked control systems. Proceedings of the IEEE , 95(1):138–162, 2007. [21] OpenAI, Ilge Akkaya, Marcin Andrychowicz, Maciek Chociej, Mateusz Litwin, Bob Mc-Grew, Arthur Petron, Alex Paino, Matthias Plappert, Glenn Powell, et al. Solving Rubik’s cube with a robot hand. arXiv preprint arXiv:1910.07113 , 2019. [22] Jie Tan, Tingnan Zhang, Erwin Coumans, Atil Iscen, Yunfei Bai, Danijar Hafner, Steven Bohez, and Vincent Vanhoucke. Sim-to-real: Learning agile locomotion for quadruped robots. In Proceedings of Robotics: Science and Systems (RSS) , 2018. [23] Yevgen Chebotar, Ankur Handa, Viktor Makoviychuk, Miles Macklin, Jan Issac, Nathan Ratliff, and Dieter Fox. Closing the sim-to-real loop: Adapting simulation randomization with real world experience. In International Conference on Robotics and Automation , pages 8973–8979, 2019. [24] Aleksei Petrenko, Zhehui Huang, Tushar Kumar, Gaurav Sukhatme, and Vladlen Koltun. Sample factory: Egocentric 3D control from pixels at 100000 FPS with asynchronous re-inforcement learning. In Proceedings of the 37th International Conference on Machine Learning , pages 7652–7662, 2020. [25] Iker Zamora, Nestor Gonzalez Lopez, Victor Mayoral Vilches, and Alejandro Hernandez Cordero. Extending the OpenAI Gym for robotics: A toolkit for reinforcement learning using ROS and Gazebo. In arXiv preprint arXiv:1608.05742 , 2016. 18 [26] Viktor Makoviychuk, Lukasz Wawrzyniak, Yunrong Guo, Michelle Lu, Kier Storey, Miles Macklin, David Hoeller, Nikita Rudin, Arthur Allshire, Ankur Handa, et al. Isaac Gym: High performance GPU-based physics simulation for robot learning. arXiv preprint arXiv:2108.10470 , 2021. [27] Yiping Kang, Johann Hauswald, Cao Gao, Austin Rovinski, Trevor N. Mudge, Jason Mars, and Lingjia Tang. Neurosurgeon: Collaborative intelligence between the cloud and mobile edge. In Proceedings of the 22nd International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS) , pages 615–629, 2017. [28] Sainbayar Sukhbaatar, Arthur Szlam, and Rob Fergus. Learning multiagent communication with backpropagation. In Advances in Neural Information Processing Systems , volume 29, 2016. [29] Tonghan Wang, Jianhao Wang, Chongyi Zheng, and Chongjie Zhang. Learning nearly de-composable value functions via communication minimization. In International Conference on Learning Representations , 2020. [30] Bob Lantz, Brandon Heller, and Nick McKeown. A network in a laptop: Rapid prototyping for software-defined networks. In Proceedings of the 9th ACM SIGCOMM Workshop on Hot Topics in Networks , pages 1–6, 2010. [31] Ravi Netravali, Anirudh Sivaraman, Somak Das, Ameesh Goyal, Keith Winstein, James Mickens, and Hari Balakrishnan. Mahimahi: Accurate record-and-replay for HTTP. In 
+
+USENIX Annual Technical Conference , pages 417–429, 2015. [32] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. In arXiv preprint arXiv:1707.06347 , 2017. [33] Antonin Raffin, Ashley Hill, Adam Gleave, Anssi Kanervisto, Maximilian Ernestus, and Noah Dormann. Stable-baselines3: Reliable reinforcement learning implementations. 
+
+Journal of Machine Learning Research , 22(268):1–8, 2021. 19

@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-001.webp",
+      "caption": "Figure 1: Cat Feeder env.",
+      "page": 1,
+      "index": 1,
+      "width": 373,
+      "height": 374
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-002.webp",
+      "caption": "Figure 2: Atari Assault env.",
+      "page": 6,
+      "index": 2,
+      "width": 375,
+      "height": 487
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-003.webp",
+      "caption": "Table 5: Cat Feeder DWN baseline hyperparameters.",
+      "page": 15,
+      "index": 3,
+      "width": 522,
+      "height": 545
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-004.webp",
+      "caption": "Table 1: Performance (mean and standard deviation across 5 seeds) at the best evaluation iteration. Cat Feeder values measure performance as the difference between number of feeding requests completed and those that expired. Atari Assault values are the game score.",
+      "page": 7,
+      "index": 4,
+      "width": 544,
+      "height": 334
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-005.webp",
+      "caption": "Figure 3: Learning curves for different methods on Cat Feeder (left) and Atari Assault (right). We plot mean over 5 seeds at each evaluation iteration and the shaded region is ± standard deviation.",
+      "page": 7,
+      "index": 5,
+      "width": 976,
+      "height": 354
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-006.webp",
+      "caption": "Table 4: Cat Feeder single-agent PPO baseline hyperparameters. Hyperparameters were tuned using Optuna with 40 trials. The nearest-target shaping variant is identical but uses a distance reward scale of 0.6 with shaping toward the nearest target.",
+      "page": 14,
+      "index": 6,
+      "width": 494,
+      "height": 509
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-007.webp",
+      "caption": "Table 3: Cat Feeder multi-agent PPO hyperparameters (All-Pay and Winner-Pays).",
+      "page": 14,
+      "index": 7,
+      "width": 518,
+      "height": 668
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-008.webp",
+      "caption": "Figure 4: Comparison of control and bid distributions across environments and methods. The control distribution is the number of timesteps controlled by each policy, while the bid distribution is the distribution over bids picked by the policies.",
+      "page": 8,
+      "index": 8,
+      "width": 814,
+      "height": 721
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-009.webp",
+      "caption": "Table 9: Assault DWN baseline hyperparameters.",
+      "page": 17,
+      "index": 9,
+      "width": 527,
+      "height": 544
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-010.webp",
+      "caption": "Figure 5: Scaling number of targets and ablations on the Cat Feeder environment.",
+      "page": 9,
+      "index": 10,
+      "width": 976,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-011.webp",
+      "caption": "Figure 6: Effect of action window on performance: Cat Feeder (top) and Atari Assault (bottom).",
+      "page": 9,
+      "index": 11,
+      "width": 394,
+      "height": 591
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02151v1/fig-012.webp",
+      "caption": "Table 7: Assault multi-agent PPO hyperparameters (All-Pay and Winner-Pays).",
+      "page": 16,
+      "index": 12,
+      "width": 468,
+      "height": 486
+    }
+  ]
+}

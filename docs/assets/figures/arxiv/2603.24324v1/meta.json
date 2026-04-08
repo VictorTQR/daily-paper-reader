@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.24324v1/fig-001.webp",
+      "caption": "Table 1: Final evaluation on four Overcooked layouts. J denotes sparse return (mean ± std across evaluation episodes). Deliveries and invalid deliveries are episode means.",
+      "page": 7,
+      "index": 1,
+      "width": 1030,
+      "height": 189
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v1/fig-002.webp",
+      "caption": "Figure 3: Layouts used in the reported experiments: Cramped Room, Forced Coordination, Coordination Ring, and Asymmetric Advantages.",
+      "page": 7,
+      "index": 2,
+      "width": 976,
+      "height": 199
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v1/fig-003.webp",
+      "caption": "Figure 1: The proposed objective-grounded reward search framework.",
+      "page": 3,
+      "index": 3,
+      "width": 932,
+      "height": 548
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v1/fig-004.webp",
+      "caption": "Figure 4: Learning curves of evaluation sparse return J for the MAPPO baseline and the selected candidates from the first and second generations. Shaded regions indicate variability across evaluation episodes.",
+      "page": 8,
+      "index": 4,
+      "width": 975,
+      "height": 612
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v1/fig-005.webp",
+      "caption": "Figure 5: Candidate promotion diagram. Nodes summarize evaluated candidates and objective scores, and edges indicate the promotion path used to condition subsequent generations.",
+      "page": 8,
+      "index": 5,
+      "width": 806,
+      "height": 477
+    },
+    {
+      "url": "assets/figures/arxiv/2603.24324v1/fig-006.webp",
+      "caption": "Figure 2: Overview of the CTDE paradigm for multi-agent reinforcement learning. (a) Centralized Training: A shared critic (V) utilizes global state information and joint observation buffers to guide policy updates via training feedback. (b) Decentralized Execution: Individual actors (πi) rely exclusively on local observations for action selection, ensuring scalability in partially observable environments.",
+      "page": 5,
+      "index": 6,
+      "width": 957,
+      "height": 454
+    }
+  ]
+}

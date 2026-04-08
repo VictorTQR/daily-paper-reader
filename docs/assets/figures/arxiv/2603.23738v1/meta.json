@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2603.23738v1/fig-001.webp",
+      "caption": "Figure 3: Six scenarios defining the collision behavior measure mc. Each causes the ego car (dark gray) to crash within two timesteps. Columns correspond to the action taken: LEFT, RIGHT, or FASTER.",
+      "page": 11,
+      "index": 1,
+      "width": 826,
+      "height": 370
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23738v1/fig-002.webp",
+      "caption": "Table 2: Examples of expressing behaviors in different domains as a measure m(π).",
+      "page": 7,
+      "index": 2,
+      "width": 836,
+      "height": 202
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23738v1/fig-003.webp",
+      "caption": "Figure 2: Left: Return breakdown of a PPO agent training on HighJax. Training is deliberately slowed down to DKL = 5 × 10−4 per epoch. Right: Value of the collision behavior measure mc across training.",
+      "page": 10,
+      "index": 3,
+      "width": 817,
+      "height": 250
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23738v1/fig-004.webp",
+      "caption": "Table 4: Observation matrices for the six scenarios defining the collision behavior measure mc (Eq. 4). Each matrix O ∈ R5×5 contains the ego vehicle (absolute) and four nearest NPCs (relative). Columns: presence, longitudinal position, lateral position, longitudinal velocity, lateral velocity.",
+      "page": 18,
+      "index": 4,
+      "width": 781,
+      "height": 519
+    },
+    {
+      "url": "assets/figures/arxiv/2603.23738v1/fig-005.webp",
+      "caption": "Table 1: A cross-taxonomy of XRL methods according to their explanation targets. The purple cells indicate the corresponding categories in three surveys.",
+      "page": 4,
+      "index": 5,
+      "width": 824,
+      "height": 265
+    }
+  ]
+}
