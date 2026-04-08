@@ -25,3 +25,57 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: RL AGT
+      description: 强化学习和智能体相关的论文查找
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: retrieval augmented generation
+          keyword_cn: 检索增强生成
+          query: retrieval augmented generation
+        - keyword: Reinforcement Learning
+          keyword_cn: 强化学习
+          query: Fundamental theories and algorithms of reinforcement learning
+        - keyword: Multi-Agent Systems
+          keyword_cn: 多智能体系统
+          query: Multi-agent reinforcement learning and coordination
+        - keyword: LLM Agents
+          keyword_cn: 大语言模型智能体
+          query: Large language model based autonomous agents
+        - keyword: Agent Architectures
+          keyword_cn: 智能体架构
+          query: Design and frameworks for intelligent agent systems
+      intent_queries:
+        - query: Recent advances in reinforcement learning and autonomous agents
+          query_cn: 强化学习与自主智能体的最新进展
+          enabled: true
+          source: manual
+          note: ''
+        - query: State of the art multi agent reinforcement learning techniques
+          query_cn: 多智能体强化学习的前沿技术
+          enabled: true
+          source: manual
+          note: ''
+        - query: Integration of large language models with reinforcement learning agents
+          query_cn: 大语言模型与强化学习智能体的集成
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-04-08T02:48:12.993Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
