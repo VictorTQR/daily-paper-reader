@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02786v1/fig-001.webp",
+      "caption": "Fig. 1. Complex reasoning using our agent system. Given the identical conditional task, the left and right panels illustrate the agent’s behavior depending on observations: the agent navigates to the badminton net through random obstacles when \"yellow sign number 7\" is observed (left), and proceeds to the white table in front of the yellow frame when it is not (right).",
+      "page": 1,
+      "index": 1,
+      "width": 518,
+      "height": 576
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02786v1/fig-002.webp",
+      "caption": "TABLE I QUANTITATIVE ANALYSIS IN SIMULATION. ↑: HIGHER IS BETTER, ↓: LOWER IS BETTER. THE BEST RESULTS ARE HIGHLIGHTED IN BOLD.",
+      "page": 6,
+      "index": 2,
+      "width": 932,
+      "height": 194
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02786v1/fig-003.webp",
+      "caption": "Fig. 6. Qualitative evaluation of the QuadAgent in real-world environments. (a) Experiment 1: The UAV executes a long-horizon conditional task. The trajectory highlights an agile avoidance of unmapped obstacles (red box) and the timeline illustrates the autonomous sequential completion of sub-tasks. (b) Experiment 2: The agent utilizes the topological connectivity of the Impression Graph to identify and execute a spatial shortcut (solid blue line) to Goal 1 compared with the longer one (dashed blue line). (c) Experiment 3: During the navigation to Goal 1, a conflicting user input triggers an immediate trajectory update towards Goal 2 (blue line), preempting the original planned path to Goal 1 (dark green dashed line). While navigating to Goal 3, the agent processes an informational user input, answering the user in parallel without interrupting the physical flight. Note: Text color-coding and goal annotations are for visualization only. In practice, the agent receives a single unified instruction and infers targets autonomously.",
+      "page": 7,
+      "index": 3,
+      "width": 1040,
+      "height": 748
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02786v1/fig-004.webp",
+      "caption": "Fig. 2. System Overview. In Foreground Workflow Agents, the orchestrator monitors events (ϵusr, ϵphy) in the idle state and routes tasks to the planner or executor. Both the executor and pre-executor autonomously call mnemonic, navigation, or perceptual skills from the skill library. Notably, the navigation skill triggers ϵpath to drive the onboard physical layer state machine for actuation, transitioning among the following states: qhover (hovering), qalign_s (in-place rotation to align with the initial path heading), qavoid (path tracking via collision avoidance policy), and qalign_e (in-place rotation to the final target orientation). The Impression Graph at the top right underpins mnemonic and navigation skills as the scene prior representation. Images in the Impression Graph and the physical layer show the arena and UAV used in real-world experiments.",
+      "page": 3,
+      "index": 4,
+      "width": 994,
+      "height": 506
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02786v1/fig-005.webp",
+      "caption": "Fig. 4. Data Flow of Background Pre-execution. The pipeline branches from the task registry (center left). While the Foreground Workflow Agents execute the task from the first one, upcoming sub-tasks are assigned across Background Agents (bottom) for pre-execution using mnemonic skills. The retrieved context is cached in a shared buffer (center right) and dynamically injected into the prompt of the Executor (top right).",
+      "page": 4,
+      "index": 5,
+      "width": 510,
+      "height": 431
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02786v1/fig-006.webp",
+      "caption": "Fig. 3. Timelines of Typical Cases. In each sub-image, the upper rows depict the Foreground Workflow Agents’ lifecycle, where qidle marks the idle state, qorc indicates the orchestrator’s active routing phase, and qplan/qexec denote the engagement of the planner and executor, respectively. The lower rows track the physical layer states. (a) Our suspend-andresume protocol yields the agent to the idle state (qidle) immediately after triggering ϵpath, enabling “Chatting-while-Flying”, unlike the Blocking Baseline (b) where the agent is blocked until physical completion. (c) Informational Queries are resolved in parallel with the ongoing flight state (qavoid). (d) Conflicting Commands trigger preemptive replanning, issuing a new ϵpath to immediately redirect the UAV.",
+      "page": 4,
+      "index": 6,
+      "width": 513,
+      "height": 805
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02786v1/fig-007.webp",
+      "caption": "Fig. 5. Impression Graph Construction Pipeline. (a) Topological Connectivity: The depth map is tessellated into patches and projected into geometric pyramidal frustums. Edges (ni, nj) are established solely if the volumetric intersection of their frustums exceeds σvol. (b) Semantic Generation: Irgb is segmented into depth-stratified views (Near, Far, Full) and concatenated into a composite input for the VLM.",
+      "page": 5,
+      "index": 7,
+      "width": 506,
+      "height": 530
+    }
+  ]
+}

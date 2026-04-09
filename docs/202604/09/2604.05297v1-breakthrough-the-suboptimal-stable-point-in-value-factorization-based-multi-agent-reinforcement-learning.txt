@@ -1,0 +1,2810 @@
+Title: Breakthrough the Suboptimal Stable Point in Value-Factorization-Based Multi-Agent Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.05297v1
+
+Published Time: Wed, 08 Apr 2026 00:28:27 GMT
+
+Number of Pages: 31
+
+Markdown Content:
+# Breakthrough the Suboptimal Stable Point in Value-Factorization-Based Multi-Agent Reinforcement Learning 
+
+Lesong Tao 1 Yifei Wang 1 Haodong Jing 1 Jingwen Fu 2 Miao Kang 1 Shitao Chen 1 Nanning Zheng 1
+
+Abstract 
+
+Value factorization, a popular paradigm in MARL, faces significant theoretical and algorithmic bot-tlenecks: its tendency to converge to subopti-mal solutions remains poorly understood and un-solved. Theoretically, existing analyses fail to explain this due to their primary focus on the opti-mal case. To bridge this gap, we introduce a novel theoretical concept: the stable point, which char-acterizes the potential convergence of value factor-ization in general cases. Through an analysis of stable point distributions in existing methods, we reveal that non-optimal stable points are the pri-mary cause of poor performance. However, algo-rithmically, making the optimal action the unique stable point is nearly infeasible. In contrast, iter-atively filtering suboptimal actions by rendering them unstable emerges as a more practical ap-proach for global optimality. Inspired by this, we propose a novel Multi-Round Value Factorization (MRVF) framework. Specifically, by measuring a non-negative payoff increment relative to the pre-viously selected action, MRVF transforms inferior actions into unstable points, thereby driving each iteration toward a stable point with a superior ac-tion. Experiments on challenging benchmarks, in-cluding predator-prey tasks and StarCraft II Multi-Agent Challenge (SMAC), validate our analysis of stable points and demonstrate the superiority of MRVF over state-of-the-art methods. 
+
+1. Introduction 
+
+Multi-agent reinforcement learning (MARL) effectively ad-dresses many real-world problems, such as robotics (Hüt-tenrauch et al., 2019), automated warehouses (Tao et al., 2024), and games (Berner et al., 2019). MARL’s core issue 
+
+> 1
+
+State Key Laboratory of Human-Machine Hybrid Augmented Intelligence, Institute of Artificial Intelligence and Robotics, Xi’an Jiaotong University 2Zhongguancun Academy. Correspondence to: Nanning Zheng <nnzheng@mail.xjtu.edu.cn>. 
+
+Preprint. April 8, 2026. Clip  Clip    
+
+> Current Solution Optimal Solution
+> 123
+
+Figure 1. Clipping payoffs in the multi-round process. In this example, the two suboptimal solutions have relatively high payoffs. Therefore, existing methods are likely to select one of them. In contrast, by clipping the payoff of the selected solution, MRVF avoids convergence to it in subsequent rounds. Eventually, only the optimal solution retains a high payoff, making it easily identifiable. 
+
+is finding the optimal action in an action space that grows ex-ponentially with the number of agents. To address this issue, value factorization methods represent the joint action value in a specific form. Early value factorization methods, such as VDN (Sunehag et al., 2017) and QMIX (Rashid et al., 2020b), represent the joint action value through a monotonic mix of individual action values. This monotonic relation-ship ensures that the optimal joint action can be obtained by searching through individual action spaces. However, be-cause of the monotonic particularity, these methods struggle to obtain the global optimum in non-monotonic cases. To mitigate the representational limitation in VDN and QMIX, recent methods introduce new fitting functions (e.g., QPLEX (Wang et al., 2021) and ResQ (Shen et al., 2022)) or loss functions (e.g., QTRAN (Son et al., 2019) and WQMIX (Rashid et al., 2020a)). However, these algorithms often converge to suboptimal solutions, particularly when initialized non-optimally. This phenomenon remains insuffi-ciently understood, since existing analyses typically assume convergence from the optimal initialization. To bridge this gap, we introduce a novel theory to analyze the conver-gence under general initialization. A key issue is the gradient discontinuity inherent to value factorization under general initialization. To address this, we model the solu-tion trajectory as a discrete dynamical system, with stable points corresponding to converged solutions. This perspec-tive enables our analysis to more accurately reflect empirical outcomes than prior work (Ye et al., 2022). By characteriz-ing the distribution of stable points, we demonstrate that the 1
+
+> arXiv:2604.05297v1 [cs.AI] 7 Apr 2026 Submission and Formatting Instructions for ICML 2026
+
+prevalence of suboptimal stable points is a primary cause of the poor performance exhibited by existing methods. From the above discussion, a necessary condition for exist-ing methods to achieve global optimality is that the optimal action is the unique stable point. However, this uniqueness rarely holds under a single factorization due to the high dimensionality of multi-agent action spaces. In contrast, we point out a more tractable alternative: iteratively transform-ing suboptimal actions into unstable points until only the optimal action remains stable. Inspired by this, we propose a multi-round value factorization (MRVF) framework .As illustrated in Figure 1, 1) for each round , MRVF clips the difference between raw payoff and the payoff obtained in the preceding round to zero. This clipping operation not only renders inferior actions unstable, but also enhances the stability of superior actions by suppressing surrounding low-payoff influences. Consequently, the solution in each round converges to a superior action. 2) As a whole , since every round strictly improves the solution, MRVF can find the optimal solution given a sufficient number of rounds. Environments with highly non-monotonic payoffs (Rashid et al., 2020a) require significant coordination, which is extremely challenging for MARL. Accordingly, we con-duct experiments on non-monotonic one-step games and the predator-prey task (Böhmer et al., 2020). Existing methods perform poorly in these environments, corroborating our the-oretical results on their suboptimality. In contrast, MRVF achieves better performance in both highly non-monotonic and nearly monotonic settings (e.g., the StarCraft Multi-Agent Challenge, SMAC (Whiteson et al., 2019)), demon-strating that its multi-round iterations can attain a nearly optimal solution. 
+
+2. Related Work 
+
+Value-based Methods IQL (Tan, 1993) is one of the ear-liest methods where agents independently learn individual action values. However, this method does not account for the dynamic policies of other agents. To address this is-sue, recent works propose learning a factorized joint action value under the IGM principle. Monotonic factorization is an intuitive way to satisfy the IGM principle. For exam-ple, VDN (Sunehag et al., 2017) represents the joint action value as the sum of individual action values. QMIX (Rashid et al., 2020b) represents the joint action value with a mono-tonic network that uses a positive weighted linear to deal with individual action values. Qattan (Yang et al., 2020) uses multi-head attention (Vaswani et al., 2017) to generate mixing weights. NA 2Q (Liu et al., 2023) improves inter-pretability through Taylor expansion-based monotonic fac-torization. GoMARL (Zang et al., 2023) and HYGMA (Liu & Li, 2025) introduce a grouping mechanism into mono-tonic factorization. However, monotonic factorizations may suffer from representational limitations. To address this issue, QTRAN (Son et al., 2019) and WQMIX (Rashid et al., 2020a) pay more attention to the estimation of greedy action values. Specifically, QTRAN introduces a compen-satory base to relax the non-optimal errors, while WQMIX reduces the weight on the approximation of non-optimal parts. Other methods like QPLEX (Wang et al., 2021) and ResQ (Shen et al., 2022) design complete factorizations of the joint action value. QPLEX uses the maximum of a mixer value and a non-positive advantage function. ResQ combines a monotonic function with a non-positive func-tion. GVR (Wan et al., 2022) takes a different approach by making u∗ the only stable point, although this requires numerous approximations. 
+
+Policy-based Methods In addition to value factorization methods, policy-based approaches also constitute a popular paradigm in MARL. COMA (Foerster et al., 2018) intro-duces a counterfactual baseline in actor-critic framework, while MAPPO (Yu et al., 2022) adapts PPO (Schulman et al., 2017) to multi-agent settings. Policy-based methods can be regarded as a special case of value factorization: value factorization methods factorize the joint action-value into individual Q-values, whereas policy-based methods factorize it into individual policy distributions. Building on this similarity, several works integrate value factoriza-tion into policy-based methods to handle continuous action spaces, exemplified by DOP (Wang et al., 2020b) and FAC-MAC (Peng et al., 2021). 
+
+Communication-based Methods Other researchers study communication mechanisms in multi-agent systems. Comm-Net (Sukhbaatar et al., 2016) enables multi-round communi-cation for sharing observations. DIAL (Foerster et al., 2016) designs gradient-based messages exchanged between agents. To decide with whom to communicate, TarMAC (Das et al., 2019) uses a signature-based soft attention mechanism, and MAGIC (Niu et al., 2021) uses graph neural networks. The communication mechanisms can be integrated into ei-ther value-based or policy-based methods. For example, NDQ (Wang et al., 2020a) combines value factorization and communication by mixing individual Qs through com-munication, while CommFormer (Hu et al., 2024) estab-lishes a learnable graph for sharing information in MAPPO. ACE (Li et al., 2023) models communication as intermedi-ate processes in the Markov Decision Process. In addition to parallel decision making, recent methods study sequen-tial decision making through communication. PG-AR (Fu et al., 2022) randomizes the order of decision making. Seq-Comm (Ding et al., 2024) use intentions to prioritize agents in sequential decision-making. 
+
+Other MARL Methods Recent works introduce addi-tional innovations in MARL. RES (Pan et al., 2021) ad-2Submission and Formatting Instructions for ICML 2026 
+
+dresses value overestimation using regularized softmax losses. MAVEN (Mahajan et al., 2019) enhances exploration efficiency through randomized latent vectors. LIGS (Mguni et al., 2022) proposes learnable intrinsic rewards to im-prove multi-agent cooperation. SHAQ (Wang et al., 2022) integrates the Shapley value by modeling Q functions as marginal contributions of agents. 
+
+3. Background 
+
+3.1. Dec-POMDP 
+
+In cooperative multi-agent systems, agents interact with the environment to achieve common objectives. This pro-cess can be modeled as a decentralized partially observable Markov decision process (Dec-POMDP) (Oroojlooy & Ha-jinezhad, 2023), defined by a tuple < S, U, P, O, R, γ, n > ,in which n is the number of agents, S is the state space, 
+
+U = U1 × U 2 × · · · × U n is the action space, P (s′
+
+|s, u) : 
+
+S × U × S → [0 , 1] is the transition probability between the states, O : S → O is the joint observation function where 
+
+O is the joint observation space, r ∼ R : S × U → R is the reward, γ ∈ (0 , 1] is the discount, agent have an action-observation history τ ∈ T ≡ (O × U)∗. Similarly to RL with a single agent, the objective of MARL is to find the policy π : T × U → [0 , 1] that maximizes the joint ac-tion value Qjt (τ , u) = E π [P 
+
+> t
+
+γtrt|τ , u], the expectation of return. However, obtaining the global optimal action 
+
+u∗ = arg max u Qjt (τ , u) by searching the large action space is intractable for value-based learning. 
+
+3.2. Monotonic Value Factorization 
+
+Value factorization methods design Qtot to approximate Qjt 
+
+by minimizing Ltot .
+
+Ltot = X 
+
+> τ,u
+
+π(u|τ )( Qtot (τ , u) − Qjt (τ , u)) 2 (1) Specifically, VDN (Sunehag et al., 2017) factorizes 
+
+Qtot into the sum of individual Qs: Qtot = P 
+
+> i
+
+Qi.And QMIX (Rashid et al., 2020b) uses a monotonic function fmon to represent the relationship: Qtot =
+
+fmon (Q1, Q 2, · · · , Q n) where ∂f mon  
+
+> ∂Q i
+
+≥ 0, ∀i ∈{1, 2, · · · , N }. The monotonicity of Qtot with respect to 
+
+Qi ensures the alignment of their optimal actions, which is the Individual-Global-Max (IGM) principle 1:
+
+> n
+
+Y
+
+> i=0
+
+arg max 
+
+> ui
+
+Qi(τi, u i) ⊆ arg max  
+
+> u
+
+Qtot (τ , u) (2)    
+
+> 1We use " ⊆" instead of " =" in Equation (2), as Qtot may have more maxima than individual Qs (Table 2).
+
+where nQ
+
+> i=0
+
+arg max 
+
+> ui
+
+Qi(τi, u i) is the Cartesian product of the sets arg max 
+
+> ui
+
+Qi(τi, u i), and Qi : Ti × U i → R is the individual action value of agent i. Under the IGM principle, if Qtot approximates Qjt precisely, the maximum of Qjt 
+
+would be obtained by searching the maximum of Qi. Here we define the greedy action ¯u as 
+
+¯u ∈
+
+> n
+
+Y
+
+> i=0
+
+arg max 
+
+> ui
+
+Qi(τi, u i) (3) 
+
+3.3. Gradient-Free Components in Value Factorization 
+
+Loss function Ltot defined in existing value factorization contains gradient-free components that are not updated via gradient backpropagation. In this paper, we focus on those whose values depend on the outcome of arg max 
+
+> ui
+
+Qi(τi, u i).
+
+Definition 3.1 (Gradient-free components and eu). Gradient-free components are functions that take a formal parameter 
+
+eu, where eu is instantiated by the greedy action ¯u.Gradient-free components are common in value factoriza-tion, for example, the decentralized ϵ-greedy policy ππ(u|τ ) = 
+
+ ϵ
+
+|U| 
+
+n−m 
+
+1 − ϵ + ϵ
+
+|U| 
+
+m
+
+(4) where m = |{ i|ui = eui}| . Recent methods introduce additional terms involving eu into monotonic factoriza-tion. For example, the weight w of the weighted Ltot in WQMIX (Rashid et al., 2020a) 2.
+
+w(τ , u) = 
+
+(
+
+1 ˆQjt (τ , u) > ˆQjt (τ , eu) or u = eu
+
+α < 1 otherwise 
+
+(5) where ˆQjt is an approximation of Qjt , and the residual mask 
+
+wr in Qtot of ResQ (Shen et al., 2022). 
+
+wr(τ , u) = 
+
+(
+
+0 u = eu
+
+1 otherwise (6) 
+
+4. A Unified Theory for the Suboptimality of Existing Value Factorization 
+
+In this section, we discuss why existing value factorization methods converge to suboptimal solutions during training. To explain this phenomenon, we propose a novel theory to study how greedy actions change and converge during training. 1) Regarding the transition of greedy actions ,prior work (Ye et al., 2022) overlooks the gradient discon-tinuities caused by the discrete changes in greedy actions (as illustrated in Figure 2). To address this issue, we model 
+
+> 2It stands for Centrally-Weighted QMIX.
+
+3Submission and Formatting Instructions for ICML 2026 
+
+the transitions of greedy actions using a discrete dynamical system, thereby enabling gradient-based analysis at every transition step. 2) Regarding the convergence of greedy actions , existing studies (Son et al., 2019; Rashid et al., 2020a; Wang et al., 2021; Shen et al., 2022) only analyze convergence when the greedy action is optimal. In contrast, we provide conditions under which greedy actions converge in the general case and give specific examples showing how current algorithms converge to suboptimal solutions. 𝒖 𝟏 
+
+# 𝒖 𝟐 
+
+# 𝒖 𝟑 
+
+Start 
+
+End 
+
+∇𝜃 𝐿 𝜃 
+
+> 𝒖 𝟏
+
+∇𝜃 𝐿 𝜃 
+
+> 𝒖 𝟐
+
+∇𝜃 𝐿 𝜃      
+
+> 𝒖 𝟑
+> 𝐿 :Factorization Loss 𝜃 : Gradient -based Parameters
+> : Gradient Direction : Original Gradient Direction
+> Figure 2. Gradient discontinuity induced by crossing different val-ues of greedy action. The gradient is continuous within any single region. However, when the greedy action changes, the values of the gradient-free components change. Since these components ap-pear in the gradient of gradient-based parameters (e.g., individual
+> Qs), their sudden changes induce a discontinuity in the gradient.
+
+4.1. Transition of the Greedy Action 
+
+To introduce the analysis of the greedy action’s convergence, we first illustrate how the greedy action changes during training. We provide an example for WQMIX in Figure 3, where we observe that the transition of greedy actions is similar to that in a dynamical system xk+1 = g(xk):
+
+xk+1 =g(xk)¯u := xk+1 , eu := xk (7) where the current state eu controls the transition, and the next state ¯u is the result of the transition. Different factorization forms correspond to different functions g, depending on how the loss function is defined and optimized. We illustrate the transition in Figure 3 as follows: 1. Initially, eu = (1 , 3) makes an all-ones weight matrix. 2. Minimizing Ltot = w ∗ (Qtot − Qjt )2 under the all-ones weight w yields the Qtot (left table), correspond-ing to ¯u = (3 , 3) .3. eu is assigned the new value ¯u = (3 , 3) , thereby alter-ing the weight matrix (shaded regions). Dynamical System Value Factorization 
+
+eu Current state of greedy action A formal parameter of gradient-free components 
+
+¯u Next state of greedy action Individual-max action defined in Equation (3) 
+
+g System function Gradient-based optimization of factorization parameters  
+
+> Table 1. The element-wise correspondence between dynamical system and value factorization.
+
+4. Minimizing Ltot with the weight under eu = (3 , 3) 
+
+produces a new Qtot (middle table). 5. ¯u keeps on changing (steps 2-4) until ¯u = eu is reached (right table). 
+
+4.2. Convergence of the Greedy Action 
+
+From the discussion above, the transition of ¯u typically begins in a transient phase (steps 2-4) and ends in a steady phase (step 5) when self-transition occurs. If self-transition occurs, both ¯u and eu remain unchanged, which reflects the convergence of value factorization. We use stable points to describe the self-transition of greedy actions , defined as follows: 
+
+Definition 4.1 (Stable Point) . In a specific value factoriza-tion, for a joint action value Qjt and τ ∈ T , if ˇu is a stable point of Qjt (τ , ·), then for eu = ˇ u in the optimization of minimizing Ltot , the converged ¯u satisfies ¯u = ˇ u.Note that multiple stable points may exist in value factor-ization, any of which could be the final result of greedy actions. To analyze the possible outcomes of greedy actions, we need to determine whether an action ˇu is a stable point, which is described as follows. 1. Set eu = ˇ u and generate the corresponding gradient-free components. 2. Minimize Ltot under eu = ˇ u to obtain Qtot (multiple solutions may exist) and corresponding ¯u.3. If any ¯u satisfies ¯u = ˇ u, then ˇu is a stable point. 4. Furthermore, if ¯u = ˇ u holds for all solutions, ˇu is a strongly stable point. Otherwise, ˇu is a weakly stable point. The difference between mixer types lies in optimization of the loss function (Step 2): For VDN-style mixers, we obtain 
+
+Qtot using gradient descent. And for QMIX-style mixers, we obtain Qtot based on the Ideal QMIX assumption: The Ideal QMIX yields the optimal Qtot that minimizes Ltot 
+
+under any given eu (Appendix B.2). 4Submission and Formatting Instructions for ICML 2026 8 -12  -12                       
+
+> -12 30
+> -12 05
+> -8-8-8
+> -811
+> -815
+> 8-4.2 2.2
+> -4.2 -4.2 -4.2
+> 2.2 -4.2 2.2
+> 8-5-5
+> -5-5-5
+> -5-5-5
+
+CW -QMIX:  𝛼 = 0.1, 𝜖 = 1
+
+𝑄 tot 
+
+𝑄 jt 
+
+෥𝒖 = 1,3 ෥𝒖 = 3,3 ෥𝒖 = 1,1
+
+ഥ𝒖 = 1,1
+
+ഥ𝒖 = 1,1ഥ𝒖 = 3,3
+
+Unstable  Unstable  Stable                        
+
+> Figure 3. Transition of greedy action in WQMIX with α= 0 .1under uniform visitation ( π≡1). This process begins with eu= (1 ,3)
+> (top right) and stabilizes at ¯u= (1 ,1) (top left). At each step we present Qtot optimized under the weight induced by current eu, where cells are shaded if w(τ,u) = α, and the value corresponding to ¯u= ( row, column )is in bold.
+
+4 0 -8 0 3 0-8 0 -8  
+
+> (a) Qjt
+
+1 α αα α αα α α 
+
+> (b) w
+
+Ltot =70 α
+
+4 1 -4 1 1 -4 -4 -4 -8      
+
+> (c) Q∗
+> tot under ¯u=u∗
+
+Ltot =33 α
+
+4 4 -8 4 4 0-8 0 -8                                 
+
+> (d) Qtot with ¯u̸=u∗
+> Table 2. An example for WQMIX in which u∗is not a stable point. (a): The matrix of Qjt with the maximum value of 4. (b): The weight wof WQMIX where eu=u∗. (c): The Qtot with minimum Ltot under the condition that ¯u=u∗. (d): Another
+> Qtot where ¯u̸=u∗achieves less Ltot than (c). Therefore, u∗is not a stable point in this case.
+
+4.3. Suboptimality of Existing Value Factorization 
+
+We analyze stable points in existing methods to demonstrate cases where greedy actions converge to suboptimal actions, which usually happens in environments with highly non-monotonic payoff. Then, we derive the conditions under which the greedy action converges solely to the optimal action. 
+
+WQMIX: WQMIX can not guarantee the convergence to the optimal action. In some cases, as shown in Table 2, the optimal action is not a stable point for any α, which means that the greedy action does not converge to the optimal action. 
+
+QPLEX: QPLEX proves that if eu happens to be the optimal action, then ¯u can converge to the optimal action. How-ever, we find that multiple suboptimal stable points exist in QPLEX, which means that if eu is certain suboptimal actions, 
+
+¯u will converge to them (examples in Appendix D). 
+
+ResQ: ResQ proves that ¯u can converge to the optimal action when eu is the optimal action (similar to QPLEX). However, we find that although the optimal action is the only stable point, it is always a weak stable point (proof in Appendix C.2). This means that even if the optimal action has been found ( eu = u∗), it may be lost subsequently. From the above discussion, we conclude that in single-round value factorization, if the greedy action is to be guaranteed to converge to the optimal action, then the optimal action must be the unique strongly stable point, which means: 1. The optimal action must be a strong stable point (WQMIX and ResQ fail) 2. All suboptimal actions must be unstable points (QPLEX fails). 
+
+5. Breakthrough Suboptimality with Multi-Round Value Factorization 
+
+In Section 4.3, we provide the condition under which the greedy action converges exclusively to the optimal action. This condition is highly stringent, to the extent that existing single-round factorization methods struggle to satisfy them. Therefore, for achieving optimality, we propose a multi-round factorization framework with a lenient condition — the Strict Improvement Condition : if the preceding greedy action is not optimal, the current greedy action must attain a strictly higher payoff than the preceding one. Satisfying this condition guarantees that the greedy action in a certain round is the optimal one (Theorem 5.2). 
+
+Definition 5.1 (Strict Improvement Condition) . Given a joint action value Qjt and τ ∈ T , let {¯uk|¯uk ∈ U} be an infinite sequence of greedy actions. The Strict Improvement Condition is satisfied if, ∀k > 1 and ¯uk−1̸ = u∗, we have 
+
+Qjt (τ , ¯uk) > Q jt (τ , ¯uk−1).
+
+Theorem 5.2. Given a joint action value Qjt with a fi-nite action space U and τ ∈ T , for any infinite sequence 
+
+5Submission and Formatting Instructions for ICML 2026 
+
+{¯uk|¯uk ∈ U} that satisfies the Strict Improvement Condi-tion, then ∃K > 0, ¯uK = u∗.
+
+5.1. Designs for the Strict Improvement Condition 
+
+We design the loss function of Qtot to derive, through back-ward computation, individual Q-values that meet the con-dition. Typically, ˆQjt , a payoff measurement, serves as the target value of Qtot . In this paper, we replace it with the action-value increment for round k > 1. As shown in Equa-tion (8), for each step t, this increment is computed as the difference between ˆQjt and its value at the preceding greedy action ¯uk−1 
+
+> t
+
+, clipped to a minimum of zero. 
+
+Ltot = E τ t,ukt ∼πk [( Qtot (τ t, ¯uk−1 
+
+> t
+
+, ukt )
+
+− max { ˆQjt (τ t, ukt ) − ˆQjt (τ t, ¯uk−1 
+
+> t
+
+), 0})2], k > 1
+
+(8) where max { ˆQjt (τ t, ukt ) − ˆQjt (τ t, ¯uk−1 
+
+> t
+
+), 0} is the action-value increment. We illustrate in Table 3 how the target value of Qtot shapes during the multi-round process. For the first round, we use the raw ˆQjt as the target for Qtot , as shown in Equation (9). 
+
+Ltot = E τ t,ukt ∼πk [( Qtot (τ t, ukt ) − ˆQjt (τ t, ukt )) 2], k = 1 
+
+(9) 8 -12 -12 -12 3 0-12 0 5
+
+(a) k = 1 
+
+3 0 00 0 00 0 0
+
+(b) k = 2 
+
+0 0 00 0 00 0 0
+
+(c) k = 3 
+
+Table 3. This table shows the target of Qtot in three round, in which the value corresponding to ¯u is in bold when it is unique. (a): The target of Qtot in the first round which is the original ˆQjt .(b): The target of Qtot in the second round which is clipped with 
+
+ˆQjt (τ t, ¯u1 
+
+> t
+
+) = 5 . (c): The target of Qtot in the final round where any u can be ¯u3.
+
+Intuitively, as shown in Table 3, the action-value increment enhances the monotonicity of ˆQjt : It suppresses the locally high payoffs of inferior actions and, conversely, offsets the low payoffs around superior actions. This reshaping inclines monotonic factorization toward superior actions. Theoreti-cally, it ensures the Strict Improvement Condition when 
+
+¯uk−1
+
+> t
+
+̸ = u∗. This is grounded in a property of monotonic factorization: the greedy action in QMIX will not converge to actions with the lowest target value of Qtot , since these lowest-value actions are not stable points (Theorem 5.3). With the action-value increment, all inferior actions u−
+
+> t
+
+with ˆQjt (τ t, u− 
+
+> t
+
+) ≤ ˆQjt (τ t, ¯uk−1 
+
+> t
+
+) are assigned zero, the minimum value. Meanwhile, all superior actions u+ 
+
+> t
+
+with 
+
+ˆQjt (τ t, u+ 
+
+> t
+
+) > ˆQjt (τ t, ¯uk−1 
+
+> t
+
+) have positive values. There-fore, ¯ukt only converges to actions that are superior to ¯uk−1 
+
+> t
+
+.
+
+Theorem 5.3. Given a non-constant joint action value 
+
+Qjt (τ , ·) (∀τ ∈ T , ∀C ∈ R, Q jt (τ , ·)̸ ≡ C) with finite action-observation history space T and action space U.For the ideal QMIX and the centralized ϵ-greedy policy 
+
+π defined in Equation (11), we have ∃E ∈ (0 , 1) , ∀ϵ ∈
+
+(0 , E ), ∀τ ∈ T , ∀u ∈ arg min u Qjt (τ , u), u is not a sta-ble point. 
+
+The forward computation in step t generates the greedy final action ¯ut during evalutaion (or the final action ut
+
+for exploration during training) that actually interacts with the environment. However, the greedy action in the final round is not always optimal. As shown in Table 3, since the greedy action in the round k = 2 is optimal, the action-value increment for all actions in the next round is zero. As a result, greedy action in the round k = 3 can converge to an arbitrary action, which could lead to a deterioration of ¯ut.Therefore, when we need to output ¯ut, early termination is necessary once the optimal action is obtained . To verify whether the optimal action has been found, we use the Strict Improvement Condition to check for a payoff increase between consecutive greedy actions. Specifically, when ˆQjt (τ t, ¯ukt ) ≤ ˆQjt (τ t, ¯uk−1 
+
+> t
+
+), the forward process in step t is terminated with an output ¯uk−1 
+
+> t
+
+, otherwise the process proceed to the next round. 
+
+5.2. Overview of the Architecture 
+
+The architecture of our methods is shown in Figure 4. The architecture consists of three crucial parts: individual Q networks, a mixing network with positive weights, and a joint action value network. Individual Q networks receive the action-observation history τ t and the greedy action of the preceding round ¯uk−1 
+
+> t
+
+(default action for the first round). Then, they output the actions of the current round 
+
+ukt through the ϵ-greedy action selector. The mixing net-work receives individual Q values and outputs Qtot . The joint action value network outputs ˆQjt to approximate the real Qjt . We update ˆQjt by minimizing the temporal differ-ence (TD) error in Equation (10) (omitted in Figure 4). 
+
+Ljt = E τ t,ut∼π [( ˆQjt (τ t, ut)−(rt +γ ˆQjt (τ t+1 , ¯ut+1 ))) 2]
+
+(10) where ¯ut is the greedy final action, and ˆQjt (τ t+1 , ¯ut+1 )
+
+approximates max ut+1 
+
+ˆQjt (τ t+1 , ut+1 ).Within step t, both the forward and backward processes take 
+
+τ t as input, and in each round, the individual Q networks are fed with τ t and ¯uk−1 
+
+> t
+
+to produce Qi and ¯ukt . The difference is that the forward process computes and compares ˆQjt to determine whether to terminate early, while the backward process does not involve early termination and computes 
+
+ˆQjt only once using the recorded ut from the batch (not shown in Figure 4). In addition, Qtot is computed only in the backward. 6Submission and Formatting Instructions for ICML 2026 𝑘 + 1 Round 𝑘 − 1 Round  𝑘  Round 
+
+𝝉 𝑡  𝝉 𝑡  𝝉 𝑡 
+
+ഥ𝒖 𝑡  
+
+> 𝑘 −2
+
+ഥ𝒖 𝑡  
+
+> 𝑘 −1
+
+ഥ𝒖 𝑡                       
+
+> 𝑘
+> Individual 𝑄 0
+> Individual 𝑄 1
+> Individual 𝑄 𝑛
+> ⋯
+> 𝜏 𝑡
+> 0,ഥ𝒖 𝑡
+> 𝑘 −1𝑸 0𝜏 𝑡
+> 0,ഥ𝒖 𝑡
+> 𝑘 −1,⋅
+> 𝑸 1𝜏 𝑡
+> 1,ഥ𝒖 𝑡
+> 𝑘 −1,⋅
+> 𝑸 𝑛 𝜏 𝑡
+> 𝑛 ,ഥ𝒖 𝑡
+> 𝑘 −1,⋅
+> Mixing
+> network
+> 𝜏 𝑡
+> 1,ഥ𝒖 𝑡
+> 𝑘 −1
+> 𝜏 𝑡
+> 𝑛 ,ഥ𝒖 𝑡
+> 𝑘 −1
+> 𝑄 tot 𝝉 𝑡 ,ഥ𝒖 𝑡
+> 𝑘 −1,𝒖 𝑡
+> 𝑘
+> 𝝐 -greedy
+> policy
+> 𝑸 𝝉 𝑡 ,ഥ𝒖 𝑡
+> 𝑘 −1,𝒖 𝑡
+> 𝑘
+> Joint action
+> value network
+> ෠𝑄 jt 𝝉 𝑡 ,ഥ𝒖 𝑡
+> 𝑘
+> ഥ𝒖 𝑡
+> 𝑘
+> 𝑠 𝑡 ,ഥ𝒖 𝑡
+> 𝑘 −1
+> 𝝉 𝑡
+
+𝒖 𝑡     
+
+> Compare
+> ෠𝑄 jt 𝝉 𝑡 ,ഥ𝒖 𝑡
+> 𝑘 −1
+> Terminate ?
+> Forward only Backward only Forward and Backward
+
+Figure 4. The architecture of multi-round value factorization framework. 
+
+5.3. Sampling 
+
+We approximate the expectation in Ljt and Ltot by sampling the action spaces. We design sampling strategies for multi-round frameworks to ensure stable training. For the final action ut in Ljt , its sampling should not only cover the greedy final action and random actions, but also cover the greedy action in each round, which obtains an accurate target value in Equation (8). Therefore, during training, we disable early termination and select ¯ukt in a certain round 
+
+k as the final action with probability p. For ukt in Ltot , its distribution πk is the centralized ϵ-greedy policy defined in Equation (11) with eu = ¯ uk.
+
+π(u|τ ) = 
+
+(1 − ϵ + ϵ  
+
+> |U|
+
+u = eu  
+
+> ϵ
+> |U|
+
+u̸ = eu (11) The reason for not using the decentralized one (defined in Equation (4)) is that, according to Theorem 5.3, the central-ized ϵ-greedy policy is required to guarantee the Strict Im-provement Condition. More importantly, since Qtot learns the actual payoff from ˆQjt , the centralized ϵ-greedy pol-icy allows the same actions to be sampled in Ljt and Ltot 
+
+when sampling random actions, which prevents Qtot from learning regions where ˆQjt exhibits underfitting. 
+
+6. Experiment 
+
+In this section, we evaluate the performance in one-step games, the predator-prey task (Böhmer et al., 2020) with increasing punishment, and a variety of SMAC (White-son et al., 2019) scenarios, among which one-step games and predator-prey tasks with large punishment are environ-ments with highly non-monotonic payoff (defined in Ap-pendix B.1). In addition, experiments in SMACv2 (Ellis et al., 2023) are included in Appendix H.3, since this paper studies the impact of payoff structure rather than stochas-tic factors on value factorization. We report the median performance, with the shaded area denoting the 25%-75% percentile (0%-100% percentile for one-step games). We use the methods discussed in Section 4 as our primary baseline. These algorithms are closely related to MRVF in that all aim to improve value factorization under non-monotonic payoffs. The results for other baselines (e.g., policy-based methods including MAPPO (Yu et al., 2022) and other recent value factorization methods) are presented in Appendix H.5. Our experimental setup is provided in Ap-pendix E, and ablation results are presented in Appendix F. 
+
+6.1. One-Step Game 
+
+In Section 4.3, we observe that existing methods struggle to achieve optimal solutions in highly non-monotonic payoff matrices. However, benchmarks in matrix form (Wang et al., 2021; Shen et al., 2022) suffer from limitations in both scale and generality. To address this, we introduce the risk-reward game , which can randomly generate payoffs in the form of high-dimensional tensors. In a risk-reward game , only |U| 
+
+out of |U| n entries are positive in the payoff tensor (see Appendix E.1 for details). Therefore, agents must reach consensus to obtain positive rewards; otherwise, even a deviation by an individual agent yields large-magnitude negative rewards. As shown in Figure 5, in cases with 3 agents and 5 actions, monotonic factorizations (QMIX (Rashid et al., 2020b) and NA 2Q (Liu et al., 2023)) obtain the smallest positive re-turn, nearly zero, while QTRAN (Son et al., 2019) and WQMIX (Rashid et al., 2020a) only achieve a moderate positive return. In contrast, our method consistently attains the optimal return. When the number of agents increases to 5, the risk of obtaining positive returns increases, since con-7Submission and Formatting Instructions for ICML 2026 0 10000 20000 30000 40000 50000                 
+
+> Step
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Test Normalized Return
+> 3agents_5actions
+> 010000 20000 30000 40000 50000
+> Step
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Test Normalized Return
+> 5agents_5actions
+> 010000 20000 30000 40000 50000
+> Step
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Test Normalized Return
+> 5agents_8actions
+> MRVF QMIX NA²Q QPLEX QTRAN WQMIX RESQ
+
+Figure 5. Test normalized return in the risk-reward games. The positive returns are normalized to [0 , 1] (0 corresponds to the smallest positive return, and 1 corresponds to the largest). The negative returns are normalized to [−1, 0) . Five random cases for each setting. 0.0 0.2 0.4 0.6 0.8 1.0                    
+
+> Step 1e6
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> Test Return
+> predator prey 0
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -2
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -5
+> MRVF QMIX NA²Q QPLEX QTRAN WQMIX RESQ
+
+Figure 6. Test return in the predator prey tasks with punishments 0 (left), -2 (middle), and -5 (right). The non-monotonicity of the payoff increases with the punishment. 
+
+sensus requires coordination among more agents. Existing methods rarely obtain positive returns, while our method still obtains the optimum with high probability. However, in cases with 5 agents and 8 actions, the positive rewards become too sparse to obtain. Despite this challenge, our method still obtains better results than others. 
+
+6.2. Predator Prey 
+
+We conduct experiments on the predator-prey task involving 8 agents, where capturing a prey requires cooperation be-tween at least two agents. Agents are punished for capturing the prey alone. We vary the punishment from 0 to -5 to evaluate its impact on performance. The non-monotonic property of the payoff increases with the punishment, since agents must act more cautiously when choosing the "cap-ture" action to ensure consensus and avoid punishments. The results in Figure 6 show that all methods perform well when the punishment is zero. However, as the punishment intensifies, existing methods avoid the "capture" action to prevent punishments, resulting in return ≈ 0. Among baseline approaches, WQMIX performs adequately only under moderate punishments, while the performance of ResQ shows significant fluctuations due to its weak sta-bility. In contrast, our method consistently achieves the best performance, even under the strongest punishment of -5. Combined with the results in risk-reward games, we conclude that our method outperforms existing methods in environments with highly non-monotonic payoff. 
+
+6.3. StarCraft II Multi-Agent Challenge 
+
+We conduct experiments on the SMAC benchmark in sce-narios of varying difficulty. Monotonic value factoriza-tion methods, including QMIX (Rashid et al., 2020b) and NA 2Q (Liu et al., 2023), are particularly well-suited for the SMAC because changes in an individual agent’s action within a single step have little impact on overall performance (see Appendix E.3 for details). Nevertheless, as shown in Figure 7, MRVF even achieves an advantage over mono-tonic value factorization methods, particularly in 3s_vs_5z ,
+
+2c_vs_64zg and bane_vs_bane scenarios. Meanwhile, the final performance of MRVF is the best in most scenarios, 8Submission and Formatting Instructions for ICML 2026 
+
+Methods MRVF QMIX NA 2Q QPLEX QTRAN WQMIX RESQ Best 6 3 4 1 1 1 3Worst 0 1 0 3 5 2 1
+
+Table 4. The number of SMAC scenarios where each method performs the best and the worst. We evaluate the final performance (averaged over steps after 1.5M) with a tolerance of ±0.05 .0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00                                                     
+
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Test Win Rate
+> 2c_vs_64zg
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test Win Rate
+> 3s_vs_5z
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Test Win Rate
+> MMM2
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> Test Win Rate
+> 5m_vs_6m
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test Win Rate
+> bane_vs_bane
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test Win Rate
+> 3s5z
+> MRVF QMIX NA²Q QPLEX QTRAN WQMIX RESQ
+
+Figure 7. Test win rate in the SMAC benchmarks. 
+
+as shown in Table 4. Combined with the results in the 
+
+risk-reward games and the predator prey task, we conclude that MRVF performs the best in both monotonic and non-monotonic scenarios. In contrast, other methods (QPLEX (Wang et al., 2021), ResQ (Shen et al., 2022)), QTRAN (Son et al., 2019) and WQMIX (Rashid et al., 2020a)) often converge to subopti-mal stable points. This leads to a high variance in perfor-mance within a scenario and across scenarios. Within the same scenario, although they occasionally achieve strong performance (as seen in the upper bounds of the shaded regions in Figure 7), their average performance lags behind. In addition, across different scenarios, their performance may vary drastically. For example, WQMIX performs well in bane_vs_bane but poorly in both 5m_vs_6m and 3s_vs_5z .Therefore, MRVF achieves significant improvements in ro-bustness and performance over them in almost all scenarios. 
+
+7. Conclusion 
+
+In this paper, we introduce a novel theoretical tool for study-ing the convergence of greedy action under value factoriza-tion, and propose MRVF, a novel framework for cooperative multi-agent reinforcement learning. In Section 4, we use this theoretical tool to derive the condition for global opti-mality in single-round factorization, and provide examples to demonstrate why existing methods struggle to satisfy this condition. In Section 5, we propose the condition for global optimality in multi-round factorization, which is strictly improving the greedy action round by round. To satisfy this condition, we design the forward and backward com-putation of MRVF. In addition, we design new sampling strategies suitable for multi-round factorization to ensure training stability. Experiments on non-monotonic one-step games, predator-prey tasks, and the StarCraft II Multi-Agent Challenge show the superior performance and robustness of MRVF compared to state-of-the-art value factorization methods. 9Submission and Formatting Instructions for ICML 2026 
+
+References 
+
+Bengio, Y., Ducharme, R., Vincent, P., and Jauvin, C. A neural probabilistic language model. Journal of machine learning research , 3(Feb):1137–1155, 2003. Berner, C., Brockman, G., Chan, B., Cheung, V., D˛ ebiak, P., Dennison, C., Farhi, D., Fischer, Q., Hashme, S., Hesse, C., et al. Dota 2 with large scale deep reinforcement learning. arXiv preprint arXiv:1912.06680 , 2019. Böhmer, W., Kurin, V., and Whiteson, S. Deep coordina-tion graphs. In International Conference on Machine Learning , pp. 980–991. PMLR, 2020. Chung, J., Gulcehre, C., Cho, K., and Bengio, Y. Empirical evaluation of gated recurrent neural networks on sequence modeling. arXiv preprint arXiv:1412.3555 , 2014. Das, A., Gervet, T., Romoff, J., Batra, D., Parikh, D., Rab-bat, M., and Pineau, J. Tarmac: Targeted multi-agent communication. In International Conference on machine learning , pp. 1538–1546. PMLR, 2019. Ding, G., Liu, Z., Fang, Z., Su, K., Zhu, L., and Lu, Z. Multi-agent coordination via multi-level communication. 
+
+Advances in Neural Information Processing Systems , 37: 118513–118539, 2024. Ellis, B., Cook, J., Moalla, S., Samvelyan, M., Sun, M., Mahajan, A., Foerster, J., and Whiteson, S. Smacv2: An improved benchmark for cooperative multi-agent re-inforcement learning. Advances in Neural Information Processing Systems , 36:37567–37593, 2023. Foerster, J., Assael, I. A., De Freitas, N., and Whiteson, S. Learning to communicate with deep multi-agent re-inforcement learning. Advances in neural information processing systems , 29, 2016. Foerster, J., Farquhar, G., Afouras, T., Nardelli, N., and Whiteson, S. Counterfactual multi-agent policy gradi-ents. In Proceedings of the AAAI conference on artificial intelligence , volume 32, 2018. Fu, W., Yu, C., Xu, Z., Yang, J., and Wu, Y. Revisiting some common practices in cooperative multi-agent reinforce-ment learning. In International Conference on Machine Learning , pp. 6863–6877. PMLR, 2022. Hu, S., Shen, L., Zhang, Y., and Tao, D. Learning multi-agent communication from graph modeling perspective. In International Conference on Learning Representations ,2024. Hüttenrauch, M., Šoši´ c, A., and Neumann, G. Deep rein-forcement learning for swarm systems. Journal of Ma-chine Learning Research , 20(54):1–31, 2019. Li, C., Liu, J., Zhang, Y., Wei, Y., Niu, Y., Yang, Y., Liu, Y., and Ouyang, W. Ace: Cooperative multi-agent q-learning with bidirectional action-dependency. In Proceedings of the AAAI conference on artificial intelligence , volume 37, pp. 8536–8544, 2023. Liu, C. and Li, D. HYGMA: Hypergraph coordination net-works with dynamic grouping for multi-agent reinforce-ment learning. In International Conference on Machine Learning , volume 267, pp. 38767–38788. PMLR, 2025. Liu, Z., Zhu, Y., and Chen, C. N A2Q : Neural attention additive model for interpretable multi-agent q-learning. In International Conference on Machine Learning , pp. 22539–22558. PMLR, 2023. Mahajan, A., Rashid, T., Samvelyan, M., and Whiteson, S. Maven: Multi-agent variational exploration. Advances in neural information processing systems , 32, 2019. Mguni, D., Jafferjee, T., Wang, J., Slumbers, O., Perez-Nieves, N., Tong, F., Yang, L., Zhu, J., and Yang, Y. Ligs: Learnable intrinsic-reward generation selection for multi-agent learning. In ICLR 2022-10th International Conference on Learning Representations , volume 2022. ICLR, 2022. Mikolov, T., Chen, K., Corrado, G., and Dean, J. Efficient estimation of word representations in vector space. arXiv preprint arXiv:1301.3781 , 2013. Niu, Y., Paleja, R. R., and Gombolay, M. C. Multi-agent graph-attention communication and teaming. In AAMAS ,volume 21, pp. 20th, 2021. Oroojlooy, A. and Hajinezhad, D. A review of coopera-tive multi-agent deep reinforcement learning. Applied Intelligence , 53(11):13677–13722, 2023. Pan, L., Rashid, T., Peng, B., Huang, L., and Whiteson, S. Regularized softmax deep multi-agent q-learning. Ad-vances in Neural Information Processing Systems , 34: 1365–1377, 2021. Peng, B., Rashid, T., Schroeder de Witt, C., Kamienny, P.-A., Torr, P., Böhmer, W., and Whiteson, S. Facmac: Factored multi-agent centralised policy gradients. Ad-vances in Neural Information Processing Systems , 34: 12208–12221, 2021. Rashid, T., Farquhar, G., Peng, B., and Whiteson, S. Weighted qmix: expanding monotonic value function fac-torisation for deep multi-agent reinforcement learning. In 
+
+Proceedings of the 34th International Conference on Neu-ral Information Processing Systems , pp. 10199–10210, 2020a. 10 Submission and Formatting Instructions for ICML 2026 
+
+Rashid, T., Samvelyan, M., De Witt, C. S., Farquhar, G., Foerster, J., and Whiteson, S. Monotonic value function factorisation for deep multi-agent reinforcement learning. 
+
+The Journal of Machine Learning Research , 21(1):7234– 7284, 2020b. Schulman, J., Wolski, F., Dhariwal, P., Radford, A., and Klimov, O. Proximal policy optimization algorithms. 
+
+arXiv preprint arXiv:1707.06347 , 2017. Shen, S., Qiu, M., Liu, J., Liu, W., Fu, Y., Liu, X., and Wang, C. Resq: A residual q function-based approach for multi-agent reinforcement learning value factorization. 
+
+Advances in Neural Information Processing Systems , 35: 5471–5483, 2022. Son, K., Kim, D., Kang, W. J., Hostallero, D. E., and Yi, Y. Qtran: Learning to factorize with transformation for cooperative multi-agent reinforcement learning. In Inter-national conference on machine learning , pp. 5887–5896. PMLR, 2019. Sukhbaatar, S., Fergus, R., et al. Learning multiagent com-munication with backpropagation. Advances in neural information processing systems , 29, 2016. Sunehag, P., Lever, G., Gruslys, A., Czarnecki, W. M., Zam-baldi, V., Jaderberg, M., Lanctot, M., Sonnerat, N., Leibo, J. Z., Tuyls, K., et al. Value-decomposition networks for cooperative multi-agent learning. arXiv preprint arXiv:1706.05296 , 2017. Tan, M. Multi-agent reinforcement learning: Independent vs. cooperative agents. In Proceedings of the tenth inter-national conference on machine learning , pp. 330–337, 1993. Tao, L., Kang, M., Dong, J., Zhang, S., Ye, K., Chen, S., and Zheng, N. Poaql: A partially observable altruistic q-learning method for cooperative multi-agent reinforce-ment learning. In 2024 IEEE International Conference on Robotics and Automation (ICRA) , pp. 15076–15082. IEEE, 2024. Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., and Polosukhin, I. At-tention is all you need. Advances in neural information processing systems , 30, 2017. Wan, L., Liu, Z., Chen, X., Lan, X., and Zheng, N. Greedy based value representation for optimal coordination in multi-agent reinforcement learning. In International Con-ference on Machine Learning , pp. 22512–22535. PMLR, 2022. Wang, J., Ren, Z., Liu, T., Yu, Y., and Zhang, C. Qplex: Duplex dueling multi-agent q-learning. In International Conference on Learning Representations , 2021. Wang, J., Zhang, Y., Gu, Y., and Kim, T.-K. Shaq: Incorpo-rating shapley value theory into multi-agent q-learning. 
+
+Advances in Neural Information Processing Systems , 35: 5941–5954, 2022. Wang, T., Wang, J., Zheng, C., and Zhang, C. Learning nearly decomposable value functions via communication minimization. In International Conference on Learning Representations , 2020a. Wang, Y., Han, B., Wang, T., Dong, H., and Zhang, C. Off-policy multi-agent decomposed policy gradients. arXiv preprint arXiv:2007.12322 , 2020b. Whiteson, S., Samvelyan, M., Rashid, T., De Witt, C., Far-quhar, G., Nardelli, N., Rudner, T., Hung, C., Torr, P., and Foerster, J. The starcraft multi-agent challenge. In 
+
+Proceedings of the International Joint Conference on Au-tonomous Agents and Multiagent Systems, AAMAS , pp. 2186–2188, 2019. Yang, Y., Hao, J., Liao, B., Shao, K., Chen, G., Liu, W., and Tang, H. Qatten: A general framework for cooper-ative multiagent reinforcement learning. arXiv preprint arXiv:2002.03939 , 2020. Ye, J., Li, C., Wang, J., and Zhang, C. Towards global op-timality in cooperative marl with the transformation and distillation framework. arXiv preprint arXiv:2207.11143 ,2022. Yu, C., Velu, A., Vinitsky, E., Gao, J., Wang, Y., Bayen, A., and Wu, Y. The surprising effectiveness of ppo in cooper-ative multi-agent games. Advances in neural information processing systems , 35:24611–24624, 2022. Zang, Y., He, J., Li, K., Fu, H., Fu, Q., Xing, J., and Cheng, J. Automatic grouping for efficient cooperative multi-agent reinforcement learning. Advances in neural information processing systems , 36:46105–46121, 2023. 11 Submission and Formatting Instructions for ICML 2026 
+
+A. Relationship to Existing Work 
+
+Relationship to Weighted QMIX Both Weighted QMIX (Rashid et al., 2020a) and the single-round value factorization in our method aim to enhance convergence toward actions superior to a given action. Weighted QMIX achieves this by reducing the fitting weight for inferior actions, whereas our method assigns them the minimum target value. However, Weighted QMIX cannot guarantee strict improvement over the given action, as suboptimal actions may be stable points. In contrast, our method ensures strict improvement by preventing actions with minimum target value from becoming stable points. Moreover, even when Weighted QMIX obtains the optimal action, it may fail to stabilize at this optimum because the optimal action might not be a stable point. Although our method similarly risks deviating from the optimal action, we mitigate this by early termination when no further improvement is detected. 
+
+Relationship to GVR For the theoretical aspect, GVR (Wan et al., 2022) merely depicts the phenomenon of greedy-action transition caused by changes in the policy distribution, which can be regarded as a special case of the transition discussed in our paper. In contrast, we reveal that the essence of greedy-action transition lies in gradient-free components, and we model this transition with a discrete dynamical system. Unlike GVR, our theory serves as a theoretical paradigm for value factorization methods that involve gradient-free components. With this paradigm, we not only expose the suboptimality of prior work but also provide design guidelines for future factorization schemes. For the algorithmic aspect, the main idea of GVR (Wan et al., 2022) is to establish the optimal action as a stable point while rendering other actions non-stable. However, this approach requires prior knowledge of the optimal action, which is fundamentally infeasible in MARL since finding the optimal action is the primary objective. Consequently, GVR inevitably relies on approximations of ideal conditions, which not only increase the complexity but may also convert certain suboptimal actions into stable points. In contrast to GVR, our method converts inferior actions into unstable points in each iteration. Determining inferior actions is computationally straightforward, and by assigning them the minimum target value, existing monotonic value factorizations can effectively exclude these inferior actions. Therefore, our method strictly improves the current action through iterations, providing a more reliable approximation to the optimal action. 
+
+Relationship to Communication Our method can also be interpreted as a multi-round communication algorithm within a parallel execution framework. In each iteration, agents exchange pre-decision information and generate new decisions through communication. The key challenge in such frameworks is ensuring that post-communication actions strictly improve upon pre-communication actions — failure to achieve this prevents agents from reaching consensus, resulting in suboptimal solutions. In our method, by rendering actions inferior to pre-communication ones as non-stable points, our approach not only guarantees the improvement of post-communication actions but also approaches the optimal action within sufficient communication rounds. In contrast, sequential execution frameworks essentially extend single-step action selection across agents, where each agent’s action depends on higher-priority agents’ choices. Such frameworks not only demonstrate lower efficiency but also introduce additional concerns regarding policy convergence and suboptimality caused by execution ordering (Ding et al., 2024). 
+
+B. Definition 
+
+In this section, we will define some important concepts that have been used in previous work but have not yet been rigorously defined. 
+
+B.1. Monotonic Payoff 
+
+Note that the definition of monotonicity for payoffs differs from that in functions of real variables, as there is no ordering relationship defined in the action space, the domain of the payoff. We define an order relation on the actions based on the function F as follows: 
+
+Definition B.1 (Order Relation ⪰). Let u1 
+
+> i
+
+, u 2 
+
+> i
+
+∈ U i be two actions of agent i. For the function F , if the order relation between u1 
+
+> i
+
+and u2 
+
+> i
+
+is u1 
+
+> i
+
+⪰ u2 
+
+> i
+
+, then 
+
+F (u1 
+
+> i
+
+, u−i) ≥ F (u2 
+
+> i
+
+, u−i), ∀u−i ∈ U−i (12) where u−i = ( u1, · · · , u i−1, u i+1 , · · · , u n) is the joint action without ui.The function F can be replaced with Qjt , a measurement of payoff. However, the order relation based on Qjt exists over the entire action space only if Qjt is monotonic, which is defined as follows: 12 Submission and Formatting Instructions for ICML 2026 
+
+Definition B.2 (Monotonic Qjt ). ∀τ ∈ T , if for every agent i and any two actions u1 
+
+> i
+
+, u 2 
+
+> i
+
+∈ U i, there exists an order relation that is either u1 
+
+> i
+
+⪰ u2 
+
+> i
+
+or u2 
+
+> i
+
+⪰ u1 
+
+> i
+
+, then Qjt is monotonic. Monotonic  Non -monotonic  
+
+> 𝑢 𝑖
+> 1
+> 𝑢 𝑖
+> 2
+> 𝑢 𝑖
+> 1
+> 𝑢 𝑖
+> 2𝑢 𝑖
+> 2
+> 𝑢 𝑖
+> 2
+> 𝑢 𝑖
+> 1
+> 𝑢 𝑖
+> 1
+
+𝑢 𝑖  
+
+> 1
+
+≽ 𝑢 𝑖  
+
+> 2
+
+𝑢 𝑖  
+
+> 1
+
+≽ 𝑢 𝑖  
+
+> 2
+
+𝑢 𝑖  
+
+> 1
+
+≽ 𝑢 𝑖  
+
+> 2
+
+𝑢 𝑖  
+
+> 2
+
+≽ 𝑢 𝑖 
+
+> 1
+
+Figure 8. An illustration of Definition B.2. We intercept curves corresponding to different u−i and check whether their monotonicity with respect to ui is consistent. 
+
+Table 5 shows the payoff matrices with different monotonicity. Monotonic factorization methods can easily obtain the optimal solution in monotonic cases ((a) and (b) in Table 5) and sometimes in non-monotonic cases ((c) in Table 5). However, monotonic factorizations struggle to obtain the optimal solution in highly non-monotonic cases ((d) in Table 5). 9 8 76 5 43 2 1
+
+(a) Monotonic 
+
+8 9 72 3 15 6 4
+
+(b) Monotonic 
+
+9 0 00 5 00 0 0
+
+(c) Non-monotonic 
+
+9 -9 -9 -9 5 0-9 0 0
+
+(d) Highly non-monotonic 
+
+Table 5. Payoff matrices with different monotonicity, where the value in row r and column c denotes the payoff of joint action u = ( r, c ).(a): A monotonic payoff matrix. (b) A monotonic payoff matrix generated by rearranging the rows and columns of (a). (c) A non-monotonic payoff matrix, where the relation between any two rows or columns is partially ordered. (d) A highly non-monotonic payoff matrix, where the relation between any two rows or columns is largely unordered. 
+
+B.2. Ideal QMIX 
+
+The objective of QMIX is to find individual Qs and Qmon that minimize the MSE between Qtot and Qjt . Considering a 
+
+τ ∈ T in Equation (1), the loss function is defined in Equation (13). 
+
+Ltot (τ ) = X
+
+> u
+
+π(u|τ )( Qmon (τ , u) − Qjt (τ , u)) 2 (13) Since the relationship between individual Qs and Qmon is monotonic, the magnitude relationship of Qmon is constrained by that of individual Qs, which is ∀τ ∈ T and ∀i ∈ { 1, 2, · · · , n }, ∀ui, v i ∈ U i, u−i ∈ U−i = U1 ×· · · U i−1 ×U i+1 ×· · ·×U n
+
+(Qmon (τ , u−i, u i) − Qmon (τ , u−i, v i))( Qi(τ , u i) − Qi(τ , v i)) ≥ 0 (14) Combining the objective defined in Equation (13) and the constrain defined in Equation (14), we get the ideal optimization problem that QMIX solves. In practice, QMIX uses the network as a monotonic function fmon to represent the constraint between individual Qs and Qmon , and applies stochastic gradient descent (SGD) to minimize the objective. In this way, 
+
+Qi is updated based on its gradient which involves ∂f mon  
+
+> ∂Q i
+
+. However, since how ∂f mon  
+
+> ∂Q i
+
+varies is unknown, to avoid this confounding factor, we assume that QMIX can obtain the optimal combination of individual Qs and Qmon that satisfies Equation (14), and consequently minimize Ltot . We name QMIX based on this assumption as the ideal QMIX which is defined as follows 3:
+
+> 3
+
+The policy π is omitted in the definition by Rashid et al. (2020a). However, it plays a crucial role in shaping Qtot , which will be discussed in Lemma C.1. 
+
+13 Submission and Formatting Instructions for ICML 2026 
+
+Definition B.3 (Ideal QMIX) . Let Q be the set of pairs (Q, Q mon ), where the individual action values Q =(Q1, Q 2, · · · , Q n) and Qmon satisfy Equation (14). For a joint action value Qjt and policy π, Q and Qmon of the ideal QMIX converge to Q∗ and Q∗ 
+
+> mon
+
+which satisfy ∀τ ∈ T
+
+Q∗, Q ∗ 
+
+> mon
+
+∈ arg min 
+
+> (Q,Q mon )∈Q
+
+X
+
+> u
+
+π(u|τ )( Qmon (τ , u) − Qjt (τ , u)) 2 (15) where Qtot = Qmon in QMIX. As for other value factorization methods such as WQMIX (Rashid et al., 2020a) and ResQ (Shen et al., 2022) where Qmon 
+
+appears in their design, we also assume they share the same property as the ideal QMIX, which aligns with the assumption used in their papers. From Definition B.3, the ideal QMIX obtains a monotonic representation of Qjt with the minimum Ltot . We illustrate this process in matrix cases: Given the order of rows and columns, we can find the monotonic matrix with local minimum Ltot 
+
+by solving the constraint optimization problem. To find the monotonic matrix with minimum Ltot , we compare Ltot for all possible orders. We give an example of the ideal QMIX shown in Table 6. 8 -12 -12 -12 3 0-12 0 5
+
+(a) Qjt 
+
+Ltot =36.22 -8 -8 -8 -8 1 1-8 1 5
+
+(b) Q∗
+
+> tot
+
+Ltot =45.56 
+
+8 -5 -5 -5 -5 -5 -5 -5 -5 
+
+(c) Q∗ 
+
+> tot
+
+for ¯u = u∗
+
+Table 6. (a): A non-monotonic payoff matrix, where the value presented in row r and column c denotes the Qjt value of joint action (r, c ).(b): The monotonic representation with the global minimum Ltot . (c) The optimal monotonic representation constrained by ¯u = u∗.Since the Ltot of (b) is less than the Ltot of (c), Qtot of the ideal QMIX under uniform visitation ( π ≡ 1) will converge to (b), which fails to get the global optimal action. 
+
+C. Proofs 
+
+C.1. Theorem on MRVF Theorem 5.2. Given a joint action value Qjt with a finite action space U and τ ∈ T , for any infinite sequence {¯uk|¯uk ∈ U}
+
+that satisfies the Strict Improvement Condition, then ∃K > 0, ¯uK = u∗.Proof. Let Uk 
+
+> +
+
+= {u|Qjt (τ , u) > Q jt (τ , ¯uk), u ∈ U} be the set of actions superior to ¯uk.
+
+Assume to the contrary that ∀k > 0, ¯uk̸ = u∗. Since ∀k > 1, Q jt (τ , ¯uk) > Q jt (τ , ¯uk−1) when ¯uk−1̸ = u∗ (Strict Improvement Condition), we have Uk 
+
+> +
+
+⊂ Uk−1+ , which is equivalent to 
+
+|Uk−1+ | − | U k
+
+> +
+
+| ≥ 1 (16) Telescoping Equation (16) from k = 1 to k = K, we get ∀K > 0, |UK 
+
+> +
+
+| ≤ | U 1+| − (K − 1) .If we choose K > |U| + 1 , since U1+ ⊆ U , we get |UK 
+
+> +
+
+| < |U 1+| − | U| ≤ 0, which contradicts the fact that |UK 
+
+> +
+
+| ≥ 0.Therefore, we prove that ∃K > 0, ¯uK = u∗.
+
+Lemma C.1. For the idea QMIX defined in Equation (15) and ϵ-greedy policy π that is continuous for ϵ ∈ [0 , 1] and satisfies Equation (17), we have lim 
+
+> ϵ→0+
+
+Q∗
+
+> tot
+
+(τ , eu) = Qjt (τ , eu) for given τ ∈ T , where Q∗ 
+
+> tot
+
+is the converged Qtot .
+
+lim 
+
+> ϵ→0+
+
+π(u|τ ) = 
+
+(
+
+1 u = eu
+
+0 otherwise (17) 
+
+Proof. Assume for a contradiction that lim 
+
+> ϵ→0+
+
+Q∗
+
+> tot
+
+(τ , eu)̸ = Qjt (τ , eu), which means ∃∆ > 0, ∀E > 0, ∃ϵ ∈
+
+(0 , E ), |Q∗
+
+> tot
+
+(τ , eu) − Qjt (τ , eu)| ≥ ∆.14 Submission and Formatting Instructions for ICML 2026 
+
+The loss of Q∗ 
+
+> tot
+
+defined in Equation (15) is 
+
+L∗ 
+
+> tot
+
+= X
+
+> u
+
+π(u|τ )( Q∗
+
+> tot
+
+(τ , u) − Qjt (τ , u)) 2
+
+= X
+
+> u̸=eu
+
+π(u|τ )( Q∗
+
+> tot
+
+(τ , u) − Qjt (τ , u)) 2 + π(eu|τ )( Q∗
+
+> tot
+
+(τ , eu) − Qjt (τ , eu)) 2
+
+≥ π(eu|τ )∆ 2
+
+(18) Let Q′
+
+> tot
+
+(τ , ·) ≡ ∆2 + Qjt (τ , eu). The loss of Q′ 
+
+> tot
+
+is 
+
+L′ 
+
+> tot
+
+= X
+
+> u̸=eu
+
+π(u|τ )( ∆2 + Qjt (τ , eu) − Qjt (τ , u)) 2 + π(eu|τ )( ∆2 )2
+
+(19) Consider L∗ 
+
+> tot
+
+− L′
+
+> tot
+
+, we have 
+
+L∗ 
+
+> tot
+
+− L′ 
+
+> tot
+
+≥ π(eu|τ )( ∆2 )2 − X
+
+> u̸=eu
+
+π(u|τ )( ∆2 + Qjt (τ , eu) − Qjt (τ , u)) 2 (20) Notice that 
+
+lim 
+
+> ϵ→0+
+
+(π(eu|τ )( ∆2 )2 − X
+
+> u̸=eu
+
+π(u|τ )( ∆2 + Qjt (τ , eu) − Qjt (τ , u)) 2) = ( ∆2 )2 > 0 (21) Therefore, ∃E > 0, ∀ϵ ∈ (0 , E ), L ∗ 
+
+> tot
+
+> L ′
+
+> tot
+
+, contradicting the condition that L∗ 
+
+> tot
+
+is the minimum (the definition of Q∗
+
+> tot
+
+in Equation (15). Hence the assumption is false, and we have lim  
+
+> ϵ→0+
+
+Q∗
+
+> tot
+
+(τ , eu) = Qjt (τ , eu).
+
+Theorem 5.3. Given a non-constant joint action value Qjt (τ , ·) (∀τ ∈ T , ∀C ∈ R, Q jt (τ , ·)̸ ≡ C) with finite action-observation history space T and action space U. For the ideal QMIX and the centralized ϵ-greedy policy π defined in Equation (11), we have ∃E ∈ (0 , 1) , ∀ϵ ∈ (0 , E ), ∀τ ∈ T , ∀u ∈ arg min u Qjt (τ , u), u is not a stable point. Proof. For τ ∈ T , Assume for a contradiction that an action with the minimum payoff can be a stable point, which means 
+
+∀Eτ ∈ (0 , 1] , ∃ϵ ∈ (0 , E τ ), ∃Q∗ 
+
+> tot
+
+that Qjt (τ , ¯u∗) = min u Qjt (τ , u) and eu = ¯ u∗ (¯u∗ is the stable point with the minimun 
+
+Qjt ), where Q∗ 
+
+> tot
+
+is the converged Qtot of the ideal QMIX (see Definition B.3). We define U+ = {u|Qjt (τ , u) > min u Qjt (τ , u)} and U − = U − U+ .Since lim  
+
+> ϵ→0+
+
+Q∗
+
+> tot
+
+(τ , ¯u∗) = Qjt (τ , ¯u∗) (Lemma C.1 and eu = ¯ u∗), we have ∃E0 
+
+> τ
+
+∈ (0 , 1] , ∀ϵ ∈ (0 , E 0 
+
+> τ
+
+), Q ∗
+
+> tot
+
+(τ , ¯u∗) <
+
+min u∈U + Qjt (τ , u). Thus, ∀u ∈ U+, since Q∗
+
+> tot
+
+(τ , u) ≤ Q∗
+
+> tot
+
+(τ , ¯u∗) < Q jt (τ , u).Therefore, for the point-wise squared error of L∗
+
+> tot
+
+, we have 
+
+L∗
+
+> tot
+
+(u) = π(u|τ )( Q∗
+
+> tot
+
+(τ , u) − Qjt (τ , u)) 2
+
+> ϵ
+
+|U| (Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , u)) , ∀u ∈ U+ (22) Therefore, for the loss of Q∗ 
+
+> tot
+
+defined in Equation (15), we have 
+
+L∗ 
+
+> tot
+
+= X
+
+> u
+
+π(u|τ )( Q∗
+
+> tot
+
+(τ , u) − Qjt (τ , u)) 2
+
+> ϵ
+
+|U|
+
+X 
+
+> u∈U+
+
+(Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , u)) 2 + (1 − ϵ + ϵ
+
+|U| )( Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , ¯u∗)) 2 (23) Consider certain u+ ∈ U+. We define Q′ 
+
+> tot
+
+as 
+
+Q′
+
+> tot
+
+(τ , u) = 
+
+(
+
+Qjt (τ , u+) u = u+
+
+Q∗
+
+> tot
+
+(τ , ¯u∗) otherwise (24) 15 Submission and Formatting Instructions for ICML 2026 
+
+The loss of Q′ 
+
+> tot
+
+defined in Equation (15) is ( eu = ¯ u∗)
+
+L′ 
+
+> tot
+
+= ϵ
+
+|U| ( X 
+
+> u∈(U+−{ u+})
+
+(Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , u)) 2 + X 
+
+> u∈U−
+
+(Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , ¯u∗)) 2)+ (1 − ϵ + ϵ
+
+|U| )( Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , ¯u∗)) 2
+
+(25) Comparing L∗ 
+
+> tot
+
+and L′
+
+> tot
+
+, we have 
+
+L∗ 
+
+> tot
+
+− L′ 
+
+> tot
+
+> ϵ
+
+|U| (( Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , u+)) 2 − | U−|(Q∗
+
+> tot
+
+(τ , ¯u∗) − Qjt (τ , ¯u∗)) 2) (26) Notice that 
+
+f (x) = ( x − Qjt (τ , u+)) 2 − | U−|(x − Qjt (τ , ¯u∗)) 2 (27) is a continuous function and 
+
+lim    
+
+> x→Qjt (τ,¯u∗)
+
+f (x) = ( Qjt (τ , ¯u∗) − Qjt (τ , u+)) 2 > 0 (28) Since lim 
+
+> ϵ→0+
+
+Q∗
+
+> tot
+
+(τ , ¯u∗) = Qjt (τ , ¯u∗), we have lim 
+
+> ϵ→0+
+
+f (Q∗
+
+> tot
+
+(τ , ¯u∗)) , which means ∃E1 
+
+> τ
+
+∈ (0 , 1] , ∀ϵ ∈
+
+(0 , E 1 
+
+> τ
+
+), f (Q∗
+
+> tot
+
+(τ , ¯u∗)) > 0.Therefore, we find Eτ = min {E0 
+
+> τ
+
+, E 1 
+
+> τ
+
+} ∈ (0 , 1] that ∀ϵ ∈ (0 , E τ ) L∗ 
+
+> tot
+
+> L ′
+
+> tot
+
+, which contradicts the condition that Q∗
+
+> tot
+
+satisfies Equation (15). Thus, ∃Eτ ∈ (0 , 1] , ∀ϵ ∈ (0 , E τ ), ∀u ∈ arg min u Qjt (τ , u), u is not a stable point. Finally, we complete the proof by taking E = min   
+
+> τ∈T
+
+Eτ .
+
+C.2. Theorem on ResQ 
+
+We will prove that u∗ is the unique yet weakly stable point of ResQ (Shen et al., 2022). Here, we present the expression of 
+
+Qtot of ResQ. 
+
+Qtot (τ , u) = Qmon (τ , u) + wr(τ , u) ∗ Qr(τ , u) (29) where Qmon = fmon (Q1, Q 2, · · · , Q n), Qr ≤ 0 and 
+
+wr(τ , u) = 
+
+(
+
+0 u = eu
+
+1 otherwise (30) The loss function for certain τ is 
+
+Ltot (τ ) = X
+
+> u
+
+π(u|τ )( Qtot (τ , u) − Qjt (τ , u)) 2 (31) We provide a specific instance for the weak stability of ResQ in Table 7. Then, we prove that the weak stability occurs in general cases in Theorem C.3. 8 -12 -12 -12 3 0-12 0 5
+
+(a) Qjt 
+
+8 8 88 8 98 8 8
+
+(b) Qmon 
+
+0 -20 -20 -20 -5 -9 -20 -8 -4 
+
+(c) wr ∗ Qr
+
+Table 7. This table shows the weak stability of ResQ for a specific Qjt in (a), where we let eu = u∗ initially to check whether ResQ will stabilize at u∗. We highlight the values related to eu in red and ¯u in blue. Qtot is the sum of Qmon in (b) and wr ∗ Qr in (c), which equals to Qjt (Ltot = 0 ). However, since ¯u̸ = u∗, u∗ is not a strongly stable point for ResQ. 
+
+Lemma C.2. Given a joint action value Qjt and τ ∈ T , ∀eu ∈ U, we can find Qtot with Ltot = 0 and ¯u̸ = eu.
+
+16 Submission and Formatting Instructions for ICML 2026 
+
+Proof. We can find a Qmon that satisfies 1. Qmon ≥ Qjt 
+
+2. Qmon (τ , eu) = Qjt (τ , eu)
+
+3. ¯u̸ = eu
+
+Here we give a specific Qmon that satisfies these conditions: 
+
+Qmon (τ , u) = 
+
+(
+
+Qjt (τ , eu) u = eu
+
+max u Qjt (τ , u) + ∆ otherwise (32) where ∆ > 0. We let Qr = Qjt − Qmon . Since Qmon ≥ Qjt , we have Qr ≤ 0. Therefore, we obtain Qmon , wr and Qr,which together constitute the Qtot of ResQ. 
+
+∀u̸ = eu, we have Qjt (τ , u) = Qtot (τ , u) = Qmon (τ , u) + 1 ∗ Qr(τ , u). For eu, since Qmon (τ , eu) = Qjt (τ , eu), we have 
+
+Qjt (τ , eu) = Qtot (τ , eu) = Qmon (τ , eu) + 0 ∗ Qr(τ , eu).Therefore, ∀u ∈ U, we have Qjt (τ , u) = Qtot (τ , u), which means Ltot = 0 . Thus, we find Qtot with Ltot = 0 and 
+
+¯u̸ = eu.Lemma C.2 demonstrates that in ResQ, for any two actions in the entire action space, the greedy action may transit from one to another, which indicates that no action can be a strongly stable point. 
+
+Theorem C.3. Given a joint action value Qjt and τ ∈ T , ∀u∗ ∈ arg max u Qjt (τ , u), u∗ is a weakly stable point of ResQ (Shen et al., 2022), while ∀u− /∈ arg max u Qjt (τ , u) is not a stable point of ResQ. Proof. First, we illustrate that u∗ is a weak stable point. 
+
+Let eu = u∗. We can find a Qmon that satisfies 1. Qmon ≥ Qjt 
+
+2. Qmon (τ , eu) = Qjt (τ , eu)
+
+3. ¯u = u∗
+
+where Qmon ≡ Qjt (τ , u∗) is a specific case. We let Qr = Qjt − Qmon . Since Qmon ≥ Qjt , we have Qr ≤ 0. Therefore, we obtain Qmon , wr and Qr, which together constitute the Qtot of ResQ. According to wr defined in Equation (30), we have 
+
+Qtot =
+
+(
+
+Qmon (τ , u) + 1 ∗ Qr(τ , u) ∀u̸ = eu
+
+Qmon (τ , eu) + 0 ∗ Qr(τ , eu) u = eu (33) Substituting Qr = Qjt − Qmon and Qmon (τ , eu) = Qjt (τ , eu) into Equation (33) yields Qtot ≡ Qjt .Since Qtot ≡ Qjt , we have Ltot = 0 , which is the lower bound of loss. Therefore, u∗ is a stable point of ResQ. However, according to Lemma C.2 for eu = u∗, we can also find Q′ 
+
+> tot
+
+with L′ 
+
+> tot
+
+= 0 while ¯u′̸ = u∗. Thus, u∗ is a weakly stable point of ResQ. 
+
+Second, we illustrate that u− is not a stable point. 
+
+Let eu = u−. Assume for a contradiction that there exists Qtot satisfying ¯u = u− and achieving the minimum loss. According to Lemma C.2, we have Ltot = 0 , otherwise Ltot is not the minimum. 17 Submission and Formatting Instructions for ICML 2026 
+
+Since Ltot = 0 , we have ∀u ∈ U, Q tot (τ , u) = Qjt (τ , u). Therefore, we have Qtot (τ , u−) = Qjt (τ , u−) for u− and 
+
+Qtot (τ , u∗) = Qjt (τ , u∗) for u∗.However, since Qtot (τ , u−) ≥ Qtot (τ , u∗) due to ¯u = u−, we get a contradiction where Qjt (τ , u−) ≥ Qjt (τ , u∗).Therefore, u− is not a stable point. 
+
+D. Stability Analysis of QPLEX 
+
+In this section, we provide a suboptimal case of QPLEX in matrix games. Here, we present the expression of Qtot of QPLEX. 
+
+Qtot (τ , u) = X
+
+> i
+
+max 
+
+> ui
+
+Qi(τi, u i) + X
+
+> i
+
+wi(τ , u) ∗ (Qi(τi, u i) − max 
+
+> ui
+
+Qi(τi, u i)) (34) where wi(τ , u) ≥ 0, and max ui Qi(τi, u i) can be treated as a gradient-free component, since 
+
+max 
+
+> ui
+
+Qi(τi, u i) = Qi(τi, ¯ui), ¯ui = arg max 
+
+> ui
+
+Qi(τi, u i) (35) The loss function for certain τ under uniform visitation is 
+
+Ltot (τ ) = X
+
+> u
+
+(Qtot (τ , u) − Qjt (τ , u)) 2 (36) For QPLEX, stable point occurs when the gradients of Q and w satisfy that ∀i ∈ { 1, 2, · · · , N }
+
+∂L tot 
+
+∂Qi
+
+= 0, ∂L tot 
+
+∂wi
+
+≥ 0 (37) where ∂L tot   
+
+> ∂w i(τ,u)
+
+> 0 only when wi(τ , u) = 0 .The suboptimal cases of QPLEX are presented in Table 8 and Table 9, where there are three stable points but only one is optimal. For readers to verify those stable points, we expand Equation (37) into Equation (38). 
+
+∂L tot 
+
+∂Q i(τi, u i) =
+
+P 
+
+> u∈U(ui=ui)
+
+(Qtot (τ , u) − Qjt (τ , u)) wi(τ , u) ui̸ = ¯ ui
+
+X 
+
+> u∈U(ui=ui)
+
+(Qtot (τ , u) − Qjt (τ , u)) wi(τ , u)+ 
+
+X
+
+> u∈U
+
+(Qtot (τ , u) − Qjt (τ , u))(1 − wi(τ , u)) ui = ¯ ui
+
+∂L tot 
+
+∂w i(τ , u) =( Qtot (τ , u) − Qjt (τ , u))( Qi(τi, ui) − Qi(τi, ¯ui)) 
+
+(38) where U(ui = ui) = {u|u ∈ U, ui = ui}.
+
+E. Experimental Setup 
+
+We adopt a setup similar to PyMARL (Whiteson et al., 2019). We use the implementation of QMIX, QTRAN, QPLEX, WQMIX, ResQ, and NA 2Q (Liu et al., 2023) from their open-source repositories 4 5 6 7 . These codes are released under the Apache License V2.0. 
+
+> 4
+
+https://github.com/oxwhirl/pymarl 
+
+> 5
+
+https://github.com/oxwhirl/wqmix 
+
+> 6
+
+https://github.com/xmu-rl-3dv/ResQ 
+
+> 7
+
+https://github.com/zichuan-liu/NA2Q 
+
+18 Submission and Formatting Instructions for ICML 2026 
+
+8 -12 -12 -12 3 0-12 0 5
+
+(a) Qjt 
+
+Q1
+
+Q2 2.77 0.31 0.37 
+
+5.23 8 -12 -12 0.49 -12 3 00.33 -12 0 5
+
+(b) ˇQtot 
+
+Q1
+
+Q2 1.82 3.09 0.70 1.42 5.5 -12 -12 
+
+2.41 -12 5.5 01.09 -12 0 5
+
+(c) ˇQtot 
+
+Q1
+
+Q2 1.29 0.66 3.41 
+
+1.38 6.5 -12 -12 0.68 -12 3 0
+
+3.09 -12 0 6.5 
+
+(d) ˇQtot 
+
+0.25 1.51 1.71 4.21 0.48 0.10 4.08 0.59 0.09 
+
+(e) ˇw1
+
+0.00 17.64 5.01 8.53 7.65 1.41 5.30 4.16 0.15 
+
+(f) ˇw1
+
+0.00 6.70 10.86 3.35 0.26 2.71 5.10 1.03 1.92 
+
+(g) ˇw1
+
+2.01 8.13 8.34 0.85 1.12 3.12 4.62 2.08 1.05 
+
+(h) ˇw2
+
+0.00 9.07 5.22 13.71 7.94 2.29 8.23 3.76 0.13 
+
+(i) ˇw2
+
+0.00 2.58 2.50 4.93 1.05 0.23 8.72 2.36 1.47 
+
+(j) ˇw2
+
+Table 8. The example of QPLEX in which u∗ is not the only one stable points. The quantities of ˇQ∗ 
+
+> tot
+
+and ˇwi listed in the same column correspond to a particular stable point, where we highlight ˇu in bold. 
+
+8 0 00 3 00 0 5
+
+(a) Qjt 
+
+Q1
+
+Q2 4.14 1.85 0.73 
+
+3.86 8 0 00.44 0 3 00.54 0 0 5
+
+(b) ˇQtot 
+
+Q1
+
+Q2 2.57 2.75 0.99 2.59 5.5 0 0
+
+2.75 0 5.5 01.11 0 0 5
+
+(c) ˇQtot 
+
+Q1
+
+Q2 2.86 0.57 3.15 
+
+3.06 6.5 0 00.82 0 3 0
+
+3.35 0 0 6.5 
+
+(d) ˇQtot 
+
+0.94 1.31 1.10 2.34 0.83 0.91 2.41 1.49 0.83 
+
+(e) ˇw1
+
+0.00 33.25 1.48 8.82 13.44 0.44 3.00 3.35 0.16 
+
+(f) ˇw1
+
+0.00 2.91 22.31 2.13 0.54 2.57 4.35 1.53 14.12 
+
+(g) ˇw1
+
+1.44 3.50 2.34 0.76 0.95 1.43 0.66 1.34 0.07 
+
+(h) ˇw2
+
+0.00 19.52 2.99 31.74 20.50 3.13 3.35 1.73 0.14 
+
+(i) ˇw2
+
+0.00 2.20 0.10 3.89 0.83 1.94 22.74 2.53 6.15 
+
+(j) ˇw2
+
+Table 9. The example in which QPLEX has two suboptimal stable points, while QMIX can easily obtain the optimum. The quantities of 
+
+ˇQtot and ˇwi listed in the same column correspond to a particular stable point, where we highlight ˇu in bold. 
+
+All algorithms apply TD( 0) to update Qtot including ResQ, as TD( λ) result in catastrophic performance in 5m_vs_6m while no measurable improvement in other scenarios. The hyperparameters for all algorithms and environments are presented in Table 10. For WQMIX, we set α = 0 .1 for all environments. For MRVF, we use three rounds of value factorization, with a probability p = 0 .2 for sampling preselected actions. 19 Submission and Formatting Instructions for ICML 2026 
+
+For hardware, we run experiments on an NVIDIA 3090 GPU for risk-reward games, predator-prey tasks, and SMAC scenarios (excluding bane_vs_bane ). In addition, we use an NVIDIA A800 GPU for MRVF in 2c_vs_64zg and MMM2 
+
+scenarios. 
+
+Hyperparameter Value Description 
+
+Batch Size 32 Number of episodes per update Replay buffer size 5000 Maximum number of stored episodes Target update interval 200 Frequency of updating the target network Initial ϵ 1.0 The initial ϵ in the ϵ-greedy policy Final ϵ 0.05 The final ϵ in the ϵ-greedy policy Anneal steps for ϵ 50,000 Number of steps for linearly decay of ϵ
+
+Discount γ 0.99 Discount of future return Test interval 10,000 Frequency of test evaluation Test episodes 32 Number pf episodes to test 
+
+Table 10. The hyperparameters for experiments 
+
+Network structure We provide details of the network structures presented in Figure 4. The individual Q network and the mixing network ( Qtot ) are shown in Figure 9, and the joint action value network ( ˆQjt ) is shown in Figure 10. MLP 
+
+GRU 
+
+MLP 
+
+Embed 
+
+𝜏 𝑡 
+
+> 𝑖
+
+ℎ𝑡 −1 
+
+> 𝑖
+
+ℎ𝑡 
+
+> 𝑖
+
+ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+𝑸 𝑖 𝜏 𝑡 
+
+> 𝑖
+
+, ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+,⋅
+
+𝑄 0 𝜏 𝑡 
+
+> 0
+
+, ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+, 𝑢 𝑡 
+
+> 𝑘 ,0
+
+𝜋 
+
+Individual 
+
+𝑄 0
+
+Individual 
+
+𝑄 𝑛 
+
+# ⋯
+
+𝜏 𝑡  
+
+> 𝑖
+
+ഥ𝒖 𝑡  
+
+> 𝑘 −1
+
+𝜏 𝑡  
+
+> 𝑖
+
+ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+𝜏 𝑡 
+
+> 𝑖
+
+Mixing Network 
+
+𝑄 𝑛 𝜏 𝑡 
+
+> 𝑛
+
+, ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+, 𝑢 𝑡 
+
+> 𝑘 ,𝑛
+
+𝜋 
+
+MLP 
+
+MLP 
+
+|𝑤 𝑠 𝑡 |, 𝑏 𝑠 𝑡 
+
+𝒔 𝑡 
+
+|𝑤 𝑠 𝑡 |, 𝑏 𝑠 𝑡 
+
+𝒔 𝑡 
+
+Embed 
+
+ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+𝑸 
+
+# ⋯
+
+𝑄 tot 𝝉 𝑡 , ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+, 𝒖 𝑡 
+
+> 𝑘
+
+Figure 9. The network structure of Qtot .
+
+The individual Q network processes the observation using a linear layer followed by a GRU (Chung et al., 2014) with 64 hidden dimensions. The mixing network processes the state with 2-layer linear network (64 hidden dimension) and processes the individual Qs with 2-layer linear network, where the weights and bias (generated by the state’s linear processor) have 32 hidden dimension. Inspired by the embedding module (Bengio et al., 2003) (Mikolov et al., 2013), we generate the features of ¯uk by selecting them from the continuous features (128 dimensions) of the observation or state. For the concatenated feature, we double the hidden dimensions to 128. The network structure of ˆQjt is similar to that of Qtot , with two key differences: First, we use a 3-layer linear network to process the state. Second, the output of the individual network has 64 dimensions. We input the state to Qjt in all SMAC scenarios except 3s5z and 3s_vs_5z , because masking observations of dead units loses critical information for return prediction in complex scenarios. In the bane_vs_bane scenario, we replace the embedding feature with the action index to avoid GPU out-of-memory errors. 20 Submission and Formatting Instructions for ICML 2026 MLP 
+
+GRU 
+
+MLP 
+
+𝜏 𝑡 
+
+> 𝑖
+
+ℎ𝑡 −1 
+
+> 𝑖
+
+ℎ𝑡  
+
+> 𝑖
+
+𝜋 
+
+Individual 
+
+𝑄 0
+
+Individual 
+
+𝑄 𝑛 
+
+# ⋯
+
+𝜏 𝑡 
+
+> 0
+
+Mixing Network 
+
+෠𝑄 jt 𝝉 𝑡 , ഥ𝒖 𝑡 
+
+> 𝑘 −1
+
+𝜋 
+
+MLP 
+
+MLP 
+
+𝑤 𝑠 𝑡 , 𝑏 𝑠 𝑡 
+
+𝒔 𝑡 
+
+𝑤 𝑠 𝑡 , 𝑏 𝑠 𝑡 
+
+𝒔 𝑡 
+
+𝒇 
+
+# ⋯
+
+# ⋯
+
+𝑼 𝑖 
+
+𝐿 
+
+𝜏 𝑡 
+
+> 𝑛
+
+𝑓 𝜏 𝑡 
+
+> 𝑖
+
+,⋅
+
+Figure 10. The network structure of Qjt .
+
+E.1. One-Step Game 
+
+We randomly generate Qjt of the risk-reward game with the following steps: First, randomly generate the individual reward vectors ri ≥ 0. Second, we randomly generate a bijection U → U that maps ui to another action vi for all agents i, which is the exchange of rows and columns for a matrix. Finally, we let Qjt (u) = sign (v) ∗ nP
+
+> i=0
+
+ri(vi) where sign (v) = 1 if all agents choose the same mapped action, and sign (v) = −1 otherwise. Here, we give an example of the risk-reward matrix in Table 11. 
+
+r1
+
+r2 3 4 50 3 -4 -5 1 -4 5 -6 2 -5 -6 7
+
+(a) 
+
+r1
+
+r2 5 4 32 7 -6 -5 0 -5 -4 3
+
+1 -6 5 -4 
+
+(b) Table 11. An example of the risk-reward matrix. (a): the risk-reward matrix before action mapping, where positive rewards are in the diagonal. (b): the risk-reward matrix after action mapping, which scatters positive rewards. 
+
+We constrain the values of Qjt to the interval [−10 , 10] . To achieve this, we first generate the reward vectors uniformly from 
+
+[0 , 1] , then divide each component by n, and finally multiply the result by 10 . The normalized return in Figure 5 is defined as 
+
+return (u) = 
+
+         
+
+> Qjt (u)−min
+> u+∈U+Qjt (u+)max
+> u+∈U+Qjt (u+)−min
+> u+∈U+Qjt (u+)
+
+Qjt (u) ≥ 0      
+
+> Qjt (u)−min
+> u−∈U−Qjt (u−)min
+> u−∈U−Qjt (u−)
+
+Qjt (u) < 0
+
+(39) where U+ = {u+|u+ ∈ U, Q jt (u+) ≥ 0} and U + ∪ U− = U.
+
+E.2. Predator Prey 
+
+The predator-prey task (Böhmer et al., 2020) involves a multi-agent scenario where 8 predators cooperate to capture 8 prey. Each predator can choose from six possible actions: four directional movements (up, down, left, right), staying still, or attempting to "capture" prey. 
+
+Capture Conditions 
+
+21 Submission and Formatting Instructions for ICML 2026 
+
+• A predator can only select the "capture" action when occupying the same position with prey. • Successful capture requires at least two predators simultaneously choosing "capture" on the same prey. • Successful capture yields +10 reward. • If only one predator chooses "capture" for a prey, the team receives a punishment. • The captured prey and successful predators are immediately removed from the environment. Observations of removed agents are masked with zeros. 
+
+E.3. StarCraft II Multi-Agent Challenge 
+
+The SMAC (SC2.4.6 version) involves two opposing teams competing to defeat each other. Players control one team’s units with the objective of eliminating all enemy units. The reward system consists of three components: • Kill Reward : +10 for eliminating an enemy unit by reducing its HP to zero. • Win Reward : +200 for defeating all enemy units and winning the game. • Damage : The amount of change in an enemy’s HP. In the original PyMARL implementation (Whiteson et al., 2019), rewards are enforced as positive by taking absolute values. However, in scenarios where enemies can regenerate health/shields, agents might artificially inflate rewards by allowing recovery and reinflicting damage, rather than focusing on winning. To address this, we adopt the reward without taking its absolute values. We illustrate why monotonic value factorizations excel in SMAC from two aspects. First, the individual action has slight impact on returns. Take 3s_vs_5z scenario for example, the enemy unit, Zealot, has 100 health and 50 recoverable shields. Thus, the maximum return is 
+
+150 ∗ 5| {z } 
+
+> Damage
+
++ 10 ∗ 5| {z } 
+
+> Kill
+
++ 200 |{z} 
+
+> W in
+
+= 1000 (40) In particular, damages constitutes the major component of return (75% proportion). Within a step, an individual agent’s action only affects its damage, and its action will not cause a sharp change of the state. Consequently, a slight deviation from the optimal joint action is insufficient to cause a significant drop in return. Therefore, monotonic value factorization has advantages in SMAC, as without the sharp drop in return near the global optimum, monotonic value factorization can attain the global optimum. Second, choosing the optimal individual action also performs the best in average. We consider a "focus fire" case that frequently appears in SMAC. In this case, two agents fight with three enemies denoted as "A", "B", and "C", and focusing fire on the same target is the trick to win. Those enemies are identical units, except that Enemy A currently has less HP. We present the Qjt of this case in Table 12. Although Qjt in Table 12 is non-monotonic, the average return of choosing action A is superior to that of choosing other actions. In this case, monotonic value factorization can obtain the optimal value. 
+
+A B C ∅
+
+A 2.2 1.1 1.1 -0.9 
+
+B 1.1 2 1 -1 
+
+C 1.1 1 2 -1 
+
+∅ -0.9 -1 -1 -2     
+
+> Table 12. Qjt in the "focus fire" case of the SMAC environment: The action is denoted by its attack target, and the action ∅means no attack. The data in the table only represents the relative advantages of each joint action rather than actual values. The agents receive a higher return (+2) when both focus fire on the same target, a moderate return (+1) when attacking different targets, and lower returns for not attacking. Additionally, attacking low-health units (Enemy A) grants a +0.1 bonus to the returns.
+
+22 Submission and Formatting Instructions for ICML 2026 
+
+F. Ablation Study 
+
+F.1. Experiment and Analysis 
+
+We analyze the impact of multi-round iteration and strictness in improving greedy action (Equation (8)). We design MRVF-single, which uses a single round, and MRVF-non-strict, which also uses the original Qjt as the target value of Qtot 
+
+(Equation (9)) for round k > 1. We present the results in risk-reward games (Figure 11), predator-prey tasks (Figure 12), and SMAC (Figure 13). 0 10000 20000 30000 40000 50000             
+
+> Step
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Test Normalized Return
+> 3agents_5actions
+> 010000 20000 30000 40000 50000
+> Step
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Test Normalized Return
+> 5agents_5actions
+> 010000 20000 30000 40000 50000
+> Step
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Test Normalized Return
+> 5agents_8actions
+> MRVF MRVF-single MRVD-non-strict
+
+Figure 11. Test normalized return in the risk-reward games. 0.0 0.2 0.4 0.6 0.8 1.0                
+
+> Step 1e6
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> Test Return
+> predator prey 0
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -2
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -5
+> MRVF MRVF-single MRVD-non-strict
+
+Figure 12. Test return in the predator-prey tasks with punishments 0 (left), -2 (middle), and -5 (right). 
+
+The results presented in Figure 11 and Figure 12 demonstrate that the strict improvement contributes to better performance in highly non-monotonic scenarios. The explanation for this is that MRVF-non-strict cannot guarantee improvement in the greedy action compared to the preceding round, which prevents it from obtaining the optimal action within a given number of rounds. As for approximately monotonic scenarios like SMAC, Figure 13 shows a slight improvement compared to single-round factorization. In these scenarios, the improvement comes from additional information in decision-making. Specifically, by feeding ¯uk−1
+
+t into the individual Q networks, each agent knows the intentions of others and could infer their states accordingly. Without global information, this additional information contributes to better decision-making. In addition, due to the approximate monotonicity of the payoff, the first round of MRVF already produces a satisfactory solution, which explains the slightness of the improvement. 
+
+F.2. Discussion on Rounds 
+
+We will discuss how many rounds MRVF requires to obtain the optimal solution under scenarios with different levels of non-monotonicity. As discussed in Section F.1, a second round is required to obtain the optimal solution in highly 23 Submission and Formatting Instructions for ICML 2026 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00  
+
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> Test Win Rate
+
+5m_vs_6m          
+
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test Win Rate
+
+3s5z 
+
+MRVF MRVF-single MRVD-non-strict 
+
+Figure 13. Test win rate in the SMAC benchmarks. 
+
+non-monotonic environments. To support our claim, we calculate the proportion of taking ukt as the final action for each round k, as shown in Figure 14. 0 10000 20000 30000 40000 50000 
+
+> Step
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+3agents_5actions      
+
+> 010000 20000 30000 40000 50000
+> Step
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+5agents_5actions      
+
+> 010000 20000 30000 40000 50000
+> Step
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+5agents_8actions       
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+predator prey 0       
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+predator prey -2       
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+predator prey -5          
+
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+3s_vs_5z          
+
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+5m_vs_6m          
+
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Proportion
+
+3s5z 
+
+Round 1 Round 2 Round 3 
+
+Figure 14. Proportion of final actions generated in each round throughout test episodes. 
+
+From Figure 14, we find that in the predator-prey environment, as the penalty increases, the proportion of second-round decisions rises from 30% to nearly 50%. In contrast, for approximately monotonic scenarios such as SMAC, the proportion of second-round decisions typically remains around 20%, and the performance gap between multi-round and single-round is small. In addition, a third round is generally unnecessary unless the reward is so sparse that the second round fails to find the optimal action. As shown in Figure 14, third-round decisions account for only about 5% across all predator-prey and SMAC scenarios. Nevertheless, to balance performance and efficiency, we recommend starting with a maximum of three rounds and adjusting it based on the proportion. 24 Submission and Formatting Instructions for ICML 2026 
+
+G. Limitations 
+
+Although MRVF achieves significant improvements over existing methods in highly non-monotonic scenarios, it faces the issue of high computational complexity: MRVF requires calculating Qtot and Qjt in each round. Although we reduce computational complexity by reusing parts of network outputs ( e.g. , individual features in Qjt ) and early terminating the multi-round iterations for evaluation, the computational complexity of MRVF is still O(K(N + 1)) , while that of QMIX is at O(N ). In addition, as shown in Equation (9) and Equation (8), the update of Qtot depends on the results of Qjt . As a result, the update of Qtot is delayed compared to standard TD learning, which leads to a slow rise of the win rate in 
+
+3s_vs_5z (Figure 7). However, learning directly from Qjt is inevitable for environments that are not retraceable. Otherwise, if exploration of branching trajectories is allowed, TD targets could be used in the update of Qtot .We summarize the reasons why MRVF may fail to achieve the optimal solution in practice: First, the approximation errors of ˆQjt propagate to Qtot , which may prevent the Qtot from reaching the global optimum. Second, monotonic factorization is not ideal. Since we use a neural network as the mixing network, the approximation errors introduced by the network make it difficult to obtain the Qtot that minimizes Ltot . Third, overly sparse rewards may further amplify these approximation errors. As shown in Figure 5, MRVF struggles to achieve optimal performance in 5agents_8actions .
+
+H. Supplementary Experiment and Analysis 
+
+In this section, we provide analysis and experiments that are not included in the main part of this paper. 
+
+H.1. StarCraft II Multi-Agent Challenge 
+
+In Section 4.3, we analyze the stability of QPLEX (Wang et al., 2021), WQMIX (Rashid et al., 2020a) and ResQ (Shen et al., 2022). We reveal that suboptimal stable points are the main cause of the suboptimality in highly non-monotonic scenarios including risk-reward games and predator-prey tasks with large punishments. However, in Figure 7, these methods show inferior performance compared to monotonic value factorizations in SMAC scenarios. We provide the following explanation for this phenomenon. 
+
+QPLEX and ResQ From Table 9 in Appendix D, in cases where QMIX can easily obtain the global optimum, QPLEX may still fail due to multiple suboptimal stable points. In addition, for ResQ, Theorem C.3 shows that u∗ is a weakly stable point in general cases. The weak stability of ResQ is particularly severe because any action can potentially become ¯u
+
+(Lemma C.2). Consequently, QPLEX and ResQ do not perform well in SMAC. 
+
+WQMIX WQMIX is designed for highly non-monotonic scenarios, and from Figure 5 and Figure 6, it outperforms monotonic value factorization methods. Although WQMIX is supposed to perform similarly to QMIX in weakly non-monotonic or monotonic scenarios, it shows poor performance in SMAC (Figure 7). We provide three factors resulting in this phenomenon. (1) The joint action-value network : Individual features constitute only a small portion of the mixer’s input in the joint action-value network. Consequently, the joint action-value network hardly distinguishes different actions, since action information is primarily embedded in these individual features. (2) Decentralized ϵ-greedy policy : The decentralized ϵ-greedy policy (defined in Equation (4)) combined with the weight in WQMIX enhances the convergence to the local optimum, since the decentralized ϵ-greedy policy explores locally and the weight discards lower values around the local optimum. (3) Weight : When α < 1, the weight reduces sample efficiency, as downweighting samples is similar to discarding them. We conduct additional experiments to support our analysis. We replace the network of ˆQjt with that of ours and replace the decentralized ϵ-greedy policy with the centralized one. The result in Figure 15 demonstrates that these three factors do result in the performance gap between WQMIX and QMIX. 
+
+H.2. Super-hard Scenario of SMAC 
+
+We conduct additional experiments on the 6h_vs_8z scenario, which is a particularly challenging scenario where the "focus fire" is a key tactic for victory (Whiteson et al., 2019). We adopt a setup similar to the bane_vs_bane scenario, except that 25 Submission and Formatting Instructions for ICML 2026 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00  
+
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> Test Win Rate
+
+3s_vs_5z 
+
+WQMIX WQMIX (our Qjt ) WQMIX (centralized ) WQMIX (both) 
+
+Figure 15. Test win rate in 3s_vs_5z . WQMIX ( ˆQjt ) represents WQMIX replacing the network of ˆQjt with that of ours. WQMIX (centralized ϵ) represents WQMIX replacing the policy with the centralized one. WQMIX (both) represents WQMIX with both modifications. 
+
+we set anneal steps for ϵ to 10 6. The results in Figure 16 show a slight difference between MRVF and QMIX, supporting our analysis in Appendix E.3. 0 1 2 3 4 5 
+
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> Test Win Rate
+
+6h_vs_8z 
+
+MRVF QMIX 
+
+Figure 16. Test win rate in 6h_vs_8z in SMAC benchmarks. 
+
+H.3. SMACv2 
+
+Results on SMACv2 (Ellis et al., 2023) are shown in Figure 17. In terms of average return, MRVF slightly outperforms QMIX, while the two algorithms achieve comparable win rates. Overall, the performance gap between MRVF and QMIX is small. This is because SMACv2 inherits the reward design of SMAC; as shown in Appendix E.3, its payoff is nearly monotonic. However, we observe a mismatch between the return and the win rate in SMACv2, suggesting that the reward 26 Submission and Formatting Instructions for ICML 2026 
+
+design may need to account for environmental stochasticity. When this mismatch occurs, we argue that the return better reflects the performance than the win rate, since the objective of MARL is to maximize the return. 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00                                                
+
+> Step 1e6
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> 16
+> 18
+> Test Return
+> protoss_5_vs_5
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> 16
+> Test Return
+> terran_5_vs_5
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> Test Return
+> zerg_5_vs_5
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Test Win Rate
+> protoss_5_vs_5
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> Test Win Rate
+> terran_5_vs_5
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Test Win Rate
+> zerg_5_vs_5
+> MRVF QMIX
+
+Figure 17. Test return (first row) and win rate (second row) in SMACv2 benchmarks. 
+
+H.4. Predator Prey 
+
+From the results in Figure 6, QMIX fails to obtain the optimal action when the penalty is -2. However, an analysis based on ideal QMIX will reveal that the optimal action is a stable point for any ϵ ∈ (0 , 1] . In fact, this does not indicate a theoretical flaw. An explanation is that suboptimal actions are also stable points as ϵ → 0.We will provide an analysis of the stable points when ϵ → 0. Taking two agents as an example, the reward function for the predator-prey environment with a penalty of -2 is given in Equation (41). 
+
+reward =
+
+
+
+10 −2 · · · −2
+
+−2 0 · · · 0
+
+... ... . . . ...
+
+−2 0 · · · 0
+
+ (41) where the reward is a matrix of shape 6 × 6.Consider eu that neither agent executes the "capture" action, which yields a reward of 0. As ϵ → 0, Q∗
+
+tot that minimizes Ltot 
+
+is given in Equation (42). 
+
+lim 
+
+ϵ→0 Q∗
+
+tot |eu̸=u∗ =
+
+
+
+−2 −2 · · · −2
+
+−2 0 · · · 0
+
+... ... . . . ...
+
+−2 0 · · · 0
+
+ , L ∗
+
+tot = 0 + 0 ∗ o(ϵ) + 12 2 ∗ o(ϵ2) (42) where ¯u∗ = eu, and both correspond to the agents that perform the "non-capture" action. Therefore, "non-capture" action pairs are stable points in predator prey with penalty -2. Since suboptimal actions are in the majority, it is difficult for the greedy action to converge to the optimal one. However, because suboptimal actions are stable points only when ϵ is small, we can enhance the convergence to the optimal action by 27 Submission and Formatting Instructions for ICML 2026 
+
+slowing down the decay of ϵ. To support our analysis, we conduct additional experiments on QMIX with ϵ fixed at 1 and QMIX with ϵ decaying in one million steps, as shown in Figure 18. From the result in predator prey -2, agents successfully learn to capture prey in both settings, yet they still fail when the penalty is -5. In addition, increasing the weight of the optimal action in the policy can enhance the convergence to the optimal action. For example, the weighting mechanism in WQMIX serves a similar purpose. However, these methods still fail when the penalty is set to -5. 0.0 0.2 0.4 0.6 0.8 1.0             
+
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -2
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -5
+> QMIX (50k -anneal) QMIX ( = 1) QMIX (1mil -anneal)
+
+Figure 18. Test return in the predator prey tasks with punishments -2 (left), and -5 (right). QMIX (50k ϵ-anneal) represents QMIX with 
+
+5 ∗ 10 4 anneal steps for ϵ. QMIX (1mil ϵ-anneal) represents QMIX with 10 6 anneal steps for ϵ. QMIX ( ϵ = 1 ) represents QMIX with 
+
+ϵ = 1 constantly. 
+
+H.5. Comparison with other MARL baselines 
+
+In Section 6, we compare MRVF with algorithms such as WQMIX (Rashid et al., 2020a) that claim to address the representation limitation in value factorization. However, the results show that none of these methods fully resolves this limitation. Other value-factorization approaches, including NA2Q (Liu et al., 2023) HYGMA (Liu & Li, 2025) and GoMARL (Zang et al., 2023), are not designed to address the representation limitation. On-policy methods such as MAPPO (Yu et al., 2022) suffer from similar issues, converging to suboptimal Nash Equilibria (Ye et al., 2022), which are analogous to suboptimal stable points in value factorization. Consequently, all of these methods perform poorly in environments with highly non-monotonic payoffs, as illustrated in Figure 19. 0.0 0.2 0.4 0.6 0.8 1.0                  
+
+> Step 1e6
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> Test Return
+> predator prey 0
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -2
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Step 1e6
+> 40
+> 30
+> 20
+> 10
+> 0
+> 10
+> 20
+> 30
+> 40
+> Test Return
+> predator prey -5
+> MRVF MAPPO GoMARL CommFormer HYGMA
+
+Figure 19. Test return in the predator prey tasks with punishments 0 (left), -2 (middle), and -5 (right). 
+
+The comparison results on the SMAC environment are shown in Figure 20. It can be observed that the win rates of the on-policy methods (including MAPPO (Yu et al., 2022) and CommFormer (Hu et al., 2024)) increase more slowly than that of MRVF, and their final performance is usually lower. Moreover, the performance of the on-policy methods depends on hyperparameters, as in Table 13, the network and its inputs for 3s_vs_5z differ from those used in the other scenarios. 28 Submission and Formatting Instructions for ICML 2026 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00                       
+
+> Step 1e6
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> Test Win Rate
+> 5m_vs_6m
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test Win Rate
+> 3s5z
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e6
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test Win Rate
+> 3s_vs_5z
+> MRVF MAPPO GoMARL CommFormer
+
+Figure 20. Test win rate in the SMAC benchmarks. 
+
+We use the implementation of GoMARL 8, MAPPO 9, CommFormer 10 and HYGMA 11 are from their open-source repositories. The hyperparameter settings for the on-policy methods are listed in Table 13. Please refer to (Yu et al., 2022) and (Hu et al., 2024) for further details. epoch clip network stacked frames training threads rollout threads 
+
+3s_vs_5z 15 0.05 mlp 4 1 8
+
+5m_vs_6m 10 0.05 rnn 1 1 8
+
+3s5z 5 0.2 rnn 1 1 8predator prey 10 0.2 rnn 1 1 8
+
+Table 13. The hyperparameters for on-policy MARL 
+
+I. Pseudocode of MRVF 
+
+8https://github.com/zyfsjycc/GoMARL 
+
+9https://github.com/marlbenchmark/on-policy 
+
+10 https://github.com/charleshsc/CommFormer 
+
+11 https://github.com/mysteryelder/HYGMA 
+
+29 Submission and Formatting Instructions for ICML 2026 
+
+Algorithm 1 MRVF Forward Computation 
+
+1: Input: time step t, training flag is _training 
+
+2: Get action-observation history τ t from the environment. 
+
+3: Set ¯u0 
+
+> t
+
+to a default action 
+
+4: Qjt (τ t, ¯u0 
+
+> t
+
+) ← −∞ 
+
+5: f lag ← T rue 
+
+6: for k = 1 , 2, · · · , K do 
+
+7: Compute individual Q values based on τ t and ¯uk−1
+
+> t
+
+8: Obtain ¯ukt based on individual Q values 
+
+9: if Qjt (τ t, ¯ukt ) > Q jt (τ t, ¯uk−1 
+
+> t
+
+) and f lag then 
+
+10: ¯ut ← ¯ukt
+
+11: else 
+
+12: f lag ← F alse 
+
+13: if not is _training then 
+
+14: break 
+
+15: end if 
+
+16: end if 
+
+17: ukt ← ¯ukt
+
+18: end for 
+
+19: ut ← ¯ut
+
+20: if is _training then 
+
+21: Generate a random number x ∈ [0 , 1] 
+
+22: if x < p then 
+
+23: Randomly selet a round k ∈ { 1, 2, · · · , K }
+
+24: ut ← ¯ukt
+
+25: else 
+
+26: Generate a random number y ∈ [0 , 1] 
+
+27: if y < ϵ then 
+
+28: Randomly selet an action urand ∈ U
+
+29: for k = 1 , 2, · · · , K do 
+
+30: ukt ← urand 
+
+31: end for 
+
+32: ut ← urand 
+
+33: end if 
+
+34: end if 
+
+35: return ut and u1 
+
+> t
+
+, · · · , uKt
+
+36: else 
+
+37: return ut
+
+38: end if 
+
+30 Submission and Formatting Instructions for ICML 2026 
+
+Algorithm 2 MRVF Training  
+
+> 1:
+
+Initial parameters of mixing network, joint Q network and individual Q networks  
+
+> 2:
+
+Initialize replay buffer D 
+
+> 3:
+
+is _training ← T rue  
+
+> 4:
+
+while total _step < max _total _step do  
+
+> 5:
+
+Initialize the environment  
+
+> 6:
+
+for t = 1 , 2, · · · , max _step do  
+
+> 7:
+
+Get action-observation history τ t from the environment.  
+
+> 8:
+
+Obtain ut and u1 
+
+> t
+
+, · · · , uKt through Forward Computation of MRVF  
+
+> 9:
+
+Execute actions ut, observe reward rt and next action-observation history τ t+1  
+
+> 10:
+
+Store transition (τ t, {u1 
+
+> t
+
+, · · · , uKt }, ut, r t, τ t+1 ) in replay buffer D 
+
+> 11:
+
+Decay ϵ 
+
+> 12:
+
+total _step ← total _step + 1  
+
+> 13:
+
+end for  
+
+> 14:
+
+Sample minibatch B from D 
+
+> 15:
+
+for t = 1 , 2, · · · , max _step do  
+
+> 16:
+
+Get transition (τ t, ut, r t, τ t+1 , ¯ut+1 ) from B 
+
+> 17:
+
+Calculate Ljt accroding to Equation 10  
+
+> 18:
+
+for k = 1 , 2, · · · , K do  
+
+> 19:
+
+if k = 1 then  
+
+> 20:
+
+Get tuple (τ t, ukt ) from B 
+
+> 21:
+
+Calculate Ltot accroding to Equation 9  
+
+> 22:
+
+else  
+
+> 23:
+
+Get tuple (τ t, ukt , ¯uk−1 
+
+> t
+
+) from B 
+
+> 24:
+
+Calculate Ltot accroding to Equation 8  
+
+> 25:
+
+end if  
+
+> 26:
+
+end for  
+
+> 27:
+
+end for  
+
+> 28:
+
+Update parameters using gradient descent  
+
+> 29:
+
+end while 
+
+31

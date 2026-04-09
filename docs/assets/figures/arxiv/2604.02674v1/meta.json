@@ -1,0 +1,222 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-001.webp",
+      "caption": "Figure 4: Scale-dependent emergence of broad elite tiers. (a) (a) Top-k active agents (Eactive 10 , Eactive",
+      "page": 11,
+      "index": 1,
+      "width": 818,
+      "height": 268
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-002.webp",
+      "caption": "Figure 12: Hierarchy of coordination structures in a multi-agent system. A task defines the global objective, which is decomposed into subtasks; subtasks produce claims; and claims evolve through event-level coordination steps. Our analysis operates on these events rather than on whole tasks.",
+      "page": 26,
+      "index": 2,
+      "width": 582,
+      "height": 225
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-003.webp",
+      "caption": "Figure 9: Impact of Deficit-Triggered Integration (DTI) on collective cognition dynamics. (a) DTI preserves the heavy-tailed structure of coordination cascades while shifting truncation earlier, reducing excess tail mass without altering the intermediate scaling regime. Fixed-interval intervention, in contrast, introduces premature truncation and distorts the tail. (b) The growth of extreme coordination events with system size is preserved under DTI, but large cascades are systematically attenuated, leading to more controlled scaling behavior. (c) DTI reduces the concentration of cognitive effort among top agents, moderating elite dominance while maintaining a non-uniform and productive coordination structure. DTI converts late-stage expansion into earlier integration, yielding more stable and balanced collective reasoning without disrupting the underlying heavy-tailed organization of agent coordination.",
+      "page": 15,
+      "index": 3,
+      "width": 816,
+      "height": 267
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-004.webp",
+      "caption": "Table 4: Notation for heavy-tail modeling and model comparison (H1).",
+      "page": 21,
+      "index": 4,
+      "width": 610,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-005.webp",
+      "caption": "Figure 11: Internal composition of claim-level coordination cascades and the scale-conditioned integration bottleneck. (a) Claim-rooted cascades are grouped by total cognitive effort (TCE) quantile, pooling all tasks, topologies, and agent scales. As cascades move into the far tail, their internal event composition shifts toward delegation and contradiction, while merge remains comparatively weak and increasingly subproportional; revision plays an intermediate role. (b) The same bottleneck appears in the merge conversion ratio across both cascade size and society scale: integration is strongest for smaller cascades in smaller societies and weakens progressively toward extreme cascades in larger societies. Together, these results show that large coordination cascades are increasingly expansion-heavy and merge-poor, and that this integration deficit strengthens with scale.",
+      "page": 21,
+      "index": 5,
+      "width": 805,
+      "height": 329
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-006.webp",
+      "caption": "Figure 15: From structured event traces to coordination cascades. Logged event fields define parent– child claim relationships, from which we reconstruct the claim DAG. Cascades are then extracted as root-centered reachable subgraphs, enabling computation of event-level observables such as revision waves, contradiction bursts, merge fan-in, and total cognitive effort.",
+      "page": 30,
+      "index": 6,
+      "width": 760,
+      "height": 266
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-007.webp",
+      "caption": "Figure 1: Heavy-tailed coordination cascades across observables. CCDFs show a power-law regime (2 < α̂ < 3) with truncation at large x. Dashed lines indicate MLE fits above xmin. Truncated power laws are favored over log-normal and exponential alternatives (Table 2).",
+      "page": 2,
+      "index": 7,
+      "width": 822,
+      "height": 218
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-008.webp",
+      "caption": "Table 7: Notation for preferential attachment and Deficit-Triggered Integration (DTI).",
+      "page": 22,
+      "index": 8,
+      "width": 686,
+      "height": 352
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-009.webp",
+      "caption": "Table 5: Notation for elite concentration and inequality (H2).",
+      "page": 22,
+      "index": 9,
+      "width": 706,
+      "height": 219
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-010.webp",
+      "caption": "Figure 17: Coordination-law flower signatures across models. Each panel summarizes one model using five global event observables: delegation cascade, revision wave, contradiction burst, merge fan-in, and total cognitive effort (TCE). Petal extent jointly reflects four law dimensions: heavier tails (lower α̂), larger truncation scale x̂c, stronger preferential reinforcement β̂, and greater elite concentration Eall 10 . Across all four models, the qualitative ordering is preserved: TCE remains the strongest composite coordination signal, delegation and contradiction form the next tier of broad coordination, revision is intermediate, and merge is the weakest and most localized. Moving from GPT-4o-mini to Qwen 2.5 72B, Llama 3.1 70B, and Qwen 2.5 7B, the petals contract inward rather than changing shape abruptly, indicating that heavy-tailed coordination and elite formation persist across model families and scales, but with shorter tails, lower cutoff scales, and weaker concentration in smaller models owing to reduced model-inherent resources.",
+      "page": 34,
+      "index": 10,
+      "width": 751,
+      "height": 768
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-011.webp",
+      "caption": "Figure 3: Topology- and task-specific heavy-tailed coordination cascades in multi-agent LLM systems. Complementary cumulative distribution functions (CCDF) of coordination-event sizes P (X ≥ x) across four coordination observables: Delegation Cascade, Revision Wave, Contradiction Burst, and Total Coordination Effort (TCE) under four agent interaction topologies (Chain, Star, Hierarchical, and Dynamic Reputation) and four task families (Reasoning, Coding, QA, and Coordination). Each curve represents the empirical distribution of coordination-event sizes for a given task family within a topology. Across all settings, the distributions exhibit broad heavy-tailed behavior with estimated scaling exponents 2 < α̂ < 3 in the intermediate regime (values shown per panel), consistent with scale-free coordination dynamics. While the precise tail exponent varies modestly across tasks and architectures, the heavy-tailed form persists across all topologies, indicating that complex coordination in LLM multi-agent systems produces heterogeneous cascades spanning multiple scales. Deviations at the largest event sizes reflect finite-size truncation due to system constraints such as limited agent attention, bounded communication bandwidth, and task decomposition depth.",
+      "page": 10,
+      "index": 11,
+      "width": 821,
+      "height": 796
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-012.webp",
+      "caption": "Figure 8: Deficit-Triggered Integration (DTI) in coordination cascades. A cascade initially expands through parallel revision, contradiction, and delegation branches, leading to increasing fragmentation (left). DTI monitors this imbalance and triggers integration when it exceeds a threshold, consolidating active branch heads into a unified representation (middle). The cascade then resumes from this integrated state, enabling continued exploration with improved coherence and reduced fragmentation (right).",
+      "page": 14,
+      "index": 12,
+      "width": 822,
+      "height": 294
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-013.webp",
+      "caption": "Figure 7: Extreme-value scaling of coordination cascades. Mean maximum event size ⟨xmax⟩ vs. agent count N (log–log). Solid curves show empirical values with 95% CIs; dashed lines denote power-law fits (γ̂). All observables scale with N , with TCE showing the strongest growth and closest alignment to EVT predictions (γ̂TCE ≈ 0.85 vs. γth ≈ 0.82), indicating systematic expansion of the coordination tail.",
+      "page": 14,
+      "index": 13,
+      "width": 708,
+      "height": 493
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-014.webp",
+      "caption": "Table 21: TCE heavy-tail structure by topology and model. Results are pooled across task types within each topology. For all cross-model TCE fits, we fix the tail onset threshold at xmin = 8 to maintain a common fitting regime across models. Tail statistics report the fitted truncated-power-law parameters for total collective effort (TCE), together with likelihood-ratio comparisons against lognormal and pure power-law alternatives. Concentration is summarized by the top-10% effort share, and outcome by pooled task success.",
+      "page": 33,
+      "index": 14,
+      "width": 702,
+      "height": 447
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-015.webp",
+      "caption": "Table 22: TCE heavy-tail structure by task type and model. Results are shown for four representative task families and are pooled across topologies, seeds, and agent-society sizes within each task-type× model condition. For all cross-model TCE fits, we fix the tail onset threshold at xmin = 8 to maintain a common fitting regime across models. Tail statistics report the fitted truncated-powerlaw parameters for total collective effort (TCE), together with likelihood-ratio comparisons against log-normal and pure power-law alternatives. Concentration is summarized by the top-10% effort share Eall 10 , and outcome by pooled task success.",
+      "page": 33,
+      "index": 15,
+      "width": 660,
+      "height": 442
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-016.webp",
+      "caption": "Table 23: Experimental configuration summary.",
+      "page": 35,
+      "index": 16,
+      "width": 830,
+      "height": 333
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-017.webp",
+      "caption": "Figure 14: Delegation and cascade structure. Delegation events construct a subtask tree (left), defining how work is decomposed. Coordination cascades (right) capture the total downstream activity triggered by a root claim, combining revision, contradiction, and merge dynamics. Total Cognitive Effort (TCE) is defined as the size of this reachable cascade.",
+      "page": 28,
+      "index": 17,
+      "width": 532,
+      "height": 227
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-018.webp",
+      "caption": "Figure 6: Conflict-integration dynamics and performance degradation in the high-intensity regime. (a) Mean task success across coordination intensity regimes reveals a non-monotonic signature: performance plateaus at moderate intensity before undergoing significant degradation in the high-intensity tail. This decline is strongly correlated with an elevated contradiction burden and a concomitant collapse in merge conversion efficiency. The vertical dashed line demarcates the transition from productive coordination to the conflict-dominated regime. (b1) Outcome distribution among high-intensity tasks, illustrating a distinct skew toward failure as coordination complexity increases. (b2) Decomposition of elite contribution shares in high-intensity regimes. Successful runs maintain higher integration capacity, whereas unsuccessful runs are characterized by an increased share of contradictory interactions and diminished merge contributions, suggesting that systemic failure is driven by an inability to resolve dense coordination conflicts. M denotes the merge-event share of total elite coordination effort.",
+      "page": 13,
+      "index": 18,
+      "width": 812,
+      "height": 389
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-019.webp",
+      "caption": "Figure 18: Workload-expansion validation across agent society size. (a) Active-agent fraction A(N) for four task families remains high across scales, staying above 80% even at N = 512, indicating sustained participation. (b) Agents per subtask induced by the expansion rule, compared to the target scaling N/⌈N0.65⌉. The gradual increase from ∼2 to ∼9 agents per subtask shows that workload grows with N without over-concentrating agents. Together, these results verify that the expansion module maintains balanced workload and broad agent utilization while not prescribing coordination structure.",
+      "page": 36,
+      "index": 19,
+      "width": 822,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-020.webp",
+      "caption": "Table 25: Standardized agent configuration used across all experiments.",
+      "page": 36,
+      "index": 20,
+      "width": 822,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-021.webp",
+      "caption": "Table 19: Formal trigger conditions for coordination observables. Each observable is computed from structured traces via deterministic extraction rules applied to reconstructed coordination structures.",
+      "page": 32,
+      "index": 21,
+      "width": 896,
+      "height": 259
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-022.webp",
+      "caption": "Figure 5: Preferential attachment is a core micro-mechanism behind heavy-tailed coordination and elite concentration in LLM agent societies. (a) The routing ratio R(x,N) rises above the null baseline once a claim accumulates prior engagement, and the effect strengthens with system size N , revealing scale-dependent preferential amplification before saturating in the tail. (b) Estimated attachment slopes β̂ vary systematically across topology and task type, with stronger reinforcement in star, fully connected, and modular societies than in tree or chain settings. (c) Event types differ in cascade-sustaining power: delegation and contradiction occupy the high-amplification, highcontinuation region, while revision is intermediate and merge fan-in remains comparatively local. (d) Conditions with larger condition-level attachment slope β̂ also exhibit larger top-10% effort share Eactive",
+      "page": 12,
+      "index": 22,
+      "width": 819,
+      "height": 658
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-023.webp",
+      "caption": "Table 3: Tail heterogeneity across task types and communication topologies. For each observable and task–topology condition, we report the fitted truncated power-law exponent α̂, cutoff parameter x̂c, and log-likelihood ratios LRT/LN and LRT/PL comparing the truncated power law (TPL) against the log-normal (LN) and pure power-law (PL) alternatives, respectively. Lower α̂ and larger x̂c indicate broader, less sharply truncated coordination tails. Planning and reasoning tasks consistently exhibit heavier tails than coding and QA across all topology conditions, and denser topologies (mesh, star) support longer-lived cascades than locally connected structures (chain), with the planning×mesh combination producing the heaviest tails in every observable.",
+      "page": 9,
+      "index": 23,
+      "width": 822,
+      "height": 314
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-024.webp",
+      "caption": "Figure 2: Finite-size stability of heavy-tailed coordination dynamics. (Left) Estimated tail exponents α̂ (MLE) vs. agent count N . Estimates fluctuate at small N due to limited tail samples, then stabilize and converge beyond N ≈ 64, indicating emergence of a consistent heavy-tailed regime. (Right) Mean maximum event size ⟨xmax⟩ vs. N . The upper tail grows systematically across observables, with strongest expansion for TCE, showing that increasing system size expands the reachable coordination tail.",
+      "page": 9,
+      "index": 24,
+      "width": 818,
+      "height": 354
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-025.webp",
+      "caption": "Figure 16: End-to-end coordination pipeline in our experimental setup. Left: task expansion produces an interdependent task tree with cross-subtask dependencies. Center: agent interactions generate claims and event-induced edges, forming a claim DAG. Right: the cascade extracted from the root claim captures the full coordination effort used to compute event-level observables.",
+      "page": 31,
+      "index": 25,
+      "width": 826,
+      "height": 287
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-026.webp",
+      "caption": "Table 1: Primitive coordination events used in our analysis. An event is a single coordination step in the reasoning process (e.g., delegation, revision, contradiction, or merge). Events are linked through claim and subtask relationships, and each row defines a quantity computed over these events",
+      "page": 5,
+      "index": 26,
+      "width": 838,
+      "height": 631
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02674v1/fig-027.webp",
+      "caption": "Figure 10: Heterogeneity of DTI gains across topology and task family. Relative improvement in task success (%) under DTI versus baseline, reported per topology-task condition. Gains range from +2.07% (QA × Chain) to +12.34% (Planning ×Mesh/FC). DTI produces the largest improvements in conditions exhibiting the strongest expansion-integration imbalance in baseline coordination dynamics. Row and column marginals show topology- and task-level averages.",
+      "page": 16,
+      "index": 27,
+      "width": 807,
+      "height": 484
+    }
+  ]
+}

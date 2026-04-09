@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02288v1/fig-001.webp",
+      "caption": "Table 3: Hyperparameters for GRPO, SDPO, and SRPO. For GRPO and SDPO, we use the configurations from Hübotter et al. (2026). For SRPO, the GRPO-branch and SDPO-branch loss parameters are inherited from the respective baselines; only the learning rate and the dynamic-weighting temperature β differ. Entries marked “–” indicate parameters not applicable to that method.",
+      "page": 15,
+      "index": 1,
+      "width": 829,
+      "height": 1259
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02288v1/fig-002.webp",
+      "caption": "Figure 1: Training dynamics and diagnostic analysis on Chemistry with Qwen3-8B. (a) SDPO improves faster than GRPO in early training, but is later overtaken and collapses, whereas SRPO achieves both rapid initial improvement and stable long-horizon optimization. (b) Restricting SDPO updates to incorrect samples retains most of its overall benefit, whereas applying SDPO only to correct samples degrades performance and destabilizes training, supporting the necessity of sample routing. (c) The self-teacher’s token-level entropy rises during training, indicating that the distillation signal becomes increasingly dominated by uncertain predictions. Curves show a 5-step rolling mean and shaded bands denote ±1 std.",
+      "page": 2,
+      "index": 2,
+      "width": 748,
+      "height": 256
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02288v1/fig-003.webp",
+      "caption": "Table 1: Main results on five benchmarks at three training budgets. Each entry reports the highest achieved avg@16 accuracy (%) within the corresponding wall-clock budget. The last three columns report the mean over the five benchmarks. Within each model scale, the best result in each column is in bold and the second-best is underlined.",
+      "page": 7,
+      "index": 3,
+      "width": 818,
+      "height": 261
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02288v1/fig-004.webp",
+      "caption": "Figure 2: Overview of SRPO. Given a prompt x, the policy πθ generates a group of on-policy rollouts. A correctness check routes each rollout to one of two branches: correct samples are sent to the GRPO branch (top), where group-relative advantages provide a reward-aligned policy update; incorrect samples with available teacher information are sent to the SDPO branch (bottom), where a feedback-conditioned self-teacher produces logit-level distillation targets via KL(P ∥ stopgrad(Q)) for dense corrective supervision.",
+      "page": 4,
+      "index": 4,
+      "width": 826,
+      "height": 316
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02288v1/fig-005.webp",
+      "caption": "Table 5: One representative example from each benchmark. Science Q&A examples show the question stem and four answer options; the Tool Use example shows the user query and the expected structured tool call (API specification and answer omitted for brevity; see Appendix B.3 for the full template).",
+      "page": 17,
+      "index": 5,
+      "width": 824,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02288v1/fig-006.webp",
+      "caption": "Figure 4: Response length and per-step compute time for Qwen3-8B. (a) Response length on Chemistry: GRPO remains consistently long, SDPO drops rapidly, and SRPO stays moderate. Curves show a 5-step rolling mean and shaded bands denote ±1 std. (b) Average seconds per training step, averaged across five benchmarks and measured over the 1h, 5h, and 10h windows. SRPO incurs a modest overhead relative to GRPO in the early stage of training, but becomes faster than both GRPO and SDPO over longer training horizons.",
+      "page": 9,
+      "index": 6,
+      "width": 739,
+      "height": 250
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-001.webp",
+      "caption": "Figure 4: RL training performance on our scaled SFT-checkpoints. Left: Train reward and tokens per response (smoothed using an exponential moving average with decay factor 0.9). Right: Reward on the held-out evaluation set during training. The Best Move dataset, while having strong ending performance, experienced more unstable RL compared to scaled runs trained on Best Line data.",
+      "page": 6,
+      "index": 1,
+      "width": 748,
+      "height": 352
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-002.webp",
+      "caption": "Figure 18: Reasoning quality scores on 400 Predict Move tasks. Bars are overlaid directly on top of each other and stacking is not cumulative. Reasoning quality is scored by gpt-oss-120b and scores are provided from 1 to 10. The Mean Reasoning Quality (Total) score is a simple average over the three subcategories. Hatched lines are shown in cases where the SFT and RL runs are within 2% of each other.",
+      "page": 25,
+      "index": 2,
+      "width": 806,
+      "height": 908
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-003.webp",
+      "caption": "Figure 9: Example questions for each evaluation task on the same board. Note that in actual prompts (omitted in the figure) we include information related to the required format for valid parsing.",
+      "page": 15,
+      "index": 3,
+      "width": 829,
+      "height": 782
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-004.webp",
+      "caption": "Table 1: Results are shown for the Predict Move evaluation on 400 samples. Predict Move Average Rank is the average normalized rank (with 0 being the worst move and 1 being the best move per Stockfish) of the legal moves provided in this task.",
+      "page": 21,
+      "index": 4,
+      "width": 833,
+      "height": 676
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-005.webp",
+      "caption": "Figure 1: Following initial data inclusion experiments, we scaled SFT on our two best-performing datasets. Both resulted in comparably strong final evaluation performance, but training on optimal move trajectories (Best Line) led to more stable RL and faithful reasoning compared to training on single best moves (Best Move).",
+      "page": 2,
+      "index": 5,
+      "width": 829,
+      "height": 339
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-006.webp",
+      "caption": "Figure 5: Evaluation results for final RL models from each data inclusion experiment. Within each metric we split results into three sections: (left) compares single vs. multitask, (middle) compares the targeted data inclusion experiments, (right) covers our data diversity experiments. Note that in all experiments we SFT on 15 million tokens and do RL on 8k samples. In the single task setting, RL only uses the Predict Move task; in all other settings the 8k samples are split evenly between our four task types. See Appendix D for detailed results (including exact token distributions).",
+      "page": 7,
+      "index": 6,
+      "width": 748,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-007.webp",
+      "caption": "Figure 20: Select training dynamics during reinforcement learning across our inclusion and scaled experiments (cont.).",
+      "page": 29,
+      "index": 7,
+      "width": 806,
+      "height": 1117
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-008.webp",
+      "caption": "Table 2: See Figure 15 for detail on the data included in each inclusion experiment and Table 1 for performance on the Predict Move task. Each evaluation shown is based on 400 unique samples for each task. The Legal Moves task asks the model to produce a list of legal moves given a target piece – the score is measured as intersection over union (IoU) vs. ground truth. Best Move and Worst Move ask the model to, given a list of 5 moves, choose the best (or worst, respectively) move of the list – the incorrect candidates are sampled such that they are beyond a sufficient threshold of difference per Stockfish. See Appendix B for examples of each task.",
+      "page": 22,
+      "index": 8,
+      "width": 818,
+      "height": 779
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-009.webp",
+      "caption": "Figure 8: Visualized tokenization of three candidate board formats using the Qwen2.5 tokenizer.",
+      "page": 14,
+      "index": 9,
+      "width": 826,
+      "height": 586
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-010.webp",
+      "caption": "Figure 2: Performance of our best reasoning model trained from a Qwen2.5 7B-Instruct base across our evaluations. Note that trivial performance (i.e., random guessing) is 0.2 for the Best Move and Worst Move tasks. See Appendix B for example evaluation questions.",
+      "page": 3,
+      "index": 10,
+      "width": 722,
+      "height": 233
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-011.webp",
+      "caption": "Figure 12: Sample of Verbalized Alpha-Beta Pruning. This sample highlights branching, minimax decision making, and an instance of pruning.",
+      "page": 18,
+      "index": 11,
+      "width": 664,
+      "height": 429
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-012.webp",
+      "caption": "Figure 13: Sample of the Factual Board Answering dataset.",
+      "page": 18,
+      "index": 12,
+      "width": 664,
+      "height": 508
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-013.webp",
+      "caption": "Figure 16: Accuracy of tested models for both moves and pieces referenced in their reasoning traces. Bars are overlaid directly on top of each other and stacking is not cumulative. Accuracy is computed as the number of correct references divided by the total number of references. See Figure 15 for detail on the data included in each experiment. Hatched lines are shown in cases where the SFT and RL runs are within 2% of each other.",
+      "page": 23,
+      "index": 13,
+      "width": 826,
+      "height": 747
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-014.webp",
+      "caption": "Figure 6: Key results highlighting how RL influenced our SFT-checkpoints. Top left: RL on the Best Move SFT-checkpoint induced unfaithful reasoning whereas checkpoints trained on multi-step data were more robust. Top right: RL drove a meaningful decrease in hallucination rate as a side effect of simply maximizing reward on our evaluations. Bottom: Our Best Move + Best Line scaled run saw a significant distribution shift after RL in its move quality on the Predict Move evaluation (n = 400). This shift is an improvement on both an absolute and relative basis, highlighting the efficacy of RL. Appendix G has further detail on our reasoning quality measurement and Appendix E outlines hallucinations.",
+      "page": 8,
+      "index": 14,
+      "width": 829,
+      "height": 370
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-015.webp",
+      "caption": "Figure 14: Samples of Best Line and Best Move.",
+      "page": 19,
+      "index": 15,
+      "width": 664,
+      "height": 400
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-016.webp",
+      "caption": "Figure 11: Sample of the Guided Synthetic data. Note that while the teacher model is provided with a line and centipawn difference, the teacher model is still prone to hallucination (it cites a material imbalance – this is not true). Additionally, despite prompting the teacher to use UCI notation, many examples still use SAN due to teacher model bias.",
+      "page": 17,
+      "index": 16,
+      "width": 664,
+      "height": 518
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-017.webp",
+      "caption": "Table 4: SFT training hyperparameters.",
+      "page": 27,
+      "index": 17,
+      "width": 722,
+      "height": 308
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-018.webp",
+      "caption": "Table 5: RL training hyperparameters.",
+      "page": 27,
+      "index": 18,
+      "width": 722,
+      "height": 334
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-019.webp",
+      "caption": "Figure 17: Usage rate of reasoning strategies on 400 Predict Move tasks. Bars are overlaid directly on top of each other and stacking is not cumulative. Reasoning strategies are parsed using Llama 4 Scout and usage is measured as a binary flag for each evaluation sample. Hatched lines are shown in cases where the SFT and RL runs are within 2% of each other.",
+      "page": 24,
+      "index": 19,
+      "width": 806,
+      "height": 1070
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-020.webp",
+      "caption": "Figure 7: Linear regression comparing the final RL model (average score over all evaluations) with various metrics from its corresponding SFT-checkpoint. Left: Vs. average score over all evaluations. Middle: Vs. percent of moves referenced during reasoning trace that are legal (parsed by Llama 4 Maverick). Right: Vs. reasoning quality (mean over all reasoning quality metrics as judged by gpt-oss-120b). Shaded region represents the 95% confidence intervals.",
+      "page": 9,
+      "index": 20,
+      "width": 790,
+      "height": 194
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-021.webp",
+      "caption": "Figure 15: Distribution of tokens used in each experiment. Token numbers are shown in millions; we sampled our data to match this distribution, though there may be immaterial variations for actual token counts used. We include tags (e.g., [VABP]) for mnemonic reference. Note that with the Rejection Sampling (All Evals) [RSA] dataset, we allocate 50% of tokens to the Predict Move task and sample the remainder from the other evaluation tasks. SFT8 + SFT9 XL was trained by taking the SFT8 XL model checkpoint and training on the SFT9 XL dataset.",
+      "page": 20,
+      "index": 21,
+      "width": 829,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-022.webp",
+      "caption": "Figure 3: Samples from a selection of the custom datasets. The gray font represents an abbreviation of the core prompt – in all samples the model is trained with a verbose instructive prompt and provided with a board in our visual ASCII-format. Full samples are included in Appendix C.",
+      "page": 5,
+      "index": 22,
+      "width": 706,
+      "height": 262
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05134v1/fig-023.webp",
+      "caption": "Figure 10: A Rejection Sampling example. The full response in the sample is shortened for space. Note that a drawback of this dataset is that it is prone to hallucinations as is shown in the provided sample.",
+      "page": 16,
+      "index": 23,
+      "width": 664,
+      "height": 506
+    }
+  ]
+}

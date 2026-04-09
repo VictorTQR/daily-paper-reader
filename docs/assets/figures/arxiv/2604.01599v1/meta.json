@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.01599v1/fig-001.webp",
+      "caption": "Table 4: LLM-as-Judge accuracy (%) on LongMemEval-S (500 questions). KU = Knowledge Update, SSU = Single-Session User, SSA =Single-Session Assistant, SSP= Single-Session Preference, TR =Temporal Reasoning, MS= Multi-Session. Hindsight and HonCho evaluated with our harness (Gemini 3 Flash judge). †Results from respective papers; backbone and judge configurations differ.",
+      "page": 11,
+      "index": 1,
+      "width": 736,
+      "height": 290
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01599v1/fig-002.webp",
+      "caption": "Table 3: LLM-as-Judge accuracy (%) on LoCoMo (4 categories, 1,982 questions). All systems evaluated under identical conditions using our benchmark harness with Gemini 3 Flash as the judge.",
+      "page": 10,
+      "index": 2,
+      "width": 876,
+      "height": 238
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01599v1/fig-003.webp",
+      "caption": "Table 7: Hyperparameter configuration for ByteRover and evaluation pipeline.",
+      "page": 18,
+      "index": 3,
+      "width": 836,
+      "height": 939
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01599v1/fig-004.webp",
+      "caption": "Figure 2: The 5-tier progressive retrieval pipeline. Search is initiated in parallel with fingerprint computation. Tiers 0–1 resolve from cache without awaiting search. Tier 2 serves high-confidence results directly from MiniSearch. Only novel or ambiguous queries escalate to Tier 3 (single optimized LLM call with pre-fetched context) or Tier 4 (full agentic loop with tool access). Approximate latencies shown on right.",
+      "page": 8,
+      "index": 4,
+      "width": 640,
+      "height": 458
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01599v1/fig-005.webp",
+      "caption": "Figure 3: A complete knowledge entry in the Context Tree, showing the YAML frontmatter with lifecycle metadata, explicit relation annotations, raw concept (provenance), and narrative (interpreted structure).",
+      "page": 19,
+      "index": 5,
+      "width": 979,
+      "height": 990
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01599v1/fig-006.webp",
+      "caption": "Figure 1: Architectural overview of ByteRover. Clients (TUI, CLI, MCP) connect via Socket.IO to a daemon that manages a per-project task queue and agent pool. Each agent process contains three logical layers: (1) an Agent Layer where curate and search_knowledge are first-class tools in the LLM’s reasoning loop; (2) an Execution Layer with a query executor for 5-tier progressive retrieval and a sandboxed curation environment; and (3) a Knowledge Layer with the Context Tree, BM25 full-text index, and query cache, all backed by the local filesystem with no external infrastructure.",
+      "page": 5,
+      "index": 6,
+      "width": 511,
+      "height": 495
+    }
+  ]
+}

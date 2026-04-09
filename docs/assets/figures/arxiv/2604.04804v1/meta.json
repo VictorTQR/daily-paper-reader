@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-001.webp",
+      "caption": "Table 1. Main results of SkillX on three benchmarks. Methods with ∗ mean that the experience extraction model is aligned with the inference model. Methods with ‡ mean that GLM-4.6 is used for experience extraction, while inference still relies on the original model.",
+      "page": 6,
+      "index": 1,
+      "width": 987,
+      "height": 583
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-002.webp",
+      "caption": "Table 8. Prompt for merging and decomposing skills.",
+      "page": 21,
+      "index": 2,
+      "width": 1017,
+      "height": 1302
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-003.webp",
+      "caption": "Figure 3. Comprehensive Analysis of SkillX. (a) Performance of Multi-skills: Models exhibit varying performance under different skill composition. (b) Execution efficiency of Multi-skills: Jointly composing all skills yields the best execution efficiency. (c) Iterative optimization: Iterative skill refinement further improves performance. (d) Skill expansion strategies: Experience-guided expansion achieves the best on scalability and performance gains. (e) Analysis of Input tokens: Properly balancing input tokens is crucial for controlling inference cost. (f) Analysis of Execution steps: Experience-based learning reduces the number of execution steps.",
+      "page": 7,
+      "index": 3,
+      "width": 1017,
+      "height": 525
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-004.webp",
+      "caption": "Figure 5. BFCL benchmark case study: Vehicle engine start safety check and Twitter posting. SkillX follows prerequisite sequences (lock doors → press brake pedal → start engine) and properly authenticates before posting tweets, while the baseline without multi-level skills fails by calling APIs without prerequisites and encountering tool calling errors.",
+      "page": 18,
+      "index": 4,
+      "width": 1017,
+      "height": 585
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-005.webp",
+      "caption": "Figure 6. τ2-bench case study: Requesting delay flight compensation in airline domain. SkillX handles topic shifts, retrieves user reservations without reservation numbers, verifies flight delays, and executes the compensation workflow, while the baseline without multi-level skills fails to recognize topic shifts and cannot retrieve reservation details.",
+      "page": 18,
+      "index": 5,
+      "width": 1017,
+      "height": 583
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-006.webp",
+      "caption": "Table 9. Prompt for atomic skill extraction based on specific tools.",
+      "page": 23,
+      "index": 6,
+      "width": 1017,
+      "height": 931
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-007.webp",
+      "caption": "Table 2. Performance of SkillX on other base models.",
+      "page": 8,
+      "index": 7,
+      "width": 404,
+      "height": 365
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-008.webp",
+      "caption": "Figure 2. SkillX provides an automated, iterative pipeline for constructing a skills library, integrating skills extraction. skills expansion and skills refinement. The skills library is organized into three levels: planning skills, functional skills, and atomic skills.",
+      "page": 4,
+      "index": 8,
+      "width": 1015,
+      "height": 604
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-009.webp",
+      "caption": "Table 4. Prompt for filtering skills based on quality criteria.",
+      "page": 19,
+      "index": 9,
+      "width": 1017,
+      "height": 400
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-010.webp",
+      "caption": "Table 5. Prompt for summarizing environment feedback from agent interactions.",
+      "page": 19,
+      "index": 10,
+      "width": 1017,
+      "height": 448
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-011.webp",
+      "caption": "Figure 4. AppWorld benchmark case study: Updating Spotify playlist based on roommates’ suggestions. SkillX successfully handles API call sequences (pagination pattern for playlist retrieval) and cross-app integration (integrating Spotify and Phone APIs), while the baseline without multi-level skills fails due to incorrect API call sequences and inability to complete cross-app integration tasks.",
+      "page": 17,
+      "index": 11,
+      "width": 1017,
+      "height": 523
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-012.webp",
+      "caption": "Table 10. Prompt for functional skill extraction based on specific steps.",
+      "page": 24,
+      "index": 12,
+      "width": 1017,
+      "height": 823
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-013.webp",
+      "caption": "Table 7. Prompt for extracting reusable plans from agent trajectories.",
+      "page": 20,
+      "index": 13,
+      "width": 1017,
+      "height": 870
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04804v1/fig-014.webp",
+      "caption": "Table 6. Prompt for validating tool invocations against specifications.",
+      "page": 20,
+      "index": 14,
+      "width": 1017,
+      "height": 346
+    }
+  ]
+}

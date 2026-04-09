@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.06691v1/fig-001.webp",
+      "caption": "Fig. 1: Overview of proposed framework for teacher-student based CTDE inspired knowledge distillation in MARL, where the teacher learns expert coordination during training and guides lightweight student policy with near-expert performance & reduced resource cost.",
+      "page": 1,
+      "index": 1,
+      "width": 542,
+      "height": 254
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06691v1/fig-002.webp",
+      "caption": "TABLE II: Experimental Results: Algorithm Comparison with KD-MARL on MPE with Limited & Heterogeneous observations. (SL = Speaker-Listerner, SS = Simple Spread, Adv = Adversary, L = Landmark, A = Agent, V = Velocity, P = Position, M = Message, D = Distance).",
+      "page": 6,
+      "index": 2,
+      "width": 1126,
+      "height": 208
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06691v1/fig-003.webp",
+      "caption": "Fig. 4: The heatmaps show action-selection frequencies in the 3s5z SMAC scenario under constraints, with non-KD (left) and KDMARL (right). Warmer colours indicate higher frequency. KD-MARL exhibits more concentrated and stable attack patterns, while the non-KD policy shows more dispersed actions, indicating reduced coordination.",
+      "page": 7,
+      "index": 3,
+      "width": 541,
+      "height": 284
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06691v1/fig-004.webp",
+      "caption": "Fig. 3: FLOPs per episode comparison across SMAC and MPE maps, demonstrating resource-aware advantages of KD-MARL.",
+      "page": 7,
+      "index": 4,
+      "width": 1076,
+      "height": 442
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06691v1/fig-005.webp",
+      "caption": "Fig. 2: Proposed KD-MARL architecture with two-stage training strategy in limited & heterogeneous setup.",
+      "page": 3,
+      "index": 5,
+      "width": 529,
+      "height": 545
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06691v1/fig-006.webp",
+      "caption": "TABLE I: Experimental Results: Algorithm Comparison with KD-MARL on SMAC with Limited & Heterogeneous observations. All algorithms use three configurations: FO (Full Observation: 109,880 params, hidden dim 256), LH (Limited Heterogeneous: 3,960 params, hidden dim 32), and LH+A (LH with heterogeneous architecture, hidden dim ∈ [16, 32]).",
+      "page": 5,
+      "index": 6,
+      "width": 1118,
+      "height": 371
+    }
+  ]
+}

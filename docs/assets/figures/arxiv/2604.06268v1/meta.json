@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-001.webp",
+      "caption": "Figure 3 | Prompts sorted into six equal-sized reward-variance buckets Q1–Q6. We find: (a) Task gradient norm increases monotonically with bucket RV; (b) When RV near 0, substantial task gradients persist despite carrying almost no useful signal; (c) Regularizer gradient norm (KL + entropy) is flat across buckets. This directly supports the SNR mechanism under both algorithms.",
+      "page": 6,
+      "index": 1,
+      "width": 848,
+      "height": 359
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-002.webp",
+      "caption": "Figure 7 | Reasoning length decline across eight environments, showing systematic compression as a behavioral signature of template collapse.",
+      "page": 11,
+      "index": 2,
+      "width": 950,
+      "height": 365
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-003.webp",
+      "caption": "Table 9 | Ablation results for sampling strategies, filtering metrics, and keep strategies. Values in parentheses denote the change relative to the corresponding baseline in each block. A crossmark in the Stable column indicates training collapse.",
+      "page": 30,
+      "index": 3,
+      "width": 950,
+      "height": 513
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-004.webp",
+      "caption": "Figure 4 | SNR-Aware Filtering workflow. At each training iteration: (1) rollout generation collects trajectories; (2) within-prompt reward variance is computed as SNR proxy; (3) prompts are ranked by RV and top-p fraction retained, policy update performed only on high-signal subset. This filtering loop can prevent updating on noisy rollouts and requires no additional models/rollouts beyond standard RL.",
+      "page": 7,
+      "index": 4,
+      "width": 950,
+      "height": 192
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-005.webp",
+      "caption": "Figure 5 | Training dynamics under different intervention strategies. (a) Task success rate, (b) MI proxy (retrieval accuracy), and (c) reasoning entropy. Without filtering, MI degrades early while entropy spikes, signaling template collapse. Filtering effectively mitigates the decline in retrieval accuracy, with top-p SNR-Aware filtering best preserving both task performance and reasoning diversity.",
+      "page": 10,
+      "index": 5,
+      "width": 917,
+      "height": 278
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-006.webp",
+      "caption": "Figure 6 | Comparison of filtering strategies showing Top-𝑝 consistently outperforming Top-𝑘 and no-filter baselines across four environments.",
+      "page": 10,
+      "index": 6,
+      "width": 950,
+      "height": 210
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-007.webp",
+      "caption": "Figure 9 | In FrozenLake, median success rates for both Top-p filtering (orange) and no filtering (gray) decrease as environment stochasticity increases from 0% to 100%. SNR-Aware Filtering maintains a clear advantage from 0% to 50% stochasticity, but the gap closes at 80%–100%, where high transition noise weakens reward variance as an informative signal proxy.",
+      "page": 14,
+      "index": 7,
+      "width": 667,
+      "height": 352
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-008.webp",
+      "caption": "Figure 1 | Left: input-driven reasoning adapts to the current state; templated reasoning produces nearly identical responses across different inputs. Right: four reasoning regimes characterized along two axes: conditional entropy 𝐻 (𝑍 | 𝑋) (within-input diversity) and mutual information 𝐼(𝑋 ; 𝑍) (input dependence). Details in Section 2.",
+      "page": 3,
+      "index": 8,
+      "width": 950,
+      "height": 392
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-009.webp",
+      "caption": "Figure 13 | Training dynamics under three interventions. For each setting, we choose two checkpoints (steps 10/400) and connect them into a trajectory (arrows point to later steps). Color intensity indicates weaker to stronger intervention.",
+      "page": 18,
+      "index": 9,
+      "width": 839,
+      "height": 381
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-010.webp",
+      "caption": "Figure 8 | Spearman correlations showing MI-family metrics positively predict performance while entropy metrics are near-zero or negative.",
+      "page": 13,
+      "index": 10,
+      "width": 835,
+      "height": 304
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-011.webp",
+      "caption": "Table 1 | MI proxy family. All variants are derived from in-batch cross-scoring of reasoning traces against prompts, using matched (per-token log-prob under the true prompt) and marginal (per-token log-prob under the uniform prompt mixture) as base quantities. First-turn variants use only the first agent turn; trajectory variants sample across all turns.",
+      "page": 4,
+      "index": 11,
+      "width": 831,
+      "height": 221
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-012.webp",
+      "caption": "Figure 12 | Format validity versus MI and entropy diagnostics, showing that high validity does not guarantee high input dependence.",
+      "page": 17,
+      "index": 12,
+      "width": 950,
+      "height": 400
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-013.webp",
+      "caption": "Figure 14 presents six alternative mutual-information proxy metrics tracked over the course of training, complementing the retrieval accuracy shown in Figure 5 of the main paper. All proxies exhibit a consistent pattern: under the No Filtering baseline, MI proxies degrade sharply as training progresses, while the three intervention strategies (entropy regularization, KL regularization, and top-𝑝 filtering) maintain stable information retention throughout training.",
+      "page": 31,
+      "index": 13,
+      "width": 914,
+      "height": 232
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-014.webp",
+      "caption": "Figure 2 | Schematic Signal-to-Noise Ratio (SNR) view of RL updates. Left: total gradient decomposes into task gradient (sharpens with higher within-input reward variance) and regularization gradient. Right: high reward variance yields strong task gradient and better convergence (high SNR); low reward variance makes regularization gradient dominate, producing erratic updates and input-agnostic reasoning (low SNR).",
+      "page": 5,
+      "index": 14,
+      "width": 854,
+      "height": 396
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-015.webp",
+      "caption": "Figure 11 | Prompt-level reward distribution across training phases, showing RV collapse as prompts shift toward uniform reward structures.",
+      "page": 16,
+      "index": 15,
+      "width": 950,
+      "height": 436
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06268v1/fig-016.webp",
+      "caption": "Figure 10 | Effective kept ratio and zero-variance prompt count, showing adaptive selection pressure as variance collapses during training.",
+      "page": 16,
+      "index": 16,
+      "width": 835,
+      "height": 229
+    }
+  ]
+}

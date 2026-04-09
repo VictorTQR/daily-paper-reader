@@ -1,0 +1,3523 @@
+Title: Value Mirror Descent for Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.06039v1
+
+Published Time: Wed, 08 Apr 2026 01:18:04 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+Noname manuscript No. 
+
+(will be inserted by the editor) 
+
+# Value Mirror Descent for Reinforcement Learning 
+
+Zhichao Jia Guanghui Lan Abstract Value iteration-type methods have been extensively studied for computing a nearly optimal value function in reinforcement learning (RL). Under a generative sampling model, these methods can achieve sharper sample complexity than policy optimization approaches, particularly in their dependence on the discount factor. In practice, they are often employed for offline training or in simulated environments. In this paper, we consider discounted Markov decision processes with state space S, action space A, discount factor γ ∈ (0 , 1) and costs in [0 , 1]. We introduce a novel value optimization method, termed value mirror descent (VMD), which integrates mirror descent from convex optimization into the classical value iteration framework. In the deterministic setting with known transition kernels, we show that VMD converges linearly. For the stochastic setting with a generative model, we develop a stochastic variant, SVMD, which incorporates variance reduction commonly used in stochas-tic value iteration-type methods. For RL problems with general convex regularizers, SVMD attains a near-optimal sample complexity of ˜O(|S|| A|(1 − γ)−3ϵ−2). Moreover, we establish that the Bregman divergence between the generated and optimal policies remains bounded throughout the iterations. This property is absent in existing stochastic value iteration-type methods but is important for enabling effective online (continual) learning following offline training. Under a strongly convex regularizer, SVMD achieves sample complexity of ˜O(|S|| A|(1 − γ)−5ϵ−1), improving performance in the high-accuracy regime. Furthermore, we prove convergence of the generated policy to the optimal policy. Overall, the proposed method, its analysis, and the resulting guarantees, including im-proved sample complexity under strong convexity and bounded or convergent Bregman divergence, constitute new contributions to the RL and optimization literature. 
+
+Keywords reinforcement learning · value iteration-type methods · value mirror descent 
+
+Mathematics Subject Classification (2000) 90C30 · 90C39 · 90C40 · 68Q25 
+
+1 Introduction 
+
+A Markov Decision Process (MDP) is a well-studied mathematical framework for sequential decision-making under uncertainty. At each time step, an agent observes the current state of the environment and selects an action according to a policy. A cost is then incurred for the resulting state-action pair, and the environment transitions to a new state according to a probability transition kernel determined by the chosen action. The goal of solving an MDP is to find an optimal policy that minimizes the expected discounted cumulative cost over an infinite horizon (or a prescribed finite horizon). Such a policy specifies the best action to take at each state. Reinforcement learning (RL) problems are MDPs with an unknown probability transition kernel P. Given a state-action pair, instead of having direct access to the transition probabilities, one can only generate samples of the next state according to P. Classical methods for solving RL problems can be broadly divided into three categories: dynamic optimization, linear optimization and nonlinear optimization methods. Dynamic optimization methods are typically categorized into value iteration-type and policy iteration-type methods. Value iteration-type methods include the classic value iteration [2, 24, 27] and Q-learning [32], while policy-based methods include 
+
+This research was partially supported by Office of Naval Research grant N000142412654. Zhichao Jia H. Milton Stewart School of Industrial and Systems Engineering, Georgia Institute of Technology, Atlanta, GA, 30332. Email: zjia75@gatech.edu 
+
+Guanghui Lan H. Milton Stewart School of Industrial and Systems Engineering, Georgia Institute of Technology, Atlanta, GA, 30332. Email: george.lan@isye.gatech.edu 
+
+> arXiv:2604.06039v1 [math.OC] 7 Apr 2026 2
+
+policy iteration [9, 24]. Their stochastic variants have been extensively developed for RL, including model-based empirical Q-value iteration [1, 6], randomized value iteration [29], variance-reduced Q-value iteration [28], and approximate policy iteration [3, 14]. In addition to dynamic optimization methods, linear optimization methods form another important class of approaches for RL, based on linear programming formulations of MDPs; examples include stochastic primal-dual methods [4, 31] for stochastic saddle point formulations of RL problems. More recently, nonlinear optimization techniques have been widely incorporated into RL, such as trust region policy optimization methods [25], proximal policy optimization methods [26], and stochastic policy mirror descent first studied in [16] and later in [10, 11, 18, 19, 20, 33], among many others. These methods are often referred to as policy optimization methods. Both policy optimization methods and stochastic value iteration–type methods are widely used in reinforce-ment learning, representing two fundamentally different algorithmic paradigms. Policy optimization methods offer several significant advantages. First, they are flexible enough to accommodate different sampling regimes, includ-ing generative models and online Markovian sampling. Moreover, they can naturally handle, or even benefit from, the presence of (strongly) convex regularizers in RL models. Finally, policy optimization methods are often eas-ier to integrate with on-policy learning [19, 12], which facilitates action and state exploration in online settings. In contrast, stochastic value iteration–type methods offer several distinct advantages. First, under a generative model, they enjoy superior sample complexity. For a discounted Markov decision process (DMDP) with state space S, action space A, discount factor γ ∈ (0 , 1), and costs in [0 , 1], stochastic value iteration methods in [1, 28] attain an ϵ-optimal policy with sample complexity ˜O(|S|| A|(1 − γ)−3ϵ−2), matching the known lower bound in [6] up to logarithmic factors, and improving upon policy optimization methods [16, 10] in terms of the dependence on 1 − γ. Therefore, when a generative model is available, value iteration–type methods admit stronger convergence guarantees. Moreover, they are often simpler to implement, as they do not require repeated policy evaluation steps, which can be computationally involved. Despite the superior sample complexity of stochastic value iteration–type methods, they still face several im-portant challenges. First, although these methods have been extended to various regularized RL settings [5, 7], strong convergence guarantees are still lacking. In particular, it appears difficult for stochastic value iteration-type methods to achieve an O(ϵ−1) sample complexity when solving strongly convex regularized RL problems. This limitation highlights a gap compared to policy optimization methods, for which sample complexity guarantees have been more thoroughly developed in both unregularized and regularized settings [16, 10, 11]. Second, the ap-proximate optimal policies produced by value iteration–type methods can be unstable. Specifically, a policy may achieve a near-optimal value while remaining far from the optimal policy in terms of Bregman divergence. In con-trast, access to a stable near-optimal policy is often desirable in practice, for example, in fine-tuning a pre-trained agent. If the pre-trained policy remains close to the optimal one under a suitable Bregman divergence, then the probabilities of selecting optimal actions remain positive, thereby providing a favorable warm start for contin-ual training using policy optimization methods in online and on-policy settings [19, 12]. Consequently, policies produced by existing value iteration–type methods are not always well suited for continual online adaptation. 1.1 Our Contributions Our contributions in this paper are summarized from the following several aspects. First, we introduce a novel value optimization framework, termed value mirror descent (VMD), which inte-grates mirror descent from convex optimization into the classical value iteration paradigm. More specifically, our method alternates between a prox-mapping step that computes an improved policy and a value update based on this policy. The prox-mapping step can be viewed as a natural generalization of the classical value iteration update, incorporating appropriately chosen stepsizes and Bregman divergences. We show that VMD achieves a linear convergence rate, attaining an ϵ-optimal policy within O(log 2[(1 − γ)−1ϵ−1]) epochs and O((1 − γ)−1) iter-ations per epoch. Consequently, the overall iteration complexity, measured by the number of prox-mapping steps, is ˜O((1 − γ)−1), matching the optimal complexity of classical value iteration while arising from a fundamentally different optimization-based perspective. Second, we extend value mirror descent to a stochastic setting for solving RL problems with general convex regularizers, where the transition kernel is unknown but a generative model is available. Our method incorporates variance reduction technique in the sampling procedure, and establishes explicit relations between the computed value vectors and the policy value vectors. As a result, we obtain new convergence guarantees for our method and show that the overall sample complexity for computing an ϵ-optimal policy with high probability is ˜O(|S|| A|(1 −
+
+γ)−3ϵ−2). This matches the sample complexity of variance-reduced Q-value iteration method in [28], and is optimal up to logarithmic factors in view of the lower bound in [6]. In addition, our method guarantees that the Bregman divergence between the output ϵ-optimal policy and the optimal policy is bounded by O((1 − γ)−2), which is of the same order as that obtained by stochastic policy mirror descent method (see [19]). This stability property can enable a warm-start of continual online learning and fine-tuning using on-policy-compatible RL methods [12, 19], after an offline pre-traning phase by our method with nearly optimal sample complexity. 3
+
+Third, we establish convergence guarantees for stochastic value mirror descent in RL problems with strongly convex regularizers. Our analysis introduces virtual sequences of value vectors that serve as proxies of the computed value iterates, and exploits the strong convexity underlying the regularizer and Bregman divergence. Based on these techniques, we show that our method requires ˜O(|S|| A|(1 − γ)−5ϵ−1) samples from a generative model to compute an ϵ-optimal policy with high probability. This improves over the variance-reduced Q-value iteration method in [28] when ϵ < O((1 − γ)2). To the best of our knowledge, this is the first value-based methods to achieve an ˜O(ϵ−1) dependence, rather than O(ϵ−2), in sample complexity for regularized RL problems. Moreover, the Bregman divergence between the output ϵ-optimal policy and the optimal policy is bounded by O((1 − γ)−1ϵ), indicates the convergence of the generated policy to optimal policy. The rest of this paper is organized as follows. In Section 2, we introduce background on DMDPs and the classical value iteration method. Section 3 presents the value mirror descent method for solving DMDPs and establishes its convergence results. Section 4 and Section 5 develop the stochastic value mirror descent method and its convergence guarantees for RL problems with general convex regularizers and strongly convex regularizers, respectively. Section 6 concludes the paper. Several technical proofs are deferred to the appendix. 1.2 Notations For a Hilbert space, let ∥ · ∥ be the norm and ∥ · ∥ ∗ be its dual norm. For any matrix A ∈ Rm×n, define 
+
+∥A∥max = max i=1 ,...,m,j =1 ,...,n |Ai,j |. For any finite set S ⊆ Rn, we use |S| to denote its cardinality. We define the simplex in Rn by ∆n := {x ∈ Rn | 0 ≤ xi ≤ 1 ∀i = 1 , · · · , n, Pni=1 xi = 1 }. For any function f : X → R, the Clarke subdifferential of f at x ∈ X is defined as ∂f (x) = co {lim i→∞ ∇f (xi) : f (x) is differentiable at any xi ∈
+
+X, and xi → x}, where co( ·) denotes the convex hull. We write f ′(x) ∈ ∂f (x) for an arbitrary Clarke subgradient at x. A function f : X → R is said to be L-Lipschitz continuous if |f (x1) − f (x2)| ≤ L∥x1 − x2∥ holds for any 
+
+x1, x 2 ∈ X, or equivalently, ∥f ′(x)∥∗ ≤ L for any x ∈ X. We say that a continuous function f : X → R is μ-strongly convex if f (x2) ≥ f (x1) + ⟨f ′(x1), x 2 − x1⟩ + ( μ/ 2) ∥x1 − x2∥2 is satisfied for any x1, x 2 ∈ X and f ′(x1) ∈ ∂f (x1). Let ω : X → R be a continuously differentiable and 1-strongly convex distance generating function. Then, for any 
+
+x1, x 2 ∈ X, the associated Bregman divergence (or prox-function) is defined by D(x1, x 2) := ω(x2) − ω(x1) −⟨∇ ω(x1), x 2 − x1⟩, and it satisfies D(x1, x 2) ≥ ∥ x1 − x2∥2/2. For any x ∈ Rn, |x| denotes the elementwise absolute value of x.
+
+2 Background 
+
+In this section, we present preliminaries on DMDPs considered in this paper, as well as the classical value iteration method underlying our algorithm. 2.1 Discounted Markov Decision Processes A DMDP can be described by a tuple ( S, A, P, c, γ ), where S is a finite state space, A is a finite action space, 
+
+P ∈ R|S|×| A|×| S| represents the probability transition kernel, c ∈ R|S|×| A| denotes the cost function, and γ ∈ (0 , 1) is the discount factor. When action a ∈ A is taken at state s ∈ S, the system transitions to the next state s′ ∈ S
+
+with probability P(s′|s, a ), and incurs cost c(s, a ). Throughout the paper, we assume that c(s, a ) ∈ [0 , 1] for all (s, a ) ∈ S × A.For any ( s, a ) ∈ S × A and s′ ∈ S, we write Ps,a (s′) = P(s′|s, a ), so that Ps,a ∈ R|S| denotes the transition probability vector associated with ( s, a ). For any vector V ∈ R|S|, we let PV ∈ R|S|×| A| be defined by ( PV )s,a =
+
+P⊺
+
+> s,a
+
+V . Furthermore, for any state s ∈ S, we define PsV ∈ R|A| by ( PsV )( a) = ( PV )s,a .We denote ∆|A| by ∆A (and similarly ∆|S| by ∆S). A randomized stationary policy is a mapping π(·| s) : S →
+
+∆A, which assigns to each state s ∈ S a distribution over all actions a ∈ A. Accordingly, π(a|s) represents the probability of taking action a at state s. We let Π denote the Cartesian product of |S| simplices, representing the set of all stationary policies. For any policy π ∈ Π, we define cπ ∈ R|S| and Pπ ∈ R|S|×| S| as the cost vector and probability transition matrix induced by π, respectively, where cπ (s) = P 
+
+> a∈A
+
+π(a|s)c(s, a ) for all s ∈ S, and 
+
+Pπ (s, s ′) = P 
+
+> a∈A
+
+π(a|s)P(s′|s, a ) for all s, s ′ ∈ S. We also use 1S ∈ R|S|, 1A ∈ R|A|, 0S ∈ R|S| and 0A ∈ R|A| to denote the all-ones and all-zeros vectors of the corresponding dimensions. The goal of a (regularized) DMDP is to attain an optimal policy π ∈ Π that minimizes the expectation of the discounted cumulative cost, which is defined as 
+
+V π (s) := E P ∞ 
+
+> t=0
+
+γt[c(st, a t) + h(π(·| st))] | s0 = s, a t ∼ π(·| st), s t+1 ∼ P(·| st, a t), (2.1) 4
+
+where V π : S → R is the state-value function associated with π. We assume that the regularizer h : ∆A → [0 , ¯h]in (2.1) is continuous and convex, and define the vector h(π) ∈ R|S| by ( h(π))( s) = h(π(·| s)). Moreover, since 
+
+c(s, a ) ∈ [0 , 1] for all ( s, a ) ∈ S × A, it follows that ∥V π ∥∞ ∈ [0 , (1 + ¯h)/(1 − γ)]. For any s ∈ S and policies π and π′, we let Dππ′ (s) = D(π′(·| s), π (·| s)) denote the corresponding Bregman divergence. Common examples of Bregman divergences include the squared Euclidean distance Dπ′ 
+
+> π
+
+(s) = ∥π′(·| s)−
+
+π(·| s)∥22/2 associated with the norm ∥ · ∥ = ∥ · ∥ 2 and the distance generating function ωEuc (·) = ∥ · ∥ 22/2, the Kullback-Leibler (KL) divergence Dπ′ 
+
+> π
+
+(s) = P 
+
+> a∈A
+
+π′(a|s) ln[ π′(a|s)/π (a|s)] associated with the norm ∥ · ∥ = ∥ · ∥ 1
+
+and the distance generating function ωKL (π(·| s)) = P 
+
+> a∈A
+
+π(a|s) log( π(a|s)), and the Tsallis divergence Dπ′ 
+
+> π
+
+(s) = [p(1 − p)] −1 P
+
+> a∈A
+
+[−π′(a|s)p + (1 − p)π(a|s)p + pπ (a|s)p−1π′(a|s)] for any p ∈ (0 , 1) associated with the norm 
+
+∥ · ∥ = ∥ · ∥ 1 and the distance generating function ωT sa (π(·| s)) = −[p(1 − p)] −1 P 
+
+> a∈A
+
+π(a|s)p.By the convexity of h, there exists some μ ≥ 0 such that 
+
+h(π(·| s)) − h(π′(·| s)) + h′(π′(·| s)) , π (·| s) − π′(·| s)  ≥ μD ππ′ (s). (2.2) We say that h is a μ-strongly convex regularizer if (2.2) holds for some μ > 0. Moreover, we call π∗ an optimal policy if 
+
+V π∗
+
+(s) ≤ V π (s) ∀s ∈ S, ∀π(·| s) ∈ ∆A. (2.3) The existence of π∗ has been thoroughly studied in [24]. In our setting, π∗ exists since S and A are finite sets, and |c(s, a )| < ∞ holds for all ( s, a ) ∈ S × A.Next, we introduce several additional definitions that will be used throughout the paper. We first define the operator Γ : R|S| → R|S| by (Γ V )( s) := min 
+
+> π(·| s)∈∆A
+
+[⟨c(s, ·) + γPsV, π (·| s)⟩ + h(π(·| s))] for all s ∈ S and v ∈ R|S|. Next, for any policy π ∈ Π, we define the linear operator Γπ : R|S| → R|S| by 
+
+Γπ V := cπ + γPπ V + h(π) ∈ R|S|
+
+for all V ∈ R|S|, where ( Γπ V )( s) = ⟨c(s, ·) + γPsV, π (·| s)⟩ + h(π(·| s)) for all s ∈ S. It is easy to verify that 
+
+Γπ is a contraction mapping, i.e., ∥Γπ V1 − Γπ V2∥∞ ≤ γ∥V1 − V2∥∞ for any V1, V 2 ∈ R|S|. Moreover, Γπ is monotone, i.e., Γπ V1 ≥ Γπ V2 when V1 ≥ V2. It is also useful to note that ( I − γPπ )−1 is monotone, since (I − γPπ )−1V = P∞
+
+> i=0
+
+(γPπ )iV for any V ∈ R|S|. In addition, using the same expansion, we can see that (I − γPπ )−1V ≥ V for any V ≥ 0S.Finally, we let V ∗ denote the unique fixed point of V = Γ V . Note that for any π ∈ Π, V π defined in (2.1) is the unique fixed point of V = Γπ V . In particular, we have V π ≥ V π∗
+
+= V ∗ for any π ∈ Π. Finally, for any ϵ > 0, we say that a policy π and its associated value V π are ϵ-optimal if ∥V π − V ∗∥∞ ≤ ϵ.2.2 Value Iteration Value iteration (see [24]) is the most classical and simplest method for solving DMDPs. Given any initial value 
+
+V0 ∈ R|S|, the update in each iteration k = 0 , 1, ... is 
+
+Vk+1 = Γ V k. (2.4) Since ∥Vk+1 − V ∗∥∞ = ∥Γ V k − Γ V ∗∥∞ ≤ γ∥Vk − V ∗∥∞, value iteration converges linearly to V ∗. According to [24], the method terminates with an ϵ-optimal policy once ∥Vk+1 − Vk∥∞ ≤ ϵ(1 − γ)/(2 γ) is attained. In this paper, we develop a new method for solving DMDPs based on the value iteration framework. 
+
+3 Value Mirror Descent 
+
+Mirror descent steps have been widely used to solve DMDPs efficiently, for example, in policy mirror descent methods [16]. Motivated by this line of work, we develop a new value-based method that incorporates the idea of mirror descent. In this section, we present the basic algorithmic scheme of value mirror descent (VMD) and establish its convergence properties. 5
+
+3.1 Algorithmic Scheme of Value Mirror Descent In order to obtain a policy π that minimizes Γπ Vk in a less greedy manner than the value iteration step (2.4), we introduce the following prox-mapping step 
+
+πk+1 (·| s) = arg min 
+
+> π(·| s)∈∆A
+
+ηk [⟨c(s, ·) + γPsVk, π (·| s)⟩ + h(π(·| s))] + Dππk (s) ∀s ∈ S. (3.1) Here, the stepsize ηk and the Bregman divergence Dππk are used to control how far the next iterate πk+1 moves from the current πk. After computing πk+1 , we update the value vector from Vk to Vk+1 using πk+1 , i.e., 
+
+Vk+1 = Γπk+1 Vk. (3.2) The updates in (3.1) and (3.2) together lead to the value mirror descent (VMD) method below. 
+
+Algorithm 1 Value Mirror Descent (VMD) for DMDPs 
+
+Input: ˆπ0(·| s) = 1A/|A| ∀ s ∈ S, ˆV0 = (1 + ¯h)/(1 − γ) · 1S ∈ R|S|, K > 0, T > 0, {ηk,t }T −1 
+
+> t=0
+
+for k = 0 , 1, ..., K − 1. 
+
+for k = 0 , 1, ..., K − 1 do 
+
+Set V0 = ˆVk , π0 = ˆ πk and {ηt}T −1 
+
+> t=0
+
+= {ηk,t }T −1 
+
+> t=0
+
+.
+
+for t = 0 , 1, ..., T − 1 do 
+
+For all s ∈ S, update 
+
+πt+1 (·| s) = arg min 
+
+> π(·| s)∈∆A
+
+{ηt[⟨c(s, ·) + γPsVt, π (·| s)⟩ + h(π(·| s))] + Dππt (s)}, (3.3) 
+
+Vt+1 (s) = ⟨c(s, ·) + γPsVt, π t+1 (·| s)⟩ + h(πt+1 (·| s)) . (3.4) 
+
+end for 
+
+Set ˆVk+1 = VT and ˆ πk+1 = πT .
+
+end for Output: ˆπK and ˆVK .
+
+In Algorithm 1, we group every T iterations of (3.3) and (3.4) into one epoch and run the method for a total of K epochs. For every epoch k ∈ { 0, 1, ..., K − 1}, we will show that Vt serves as an upper bound on V πt for every t = 0 , 1, ..., T , by establishing the monotonicity property Vt ≥ Γπt Vt, which implies Vt ≥ Γπt Vt ≥ Γ 2 
+
+> πt
+
+Vt ≥· · · ≥ V πt . As a consequence, the relation ˆVk ≥ V ˆπk is preserved for all epochs k = 0 , 1, ..., K − 1. Moreover, for any epoch k ∈ { 0, 1, ..., K − 1}, with T ∈ O ((1 − γ)−1), we will show that ∥ ˆVk+1 − V ∗∥∞ ≤∥ ˆVk − V ∗∥∞/2. This yields a linear convergence rate of Algorithm 1 for computing an ϵ-optimal policy ˆ πK , by combining the linear convergence of ∥ ˆVk − V ∗∥∞ with the relation ˆVK ≥ V ˆπK .To establish the convergence of Algorithm 1, we first assume that ∥Dπ 
+
+> ˆπ0
+
+∥∞ ≤ D0 holds for any policy π. Since 
+
+π0(·| s) = 1A/|A| for any s ∈ S, it is easy to verify that D0 = 1 under the Euclidean distance, D0 = log |A| under the KL divergence, and D0 = ( |A|1−p − 1) /[p(1 − p)] under the Tsallis divergence with p ∈ (0 , 1). Moreover, we define 
+
+uk := 1+ ¯h  
+
+> 2k(1 −γ)
+
+for k = 0 , 1, ..., K, (3.5) which will be utilized later in our analysis. 
+
+Theorem 1 Suppose that the algorithmic parameters in Algorithm 1 are set to 
+
+K =
+
+l
+
+log 2
+
+ 1+ ¯h
+
+> (1 −γ)ϵ
+
+m 
+
+, T =
+
+l 41−γ
+
+m
+
+and ηk,t = 2k D0 
+
+> uk
+
+, t = 0 , 1, ..., T − 1 for k = 0 , 1, ..., K − 1. (3.6) 
+
+Then ˆπK is an ϵ-optimal policy, i.e., ∥V ˆπK − V ∗∥∞ ≤ ϵ.
+
+Theorem 1 indicates that Algorithm 1 requires ˜O((1 − γ)−1) prox-mapping computations of the form (3.1) to obtain an ϵ-optimal policy for a DMDP. By comparison, the classical value iteration also requires ˜O((1 − γ)−1)iterations of the form (2.4) to achieve the same objective. 6
+
+3.2 Convergence Analysis To obtain Theorem 1, we first show the following result that is well-known for mirror descent methods. 
+
+Lemma 1 In any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 1, for any iteration t ∈ { 0, 1, ..., T − 1}, state s ∈ S
+
+and policy π(·| s) ∈ ∆A, we have 
+
+ηt[⟨c(s, ·) + γPsVt, π t+1 (·| s) − π(·| s)⟩ + h(πt+1 (·| s)) − h(π(·| s))] + Dπt+1  
+
+> πt
+
+(s) ≤ Dππt (s) − (1 + ηtμ)Dππt+1 (s).
+
+Proof . This proof directly follows from the proof of [15, Lemma 3.4], by using the optimality condition of (3.1), the property of the Bregman divergence and the ( μ-strong) convexity of h in (2.2). Built upon Lemma 1, we next show the single-epoch convergence property of Algorithm 1. 
+
+Lemma 2 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 1, taking ηt = η > 0 for t = 0 , 1, ..., T − 1, we have 
+
+(VT − V ∗) + PT −1 
+
+> t=1
+
+(I − γPπ∗ )( Vt − V ∗) + 1 
+
+> η
+
+Dπ∗ 
+
+> πT
+
+≤ 1 
+
+> η
+
+Dπ∗ 
+
+> π0
+
++ γPπ∗ (V0 − V ∗). (3.7) 
+
+Proof . Taking π = π∗ and ηt = η in Lemma 1, for any t ∈ { 0, 1, ..., T − 1} and s ∈ S, we have 
+
+η  c(s, ·) + γPsVk, π t+1 (·| s) − π∗(·| s) + h(πt+1 (·| s)) − h(π∗(·| s) + Dπt+1  
+
+> πt
+
+(s) ≤ Dπ∗ 
+
+> πt
+
+(s) − Dπ∗ 
+
+> πt+1
+
+(s). (3.8) Notice that 
+
+c(s, ·) + γPsVt, π ∗(·| s) + h(π∗(·| s)) = c(s, ·) + γPsV ∗, π ∗(·| s) + h(π∗(·| s)) + γPs(Vt − V ∗), π ∗(·| s)
+
+= V ∗(s) + γ(Pπ∗ )s(Vt − V ∗), (3.9) where the second equality applies the relation V ∗ = cπ∗ + γP π∗ V ∗ + h(π∗). In view of (3.4), (3.9) and the fact that Dπt+1  
+
+> πt
+
+≥ 0, (3.8) becomes 
+
+η(Vt+1 (s) − V ∗(s)) ≤ Dπ∗ 
+
+> πt
+
+(s) − Dπ∗ 
+
+> πt+1
+
+(s) + γ(Pπ∗ )s(Vt − V ∗). (3.10) Since (3.10) holds for every s ∈ S, then 
+
+η(Vt+1 − V ∗) ≤ Dπ∗ 
+
+> πt
+
+− Dπ∗ 
+
+> πt+1
+
++ γPπ∗ (Vt − V ∗), (3.11) and we obtain (3.7) by summing up (3.11) for t = 0 , 1, ..., T − 1. By multiplying both sides of (3.7) by ( I − γPπ∗ )−1, Lemma 2 provides an upper bound one the cumulative value gaps Vt − V ∗, t = 1 , 2, ..., T , as well as the terminal Bregman distance ( I − γPπ∗ )−1Dπ∗ 
+
+> πT
+
+. Next, in order to bound the policy value gap V πT −V ∗, we establish the following two monotonicity properties: V0 ≥ V1 ≥ · · · ≥ VT
+
+and Vt ≥ Γπt Vt for t = 0 , 1, ..., T . Together with Lemma 2, these properties will yield an upper bound on V πT −V ∗.
+
+Lemma 3 The following properties hold for every epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 1: (a) V0 ≥ V1 ≥ V2 ≥ · · · ≥ VT ;(b) Vt ≥ Γπt Vt ≥ V πt ≥ V ∗ for t = 0 , 1, ..., T .Proof . We prove the result by mathematical induction. For the first epoch k = 0, observe that V0 = (1+ ¯h)/(1 −
+
+γ) · 1S and Γπ0 V0 = cπ0 + γPπ0 V0 + h(π0) ≤ [1 + γ(1 + ¯h)/(1 − γ) + ¯h] · 1S = V0, then V0 ≥ Γπ0 V0 ≥ V π0 ≥ V ∗
+
+holds. Now, suppose that for some t ∈ { 0, 1, ..., T − 1}, V0 ≥ V1 ≥ · · · ≥ Vt and Vi ≥ Γπi Vi, i = 0 , 1, ..., t are satisfied. It then remains to show Vt ≥ Vt+1 and Vt+1 ≥ Γπt+1 Vt+1 . To this end, for any s ∈ S, Lemma 1 with 
+
+π = πt yields 
+
+ηt [⟨c(s, ·) + γPsVt, π t+1 (·| s) − πt(·| s)⟩ + h(πt+1 (·| s)) − h(πt(·| s))] + Dπt+1  
+
+> πt
+
+(s) ≤ 0. (3.12) Since we have Γπt Vt = cπt + γPπt Vt + h(πt) and Γπt+1 Vt = cπt+1 + γPπt+1 Vt + h(πt+1 ) by definitions, and 
+
+Dπt+1  
+
+> πt
+
+≥ 0, then (3.12) simplifies to ( Γπt+1 Vt)( s) ≤ (Γπt Vt)( s), and hence 
+
+Γπt+1 Vt ≤ Γπt Vt. (3.13) Therefore, we have 
+
+Vt ≥ Γπt Vt ≥ Γπt+1 Vt = Vt+1 , (3.14) 7
+
+where the first inequality uses the inductive hypothesis, the second inequality follows from (3.13), and the equality holds by (3.4). Moreover, we obtain 
+
+Vt+1 = Γπt+1 Vt ≥ Γπt+1 Vt+1 , (3.15) where the equality follows from (3.4), and the inequality uses Vt ≥ Vt+1 by (3.14) and the monotonicity of 
+
+Γπt+1 . Combining (3.14) and (3.15) completes the induction. Since VT ≥ ΓπT VT for the current epoch implies 
+
+V0 ≥ Γπ0 V0 for the next epoch, we apply the same inductive argument to all the epochs k = 0 , 1, ..., K − 1 and therefore complete the proof. Notice that for the first epoch k = 0, ∥ ˆV0 − V ∗∥∞ ≤ u0 and ∥(I − γPπ∗ )−1Dπ∗ 
+
+> ˆπ0
+
+∥∞ ≤ D0/(1 − γ) are satisfied. Utilizing Lemma 2 and Lemma 3, we show the convergence of ∥ ˆVk − V ∗∥∞ and boundedness of ∥(I −
+
+γPπ∗ )−1Dπ∗ 
+
+> ˆπk
+
+∥∞ for every single epoch k ∈ { 1, 2, ..., K } of Algorithm 1 as follows. 
+
+Proposition 1 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 1 and some D > 0, if ∥ ˆVk − V ∗∥∞ ≤ uk and 
+
+∥(I − γPπ∗ )−1Dπ∗ 
+
+> ˆπk
+
+∥∞ ≤ D/ (1 − γ) hold, then taking T = ⌈4/(1 − γ)⌉ and ηt = D/u k for t = 0 , 1, ..., T − 1 yields 
+
+(a) V ˆπk+1 − V ∗ 
+
+> ∞
+
+≤ ∥ ˆVk+1 − V ∗∥∞ ≤ uk+1 = uk 
+
+> 2
+
+and (b) (I − γPπ∗ )−1Dπ∗  
+
+> ˆπk+1 ∞
+
+≤ 2D 
+
+> 1−γ
+
+. (3.16) 
+
+Proof . For any epoch k ∈ { 0, 1, ..., K − 1}, in view of the stepsize ηt = D/u k, Lemma 2 implies (VT − V ∗) + PT −1 
+
+> t=1
+
+(I − γPπ∗ )( Vt − V ∗) + uk 
+
+> D
+
+Dπ∗ 
+
+> πT
+
+≤ uk 
+
+> D
+
+Dπ∗ 
+
+> π0
+
++ γPπ∗ (V0 − V ∗). (3.17) Due to the monotonicity of the operator ( I − γPπ∗ )−1, it follows from (3.17) that (I − γPπ∗ )−1(VT − V ∗) + PT −1 
+
+> t=1
+
+(Vt − V ∗) + uk 
+
+> D
+
+(I − γPπ∗ )−1Dπ∗
+
+> πT
+
+≤ uk 
+
+> D
+
+(I − γPπ∗ )−1Dπ∗ 
+
+> π0
+
++ γ(I − γPπ∗ )−1Pπ∗ (V0 − V ∗). (3.18) Since by Lemma 3 V0 − V ∗ ≥ V1 − V ∗ ≥ · · · ≥ VT − V ∗ ≥ 0S , we then have ( I − γPπ∗ )−1(VT − V ∗) ≥ VT − V ∗,and thus (3.18) yields 
+
+T (VT − V ∗) + uk 
+
+> D
+
+(I − γPπ∗ )−1Dπ∗ 
+
+> πT
+
+≤ uk 
+
+> D
+
+(I − γPπ∗ )−1Dπ∗ 
+
+> π0
+
++ γ(I − γPπ∗ )−1Pπ∗ (V0 − V ∗). (3.19) Taking ∥ · ∥ ∞ on the right-hand side of (3.19), and plugging in ˆVk+1 = VT , ˆ πk = π0 and ˆ πk+1 = πT , we have 
+
+T ( ˆVk+1 − V ∗) + uk 
+
+> D
+
+(I − γPπ∗ )−1Dπ∗ 
+
+> ˆπk+1
+
+≤ uk 
+
+> (1 −γ)
+
+· 1S + γu k 
+
+> 1−γ
+
+· 1S ≤ 2uk 
+
+> 1−γ
+
+· 1S, (3.20) where the first inequality utilizes ∥(I − γPπ∗ )−1Dπ∗ 
+
+> ˆπk
+
+∥∞ ≤ D/ (1 − γ), ∥(I − γPπ∗ )−1∥∞ ≤ (1 − γ)−1, ∥Pπ∗ ∥∞ ≤ 1and ∥ ˆVk − V ∗∥∞ ≤ uk. In view of Dπ∗ 
+
+> πT
+
+≥ 0S and the choice T = ⌈4/(1 − γ)⌉, we obtain ∥ ˆVk+1 − V ∗∥∞ ≤ uk/2 = 
+
+uk+1 from (3.20), which, together with ˆVk+1 ≥ V ˆπk+1 ≥ V ∗ by Lemma 3, implies (3.16)( a). Moreover, since ˆVk+1 ≥ V ∗ ≥ 0S, then (3.20) also yields (3.16)( b). Proposition 1 implies that after each epoch k of Algorithm 1, which contains T ∈ O ((1 − γ)−1) iterations, the policy value gap ∥V ˆπk+1 − V ∗∥∞ is bounded by uk+1 , reducing the previous bound uk by at least 1 /2. At the same time, the quantity ∥(I − γPπ∗ )−1Dπ∗ 
+
+> ˆπk+1
+
+∥∞ remains controlled, increasing by at most a factor of two from one epoch to the next. These properties enable us to establish the linear convergence rate of Algorithm 1 for computing an ϵ-optimal policy, by increasing the stepsizes across epochs, as stated in Theorem 1. 
+
+Proof of Theorem 1 This result follows directly from Proposition 1 by induction. Specifically, we claim that for every epoch k ∈ { 0, 1, ..., K }, we have 
+
+∥ ˆVk − V ∗∥∞ ≤ uk and (I − γPπ∗ )−1Dπ∗  
+
+> ˆπk∞
+
+≤ 2k D0 
+
+> 1−γ
+
+(3.21) The claim is immediate for k = 0. Now, suppose that (3.21) holds for some k = k′ ∈ { 0, 1, ..., K − 1}, then in view of the parameter setting in (3.6), Proposition 1 implies that (3.21) also holds for k = k′ + 1. This concludes the induction and shows that ∥V ˆπK − V ∗∥∞ ≤ uK = u0/2K ≤ ϵ by (3.6), which completes the proof. 8
+
+4 Stochastic Value Mirror Descent under General Convex Regularizers 
+
+In this section, we extend value mirror descent to the stochastic setting, where direct access to the probability transition kernel P is unavailable. Instead, we assume the access to a generative sampling model, which allows us to generate multiple independent one-step state transitions ( s1, s 2, ... ) from any given state-action pair ( s, a ) ∈ S×A,and thereby construct approximations of Ps,a . Each query to the generative model, i.e., each independent one-step state transition generated from a state-action pair ( s, a ) ∈ S × A, is counted as one observation. Built on Algorithm 1, we develop a stochastic value mirror descent method, analyze its convergence properties, and provide its sample complexity guarantees, i.e., the total number of observations of state transitions. 4.1 Algorithm and Convergence Result We begin by highlighting the main differences between the stochastic value mirror descent (SVMD) method and Algorithm 1. First, in the stochastic setting, we construct an estimator ˆP(m) of the transition kernel P using m
+
+independent observations drawn from the generative model, and use ˆP(m) in place of P in each prox-mapping step of the algorithm. Specifically, for each state-action pair ( s, a ) ∈ S × A, suppose that m independent observations 
+
+s1, s 2, ..., s m of one-step state transition starting from ( s, a ) are generated, then we compute ˆP(m) 
+
+> s,a
+
+(s′) = 1
+
+> m
+
+Pmi=1 I{si=s′} ∀s′ ∈ S, (4.1) where IA returns 1 if the event A is true, and returns 0 otherwise. As shown in Algorithm 2, we still group the iterations into K epochs, with each epoch consisting of Tk
+
+iterations. For any epoch k ∈ { 0, 1, ..., K − 1}, we compute ˜PtVt as an unbiased estimation of PVt in each iteration 
+
+t ∈ { 0, 1, ..., T k − 1}. In particular, we employ a variance reduction technique by estimating PV0 in the first iteration t = 0, and then approximating P(Vt − V0) in the later iterations t = 1 , 2, ..., T k − 1, since the latter quantity may have smaller variance than PVt. For each state-action pair ( s, a ) ∈ S × A, computing ˜P0V0 requires 
+
+mk, 1 observations of state transition, while approximating ˜Pt(Vt − V0) requires mk, 2 additional observations in each iteration t ∈ { 1, 2, ..., T k − 1}. This variance reduction technique is also used in [28] and plays an important role in improving the sample complexity. The estimator ˜PtVt is then utilized in the prox-mapping step (4.3). Due to the inexact evaluations of PVt, the monotonicity property can only be satisfied approximately, i.e., 
+
+Vt ≥ Γπt Vt − β holds with some noise β ∈ R|S|. As a result, we further have 
+
+Vt ≥ Γπt Vt − β ≥ Γ 2 
+
+> πt
+
+Vt − (I + γPπt )β ≥ · · · ≥ V πt − P∞
+
+> i=0
+
+(γPπt )iβ = V πt − (I − γPπt )−1β, (4.2) indicating that Vt is only an approximate upper bound on V πt , rather than an exact one. We will show that the bounds on β must decrease exponentially across epochs. Therefore, for later epochs k ∈ { 1, 2, ..., K − 1},we compute their initial value estimators V0 as more accurate approximations of V ˆπk by solving V0 = ⟨c +
+
+γ ˜P0V0, π 0⟩ + h(π0) using more accurate kernel estimators ˜P0, rather than directly inheriting VTk−1 from the previous epoch k − 1. This linear system can be solved efficiently, for example, by using the optimal operator extrapolation method in [13, 17], and does not require any additional sampling once ˜P0 is defined. Furthermore, for every state s ∈ S, as shown in step (4.4), we update Vk+1 (s) by taking the smaller one of ˜Vk+1 (s) and Vt(s). These component-wise comparisons preserve the monotonicity V0 ≥ V1 ≥ · · · ≥ VT and eliminate poor updates ˜Vt+1 (s) that are larger than Vt(s), which may arise from the estimation error in ˜Pt. The policies are updated accordingly, as shown in step (4.5). 9
+
+Algorithm 2 Stochastic Value Mirror Descent (SVMD) 
+
+Input: ˆπ0(·| s) = ˆ π′
+
+> 0
+
+(·| s) = 1A/|A| ∀ s ∈ S, ˆV0 = (1 + ¯h)/(1 − γ) · 1S ∈ R|S|, K > 0, {Tk }K−1 
+
+> k=0
+
+> 0, {ηk,t }Tk −1 
+
+> t=0
+
+for 
+
+k = 0 , 1, ..., K − 1, {mk, 1, m k, 2}K−1 
+
+> k=0
+
+> 0. 
+
+for k = 0 , 1, ..., K − 1 do 
+
+Set π0 = ˆ πk , ˜π0 = ˆ π′ 
+
+> k
+
+, {ηt}Tk −1 
+
+> t=0
+
+= {ηk,t }Tk −1 
+
+> t=0
+
+, and compute ˜P0 = ˆP(mk, 1) for each ( s, a ) ∈ S × A.If k = 0, then set V0 = ˆVk ; otherwise, compute V0 = ( I − γ˜P0 
+
+> π0
+
+)−1(cπ0 + h(π0)). 
+
+for t = 0 , 1, ..., T k − 1 do 
+
+If t > 0, then compute ˜PtVt ∈ R|S|×| A| by ( ˜PtVt)s,a = ( ˜P0V0)s,a + ˆP(mk, 2)⊺ 
+
+> s,a
+
+(Vt − V0). For all s ∈ S, update ˜πt+1 (·| s) = arg min 
+
+> π(·| s)∈∆A
+
+n
+
+ηt
+
+ c(s, ·) + γ˜PtsVt, π (·| s) + h(π(·| s))  + Dπ 
+
+> ˜πt
+
+(s)
+
+o
+
+. (4.3) 
+
+Vt+1 (s) = min 
+
+n ˜Vt+1 (s) := c(s, ·) + γ˜PtsVt, ˜πt+1 (·| s) + h(πt+1 (·| s)) , V t(s)
+
+o
+
+. (4.4) 
+
+πt+1 (·| s) = 
+
+(
+
+˜πt+1 (·| s), if Vt+1 (s) = ˜Vt+1 (s); 
+
+πt(·| s), otherwise . (4.5) 
+
+end for 
+
+Set ˆ πk+1 = πTk and ˆ π′ 
+
+> k+1
+
+= ˜ πTk .
+
+end for Output: ˆπK .
+
+Below we establish the convergence of Algorithm 2. As in Section 3, we assume that ∥Dπ 
+
+> ˆπ0
+
+∥∞ ≤ D0 for all 
+
+π ∈ Π, and we continue to use the notation uk defined in (3.5). 
+
+Theorem 2 For any δ ∈ (0 , 1) , let k0 = ⌈log 2[(1 + ¯h)/(1 − γ)] ⌉, and suppose that the algorithmic parameters in Algorithm 2 are set to 
+
+K =
+
+l
+
+log 2
+
+ 1+ ¯h
+
+> (1 −γ)ϵ
+
+m 
+
+, Tk =
+
+l 28 (1 −γ) min {uk ,1}
+
+m
+
+, ηk,t = 2min {k,k 0}D0  
+
+> 7 min {uk,1}
+
+for t = 0 , 1, ..., T k − 1,mk, 1 ≥ [250 √2(1+ ¯h)] 2 ln(12 K|S|| A|δ−1)⌈log 2(ϵ−1)⌉2   
+
+> (1 −γ)3min {uk,1}2
+
+and mk, 2 ≥ (100 √2) 2 ln[4 K(Tk −1) |S|| A|δ−1]⌈log 2(ϵ−1)⌉2
+
+> (1 −γ)2
+
+for k = 0 , 1, ..., K − 1. (4.6) 
+
+Then with probability at least 1 − δ, ˆπK is an ϵ-optimal policy, and ∥Dπ∗ 
+
+> ˆπK
+
+∥∞ ≤ 4(1 + ¯h)/(1 − γ)2.
+
+In view of Theorem 2, the sample complexity for Algorithm 2 applied to DMDP with a general convex regularizer h is bounded by 
+
+O
+
+
+
+|S|| A| PK−1
+
+> k=0
+
+mk, 1 + ( Tk − 1) mk, 2
+
+
+
+= ˜O |S|| A|(1 − γ)−3ϵ−2, (4.7) which matches the existing lower bound up to logarithmic factors. Moreover, compared with the variance-reduced Q-value iteration in [28], Algorithm 2 guarantees ∥Dπ∗ 
+
+> ˆπK
+
+∥∞ ≤O((1 − γ)−2), which, under specific choices of Bregman divergences such as KL or Tsallis divergence, implies that the output policy ˆ πK (·| s) assigns positive probability to the optimal action at every state s ∈ S. As a consequence, the policies generated by Algorithm 2 are stable and may serve as a good starting point for continual learning using various policy optimization methods. 4.2 Convergence Analysis We now establish Theorem 2. Our analysis proceeds by first deriving a single-epoch convergence result, and then we show that the approximate monotonicity error remains sufficiently controlled with high probability. Finally, by combining these bounds across epochs, we obtain the overall convergence guarantee. Let us begin a stochastic counterpart of Lemma 1. 
+
+Lemma 4 In any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, for any iteration t ∈ { 0, 1, ..., T − 1}, state s ∈ S
+
+and policy π(·| s) ∈ ∆A, we have 
+
+ηt
+
+ c(s, ·) + γ ˜PtsVt, ˜πt+1 (·| s) − π(·| s) + h(˜ πt+1 (·| s)) − h(π(·| s))  + D˜πt+1  
+
+> ˜πt
+
+(s) ≤ Dπ 
+
+> ˜πt
+
+(s) − Dπ 
+
+> ˜πt+1
+
+(s).10 
+
+Proof . Similar to the proof of Lemma 1, this proof also directly utilizes [15, Lemma 3.4]. Built upon Lemma 4, we derive a single-epoch result below. It plays the same role as Lemma 2 in the deterministic setting, but now includes additional error terms arising from the stochastic setting. To facilitate our analysis, we introduce several notations. For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, we define the matrices Qt, ˜Qt ∈ R|S|×| A|, t = 0 , 1, ..., T − 1, with their row vectors Qt(s, ·) := c(s, ·) + γPsVt ∈ R|A|
+
+and ˜Qt(s, ·) := c(s, ·) + γ ˜PtsVt ∈ R|A| for all s ∈ S. For any matrix Q ∈ R|S|×| A| with row vectors Q(s, ·) ∈ R|A|
+
+and any policy π, we define ⟨Q, π ⟩ ∈ R|S| such that each of its entries ( ⟨Q, π ⟩)( s) := ⟨Q(s, ·), π (·| s)⟩.
+
+Lemma 5 In any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, for any ¯t ∈ { 0, 1, ..., T − 1}, taking ηt = η > 0 for 
+
+t = 0 , 1, ..., ¯t, we have 
+
+(V¯t+1 − V ∗) + P¯tt=1 (I − γPπ∗ )( Vt − V ∗) + 1 
+
+> η
+
+Dπ∗ 
+
+> ˜π¯t+1
+
+≤ 1 
+
+> η
+
+Dπ∗ 
+
+> π0
+
++ γPπ∗ (V0 − V ∗) + P¯tt=0 ˜Qt − Qt, π ∗ . (4.8) 
+
+Proof . Setting π = π∗ and ηt = η in Lemma 4, for any t ∈ { 0, 1, ..., T − 1} and s ∈ S, we have 
+
+η c(s, ·) + γ ˜PsVt, ˜πt+1 (·| s) − π∗(·| s) + h(˜ πt+1 (·| s)) − h(π∗(·| s))  + D˜πt+1  
+
+> ˜πt
+
+(s) ≤ Dπ∗ 
+
+> ˜πt
+
+(s) − Dπ∗ 
+
+> ˜πt+1
+
+(s). (4.9) Since Vt+1 (s) ≤ ⟨ c(s, ·) + γ ˜PtsVt, ˜πt+1 (·| s)⟩ + h(˜ πt+1 (·| s)) is satisfied by (4.3) and ⟨c(s, ·) + γ ˜PtsVt, π ∗(·| s)⟩ =
+
+⟨ ˜Qt(s, ·), π ∗(·| s)⟩ holds by definition, then (4.9) becomes 
+
+ηV t+1 (s) + Dπt+1  
+
+> ˜πt
+
+(s) ≤ Dπ∗ 
+
+> ˜πt
+
+(s) − Dπ∗ 
+
+> ˜πt+1
+
+(s) + η ˜Qt(s, ·), π ∗(·| s) + h(π∗(·| s)) . (4.10) Notice that we have 
+
+Qt(s, ·), π ∗(·| s) + h(π∗(·| s)) = c(s, ·) + γPsVt, π ∗(·| s) + h(π∗(·| s)) = V ∗(s) + γ(Pπ∗ )s(Vt − V ∗), (4.11) where the second equality follows from (3.9). Hence, it follows from (4.10) and (4.11) that 
+
+Vt+1 (s) − V ∗(s) + 1 
+
+> η
+
+D˜πt+1  
+
+> ˜πt
+
+(s) ≤ 1 
+
+> η
+
+Dπ∗ 
+
+> ˜πt
+
+(s) − 1 
+
+> η
+
+Dπ∗ 
+
+> ˜πt+1
+
+(s) + ˜Qt(s, ·) − Qt(s, ·), π ∗(·| s) + γ(Pπ∗ )s(Vt − V ∗).
+
+(4.12) Since (4.12) holds for every s ∈ S, then we have 
+
+Vt+1 − V ∗ + 1 
+
+> η
+
+D˜πt+1  
+
+> ˜πt
+
+≤ 1 
+
+> η
+
+Dπ∗ 
+
+> ˜πt
+
+− 1 
+
+> η
+
+Dπ∗ 
+
+> ˜πt+1
+
++ ˜Qt − Qt, π ∗ + γPπ∗ (Vt − V ∗), (4.13) and summing up (4.13) for t = 0 , 1, ..., ¯t together with π0 = ˜ π0 yields (4.8). Similar to Lemma 2, for each epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, Lemma 5 provides an upper bound for the cumulative value gaps and the Bregman divergences. However, unlike in Section 3, this bound alone is not sufficient to control the policy value gap V πt − V ∗, because the exact monotonicity relation Vt ≥ Γπt Vt is no longer available. Therefore, our next goal is to show that Vt remains an approximate upper bound on V πt with high probability throughout the epoch. Moreover, compared with Lemma 2, we observe that the right-hand side of (4.8) with ¯ t = T − 1 in Lemma 5 contains an additional term PT −1 
+
+> t=0
+
+⟨ ˜Qt −Qt, π ∗⟩, which stems from the cumulative estimation errors of ˜PtVt. More specifically, for any t ∈ { 0, 1, ..., T − 1} and s ∈ S, the error can be written as 
+
+˜Qt(s, ·) − Qt(s, ·), π ∗(·| s) = γ ˜PtsVt − PsVt, π ∗(·| s)
+
+= γ   ˜P0
+
+> s
+
+V0 − PsV0
+
+| {z }
+
+> A
+
+ +  ˆP(mk, 2) 
+
+> s
+
+(Vt − V0) − Ps(Vt − V0)
+
+| {z }
+
+> B
+
+, π ∗(·| s) . (4.14) Note that the terms A and B in (4.14) occur from independent estimation processes in Algorithm 2. In order to bound A and B respectively with high probability, we utilize the standard concentration inequalities below, which have also been shown in [8, 21] and used in [28, Theorem E.1, E.2]. 
+
+Lemma 6 For any (s, a ) ∈ S × A, transition probability vector Ps,a ∈ ∆S, and vector V ∈ R|S|, let ˆP(m) 
+
+> s,a
+
+∈ ∆S
+
+be the estimation of Ps,a through m independent observations of one-step state transition (s1, s 2, ..., s m) starting from (s, a ) (see (4.1) ), then we have (a) For any δ ∈ (0 , 1) ,
+
+ˆP(m)⊺ 
+
+> s,a
+
+V − P⊺
+
+> s,a
+
+V ≤ ∥ V ∥∞
+
+p2m−1 ln(2 δ−1) (4.15) 
+
+holds with probability at least 1 − δ.11 
+
+(b) For any δ ∈ (0 , 1) , let Var s′∼Ps,a (V (s′)) = P⊺
+
+> s,a
+
+(V )2 − (P⊺
+
+> s,a
+
+V )2, then 
+
+ˆP(m)⊺ 
+
+> s,a
+
+V − P⊺
+
+> s,a
+
+V ≤
+
+q
+
+2m−1Var s′∼Ps,a (V (s′)) ln(2 δ−1) + (2 /3) ∥V ∥∞m−1 ln(2 δ−1) (4.16) 
+
+holds with probability at least 1 − δ.
+
+Note that (4.15) and (4.16) in Lemma 6 follow directly from Hoeffding’s inequality and Bernstein’s inequality, respectively. For notational simplicity, we define σV ∈ R|S|×| A| as the one-step variance matrix associated with a value vector V ∈ R|S|, with entries σV (s, a ) := P⊺
+
+> s,a
+
+(V )2 − (P⊺
+
+> s,a
+
+V )2. Moreover, for any policy π, we define 
+
+σπV := Pπ (V )2 − (Pπ V )2 ∈ R|S| as the one-step variance vector associated with V ∈ R|S| and π. By the law of total variance, the following relation between σV (s, ·) and σπV (s) holds for any s ∈ S:
+
+σπV (s) = Var s′∼Ps,a ,a ∼π(·| s)(V (s′)) ≥ Ea∼π(·| s)
+
+Var s′∼Ps,a (V (s′) | a) = ⟨σV (s, ·), π (·| s)⟩ . (4.17) Next, we define ⟨σV , π ⟩ ∈ R|S| and ⟨√σV , π ⟩ ∈ R|S| by ( ⟨σV , π ⟩)( s) = ⟨σV (s, ·), π (·| s)⟩ and ( ⟨√σV , π ⟩)( s) = 
+
+⟨√σV (s, ·), π (·| s)⟩ for all s ∈ S, respectively, and let pσπV denote the element-wise square root of σπV . Then, it follows from (4.17) that 
+
+σπV ≥ ⟨ σV , π ⟩ and pσπV ≥ ⟨ √σV , π ⟩ , (4.18) where the second inequality follows from the first one by Jensen’s inequality. We also develop the following total variance bound, which is similar to [6, Lemma 8] and [28, Lemma C.1] and will be useful in our later analysis. Unlike those works, where π is restricted to deterministic stationary policies, our π may represent an arbitrary randomized stationary policy. Moreover, our result applies to the regularized setting. i.e., h̸ = 0. The proof is deferred to the appendix. 
+
+Lemma 7 For any policy π, we have 
+
+(I − γPπ )−1pσπV π 
+
+> 2
+> ∞
+
+≤ (1+ ¯h)2(1+ γ) 
+
+> γ2(1 −γ)3
+
+,
+
+where V π is the state-value function defined in (2.1) .
+
+Lemma 7 provides an upper bound for ∥(I −γPπ )−1pσπV π ∥2 
+
+> ∞
+
+in O((1 −γ)−3), which improves upon the O((1 −
+
+γ)−4) bound obtained by directly using ∥(I −γPπ )−1∥∞ ≤ (1 −γ)−1 and ∥σπV π ∥∞ ≤ ∥ V π ∥2 
+
+> ∞
+
+≤ (1+ ¯h)2(1 −γ)−2.To clarify why Lemma 7 is useful in the convergence analysis, we first compare the two bounds (4.15) and (4.16) in Lemma 6. When m is large, the right-hand side of (4.16) is dominated by its first term. Moreover, since pVar s′∼Ps,a (V (s′)) ≤ ∥ V ∥∞, then both (4.15) and (4.16) yields bounds of order O(∥V ∥∞m−1/2). However, by combining Lemma 7 with Bernstein’s inequality (4.16), we are able to derive sharper bounds than those obtained by directly applying Hoeffding’s inequality (4.15) for several error terms appearing later in the analysis. Now we bound the error terms A and B in (4.14), respectively, in the following lemma. 
+
+Lemma 8 (a) For epoch k = 0 of Algorithm 2 and any δ ∈ (0 , 1) , the following relation 
+
+˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ √2m− 120,1
+
+pσV0 (s, a )pln(2 |S|| A|δ−1) + 2(1+ ¯h)3 m−10,1(1 − γ)−1 ln(2 |S|| A|δ−1) (4.19) 
+
+is satisfied for all (s, a ) ∈ S × A with probability at least 1 − δ.(b) For any epoch k ∈ { 1, 2, ..., K − 1} of Algorithm 2, δ ∈ (0 , 1) and u ∈ (0 , (1 + ¯h)/(1 − γ)] , when 
+
+mk, 1 ≥ max 200(1 + ¯h)2u−2, 32(1 − γ) (1 − γ)−3 ln(6 |S|| A|δ−1) (4.20) 
+
+holds, we have 
+
+˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ 12
+
+h (1 −γ)1/2
+
+> 1+ ¯h
+
+pσV π0 (s, a ) + 1 
+
+i
+
+(1 − γ)u ∀(s, a ) ∈ S × A and V0 − V π0 
+
+> ∞
+
+≤ u
+
+(4.21) 
+
+with probability at least 1 − δ.(c) For any δ ∈ (0 , 1) and any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, in any iteration t ∈ { 1, 2, ..., T − 1},
+
+ˆP(mk, 2)⊺ 
+
+> s,a
+
+(Vt − V0) − P⊺
+
+> s,a
+
+(Vt − V0) ≤ √2m− 12 
+
+> k, 2
+
+∥Vt − V0∥∞
+
+pln(2 |S|| A|δ−1) (4.22) 
+
+is satisfied for all (s, a ) ∈ S × A with probability at least 1 − δ.12 
+
+Proof . We first show Lemma 8( a). In view of Lemma 6( b) and ∥V0∥∞ ≤ u0, for any ( s, a ) ∈ S × A, we know that (4.19) holds with probability at least 1 − α/ (|S|| A|). Since the processes of approximating ˜P0 
+
+> s,a
+
+are independent for different ( s, a ) pairs, then Lemma 8( a) holds by taking a union bound over all ( s, a ) ∈ S × A.Next, since the proof of Lemma 8( b) is more complicated, we defer it to the Appendix. Let us now consider Lemma 8( c). In view of Lemma 6( b), for any ( s, a ) ∈ S×A, (4.22) holds with probability at least 1 − α/ (|S|| A|). Since we independently estimate ˆP(mk, 2) 
+
+> s,a
+
+for each ( s, a ) pair in Algorithm 2, then Lemma 8( c)is satisfied by taking a union bound over all ( s, a ) ∈ S × A.Lemma 8 quantifies the stochastic errors introduced by the estimators ˜PtVt, t = 0 , 1, ..., T − 1. In the next several lemmas, we show that for each epoch k, if ∥V0 − V ∗∥∞ ≤ uk, then with high probability, Vt serves as an approximate upper bound on V πt for all t ∈ { 1, 2, ..., T }, with an error of order O(uk). To establish this result, we first utilize the error bounds in Lemma 8 to derive the following approximate monotonicity property 
+
+Vt ≥ Γπt Vt − βt and Vt ≥ V πt − (I − γPπt )−1βt for t = 1 , 2, ..., T (4.23) for some βt ∈ R|S|, and then show ∥(I − γPπt )−1βt∥∞ ∈ O (uk) with high probability. Let us first specify βt, t = 1 , ..., T in (4.23) by the following result. For notational simplicity, we define ˜Γ tπ V := ⟨c + γ ˜PtV, π ⟩ + h(π) ∈ R|S| for any V ∈ R|S| and policy π.
+
+Lemma 9 In any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, for any iteration t ∈ { 1, 2, ..., T }, we have 
+
+Vt ≥ Γπt Vt − βt, (4.24) 
+
+in which each entry of βt ∈ R|S| is defined as βt(s) := −⟨ ˜Qτ (s,t )(s, ·) − Qτ (s,t )(s, ·), π t(·| s)⟩, where the function 
+
+τ (s, t ) ∈ { 0, 1, ..., t − 1} depends on the state s and iteration t, and returns some iteration before t.Proof . We show this proof through an inductive argument. First, for t = 1 and any s ∈ S, we consider two cases from (4.4). In the first case V1(s) = ˜V1(s), we have 
+
+V1(s) =   ˜Γ 0 
+
+> π1
+
+V0
+
+(s) = ( Γπ1 V0)( s) + ˜Q0(s, ·) − Q0(s, ·), π 1(·| s) ≥ (Γπ1 V1)( s) − β1(s), (4.25) where the inequality uses V0 ≥ V1 and β1(s) = −⟨ ˜Q0(s, ·) − Q0(s, ·), π 1(·| s)⟩, with τ (s, 1) = 0. Now we discuss the second case V1(s) = V0(s). In view of (4.5) in Algorithm 2, we know that π1(·| s) = π0(·| s), and hence 
+
+V1(s) = V0(s) ≥   ˜Γ 0 
+
+> π0
+
+V0
+
+(s) ≥   ˜Γ 0 
+
+> π1
+
+V1
+
+(s) = ( Γπ1 V1)( s) − β1(s), (4.26) where the first inequality holds because we have V0 = (1 + ¯h)/(1 − γ) · 1S when k = 0, and V0 = ˜Γ 0 
+
+> π0
+
+V0 when 
+
+k > 0 by the algorithmic procedure in Algorithm 2, the second inequality uses V0 ≥ V1, and the second equality applies β1(s) = −⟨ ˜Q0(s, ·) − Q0(s, ·), π 1(·| s)⟩, with τ (s, 1) = 0. Next, suppose that for any t′ ∈ { 1, 2, ..., T − 1}, (4.24) holds for t = 1 , 2, ..., t ′, then we show that (4.24) holds for t = t′ + 1. For any s ∈ S, we still consider two cases from (4.4). In the first case Vt′+1 (s) = ˜Vt′+1 (s), we have 
+
+Vt′+1 (s) =   ˜Γ t′ 
+
+> πt′+1
+
+Vt′
+
+(s) =  Γπt′+1 Vt′
+
+(s) + ˜Qt′
+
+(s, ·) − Qt′
+
+(s, ·), π t′+1 (·| s) ≥  Γπt′+1 Vt′+1 
+
+(s) − βt′+1 (s),
+
+(4.27) where the inequality utilizes Vt′ ≥ Vt′+1 and βt′+1 (s) = −⟨ ˜Qt′
+
+(s, ·) − Qt′
+
+(s, ·), π t′+1 (·| s)⟩, with τ (s, t ′ + 1) = t′.For the second case Vt′+1 (s) = Vt′ (s), πt′+1 (·| s) = πt′ (·| s) holds by (4.5) in Algorithm 2, then 
+
+Vt′+1 (s) = Vt′ (s) ≥  Γπt′ Vt′
+
+(s) − βt′ (s) ≥  Γπt′+1 Vt′+1 
+
+(s) − βt′+1 (s), (4.28) where the first inequality follows from the inductive hypothesis, and the second inequality uses Vt′ ≥ Vt′+1 and 
+
+βt′+1 (s) = βt′ (s), with τ (s, t ′ + 1) = τ (s, t ′). This completes the inductive argument and concludes the proof. Lemma 9 characterizes the sequence βt defined in (4.23) for t = 1 , 2, ..., T . To further show ∥(I−γPπt )−1βt∥∞ ∈O(uk) for t = 1 , 2, ..., T with high probability, we proceed by mathematical induction and divide the argument into two parts. The first part addresses the initial iterate in each epoch and the choice of mk, 1, while the second part handles the remaining iterates within each epoch and the choice of mk, 2.For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2 and V ∈ R|S|, we first define the error 
+
+εk(v) := 
+
+h 11+ ¯h (1 − γ) 32
+
+pσV (s, a ) + (1 − γ)
+
+i
+
+min {uk, 1}. (4.29) Then, in the first part of our induction, we show that for any c ≥ 5, under specific sample sizes, the following relations (a)
+
+( ˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ εk (V0)2c ∀(s, a ) ∈ S × A if k = 0; 
+
+˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ εk (V π0 )2c ∀(s, a ) ∈ S × A and ∥V0 − V π0 ∥∞ ≤ uk 
+
+> c
+
+if k > 0; (b) V1 ≥ V π1 − 5uk 
+
+> 2c
+
+· 1S (4.30) are satisfied with high probability as shown in the lemma below. 13 
+
+Lemma 10 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2 and δ ∈ (0 , 1) , suppose that ∥V π0 − V ∗∥∞ ≤ uk,and the algorithmic parameter 
+
+mk, 1 ≥ 10 √2c(1 + ¯h)2(1 − γ)−3 min {uk, 1}−2 ln(12 |S|| A|δ−1), (4.31) 
+
+then (4.30) holds with probability at least 1 − δ/ 2.Proof . First, in view of Lemma 8( a), Lemma 8( b) and the choice of mk, 1 in (4.31), we know that (4.30)( a) is satisfied with probability at least 1 − δ/ 2. Next, to show (4.30)( b), in view of (4.2) and Lemma 9, it suffices to show (I − γPπ1 )−1  − ˜Q0 − Q0, π 1
+
+ ≤ 5uk 
+
+> 2c
+
+· 1S. (4.32) For any ( s, a ) ∈ S × A, since we have σV0 (s, a ) ≤ ∥ V0∥2 
+
+> ∞
+
+≤ (1 + ¯h)2/(1 − γ)2 when the epoch k = 0, and 
+
+σV π0 (s, a ) ≤ ∥ V π0 ∥2 
+
+> ∞
+
+≤ (1 + ¯h)2/(1 − γ)2 when k > 0, then (4.30)( a) implies that 
+
+˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ 12c
+
+(1 − γ) 12 + (1 − γ) =: w0 ∀(s, a ) ∈ S × A, (4.33) and thus 
+
+(I − γPπ1 )−1 ˜Q0 − Q0, π 1 ∞ ≤ (1 − γ)−1γw 0 ≤ 12c
+
+(1 − γ)− 12 + 1  =: w, (4.34) which, in view of (4.2) and Lemma 9, yields 
+
+V1 ≥ V π1 + ( I − γPπ1 )−1 ˜Q0 − Q0, π 1 ≥ V π1 − w · 1S. (4.35) Notice that the bound in (4.34) does not imply (4.32). To establish (4.32), we further utilize Lemma 7. Since ˜Q0 − Q0 depends on σV0 or σV π0 (see (4.30)), then we relates σV0 or σV π0 to σV π1 in order to invoke Lemma 7. To this end, we first bound ∥V π1 − V0∥∞ if epoch k = 0, and ∥V π1 − V π0 ∥∞ if k > 0, i.e., 
+
+
+
+V0 + w · 1S ≥ V1 + w · 1S
+
+> (a)
+
+≥ V π1 ≥ V ∗ (b)
+
+≥ V0 − u0 · 1S if k = 0; 
+
+V π0 + ( uk + w) · 1S
+
+> (c)
+
+≥ V0 + w · 1S ≥ V1 + w · 1S
+
+> (d)
+
+≥ V π1 ≥ V ∗ (e)
+
+≥ V π0 − uk · 1S if k > 0,
+
+(4.36) where ( a), (d) follow from (4.35), ( b) uses ∥ ˆV0 − V ∗∥∞ ≤ u0, ( c) applies ∥V0 − V π0 ∥∞ ≤ uk/c ≤ uk by (4.30)( a), and ( e) uses ∥V π0 − V ∗∥∞ ≤ uk. It directly follows from (4.36) that 
+
+∥V π1 − V0∥∞ ≤ u0 + w if k = 0; ∥V π1 − V π0 ∥∞ ≤ uk + w if k > 0. (4.37) Utilizing (4.37), the triangle inequality, i.e., pσV (s, a ) ≤ pσv′ (s, a )+ pσv−v′ (s, a ) ∀v, v ′ ∈ R|S|, and the relation 
+
+pσV (s, a ) ≤ ∥ V ∥∞ ∀V ∈ R|S|, for any ( s, a ) ∈ S × A, we have 
+
+(p σV0 (s, a ) ≤ pσV π1 (s, a ) + ∥V π1 − V0∥∞ ≤ pσV π1 (s, a ) + u0 + w if k = 0; 
+
+pσV π0 (s, a ) ≤ pσV π1 (s, a ) + ∥V π1 − V π0 ∥∞ ≤ pσV π1 (s, a ) + uk + w if k > 0. (4.38) Combining (4.30)( a) with (4.38), we obtain 
+
+˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ 12c
+
+h (1 −γ)3/2
+
+> 1+ ¯h
+
+ p σV π1 (s, a ) + uk + w + (1 − γ)
+
+i
+
+min {uk, 1} ∀(s, a ) ∈ S × A, (4.39) and it follows from (4.39) that 
+
+(I − γPπ1 )−1 ˜Q0 − Q0, π 1 ∞
+
+≤ γ(1 −γ)3/2
+
+> 2c(1+ ¯h)
+
+ (I − γPπ1 )−1 √σV π1 , π 1 ∞ + (1 − γ)−1(uk + w) min {uk, 1} + γ(1 −γ)2c min {uk, 1}≤ γ(1 −γ)3/2
+
+> 2c(1+ ¯h)
+
+n
+
+(1 + ¯h)(1 + γ) 12 γ−1(1 − γ)− 32 + (1 − γ)−1uk + 12c (1 − γ)− 12 + 12c
+
+o
+
+min {uk, 1} + 12c uk
+
+≤ 
+
+> √22c
+
+uk + 12c ×  1 + 12c + 12c
+
+uk + 12c uk = (2+ √2+1 /c )uk 
+
+> 2c
+
+≤ 5uk 
+
+> 2c
+
+, (4.40) where the first inequality applies (4.39), the second one utilizes (4.18), Lemma 7 and the definition of w in (4.34), and the last one uses c ≥ 5. This implies (4.32) and completes the proof. Next, we proceed to the second part of our induction. Specifically, we show that for any t′ ∈ { 1, 2, ..., T − 1},if (4.30) holds and (a) ˆP(mk, 2)⊺ 
+
+> s,a
+
+(Vt − V0) − P⊺
+
+> s,a
+
+(Vt − V0) ≤ 12c (1 − γ)uk ∀(s, a ) ∈ S × A,
+
+(b) Vt+1 ≥ V πt+1 − 5uk 
+
+> 2c
+
+· 1S (4.41) 14 
+
+are satisfied for all iterations t = 1 , 2, ..., t ′ − 1, then (4.41) holds for t = t′ with probability at least 1 − δ/ [2( T −
+
+1)]. Note that in Lemma 10, we proved that (4.30) holds with high probability by utilizing Lemma 8( a) and Lemma 8( b), both of which rely on Bernstein’s inequality, together with the bound ∥V0∥∞ ≤ O ((1 − γ)−1) or 
+
+∥V π0 ∥∞ ≤ O ((1 − γ)−1). By contrast, to show that (4.41) holds for t = t′ with high probability, we apply Lemma 8( c), which is based on Hoeffding’s inequality, and use the bound ∥Vt′ − V0∥∞ = O(uk), which will be established later. 
+
+Lemma 11 In any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, for any iteration t′ ∈ { 1, 2, ..., T − 1} and δ ∈ (0 , 1) ,suppose that ∥V π0 − V ∗∥∞ ≤ uk, (4.30) and (4.41) for t = 1 , 2, ..., t ′ − 1 are satisfied, and the algorithmic parameter 
+
+mk, 2 ≥  4√2c2(1 − γ)−2 ln 4( T − 1) |S|| A|δ−1, (4.42) 
+
+then (4.41) holds for t = t′ with probability at least 1 − δ/ [2( T − 1)] .Proof . We first show that (4.41)( a) holds for t = t′ with probability at least 1 − δ/ [2( T − 1)]. For this purpose, let us bound ∥Vt′ − V0∥∞. Notice that 
+
+V0 ≥ Vt′ ≥ V πt′ − 5uk 
+
+> 2c
+
+· 1S ≥ V ∗ − uk 
+
+> 2
+
+· 1S ≥ V π0 − 32 uk · 1S ≥ V0 − 2uk · 1S, (4.43) where the second inequality uses the inductive hypothesis (4.30)( b) or (4.41)( b) for t = t′ − 1, the third one holds due to c ≥ 5, the fourth one applies ∥V π0 − V ∗∥∞ ≤ uk, and the fifth one utilizes ∥V0 − V π0 ∥∞ ≤ uk/2 by the inductive hypothesis (4.30)( a). It then follows from (4.43) that ∥Vt′ − V0∥∞ ≤ 2uk, which, together with Lemma 8( c) and the choice of mk, 2 in (4.42), implies that (4.41)( a) holds for t = t′ with probability at least 1 − δ/ [2( T − 1)]. Next, we show that (4.41)( b) holds for t = t′. In view of (4.2) and Lemma 9, it suffices to show that 
+
+(I − γPπt′+1 )−1βt′+1 ∞ ≤ 5uk 
+
+> 2c
+
+, (4.44) where each entry βt′+1 (s) = ⟨ ˜Qτ (s,t ′+1) (s, ·)−Qτ (s,t ′+1) (s, ·), π t′+1 (·| s)⟩ and τ (s, t ′+1) ∈ { 0, 1, ..., t ′} by Lemma 9. For any s ∈ S, let τ = τ (s, t ′ + 1) for notational simplicity, and we have 
+
+|βt′+1 (s)| ≤ ˜Qτ (s, ·) − Qτ (s, ·) , π t′+1 (·| s)
+
+≤ γ ˜P0
+
+> s
+
+V0 − PsV0 , π t′+1 (·| s) + γ ˆP(mk, 2) 
+
+> s
+
+(Vτ − V0) − Ps(Vτ − V0) , π t′+1 (·| s)
+
+≤ γ ˜P0
+
+> s
+
+V0 − PsV0 , π t′+1 (·| s) + 12c (1 − γ)uk, (4.45) where | · | denotes the elementwise absolute value, the second inequality follows from the construction of ˜Pτs Vτ
+
+in Algorithm 2, and the third inequality uses the inductive hypothesis (4.41)( a) for t = τ . Combining (4.33) with (4.45), we have 
+
+(I − γPπt′+1 )−1βt′+1 ∞ ≤ (1 − γ)−1w0 + 12c (1 − γ)uk
+
+ = 12c
+
+(1 − γ)− 12 + 1 + uk
+
+ =: w′, (4.46) which, together with (4.2) and Lemma 9, yields 
+
+Vt′+1 ≥ V πt′+1 − w′. (4.47) Then we bound ∥V πt′+1 − V0∥∞ if epoch k = 0, or ∥V πt′+1 − V π0 ∥∞ if k > 0, using 
+
+
+
+V0 + w′ · 1S ≥ Vt′+1 + w′ · 1S
+
+> (a)
+
+≥ V πt′+1 ≥ V ∗ (b)
+
+≥ V0 − u0 · 1S if k = 0; 
+
+V π0 + ( uk + w′) · 1S
+
+> (c)
+
+≥ V0 + w′ · 1S ≥ Vt′+1 + w′ · 1S
+
+> (d)
+
+≥ V πt′+1 ≥ V ∗ (e)
+
+≥ V π0 − uk · 1S if k > 0,
+
+(4.48) where ( a) and ( d) follows from (4.47), ( b) applies ∥V0 − V ∗∥∞ ≤ u0, ( c) uses ∥V0 − V π0 ∥∞ ≤ uk/c ≤ uk by the inductive hypothesis (4.30)( a), and ( e) utilizes ∥V π0 − V ∗∥∞ ≤ uk. By (4.48), we obtain 
+
+V πt′+1 − V0 ∞ ≤ u0 + w′ if k = 0; V πt′+1 − V π0 
+
+> ∞
+
+≤ uk + w′ if k > 0. (4.49) Following the same procedure from (4.37) to (4.39), we obtain 
+
+˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ 12c
+
+h (1 −γ)3/2
+
+> (1+ ¯h)
+
+q 
+
+σV πt′+1 (s, a ) + uk + w′
+
++ (1 − γ)
+
+i
+
+min {uk, 1} ∀(s, a ) ∈ S × A. (4.50) 15 
+
+Finally, combining (4.45) and (4.50), we have 
+
+(I − γPπt′+1 )−1βt′+1 ∞ ≤ γ (I − γPπt′+1 )−1 ˜P 0V0 − P V 0, π t′+1 ∞ + 12c uk
+
+≤ γ(1 −γ)3/2
+
+> 2c(1+ ¯h)
+
+ (I − γPπt′+1 )−1 √σV πt′+1 , π t′+1 ∞ + (1 − γ)−1(uk + w′) min {uk, 1} + 1 
+
+> c
+
+uk
+
+≤ γ(1 −γ)3/2
+
+> 2c(1+ ¯h)
+
+n
+
+(1 + ¯h)(1 + γ) 12 γ−1(1 − γ)− 32 + (1 − γ)−1 2c+1 2c uk + 12c (1 − γ)− 12 + 12c
+
+o
+
+min {uk, 1} + 1 
+
+> c
+
+uk
+
+≤ 
+
+> √22c
+
+uk + 12c × 2c+3 2c uk + 1 
+
+> c
+
+uk = 3+ √2+3 /(2 c)2c uk ≤ 5uk 
+
+> 2c
+
+, (4.51) where the third inequality uses (4.18), Lemma 7 and the definition of w′ in (4.46). This implies (4.44) and completes the proof. Now we conclude the induction by combining Lemma 10 and Lemma 11. 
+
+Lemma 12 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, δ ∈ (0 , 1) and c ≥ 5, if ∥V π0 − V ∗∥∞ ≤ uk holds, and the algorithmic parameters are set to 
+
+mk, 1 ≥ [10 √2c(1+ ¯h)] 2 ln(12 |S|| A|δ−1)(1 −γ)3 min {uk ,1}2 and mk, 2 ≥ (4 √2c)2 ln[4( T −1) |S|| A|δ−1](1 −γ)2 , (4.52) 
+
+then we have 
+
+(a)
+
+( ˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ εk (V0)2c ∀(s, a ) ∈ S × A if k = 0; 
+
+˜P0⊺
+
+> s,a
+
+V0 − P⊺
+
+> s,a
+
+V0 ≤ εk (V π0 )2c ∀(s, a ) ∈ S × A and ∥V0 − V π0 ∥∞ ≤ uk 
+
+> c
+
+if k > 0; (b) ˆP(mk, 2)⊺ 
+
+> s,a
+
+(Vt − V0) − P⊺
+
+> s,a
+
+(Vt − V0) ≤ 12c (1 − γ)uk ∀(s, a ) ∈ S × A for t = 1 , 2, ..., T − 1; (c) Vt ≥ V πt − 5uk 
+
+> 2c
+
+· 1S for t = 1 , 2, ..., T (4.53) 
+
+with probability at least 1 − δ, where εk(·) is defined in (4.29) .Proof . This result follows directly from Lemma 10 and Lemma 11. Lemma 12 implies that, for every epoch k of Algorithm 2, with high probability, Vt bounds V πt up to an error of order O(uk) for all t = 1 , 2, ..., T . Recall that Lemma 5 bounds the cumulative sum of Vt − V ∗. With the help of Lemma 5 and Lemma 12, we obtain the following single-epoch convergence result for Algorithm 2. 
+
+Proposition 2 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 2, δ ∈ (0 , 1) and some D > 0, suppose that 
+
+∥V π0 − V ∗∥∞ ≤ uk and ∥(I − γPπ∗ )−1Dπ∗ 
+
+> ˜π0
+
+∥∞ ≤ D/ (1 − γ) hold, and the algorithmic parameters are set to 
+
+Tk =
+
+l 28 1−γ
+
+m
+
+, ηt = D 
+
+> 7uk
+
+for t = 0 , 1, ..., T k − 1,mk, 1 ≥ [250 √2(1+ ¯h)] 2 ln(12 |S|| A|δ−1)(1 −γ)3 min {uk ,1}2 and mk, 2 ≥ (100 √2) 2 ln[4( T −1) |S|| A|δ−1](1 −γ)2 , (4.54) 
+
+then with probability at least 1 − δ, we have 
+
+(a) V πT − V ∗ 
+
+> ∞
+
+≤ uk 
+
+> 2
+
+= uk+1 ; (b) (I − γPπ∗ )−1Dπ∗  
+
+> ˜πt∞
+
+≤ 2D 
+
+> 1−γ
+
+for all t = 0 , 1, ..., T. (4.55) 
+
+Proof . First, we know from Lemma 5 and the choice of ηt in (4.54) that (VT − V ∗) + PT −1 
+
+> t=1
+
+(I − γPπ∗ )( Vt − V ∗) ≤ 7uk 
+
+> D
+
+Dπ∗ 
+
+> ˜π0
+
++ γPπ∗ (V0 − V ∗) + PT −1 
+
+> t=0
+
+˜Qt − Qt, π ∗ . (4.56) Since V0 ≥ V1 ≥ · · · ≥ VT holds, and by Lemma 12, VT ≥ V πT − (uk/10) · 1S is satisfied with probability at least 1 − δ, then (4.56) can be simplified to (I − γPπ∗ )−1 V πT − uk 
+
+> 10
+
+· 1S − V ∗ + ( T − 1)  V πT − uk 
+
+> 10
+
+· 1S − V ∗
+
+≤ (I − γPπ∗ )−1 7uk 
+
+> D
+
+Dπ∗ 
+
+> ˜π0
+
++ γPπ∗ (V0 − V ∗) + PT −1 
+
+> t=0
+
+˜Qt − Qt, π ∗ . (4.57) By utilizing ( I − γPπ∗ )−1(V πT − V ∗) ≥ V πT − V ∗ and moving the terms involving ( uk/10) · 1S to the right-hand side in (4.57), we obtain 
+
+V πT − V ∗ 
+
+> ∞
+
+≤ 1
+
+> T
+
+ 7uk 
+
+> D
+
+(I − γPπ∗ )−1Dπ∗ 
+
+> ˜π0∞
+
+| {z }
+
+> A1
+
++ γ (I − γPπ∗ )−1Pπ∗ (V0 − V ∗) ∞
+
+| {z }
+
+> A2
+
++ PT −1 
+
+> t=0
+
+(I − γPπ∗ )−1 ˜Qt − Qt, π ∗
+
+> ∞
+
+| {z }
+
+> A3
+
++ uk
+
+> 10
+
+(T − 1) I + ( I − γPπ∗ )−1 · 1S ∞
+
+| {z }
+
+> A4
+
+
+
+. (4.58) 16 
+
+Now, let us bound the terms A1/T, A 2/T, A 3/T and A4/T in (4.58), respectively. First, it is straightforward to check from the choice of T in (4.54) that  
+
+> A1
+> T
+
+≤ uk 
+
+> 7(1 −γ)T
+
+≤ uk 
+
+> 4
+
+, A2 
+
+> T
+
+≤ ∥V0−V ∗∥∞ 
+
+> (1 −γ)T
+
+≤ 13 uk 
+
+> 350
+
+, and A4 
+
+> T
+
+≤ uk
+
+> 10
+
+  T −1 
+
+> T
+
++ 1(1 −γ)T
+
+ ≤ 29 uk 
+
+> 280
+
+, (4.59) where the first relation utilizes ∥(I −γPπ∗ )−1Dπ∗ 
+
+> ˜π0
+
+∥∞ ≤ (1 −γ)−1D, and the second relation applies ∥V0 −V ∗∥∞ ≤
+
+uk when the epoch k = 0, and ∥V0 − V ∗∥∞ ≤ ∥ V π0 − V ∗∥∞ + ∥V0 − V π0 ∥∞ ≤ (26 /25) uk (see (4.53)( a) in Lemma 12) when k > 0. Moreover, for any t ∈ { 0, 1, ..., T − 1} in the term A3 of (4.58), we have 
+
+(I − γPπ∗ )−1 ˜Qt − Qt, π ∗
+
+> ∞
+> (a)
+
+= (I − γPπ∗ )−1γ   ˜P 0V0 − P V 0
+
+ +  ˆP (mk, 2)(Vt − V0) − P (Vt − V0), π ∗
+
+> ∞
+
+≤ γ (I − γPπ∗ )−1 ˜P 0V0 − P V 0, π ∗ 
+
+> ∞
+
++ γ (I − γPπ∗ )−1 ˆP (mk, 2)(Vt − V0) − P (Vt − V0), π ∗
+
+> ∞
+> (b)
+
+≤ γ (I − γPπ∗ )−1h (1 −γ)3/2
+
+> 50(1+ ¯h)
+
+  √σV ∗ , π ∗ + uk · 1S
+
+ min {uk, 1} + 1−γ 
+
+> 50
+
+min {uk, 1} · 1S
+
+i 
+
+> ∞
+
++ uk
+
+> 50
+
+≤ γ(1 −γ)3/2 
+
+> 50(1+ ¯h)
+
+(I − γPπ∗ )−1 √σV ∗ , π ∗
+
+> ∞
+
+uk + 3uk
+
+> 50 (c)
+
+≤ γ(1 −γ)3/2 
+
+> 50(1+ ¯h)
+
+× (1+ ¯h)(1+ γ)1/2 
+
+> γ(1 −γ)3/2
+
+uk + 350 uk ≤ 110 uk, (4.60) where ( a) follows from the construction of ˜P tVt in Algorithm 2, ( b) uses the error bounds in (4.53)( a) and (4.53)( b), pσV0 (s, a ) − pσV ∗ (s, a ) ≤ pσV0−V ∗ (s, a ) ≤ ∥ V0 − V ∗∥∞ ≤ u0 if epoch k = 0, and pσV π0 (s, a ) − pσV ∗ (s, a ) ≤
+
+pσV π0 −V ∗ (s, a ) ≤ ∥ V π0 − V ∗∥∞ ≤ uk if k > 0, and ( c) utilizes (4.18) and Lemma 7. It follows from (4.60) that A3/T ≤ uk/10, which, together with (4.58) and (4.59), yields ∥V πT − V ∗∥∞ ≤ (687 /1400) uk ≤ uk/2. This completes the first part of this proof. Next, we show (4.55)( b). For any t′ ∈ { 1, 2, ..., T k}, let η = ηt, then Lemma 5 implies that (Vt′ − V ∗) + Pt′−1 
+
+> t=1
+
+(I − γPπ∗ )( Vt − V ∗) + 1 
+
+> η
+
+Dπ∗ 
+
+> ˜πt′
+
+≤ 1 
+
+> η
+
+Dπ∗ 
+
+> ˜π0
+
++ γPπ∗ (V0 − V ∗) + Pt′−1 
+
+> t=0
+
+˜Qt − Qt, π ∗ , (4.61) which yields 
+
+η(I − γPπ∗ )−1 V πt′ − V ∗ + η(t′ − 1)  V πt′ − V ∗ + ( I − γPπ∗ )−1Dπ∗
+
+> ˜πt′
+
+≤ (I − γPπ∗ )−1Dπ∗ 
+
+> ˜π0
+
++ η(I − γPπ∗ )−1h
+
+γPπ∗ (V0 − V ∗) + Pt′−1 
+
+> t=0
+
+˜Qt − Qt, π ∗ i
+
++ η 11−γ + ( t′ − 1)  · uk 
+
+> 10
+
+· 1S (4.62) by V0 ≥ V1 ≥ · · · ≥ VT and VT ≥ V πT − (uk/10) · 1S. Since V πt′ ≥ V ∗ and η = D/ (7 uk), then we simplify (4.62) to 
+
+(I − γPπ∗ )−1Dπ∗  
+
+> ˜πt′∞
+
+≤ D 
+
+> 1−γ
+
++ D 
+
+> 7uk
+
+· 11−γ · 26 uk 
+
+> 25
+
++ D 
+
+> 7uk
+
+· t′uk 
+
+> 10
+
++ D 
+
+> 7uk
+
+·   11−γ + t′ − 1 · uk 
+
+> 10
+
+≤ 2D 
+
+> 1−γ
+
+, (4.63) where the first inequality uses ∥(I − γPπ∗ )−1Dπ∗ 
+
+> ˜π0
+
+∥∞ ≤ D/ (1 − γ), ∥V0 − V ∗∥∞ ≤ (26 /25) uk and (4.60). This completes the proof. Proposition 2 shows that one epoch of Algorithm 2 reduces the value error from uk to uk+1 = uk/2 with high probability, while maintaining control of the Bregman-divergence term. This result is the stochastic analogue of Proposition 1 and implies that Algorithm 2 computes an ϵ-optimal policy ˆ πK in K := ⌈log 2(u0/ϵ )⌉ epochs with high probability. However, the bound on ∥(I − γPπ∗ )−1Dπ∗
+
+> ˆπ′
+> k
+
+∥∞ grows exponentially across epochs, which yields an upper bound on ∥Dπ∗ 
+
+> ˆπK
+
+∥∞ that depends polynomially on ϵ−1, thus possible unboundedness as ϵ tends zero. To remove this dependence on ϵ, we apply the analysis in Proposition 2 only during the first k0 := ⌈log 2 u0⌉ epochs, i.e., for k = 0 , 1, ..., k 0 − 1. Then we have uk0 ≤ 1 with high probability. Starting from epoch k0, we utilize the convergence analysis developed in the following result. Since the analysis below involves multiple epochs, we use the subscript ( k, t ) instead of t for the relevant quantities. 
+
+Proposition 3 For any δ ∈ (0 , 1) and some D > 0, suppose that ∥V ˆπk0 − V ∗∥∞ ≤ uk0 ≤ 1 and ∥(I −
+
+γPπ∗ )−1Dπ∗
+
+> ˆπ′
+> k0
+
+∥∞ ≤ D/ (1 − γ) hold, and the algorithmic parameters in Algorithm 2 are set to 
+
+Tk =
+
+l 28 (1 −γ)uk
+
+m
+
+, ηk,t = D 
+
+> 7
+
+for t = 0 , 1, ..., T k − 1, k = k0, k 0 + 1 , ..., K − 1,mk, 1 ≥ [250 √2(1+ ¯h)] 2 ln(12 K|S|| A|δ−1)⌈log 2(ϵ−1)⌉2   
+
+> (1 −γ)3min {uk,1}2
+
+and mk, 2 ≥ (100 √2) 2 ln[4 K(Tk −1) |S|| A|δ−1]⌈log 2(ϵ−1)⌉2
+
+> (1 −γ)2
+
+for k = k0, k 0 + 1 , ..., K − 1, (4.64) 
+
+then with probability at least 1 − [( K − k0)/K ]δ, we have 
+
+(a) V ˆπK − V ∗ 
+
+> ∞
+
+≤ uK ; (b) (I − γPπ∗ )−1Dπ∗  
+
+> ˜πk,t ∞
+
+≤ 2D 
+
+> 1−γ
+
+∀t = 0 , 1, ..., T k (4.65) 
+
+for all k = k0, k 0 + 1 , ..., K − 1.17 
+
+Proof . We use mathematical induction to show that for any epoch k′ ∈ { k0, k 0 + 1 , ..., K }, we have (a) For the epochs k = k0, k 0 + 1 , ..., k ′ − 1, (4.53) with c = 25 ⌈log 2(ϵ−1)⌉ holds; (b) V ˆπk − V ∗ 
+
+> ∞
+
+≤ uk holds for k = k0, k 0 + 1 , ..., k ′;(c) (I − γPπ∗ )−1Dπ∗  
+
+> ˜πk,t ∞
+
+≤ 2D 
+
+> 1−γ
+
+holds for t = 1 , 2, ..., T k, k = k0, k 0 + 1 , ..., k ′ − 1 (4.66) with probability at least 1 −[( k′ −k0)/K ]δ. Observe that (4.66) holds trivially for k′ = k0. Now, suppose that (4.66) holds for any k′ ∈ { k0, k 0 + 1 , ..., K − 1}, then we show that (a) For the epoch k = k′, (4.53) with c = 25 ⌈log 2(ϵ−1)⌉ holds; (b) V ˆπk′+1 − V ∗ 
+
+> ∞
+
+≤ uk′+1 ;(c) (I − γPπ∗ )−1Dπ∗  
+
+> ˜πk′,t ∞
+
+≤ 2D 
+
+> 1−γ
+
+∀t = 1 , 2, ..., T k′ (4.67) holds with probability at least 1 − δ/K . To this end, in view of the parameter setting in (4.64), we first know that (4.53) with c = 25 holds for epoch k = k′ with probability at least 1 − δ/K .Next, we show (4.67)( b). For any k ∈ { k0, k 0 + 1 , ..., k ′}, by Lemma 5 and ηk,t = 7 D for t = 0 , 1, ..., T k − 1, we have (Vk,T k − V ∗) + PTk −1 
+
+> t=1
+
+(I − γPπ∗ )( Vk,t − V ∗) + 7 
+
+> D
+
+Dπ∗
+
+> ˜πk,T k
+
+≤ 7 
+
+> D
+
+Dπ∗ 
+
+> ˜πk, 0
+
++ γPπ∗ (Vk, 0 − V ∗) + PTk −1 
+
+> t=0
+
+˜Qk,t − Qk,t , π ∗ . (4.68) Summing up (4.68) for k = k0, k 0 + 1 , ..., k ′, and utilizing ∥Vk+1 ,0 − Vk,T k ∥∞ ≤ ∥ Vk+1 ,0 − V ˆπk+1 ∥∞ + ∥V ˆπk+1 −
+
+Vk,T k ∥∞ ≤ uk+1 /(25 ⌈log 2(ϵ−1)⌉)+ uk/(10 ⌈log 2(ϵ−1)⌉) = 6 uk+1 /(25 ⌈log 2(ϵ−1)⌉) by (4.67)( a) and ˜ πk+1 ,0 = ˜ πk,T k
+
+for k = k0, k 0 + 1 , ..., k ′ − 1, we obtain (Vk′,T k′ − V ∗) + Pk′−1
+
+> k=k0
+
+PTk
+
+> t=1
+
+(I − γPπ∗ )( Vk,t − V ∗) + PTk′ −1 
+
+> t=1
+
+(I − γPπ∗ )( Vk′−1,t − V ∗) + 7 
+
+> D
+
+Dπ∗
+
+> ˜πk′,T k′
+
+≤ 7 
+
+> D
+
+Dπ∗ 
+
+> ˜πk0,0
+
++ γPπ∗ (Vk0,0 − V ∗) + Pk′
+
+> k=k0
+
+PTk −1 
+
+> t=0
+
+˜Qk,t − Qk,t , π ∗ + Pk′−1 
+
+> k=k0
+> 6uk+1
+> 25 ⌈log 2(ϵ−1)⌉
+
+· 1S. (4.69) Utilizing ˆ πk′+1 = πk′,T k′ , Vk, 0 ≥ Vk, 1 ≥ · · · ≥ Vk,T k for k = k0, k 0+1 , ..., k ′, ∥Vk,t −V πk,t ∥∞ ≤ uk/(10 ⌈log 2(ϵ−1)⌉)for t = 0 , 1, ..., T k, k = k0, k 0+1 , ..., k ′ by the inductive hypothesis (4.66)( a) and (4.67)( a), ∥(I−γPπ∗ )−1Dπ∗
+
+> ˆπ′
+> k0
+
+∥∞ ≤
+
+D/ (1 − γ) where ˆ π′ 
+
+> k0
+
+= ˜ πk0,0, ∥Vk0,0 − V ∗∥∞ ≤ ∥ V ˆπk0 − V ∗∥∞ + ∥Vk0,0 − V ˆπk0 ∥∞ ≤ (26 /25) uk0 ≤ 26 /25 that follows from the inductive hypothesis (4.66)( a), and ∥(I − γPπ∗ )−1⟨ ˜Qk,t − Qk,t , π ∗⟩∥ ∞ ≤ uk/(10 ⌈log 2(ϵ−1)⌉) that holds for t = 0 , 1, ..., T k − 1, k = k0, k 0 + 1 , ..., k ′ by the similar computation as in (4.60), we multiply ( I − γPπ∗ )−1
+
+on both sides of (4.69) and have 
+
+Tk′ V ˆπk′+1 − V ∗ 
+
+> ∞
+
+≤ 71−γ + 26 25(1 −γ) + Pk′ 
+
+> k=k0
+
+Tk · uk 
+
+> 10 ⌈log 2(ϵ−1)⌉
+
++ Pk′−1
+
+> k=k0
+> 6uk+1
+> 25(1 −γ)⌈log 2(ϵ−1)⌉
+
++ Pk′−1 
+
+> k=k0
+
+Tk · uk 
+
+> 10 ⌈log 2(ϵ−1)⌉
+
++ ( Tk′ − 1) · uk′ 
+
+> 10 ⌈log 2(ϵ−1)⌉
+
++ uk′ 
+
+> 10(1 −γ)⌈log 2(ϵ−1)⌉
+
+. (4.70) Applying the choice of Tk ≥ 28 /[(1 − γ)uk] for k = k0, k 0 + 1 , ..., K − 1 by (4.64) and k′ − k0 + 1 ≤ K − k0 =
+
+⌈log 2(u0/ϵ )⌉ − ⌈ log 2(u0)⌉ ≤ ⌈ log 2(ϵ−1)⌉ to (4.70), we obtain 
+
+V ˆπk′+1 − V ∗ 
+
+> ∞
+
+≤ (1 −γ)uk′ 
+
+> 28
+
+·
+
+ 201 25(1 −γ) + 14 5(1 −γ) + 325(1 −γ) + 14 5(1 −γ) + 110(1 −γ)
+
+
+
+≤ uk′ 
+
+> 2
+
+= uk′+1 . (4.71) Finally, let us show (4.67)( c). For any t′ ∈ { 1, 2, ..., T k′ }, Lemma 5 yields (Vk′,t ′ − V ∗) + Pt′−1 
+
+> t=1
+
+(I − γPπ∗ )( Vk′,t − V ∗) + 7 
+
+> D
+
+Dπ∗
+
+> ˜πk′,t ′
+
+≤ 7 
+
+> D
+
+Dπ∗ 
+
+> ˜πk′,0
+
++ γPπ∗ (Vk′,t ′ − V ∗) + Pt′−1 
+
+> t=0
+
+˜Qk′,t − Qk′,t , π ∗ . (4.72) Summing up (4.68) for k = k0, k 0 + 1 , ..., k ′ − 2 as well as (4.72), we obtain (Vk′,t ′ − V ∗) + Pk′−1
+
+> k=k0
+
+PTk
+
+> t=1
+
+(I − γPπ∗ )( Vk,t − V ∗) + Pt′−1 
+
+> t=1
+
+(I − γPπ∗ )( Vk′,t − V ∗) + 6 
+
+> D
+
+Dπ∗
+
+> ˜πk′,t ′
+
+≤ 6 
+
+> D
+
+Dπ∗ 
+
+> ˜πk0,0
+
++ γPπ∗ (Vk0,0 − V ∗) + Pk′−1
+
+> k=k0
+
+PTk −1 
+
+> t=0
+
+˜Qk,t − Qk,t , π ∗ + Pt′−1 
+
+> t=0
+
+˜Qk′,t − Qk′,t , π ∗
+
++ Pk′−1 
+
+> k=k0
+> 6uk+1
+> 25 ⌈log 2(ϵ−1)⌉
+
+· 1S, (4.73) which, following the procedure from (4.69) to (4.71) and using t′ ≤ Tk′ , implies (4.67)( c) and concludes the induction. This completes the proof. We are now ready to prove Theorem 2. The proof proceeds by recursively applying Proposition 2 over the epochs k = 0 , 1, ..., k 0 − 1, and then invoking Proposition 3 for the remaining epochs. 18 
+
+Proof of Theorem 2 This proof follows directly from Proposition 2 and Proposition 3. We first apply Proposition 2 to the epochs k = 0 , 1, ..., k 0 − 1 of Algorithm 2. In each epoch k ∈ { 0, 1, ..., k 0 − 1}, in view of the parameter setting (4.6), (4.55) occurs with probability at least 1 − δ/K . As a result, with probability at least 1 − (k0/K )δ, we will have ∥V ˆπ0 −V ∗∥∞ ≤ uk0 and ∥(I −γPπ∗ )−1Dπ∗ 
+
+> ˜πk,t
+
+∥∞ ≤ 2k0 D0/(1 −γ) for all k = 0 , 1, ..., k 0 −1, t = 0 , 1, ..., T k.Next, we apply Proposition 3 to the epochs k = k0, k 0 + 1 , ..., K − 1 of Algorithm 2, and obtain 
+
+V ˆπK − V ∗ 
+
+> ∞
+
+≤ uK = u0 
+
+> 2K
+
+≤ ϵ (4.74) and 
+
+Dπ∗  
+
+> ˆπK∞
+
+≤ max 
+
+> k=0 ,1,...,K −1,t =0 ,1,...,T k
+
+(I − γPπ∗ )−1Dπ∗  
+
+> ˜πk,t ∞
+
+≤ 2 · 2k0 · D0 
+
+> 1−γ
+
+≤ 4(1+ ¯h)D0 
+
+> (1 −γ)2
+
+(4.75) with probability at least 1 − (k0/K )δ − [( K − k0)/K ]δ = 1 − δ. This completes the proof. 
+
+5 Stochastic Value Mirror Descent under Strongly Convex Regularizers 
+
+In this section, we establish the convergence of stochastic value mirror descent when the regularizer h is μ-strongly convex. This additional curvature improves the ϵ-dependence of the sample complexity of our method from O(ϵ−2)to O(ϵ−1). Throughout this section, we assume that the Bregman divergence is associated with the l1-norm. 5.1 Algorithm and Convergence Result Algorithm 3 is a simplified version of Algorithm 2, obtained by removing the step (4.5), which determines whether in each iteration to accept the policy update based on the comparison in (4.4). We will show that every policy computed by (5.3) is sufficiently well-behaved to be accepted under the strongly convex regularized setting. For value-based methods, obtaining an ϵ-optimal policy with high probability using only O(ϵ−1) samples is challenging, since standard sample-average arguments typically require O(ϵ−2) samples to control the estimation error within ϵ. To overcome this difficulty, for any epoch k ∈ { 0, 1, ..., K − 1}, we introduce a sequence of auxiliary value vectors, denoted by { ¯Vt}Tt=0 , which serve as proxies of the computed value updates {Vt}Tt=0 . Specifically, we define ¯V0 := V0 if epoch k = 0, ¯V0 := V π0 if k > 0, and ¯Vt+1 (s) := min  c(s, ·) + γPs ¯Vt, π t+1 (·| s) + h(πt+1 (·| s)) , ¯Vt(s) ∀s ∈ S for t = 0 , 1, ..., T − 1. (5.1) Moreover, for every t ∈ { 0, 1, ..., T − 1}, we define ˜Pt ¯Vt by 
+
+ ˜Pt ¯Vt
+
+ 
+
+> s,a
+
+:=  ˜P0V0
+
+ 
+
+> s,a
+
++  ˆP(mk, 2)( ¯Vt − V0) 
+
+> s,a
+
+(5.2) for all ( s, a ) ∈ S×A, where ˆP(mk, 2) uses the same mk, 2 observations of state transitions for computing ˜Pt(Vt −V0). We also define ¯Qt ∈ R|S|×| A| by ¯Qt(s, ·) := c(s, ·) + γPs ¯Vt ∈ R|A| for all s ∈ S.The proxy iterates { ¯Vt}Tt=0 inspire us to establish the approximate monotonicity property ¯Vt ≥ Γπt ¯Vt − β,rather than Vt ≥ Γπt Vt −β. Later we will bound the noise β in a different manner, by controlling ∥ ˜Qt − ¯Qt∥max and 
+
+∥Vt − ¯Vt∥∞ throughout the epoch, and utilizing the strong convexity of h together with the Bregman divergence. 
+
+Algorithm 3 Stochastic Value Mirror Descent (SVMD) for DMDPs with Strongly Convex Regularizer 
+
+Input: ˆπ0(·| s) = 1A/|A| ∀ s ∈ S, ˆV0 = (1 + ¯h)/(1 − γ) · 1S ∈ R|S|, K > 0, T > 0, {ηk,t }T −1 
+
+> t=0
+
+for k = 0 , 1, ..., K − 1, 
+
+{mk, 1, m k, 2}K−1 
+
+> k=0
+
+> 0. 
+
+for k = 0 , 1, ..., K − 1 do 
+
+Set π0 = ˆ πk , {ηt}T −1 
+
+> t=0
+
+= {ηk,t }T −1 
+
+> t=0
+
+, and compute ˜P0 = ˆP(mk, 1) for each ( s, a ) ∈ S × A.If k = 0, then set V0 = ˆVk ; otherwise, compute V0 that satisfies V0 = ⟨c + γ˜P0V0, π 0⟩ + h(π0). 
+
+for t = 0 , 1, ..., T − 1 do 
+
+If t > 0, then compute ˜PtVt ∈ R|S|×| A| by ( ˜PtVt)s,a = ( ˜P0V0)s,a + ˆP(mk, 2)⊺ 
+
+> s,a
+
+(Vt − V0). For all s ∈ S, update 
+
+πt+1 (·| s) = arg min 
+
+> π(·| s)∈∆A
+
+n
+
+ηt
+
+ c(s, ·) + γ˜PtsVt, π (·| s) + h(π(·| s))  + Dππt (s)
+
+o
+
+, (5.3) 
+
+Vt+1 (s) = min 
+
+n ˜Vt+1 (s) := c(s, ·) + γ˜PtsVt, π t+1 (·| s) + h(πt+1 (·| s)) , V t(s)
+
+o
+
+. (5.4) 
+
+end for 
+
+Set ˆ πk+1 = πTk .
+
+end for Output: ˆπK .19 
+
+As in the previous sections, we assume ∥Dπ 
+
+> ˆπ0
+
+∥∞ ≤ D0. Moreover, we redefine 
+
+uk := 12k max  1+ ¯h 
+
+> 1−γ
+
+, μD 0 for k = 0 , 1, ..., K. (5.5) The convergence of Algorithm 3 is established as follows. 
+
+Theorem 3 For any δ ∈ (0 , 1) , suppose that the algorithmic parameters in Algorithm 3 are set to 
+
+K =
+
+l
+
+log 2
+
+  u0
+
+> ϵ
+
+m
+
+, T =
+
+l 18 1−γ
+
+m
+
+, ηk,t = 2 
+
+> μ(t+1)
+
+for t = 0 , 1, ..., T − 1,mk, 1 ≥ 200 max 
+
+n 64(1+ ¯h)2 
+
+> μ
+
+(1 − γ)−5u−1 
+
+> k
+
+(ln T + 1) , 1
+
+o
+
+ln(24 K|S|| A|δ−1)
+
+and mk, 2 ≥
+
+h 400(1+ ¯h+μD 0) 
+
+> μ
+
+(ln T + 1) + 16 
+
+i
+
+(1 − γ)−4 ln[4 K(T − 1) |S|| A|δ−1] for k = 0 , 1, ..., K − 1, (5.6) 
+
+then with probability at least 1 − δ, ˆπK is an ϵ-optimal policy, and ∥Dπ∗ 
+
+> ˆπk
+
+∥∞ ≤ ϵ/ [μ(1 − γ)] .
+
+Theorem 3 implies that, in the strongly convex regularized setting, Algorithm 3 achieves sample complexity 
+
+O
+
+
+
+|S|| A| PK−1
+
+> k=0
+
+mk, 1 + ( T − 1) mk, 2
+
+
+
+= ˜O |S|| A|(1 − γ)−5ϵ−1. (5.7) To the best of our knowledge, this is the first value-based method to exhibit an O(ϵ−1) dependence in this setting. Moreover, the Bregman divergence between the output policy and π∗ is bounded by O((1 − γ)−1ϵ), which implies convergence of the generated policy and provides a stronger stability guarantee than in the general convex setting. 5.2 Convergence Analysis The first lemma is the strongly convex analogue of Lemma 4. 
+
+Lemma 13 In any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 3, for any iteration t ∈ { 0, 1, ..., T − 1}, state s ∈ S
+
+and policy π(·| s) ∈ ∆A, we have 
+
+ηt
+
+ c(s, ·) + γ ˜PtsVt, π t+1 (·| s) − π(·| s) + h(πt+1 (·| s)) − h(π(·| s))  + Dπt+1  
+
+> πt
+
+(s) ≤ Dππt (s) − (1 + ηtμ)Dππt+1 (s).
+
+Proof . This proof directly follows from [15, Lemma 3.4]. The next result builds on Lemma 13 and establishes a single-epoch convergence property of Algorithm 3 in terms of the proxy iterates ¯Vt.
+
+Lemma 14 In any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 3, taking ηt = 2 /[μ(t + 1)] for t = 0 , 1, ..., T − 1 yields 
+
+( ¯VT − V ∗) + PT −1 
+
+> t=1
+
+(I − γPπ∗ )( ¯Vt − V ∗) + μ(T +2) 2 Dπ∗
+
+> πT
+
+≤ μD π∗ 
+
+> π0
+
++ γPπ∗ ( ¯V0 − V ∗) + 2
+
+> μ
+
+PT −1 
+
+> t=0
+
+˜Qt − ¯Qt 2max · 1S. (5.8) 
+
+Proof . For any iteration t ∈ { 0, 1, ..., T − 1} and state s ∈ S, taking π = π∗ in Lemma 13, we have 
+
+ηt
+
+ c(s, ·) + γ ˜PsVt, π t+1 (·| s) − π∗(·| s) + h(πt+1 (·| s)) − h(π∗(·| s))  + Dπt+1  
+
+> πt
+
+(s)
+
+≤ Dπ∗ 
+
+> πt
+
+(s) − (1 + ηtμ)Dπ∗ 
+
+> πt+1
+
+(s). (5.9) It follows from (5.9) and the definitions ˜Qt(s, ·) := c(s, ·) + γ ˜PtsVt and ¯Qt(s, ·) = c(s, ·) + γPs ¯Vt that 
+
+ηt
+
+ c(s, ·) + γPs ¯Vt, π t+1 (s) − π∗(s) + h(πt+1 (·| s)) − h(π∗(·| s))  + Dπt+1  
+
+> πt
+
+(s)
+
+≤ Dπ∗ 
+
+> πt
+
+(s) − (1 + ηtμ)Dπ∗ 
+
+> πt+1
+
+(s) + ηt ˜Qt(s, ·) − ¯Qt(s, ·), π ∗(·| s) − πt+1 (·| s) . (5.10) Since ¯Vt+1 (s) ≤ ⟨ c(s, ·) + γPts ¯Vt, π t+1 (·| s)⟩ + h(πt+1 (·| s)) holds by (5.1), and we have 
+
+c(s, ·) + γPs ¯Vt, π ∗(·| s) + h(π∗(·| s)) = c(s, ·) + γPsV ∗, π ∗(·| s) + h(π∗(·| s)) + γPs( ¯Vt − V ∗), π ∗(·| s)
+
+= V ∗(s) + γ(Pπ∗ )s( ¯Vt − V ∗), (5.11) 20 
+
+where the second equality uses V ∗ = cπ∗ + γP π∗ V ∗ + h(π∗), then (5.10) becomes 
+
+ηt
+
+  ¯Vt+1 (s) − V ∗(s) + Dπt+1  
+
+> πt
+
+(s) ≤Dπ∗ 
+
+> πt
+
+(s) − (1 + ηtμ)Dπ∗ 
+
+> πt+1
+
+(s) + ηtγ(Pπ∗ )s( ¯Vt − V ∗)+ ηt ˜Qt(s, ·) − ¯Qt(s, ·), π ∗(·| s) − πt+1 (·| s) . (5.12) Next, we bound the term ηt⟨ ˜Qt(s, ·) − ¯Qt(s, ·), π ∗(·| s) − πt+1 (·| s)⟩ as 
+
+ηt ˜Qt(s, ·) − ¯Qt(s, ·), π ∗(·| s) − πt+1 (·| s)
+
+= ηk ˜Qt(s, ·) − ¯Qt(s, ·), π ∗(·| s) − πt(·| s) + ηt ˜Qt(s, ·) − ¯Qt(s, ·), π t(·| s) − πt+1 (·| s)
+
+≤ ηt 
+
+> μ
+
+˜Qt(s, ·) − ¯Qt(s, ·) 2 
+
+> ∞
+
++ ηtμ 
+
+> 4
+
+∥π∗(·| s) − πt(·| s)∥21 + η2 
+
+> t
+> 2
+
+˜Qt(s, ·) − ¯Qt(s, ·) 2 
+
+> ∞
+
++ 12 ∥πt(·| s) − πt+1 (·| s)∥21
+
+≤ ηt
+
+  1 
+
+> μ
+
++ ηt
+
+> 2
+
+ ˜Qt(s, ·) − ¯Qt(s, ·) 2 
+
+> ∞
+
++ ηtμ 
+
+> 2
+
+Dπ∗ 
+
+> πt
+
+(s) + Dπt+1  
+
+> πt
+
+(s), (5.13) where the first inequality applies H¨ older’s inequality and Young’s inequality. Combining (5.12) and (5.13), we have ¯Vt+1 (s) − V ∗(s) ≤ 1+ ηtμ/ 2 
+
+> ηt
+
+Dπ∗ 
+
+> πt
+
+(s) − 1+ ηtμηt Dπ∗ 
+
+> πt+1
+
+(s) + γ(Pπ∗ )s( ¯Vt − V ∗) +   1 
+
+> μ
+
++ ηt
+
+> 2
+
+ ˜Qt(s, ·) − ¯Qt(s, ·) 2
+
+> ∞
+
+.
+
+(5.14) Taking ηt = 2 /[μ(t + 1)], we obtain ¯Vt+1 (s) − V ∗(s) ≤ μ(t+2) 2 Dπ∗ 
+
+> πt
+
+(s) − μ(t+3) 2 Dπ∗ 
+
+> πt+1
+
+(s) + γ(Pπ∗ )s( ¯Vt − V ∗) + 1
+
+> μ
+
+ 1 + 1
+
+> t+1
+
+ ˜Qt(s, ·) − ¯Qt(s, ·) 2
+
+> ∞
+
+(5.15) Since (5.15) holds for every s ∈ S, we have ¯Vt+1 − V ∗ ≤ μ(t+2) 2 Dπ∗ 
+
+> πt
+
+− μ(t+3) 2 Dπ∗ 
+
+> πt+1
+
++ γPπ∗ ( ¯Vt − V ∗) + 2 
+
+> μ
+
+˜Qt − ¯Qt 2max · 1S, (5.16) and summing up (5.16) for t = 0 , 1, ..., T − 1 yields (5.8). Lemma 14 bounds the cumulative proxy value gap and the Bregman divergence for each epoch k ∈ { 0, 1, ..., K −
+
+1} of Algorithm 3. Next, in order to bound V πT −V ∗, we build up the relation between ¯Vt and V πt for t = 1 , 2, ..., T ,by establishing the approximate monotonicity property ¯Vt ≥ Γπt ¯Vt − βt with ∥βt∥∞ = O((1 − γ)uk). As a consequence, we will have ¯Vt ≥ V πt − (I − γPπt )−1βt where ∥(I − γPπt )−1βt∥∞ = O(uk). For this purpose, we define 
+
+b := pμ/ [16(ln T + 1)] (5.17) and show that for any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 3, (a) ˜Pt ¯Vt − P ¯Vt max ≤ b(1 − γ) 32 u 
+
+> 12
+> k
+
+; (b) ˜Qt − ¯Qt 
+
+> max
+
+≤ b(1 − γ) 12 u 
+
+> 12
+> k
+
+; (c) ∥Vt+1 − ¯Vt+1 ∥∞ ≤ b(1 − γ) 12 u 
+
+> 12
+> k
+
+;(d) ¯Vt+1 ≥ Γπt+1 ¯Vt+1 − βt+1 ; (e) ¯Vt+1 ≥ V πt+1 − uk 
+
+> 4
+
+· 1S (5.18) are satisfied for t = 0 , 1, ..., T − 1 with high probability, where 
+
+βt := Pti=1 b2 
+
+> 2iμ
+
+(1 − γ)uk · 1S. (5.19) Again, as in Section 4, we proceed by mathematical induction and divide our analysis into two parts. We first show that (5.18) holds for t = 0 with high probability. 
+
+Lemma 15 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 3 and δ ∈ (0 , 1) , if ∥ ¯V0 − V ∗∥∞ ≤ uk and ∥(I −
+
+γPπ∗ )−1Dπ∗ 
+
+> π0
+
+∥∞ ≤ uk/[μ(1 − γ)] hold, and the algorithmic parameters 
+
+mk, 1 ≥ 200 max 
+
+n 4(1+ ¯h)2 
+
+> b2
+
+(1 − γ)−5u−1 
+
+> k
+
+, 1
+
+o
+
+ln(24 |S|| A|δ−1) and ηt = 2 
+
+> μ(t+1)
+
+for t = 0 , 1, ..., T − 1, (5.20) 
+
+where b is defined in (5.17) , then with probability at least 1 − δ/ 2, (5.18) holds for t = 0 , and we have 
+
+˜P0V0 − PV0 max ≤ b 
+
+> 2
+
+(1 − γ) 32 u 
+
+> 12
+> k
+
+and V0 − ¯V0 ∞ ≤ b 
+
+> 2
+
+(1 − γ) 12 u 
+
+> 12
+> k
+
+. (5.21) 21 
+
+Proof . First, in view of the choice mk, 1 in (5.20), ∥ ¯V0∥∞ ≤ (1 + ¯h)/(1 − γ) and Lemma 6( a), (5.18)( a) holds for t = 0 with probability at least 1 − δ/ 4. Next, we show that (5.21) also holds with probability at least 1 − δ/ 4. Notice that it trivially holds when the epoch k = 0, because V0 = ¯V0; when k > 0, this follows from Lemma 8( b) with u = min {(b/ 2)(1 − γ)u1/2 
+
+> k
+
+, 1 + ¯h},¯V0 = V π0 by definition, the choice mk, 1 in (5.20) and ∥√σV π0 ∥max ≤ ∥ V π0 ∥∞ ≤ (1 + ¯h)/(1 − γ). Then, we obtain that (5.18)( b) holds for t = 0 by 
+
+˜Q0 − ¯Q0 
+
+> max
+
+≤ γ  ˜P0V0 − ˜P0 ¯V0 max + ˜P0 ¯V0 − P ¯V0 max 
+
+ ≤ γ V0 − ¯V0 ∞ + b(1 − γ) 32 u
+
+> 12
+> k
+
+≤ bγ (1 − γ) 12 u 
+
+> 12
+> k
+
++ b(1 − γ) 32 u 
+
+> 12
+> k
+
+= b(1 − γ) 12 u 
+
+> 12
+> k
+
+, (5.22) where the second inequality uses (5.18)( a) for t = 0, and the third inequality applies (5.21). Moreover, (5.18)( c)holds for t = 0 by 
+
+|V1(s) − ¯V1(s)| = min  ˜Q0(s, ·), π 1(·| s) + h(π1(·| s)) , V 0(·| s) − min  ¯Q0(s, ·), π 1(·| s) + h(π1(·| s)) , ¯V0(s)
+
+≤ max  ˜Q0(s, ·) − ¯Q0(s, ·), π 1(·| s) , |V0(s) − ¯V0(s)| ≤ max  ˜Q0(s, ·) − ¯Q0(s, ·) ∞, |V0(s) − ¯V0(s)|
+
+≤ b(1 − γ) 12 u 
+
+> 12
+> k
+
+∀s ∈ S, (5.23) where the first inequality holds since the map ( x, y ) 7 → min {x, y } is 1-Lipschitz with respect to ∥ · ∥ ∞, and the third inequality follows from (5.18)( a) and (5.18)( b). Next, in order to show (5.18)( d) for t = 0, we show ¯V1(s) ≥ (Γπ1 V1)( s) − β1(s) for any s ∈ S under two cases specified by (5.1). In the first case ¯V1(s) = c(s, ·) + γPs ¯Vt, π t+1 (·| s) + h(πt+1 (·| s)), we directly have ¯V1(s) = ( Γπ1 V0)( s) ≥ (Γπ1 V1)( s). Now we consider the second case ¯V1(s) = ¯V0(s). For any t ∈ { 0, 1, ..., T − 1},taking π = πt in Lemma 13 yields 
+
+ηt
+
+ ˜Qt(s, ·), π t+1 (·| s) − πt(·| s) + h(πt+1 (·| s)) − h(πt(·| s))  + Dπt+1  
+
+> πt
+
+(s) ≤ − (1 + ηtμ)Dπt 
+
+> πt+1
+
+(s), (5.24) which can be further simplified as (Γπt+1 ¯Vt)( s) − (Γπt ¯Vt)( s) ≤ ˜Qt(s, ·) − ¯Qt(s, ·), π t(·| s) − πt+1 (·| s) − 1
+
+> ηt
+
+Dπt+1  
+
+> πt
+
+(s) + (1 + ηtμ)Dπt 
+
+> πt+1
+
+(s)
+
+≤ ηt 
+
+> 4
+
+˜Qt(s, ·) − ¯Qt(s, ·) 2 
+
+> ∞
+
++ 1 
+
+> ηt
+
+∥πt(·| s) − πt+1 (·| s)∥21 − 1
+
+> ηt
+
+Dπt+1  
+
+> πt
+
+(s) + Dπt 
+
+> πt+1
+
+(s)
+
+≤ ηt 
+
+> 4
+
+˜Qt(s, ·) − ¯Qt(s, ·) 2 
+
+> ∞
+
+≤ b2 
+
+> 2μ(t+1)
+
+(1 − γ)uk, (5.25) where the second inequality applies H¨ older’s inequality and Young’s inequality, and the fourth inequality follows from the choice of ηt in (5.20) and (5.22). Hence, we have ¯V1(s) = ¯V0(s) =  Γπ0 ¯V0
+
+ (s) ≥  Γπ1 ¯V0
+
+ (s) − b2 
+
+> 2μ
+
+(1 − γ)uk ≥  Γπ1 ¯V1
+
+ (s) − β1(s), (5.26) where the first inequality uses (5.25), and the second inequality utilizes ¯V0 ≥ ¯V1 and the definition of βt in (5.19). Combining the two cases above implies (5.18)( d) for t = 1. Finally, (5.18)( e) for t = 1 follows from (5.18)( d), i.e., ¯V1 ≥ Γπ1 ¯V1 − β1 ≥ V π1 − (I − γPπ1 )−1β1 ≥ V π1 − b2 
+
+> 2μ
+
+uk · 1S ≥ V π1 − uk 
+
+> 4
+
+· 1S, (5.27) where the last inequality applies b = pμ/ [16(ln T + 1)] ≤ pμ/ 2. This completes the proof. Next, we proceed to the second part of the induction and establish the high probability result (5.18) for the subsequent iterations t = 1 , 2, ..., T − 1. 
+
+Lemma 16 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 3 and δ ∈ (0 , 1) , if ∥ ¯V0 − V ∗∥∞ ≤ uk and ∥(I −
+
+γPπ∗ )−1Dπ∗ 
+
+> π0
+
+∥∞ ≤ uk/[μ(1 − γ)] hold, and the algorithmic parameters are set to 
+
+ηt = 2 
+
+> μ(t+1)
+
+for t = 0 , 1, ..., T − 1, mk, 1 ≥ 200 max 
+
+n 4(1+ ¯h)2 
+
+> b2
+
+(1 − γ)−5u−1 
+
+> k
+
+, 1
+
+o
+
+ln(24 |S|| A|δ−1) and 
+
+mk, 2 ≥   25 u0 
+
+> b2
+
++ 16 (1 − γ)−3 ln[4( T − 1) |S|| A|δ−1], (5.28) 
+
+where b is defined in (5.17) , then (5.18) holds for t = 0 , 1, ..., T − 1 with probability at least 1 − δ.22 
+
+Proof . In view of Lemma 15, for any t′ ∈ { 1, 2, ..., T − 1}, let us suppose that (5.18) holds for t = 0 , 1, ..., t ′ − 1, and (5.21) is satisfied. Then we show that (5.18) holds for t = t′ with probability at least 1 − δ/ [2( T − 1)]. In order to show (5.18)( a), we first have 
+
+∥ ¯Vt′ − V0∥∞ ≤ ∥ ¯Vt′ − ¯V0∥∞ + ∥ ¯V0 − V0∥∞ ≤ 54 uk + b(1 − γ) 12 u 
+
+> 12
+> k
+
+≤   54 u 
+
+> 120
+
++ bu 
+
+> 12
+> k
+
+, (5.29) where the second inequality follows from ∥ ¯Vt′ − ¯V0∥∞ ≤ 5uk/4 by using ¯V0 ≥ ¯Vt′ and ¯Vt′ ≥ V πt′ − (uk/4) · 1S ≥
+
+V ∗ − (uk/4) · 1S ≥ ¯V0 − (5 uk/4) · 1S, as well as (5.21), and the third inequality uses uk ≤ u0. Then, in view of Lemma 6( a), the choice of mk, 2 in (5.28), and ∥ ¯Vt′ − V0∥2 
+
+> ∞
+
+≤ [(25 /8) u0 + 2 b2]uk from (5.29), we have 
+
+ˆP(mk, 2)( ¯Vt′ − V0) − P( ¯Vt′ − V0) max ≤ m− 12
+
+> k, 2
+
+p2 ln[4( T − 1) |S|| A|δ−1]∥ ¯Vt′ − V0∥∞ ≤ b 
+
+> 2
+
+(1 − γ) 32 u 
+
+> 12
+> k
+
+(5.30) with probability at least 1 − δ/ [2( T − 1)]. Then, in view of the definition of ˜Pt ¯Vt in (5.2), we obtain (5.18)( a) for 
+
+t = t′ by combining (5.21) and (5.30). Next, we show that (5.18)( b) holds for t = t′ by 
+
+˜Qt′
+
+− ¯Qt′ 
+
+> max
+
+= γ ˜Pt′
+
+Vt′ − ˜Pt′
+
+¯Vt′ + ˜Pt′
+
+¯Vt′ − P ¯Vt′ max 
+
+≤ γ ˜P0V0 + ˆP(mk, 2)(Vt′ − V0) − ˜P0V0 + ˆP(mk, 2)( ¯Vt′ − V0) 
+
+> max
+
++ γ ˜Pt′
+
+¯Vt′ − P ¯Vt′ max 
+
+≤ γ ˆP(mk, 2)(Vt′ − ¯Vt′ ) max + b(1 − γ) 32 u 
+
+> 12
+> k
+
+≤ γ∥Vt′ − ¯Vt′ ∥∞ + b(1 − γ) 32 u 
+
+> 12
+> k
+
+≤ b(1 − γ) 12 u 
+
+> 12
+> k
+
+, (5.31) where the second inequality follows from (5.18)( a) for t = t′, and the fourth inequality uses ∥Vt′ − ¯Vt′ ∥∞ ≤
+
+b(1 − γ)1/2u1/2 
+
+> k
+
+by (5.18)( c) for t = t′ − 1. Moreover, we obtain (5.18)( c) for t = t′ by 
+
+∥Vt′+1 (s) − ¯Vt′+1 (s)∥
+
+= min  ˜Qt′
+
+(s, ·), π t′+1 (·| s) + h(πt′+1 (·| s)) , V t′ (s) − min  ¯Qt′
+
+(s, ·), π t′+1 (·| s) + h(πt′+1 (·| s)) , ¯Vt′ (s)
+
+≤ max  ˜Qt′
+
+(s, ·) − ¯Qt′
+
+(s, ·), π t′+1 (·| s) , |Vt′ (s) − ¯Vt′ (s)| ≤ max  ˜Qt′
+
+(s, ·) − ¯Qt′
+
+(s, ·) ∞, |Vt′ (s) − ¯Vt′ (s)|
+
+≤ b(1 − γ) 12 u 
+
+> 12
+> k
+
+∀s ∈ S, (5.32) where the first inequality holds because the map ( x, y ) 7 → min {x, y } is 1-Lipschitz with respect to ∥ · ∥ ∞, and the third inequality uses (5.18)( a) and (5.18)( b) for t = t′.Now we show (5.18)( d) for t = t′ + 1, i.e., ¯Vt′+1 (s) ≥ (Γπt′+1 Vt′+1 )( s) − βt′+1 (s) for any s ∈ S, under two cases specified by (5.1). The first case ¯Vt′+1 (s) = c(s, ·) + γPs ¯Vt′ , π t′+1 (s) + h(πt′+1 (s)) = ( Γπt′+1 Vt′ )( s) ≥
+
+(Γπt′+1 Vt′+1 )( s) is trivial. For the second case ¯Vt′+1 (s) = ¯Vt′ (s), we have ¯Vt′+1 (s) = ¯Vt′ (s) ≥ (Γπt′ ¯Vt′ )( s) − βt′ (s) ≥ (Γπt′+1 
+
+¯Vt′ )( s) − βt′ (s) − b2(1 −γ)uk 
+
+> 2μ(t′+1)
+
+≥ (Γπt′+1 
+
+¯Vt′+1 )( s) − βt′+1 (s),
+
+(5.33) where the first inequality follows from (5.18)( d) for t = t′ − 1, the second inequality uses (5.25), and the third inequality applies ¯Vt′ ≥ ¯Vt′+1 and the definition of βt′ in (5.19). Hence, (5.18)( d) holds for t = t′ + 1 by combining the two cases. Finally, (5.18)( d) directly implies (5.18)( e) by 
+
+(I − γPπt′+1 )−1βt′+1 ∞ ≤ (1 − γ)−1∥βt′+1 ∥∞ ≤ b2 
+
+> 2μ
+
+uk ·   P t′
+
+> i=1 1
+> i
+
+ ≤ b2(ln T +1) 2μ uk ≤ uk 
+
+> 4
+
+. (5.34) This concludes the inductive arguments and completes the proof. Combining Lemma 14 and Lemma 16 yields the following single-epoch convergence result of Algorithm 3. 
+
+Proposition 4 For any epoch k ∈ { 0, 1, ..., K − 1} of Algorithm 3 and δ ∈ (0 , 1) , suppose that ∥ ¯V0 − V ∗∥∞ ≤ uk
+
+and ∥(I − γPπ∗ )−1Dπ∗ 
+
+> π0
+
+∥∞ ≤ uk/[μ(1 − γ)] hold, and the algorithmic parameters are set to 
+
+T =
+
+l 18 1−γ
+
+m
+
+, ηt = 2 
+
+> μ(t+1)
+
+for t = 0 , 1, ..., T − 1, mk, 1 ≥ 200 max 
+
+n 4(1+ ¯h)2 
+
+> b2
+
+(1 − γ)−5u−1 
+
+> k
+
+, 1
+
+o
+
+ln(24 |S|| A|δ−1),
+
+and mk, 2 ≥
+
+h 25(1+ ¯h+μD 0) 
+
+> b2
+
++ 16 
+
+i
+
+(1 − γ)−4 ln[4( T − 1) |S|| A|δ−1] (5.35) 
+
+where b is defined in (5.17) , then we have 
+
+V πT − V ∗ 
+
+> ∞
+
+≤ uk+1 = uk 
+
+> 2
+
+and (I − γPπ∗ )−1Dπ∗  
+
+> πT∞
+
+≤ uk+1  
+
+> μ(1 −γ)
+
+= uk 
+
+> 2μ(1 −γ)
+
+(5.36) 
+
+with probability at least 1 − δ.23 
+
+Proof . We first know from Lemma 14 that ( ¯VT − V ∗) + PT −1 
+
+> t=1
+
+(I − γPπ∗ )( ¯Vt − V ∗) + μ(T +2) 2 Dπ∗ 
+
+> πT
+
+≤ μD π∗ 
+
+> π0
+
++ γPπ∗ ( ¯V0 − V ∗) + PT −1  
+
+> t=0 2
+> μ
+
+˜Qt − ¯Qt 2max · 1S.
+
+(5.37) In view of Lemma 16, ∥ ˜Qt − ¯Qt∥max ≤ b(1 − γ)1/2u1/2 
+
+> k
+
+and ¯Vt+1 ≥ V πt+1 − uk/4 · 1S holds for t = 0 , 1, ..., T − 1with probability at least 1 − δ, where b ∈ (0 , pμ/ [16(ln T + 1)]]. Together with ¯V0 ≥ ¯V1 ≥ · · · ≥ ¯VT , (5.37) can be simplified to (I − γPπ∗ )−1 V πT − uk 
+
+> 4
+
+1S − V ∗ + T  V πT − uk 
+
+> 4
+
+1S − V ∗ + μ(T +2) 2 (I − γPπ∗ )−1Dπ∗
+
+> πT
+
+≤ (I − γPπ∗ )−1μD π∗ 
+
+> π0
+
++ γPπ∗ ( ¯V0 − V ∗) + T · 2 
+
+> μ
+
+b2(1 − γ)uk · 1S
+
+. (5.38) Since we have ∥ ¯V0 − V ∗∥∞ ≤ uk, ∥(I − γPπ∗ )−1Dπ∗ 
+
+> π0
+
+∥∞ ≤ uk/[μ(1 − γ)], and b2 ≤ μ/ 16, then (5.38) implies (T + 1)  V πT − V ∗ + μ(T +2) 2 (I − γPπ∗ )−1Dπ∗ 
+
+> πT
+
+−   11−γ + T  · uk 
+
+> 4
+
+· 1S
+
+≤ uk 
+
+> 1−γ
+
+· 1S + uk 
+
+> 1−γ
+
+· 1S + T u k 
+
+> 8
+
+· 1S ≤   21−γ + T
+
+> 8
+
+uk · 1S, (5.39) and hence (T + 1)  V πT − V ∗ + μ(T +2) 2 (I − γPπ∗ )−1Dπ∗ 
+
+> πT
+
+≤
+
+h 94 (1 − γ)−1 + 3T
+
+> 8
+
+i
+
+uk · 1S. (5.40) Finally, by (5.40) and the choice of T in (5.35), we obtain (5.36) and conclude the proof. Finally, Theorem 3 follows by applying Proposition 4 recursively over all epochs. 
+
+Proof of Theorem 3 By using induction that follows from Proposition 4, it is straightforward to obtain that for any k ∈ { 0, 1, ..., K },
+
+V ˆπk − V ∗ 
+
+> ∞
+
+≤ uk and (I − γPπ∗ )−1Dπ∗  
+
+> ˆπk∞
+
+≤ uk 
+
+> μ(1 −γ)
+
+(5.41) hold with probability at least 1 − (k/K )δ. In view of the choice of K in (5.35), we have ∥V ˆπK − V ∗∥∞ ≤ uK ≤ ϵ
+
+and ∥Dπ∗ 
+
+> ˆπk
+
+∥∞ ≤ ∥ (I − γPπ∗ )−1Dπ∗ 
+
+> ˆπk
+
+∥∞ ≤ uK /[μ(1 − γ)] ≤ ϵ/ [μ(1 − γ)]. 
+
+6 Conclusion 
+
+In this paper, we propose a new value mirror descent method that converges linearly to an ϵ-optimal policy for DMDPs. We then develop a stochastic value mirror descent method for solving RL problems under a generative sampling model. For RL problems with general convex regularizers, we show that with high probability, our method computes an ϵ-optimal policy using ˜O(|S|| A|(1 − γ)−3ϵ−2) samples, which is nearly optimal up to logarithmic factors. Moreover, for strongly convex regularized RL problems, our method achieves a sample complexity of ˜O(|S|| A|(1 − γ)−5ϵ−1). To the best of our knowledge, this is the first value iteration-type method to attain an O(ϵ−1) dependence on ϵ. Furthermore, our method guarantees a bounded or convergent Bregman divergence between the output approximate optimal policy and the optimal policy. This property enables the policy produced by our offline pre-training procedure to serve as a stable starting point for continual online adaptation and on-policy learning. 
+
+Appendix A: Deferred Proofs 
+
+Proof of Lemma 7 Although the Bellman-like equation established in this proof is similar to those in [6, 22, 28, 30], the regularized term h(·) is incorporated in our case, and our policy π is chosen as a randomized policy in general, while those works only discuss deterministic policies. Moreover, unlike [6, 28], we study the variance of the discounted cumulative costs for every state, rather than for every state-action pair. For any policy π and s ∈ S, we first define Σπ ∈ R|S| with each entry 
+
+Σπ (s) := Eπ
+
+h P ∞ 
+
+> t=0
+
+γt (c(st, a t) + h(π(·| st))) − V π (s)2 | s0 = s
+
+i
+
+, (6.1) where at ∼ π(·| st) for all t = 0 , 1, 2, ... . Notice that Σπ (s) represents the variance of the discounted cumulative costs over infinite steps when the initial s0 = s is given, and the following relation holds: 
+
+Σπ (s) = Eπ
+
+h P ∞ 
+
+> t=0
+
+γt(c(st, a t) + h(π(·| st))) 2 | s0 = s
+
+i
+
+− (V π (s)) 2. (6.2) 24 
+
+For any policy π, let us now prove the Bellman equation below for the variance: 
+
+Σπ = γ2σπV π + γ2Pπ Σπ . (6.3) To this end, we first simplify the first term on the right-hand side of (6.1). Specifically, we have 
+
+Eπ
+
+h P ∞ 
+
+> t=0
+
+γt(c(st, a t) + h(π(·| st))) 2 | s0 = s
+
+i
+
+= P 
+
+> a∈A,s ′∈S
+
+π(a|s)Ps,a (s′)Eπ
+
+hc(s, a ) + h(π(·| s)) + γ P∞ 
+
+> t=1
+
+γt−1(c(st, a t) + h(π(·| st))) 2 | s1 = s′i
+
+= ( c(s, a ) + h(π(·| s))) 2 + γ2 P 
+
+> a∈A,s ′∈S
+
+π(a|s)Ps,a (s′)Eπ
+
+h P ∞ 
+
+> t=1
+
+γt−1(c(st, a t) + h(π(·| st))) 2 | s1 = s′i
+
++ 2 γ(c(s, a ) + h(π(·| s))) P 
+
+> a∈A,s ′∈S
+
+π(a|s)Ps,a (s′)Eπ
+
+ P ∞ 
+
+> t=1
+
+γt−1(c(st, a t) + h(π(·| st))) | s1 = s′
+
+= ( c(s, a ) + h(π(·| s))) 2
+
+| {z }
+
+> A
+
++γ2 P 
+
+> a∈A,s ′∈S
+
+π(a|s)Ps,a (s′)Σπ (s′) +  V π (s′)2
+
++ 2 γ(c(s, a ) + h(π(·| s))) P 
+
+> a∈A,s ′∈S
+
+π(a|s)Ps,a (s′)V π (s′)
+
+| {z }
+
+> B
+
+, (6.4) where the last equality utilizes (6.1). In (6.4), since we know that 
+
+A + B =  c(s, a ) + h(π(·| s)) + γ P 
+
+> a∈A,s ′∈S
+
+π(a|s)Ps,a (s′)V π (s′)2 −  γ P 
+
+> a∈A,s ′∈S
+
+π(a|s)Ps,a (s′)V π (s′)2
+
+=  V π (s)2 − γ2  P  
+
+> s′∈S
+
+Pπ (s, s ′)V π (s′)2, (6.5) then incorporating (6.5) into (6.4) yields 
+
+Eπ
+
+h P ∞ 
+
+> t=0
+
+γt(c(st, a t) + h(π(·| st))) 2 | s0 = s
+
+i
+
+=  V π (s)2 + γ2 P 
+
+> s′∈S
+
+Pπ (s, s ′)Σπ (s′) + 
+
+h
+
+γ2 P 
+
+> s′∈S
+
+Pπ (s, s ′) V π (s′)2 − γ2  P  
+
+> s′∈S
+
+Pπ (s, s ′)V π (s′)2i
+
+=  V π (s)2 + γ2Pπ (s, ·)Σπ + γ2σπV π . (6.6) Therefore, (6.3) holds by combining (6.1) and (6.6). It then follows from (6.3) that 
+
+γ2(I − γ2Pπ )−1σπV π = Σπ ≤ (1+ ¯h)2 
+
+> (1 −γ)2
+
+· 1S, (6.7) where the inequality uses the definition of Σπ in (6.1). Finally, we directly apply [28, Lemma C.3] to (6.7) and obtain 
+
+(I − γPπ )−1pσπV π 
+
+> 2
+> ∞
+
+≤ 1+ γ 
+
+> 1−γ
+
+(I − γ2Pπ )−1σπV π ∞ ≤ (1+ ¯h)2(1+ γ) 
+
+> γ2(1 −γ)3
+
+. (6.8) This completes the proof. 
+
+Proof of Lemma 8 (b) First, for any epoch k ∈ { 1, 2, ..., K − 1} of Algorithm 2, let us denote m = mk, 1, π =
+
+π0, V = V π0 , ˜V = V0 and ˜P = ˜P 0 for notational simplicity. According to the definitions V = cπ + γPπ V + h(π)and ˜V = cπ + γ ˜Pπ ˜V + h(π), we can obtain ˜V − V = γ(I − γPπ )−1(˜Pπ − Pπ ) ˜V . (6.9) Notice that the dependence between ˜P and ˜V prevents us from directly applying Lemma 6(2) to bound the error term ( ˜Pπ − Pπ ) ˜V on the right-hand side of (6.9). To handle this difficulty, we adopt and develop the result in [23]. Specifically, we separate (6.9) as ˜V − V = γ(I − γPπ )−1(˜Pπ − Pπ )V + ( ˜Pπ − Pπ )( ˜V − V ), (6.10) where ( ˜Pπ − Pπ )V can be bounded using Lemma 6(2), and we focus on the term ( ˜Pπ − Pπ )( ˜V − V ). To properly decouple the dependence between ˜P and ˜V , for every ( s, a ) ∈ S × A, we define a perturbed probability transition kernel bP(s,a ) by 
+
+bP(s,a ) 
+
+> s′,a ′
+
+:= 
+
+(˜Ps′,a ′ if ( s′, a ′)̸ = ( s, a ); 
+
+Ps′,a ′ otherwise (6.11) 25 
+
+for all ( s, a ) ∈ S × A. Accordingly, we define 
+
+bV (s,a ) :=  I − γbP(s,a )
+
+> π
+
+−1(cπ + h(π)) (6.12) so that bV (s,a ) = cπ + γbP(s,a ) 
+
+> π
+
+bV (s,a ) + h(π) is satisfied, where bP(s,a ) 
+
+> π
+
+∈ R|S|×| S| is defined by 
+
+bP(s,a ) 
+
+> π
+
+(s1, s 2) := P 
+
+> a′∈A
+
+π(a′|s1)bP(s,a )(s2|s1, a ′). (6.13) for all s1, s 2 ∈ S. Next, we further decouple the term ( ˜Pπ −Pπ )( ˜V −V ) in (6.10). Specifically, for any ( s, a ) ∈ S×A,we have (˜Ps,a − Ps,a )⊺( ˜V − V ) = ( ˜Ps,a − Ps,a )⊺  bV (s,a ) − V | {z }
+
+> A
+
++ ( ˜Ps,a − Ps,a )⊺  ˜V − bV (s,a )| {z }
+
+> B
+
+. (6.14) Since ˜Ps,a are independently computed for all ( s, a ) ∈ S×A, then in view of (6.11) and (6.13), bP(s,a ) 
+
+> π
+
+is independent of ˜Ps,a . As a consequence, bV (s,a ) computed from bP(s,a ) 
+
+> π
+
+(see (6.12)) is also independent of ˜Ps,a , and hence for the term A in (6.14), ˜Ps,a − Ps,a and bV (s,a ) − V are independent. Moreover, for the term B in (6.14), bV (s,a ) can be regarded as a perturbed policy value vector that is close to ˜V .Below we divide the rest of this proof into three parts. In the first two parts, we provide high probability bounds for A and B in (6.14), respectively. Then, utilizing these two bounds, we complete the proof of Lemma 8(2). 
+
+Bound for A in (6.14) Let us first consider the term A. Due to the independence between ˜Ps,a − Ps,a and 
+
+bV (s,a ) − V , we obtain from Lemma 6( a) that 
+
+|A| ≤ √2 bV (s,a ) − V ∞m− 12
+
+pln(6 |S|| A|δ−1) ≤ 14 (1 − γ) bV (s,a ) − V ∞ (6.15) holds with probability at least 1 −δ/ (3 |S|| A|), where the second inequality utilizes m ≥ 32(1 −γ)−2pln(6 |S|| A|δ−1)by (4.20). In order to further derive an upper bound for |A| in terms of ∥ ˜V − V ∥∞, it follows from (6.15) that 
+
+(˜Ps,a − Ps,a )⊺ bV (s,a ) ≤ 14 (1 − γ) bV (s,a ) − V ∞ + (˜Ps,a − Ps,a )⊺V . (6.16) Moreover, by the equations ˜V = cπ + γ ˜Pπ ˜V + h(π) and bV (s,a ) = cπ + γbP(s,a ) 
+
+> π
+
+bV (s,a ) + h(π), we have ˜V − bV (s,a ) = γ(I − γ ˜Pπ )−1(˜Pπ − bP(s,a ) 
+
+> π
+
+) bV (s,a ) = γ(I − γ ˜Pπ )−1π(a|s)es(˜Ps,a − Ps,a )⊺ bV (s,a )
+
+= γπ (a|s)(˜Ps,a − Ps,a )⊺ bV (s,a )(I − γ ˜Pπ )−1es, (6.17) where the second equality holds due to the perturbation of bP(s,a ) 
+
+> π
+
+from ˜Pπ , and es ∈ R|S| has value 1 at entry s
+
+and 0 elsewhere. By (6.16) and (6.17), we have 
+
+˜V − bV (s,a ) 
+
+> ∞
+
+≤ (1 − γ)−1 (˜Ps,a − Ps,a )⊺ bV (s,a ) ≤ 14 bV (s,a ) − V ∞ + (1 − γ)−1 (˜Ps,a − Ps,a )⊺V . (6.18) It then follows from (6.18) that 
+
+bV (s,a ) − V ∞ ≤ bV (s,a ) − ˜V ∞ + ∥ ˜V − V ∥∞ ≤ 14 bV (s,a ) − V ∞ + (1 − γ)−1 (˜Ps,a − Ps,a )⊺V + ∥ ˜V − V ∥∞,
+
+(6.19) which can be simplified as 
+
+bV (s,a ) − V ∞ ≤ 43
+
+∥ ˜V − V ∥∞ + (1 − γ)−1 (˜Ps,a − Ps,a )⊺V . (6.20) Combining (6.15) with (6.20), we obtain an upper bound for the term A in (6.14) as 
+
+|A| ≤ 13
+
+(1 − γ)∥ ˜V − V ∥∞ + (˜Ps,a − Ps,a )⊺V . (6.21) 26 
+
+Bound for B in (6.14) Next, we discuss an upper bound for the term B in (6.14). We first express the difference between ( I − γ ˜Pπ )−1 and ( I − γbP(s,a ) 
+
+> π
+
+)−1 using the Woodbury matrix identity, i.e., we define 
+
+M := ( I − γ ˜Pπ )−1 −  I − γbP(s,a )
+
+> π
+
+−1 = γπ (a|s) (I−γbP(s,a )     
+
+> π)−1es(˜ Ps,a −Ps,a )⊺(I−γbP(s,a )
+> π)−1
+> 1−γπ (a|s)(˜ Ps,a −Ps,a )⊺(I−γbP(s,a )
+> π)−1es
+
+, (6.22) which utilizes the fact I − γ ˜Pπ = ( I − γbP(s,a ) 
+
+> π
+
+) − π(a|s)γe s(˜Ps,a − Ps,a )⊺. Then, in view of (6.17), we express the term B in (6.14) as 
+
+B = ( ˜Ps,a − Ps,a )⊺  ˜V − bV (s,a ) = γπ (a|s)(˜Ps,a − Ps,a )⊺ bV (s,a )(˜Ps,a − Ps,a )⊺(I − γ ˜Pπ )−1es
+
+= γπ (a|s)(˜Ps,a − Ps,a )⊺ bV (s,a )(˜Ps,a − Ps,a )⊺  I − γbP(s,a )
+
+> π
+
+−1 + M es
+
+= γπ (a|s)(˜Ps,a − Ps,a )⊺ bV (s,a )(˜Ps,a − Ps,a )⊺ I − γbP(s,a )
+
+> π
+
+−1es
+
++ ( γπ (a|s)) 2(˜Ps,a − Ps,a )⊺ bV (s,a ) (˜ Ps,a −Ps,a )⊺ (I−γbP(s,a )     
+
+> π)−1es(˜ Ps,a −Ps,a )⊺(I−γbP(s,a )
+> π)−1es
+> 1−γπ (a|s)(˜ Ps,a −Ps,a )⊺(I−γbP(s,a )
+> π)−1es
+
+, (6.23) where the second equality follows from (6.17), and the third and fourth equalities use (6.22). Let x = ( ˜Ps,a −
+
+Ps,a )⊺(I − γbP(s,a ) 
+
+> π
+
+)−1es. Since bP(s,a ) 
+
+> π
+
+is independent of ˜Ps,a , Lemma 6( a) guarantees that 
+
+|x| ≤ √2m− 12
+
+pln(6 |S|| A|δ−1)  I − γbP(s,a )
+
+> π
+
+−1es ∞ ≤ 14 (6.24) is satisfied with probability at least 1 −δ/ (3 |S|| A|), where the second inequality uses m ≥ 32(1 −γ)−2pln(6 |S|| A|δ−1)by (4.20). Then, it follows from (6.23) that 
+
+|B| = γπ (a|s)x + ( γπ (a|s)) 2 x2
+
+> 1−γπ (a|s)x
+
+ · (˜Ps,a − Ps,a )⊺ bV (s,a ) ≤ (˜Ps,a − Ps,a )⊺ bV (s,a ) · γπ (a|s)x
+
+> 1−γπ (a|s)x
+
+≤ 1/41−1/4 (˜Ps,a − Ps,a )⊺ bV (s,a ) = 13 (˜Ps,a − Ps,a )⊺ bV (s,a ) ≤ 13
+
+ |A| + (˜Ps,a − Ps,a )⊺V 
+
+≤ 19 (1 − γ)∥ ˜V − V ∥∞ + 49 (˜Ps,a − Ps,a )⊺V , (6.25) where the second inequality applies (6.24), the third inequality uses the definition of A in (6.14), and the last inequality follows from (6.21). 
+
+Proof for (4.21) in Lemma 8 Finally, in view of (6.14), and combining (6.21) and (6.25), we obtain 
+
+(˜Ps,a − Ps,a )⊺( ˜V − V ) ≤ | A| + |B| ≤ 49 (1 − γ) ˜V − V ∞ + 79 (˜Ps,a − Ps,a )⊺V . (6.26) Note that by taking a union bound for the events (6.15) and (6.24) over all the state-action pairs ( s, a ) ∈
+
+S × A, (6.26) holds for all ( s, a ) ∈ S × A with probability at least 1 − (2 /3) δ. Then (6.10) together with (6.26) yields 
+
+∥ ˜V − V ∥∞ ≤ (I − γPπ )−1(˜Pπ − Pπ )V + ( ˜Pπ − Pπ )( ˜V − V )
+
+> ∞
+
+≤ 49 ∥ ˜V − V ∥∞ + 16 9 (I − γPπ )−1 |(˜P − P)V |, π ∞, (6.27) where |(˜P − P)V | denotes element-wise absolute value of ( ˜P − P)V . Hence, it follows from (6.27) that 
+
+˜V − V ∞ ≤ 16 5 γ (I − γPπ )−1 |(˜P − P)V |, π ∞
+
+≤ 16 5 γ (I − γPπ )−1 √2m−1/2pln(6 |S|| A|δ−1)√σV , π + 23 ∥V ∥∞m−1 ln(6 |S|| A|δ−1) · 1S
+
+
+
+> ∞
+
+≤ 16 √25 γm − 12
+
+pln(6 |S|| A|δ−1) (I − γPπ )−1 ⟨√σV , π ⟩ ∞ + 23 (1 − γ)−1∥V ∥∞m−1 ln(6 |S|| A|δ−1)
+
+≤ 16 √25 γpln(6 |S|| A|δ−1) × 
+
+> √2(1+ ¯h)
+> γ(1 −γ)3/2
+
+× m− 12 + 23 (1 − γ)−1 ln(6 |S|| A|δ−1) × 1+ ¯h 
+
+> 1−γ
+
+× m−1 ≤ 12 u + 12 u = u
+
+(6.28) holds with probability at least 1 − δ, where the second inequality applies Lemma 6( b) and takes a union bound over the probability 1 − δ/ (3 |S|| A|) for all ( s, a ) ∈ S × A, as well as the 1 − (2 /3) δ probability of (6.27), the fourth inequality utilizes Lemma 7, (4.18) and ∥V ∥∞ ≤ (1 + ¯h)/(1 − γ), and the last inequality follows from 
+
+m ≥ 200(1 + ¯h)2(1 − γ)−3u−2 ln(6 |S|| A|δ−1) by (4.20) and u ≤ (1 + ¯h)/(1 − γ). We then conclude from (6.26) and (6.28) that for any ( s, a ) ∈ S × A,
+
+(˜Ps,a − Ps,a )⊺ ˜V ≤ (˜Ps,a − Ps,a )⊺( ˜V − V ) + (˜Ps,a − Ps,a )⊺V ≤ 49 (1 − γ)∥ ˜V − V ∥∞ + 16 9 (˜Ps,a − Ps,a )⊺V
+
+≤ 49 (1 − γ)u + 16 9
+
+√2m−1/2pln(6 |S|| A|δ−1)pσV (s, a ) + 23 ∥V ∥∞m−1 ln(6 |S|| A|δ−1)
+
+≤ 49 (1 − γ)u + 16 9
+
+ 110(1+ ¯h) (1 − γ) 32 upσV (s, a ) + 1300 (1 − γ)u ≤ 12
+
+ (1 −γ)1/2
+
+> 1+ ¯h
+
+pσV (s, a ) + 1 (1 − γ)u, (6.29) 27 
+
+where the second inequality follows from (6.26), the third inequality utilizes (6.28) and the error bound used in the second inequality of (6.28) obtained from Lemma 6( b), and the fourth inequality applies m ≥ 200(1 + ¯h)2(1 −
+
+γ)−3u−2 ln(6 |S|| A|δ−1) by (4.20) and ∥V ∥∞ ≤ (1 + ¯h)/(1 − γ). We conclude this proof of Lemma 8( b) by combining (6.28) and (6.29). 
+
+References 
+
+1. Alekh Agarwal, Sham Kakade, and Lin F Yang. Model-based reinforcement learning with a generative model is minimax optimal. In Conference on Learning Theory , pages 67–83. PMLR, 2020. 2. Richard Bellman. A markovian decision process. Journal of mathematics and mechanics , 6(5):679–684, 1957. 3. Dimitri P Bertsekas. Approximate policy iteration: A survey and some new methods. Journal of Control Theory and Applications , 9(3):310–335, 2011. 4. Yichen Chen and Mengdi Wang. Stochastic primal-dual methods and sample complexity of reinforcement learning. 
+
+arXiv preprint arXiv:1612.02516 , 2016. 5. Matthieu Geist, Bruno Scherrer, and Olivier Pietquin. A theory of regularized markov decision processes. In Interna-tional conference on machine learning , pages 2160–2169. PMLR, 2019. 6. Mohammad Gheshlaghi Azar, R´ emi Munos, and Hilbert J Kappen. Minimax pac bounds on the sample complexity of reinforcement learning with a generative model. Machine learning , 91(3):325–349, 2013. 7. Tuomas Haarnoja, Haoran Tang, Pieter Abbeel, and Sergey Levine. Reinforcement learning with deep energy-based policies. In International conference on machine learning , pages 1352–1361. PMLR, 2017. 8. Wassily Hoeffding. Probability inequalities for sums of bounded random variables. Journal of the American statistical association , 58(301):13–30, 1963. 9. Ronald A Howard. Dynamic programming and markov processes. John Wiley, 1960. 10. Caleb Ju and Guanghui Lan. Policy optimization over general state and action spaces. arXiv preprint arXiv:2211.16715 ,2022. 11. Caleb Ju and Guanghui Lan. Strongly-polynomial time and validation analysis of policy gradient methods. arXiv preprint arXiv:2409.19437 , 2024. 12. Caleb Ju and Guanghui Lan. Auto-exploration for online reinforcement learning. arXiv preprint arXiv:2512.06244 ,2025. 13. Georgios Kotsalis, Guanghui Lan, and Tianjiao Li. Simple and optimal methods for stochastic variational inequalities, i: Operator extrapolation. SIAM Journal on Optimization , 32(3):2041–2073, 2022. 14. Michail G Lagoudakis and Ronald Parr. Least-squares policy iteration. Journal of machine learning research ,4(Dec):1107–1149, 2003. 15. Guanghui Lan. First-order and stochastic optimization methods for machine learning , volume 1. Springer, 2020. 16. Guanghui Lan. Policy mirror descent for reinforcement learning: Linear convergence, new sampling complexity, and generalized problem classes. Mathematical programming , 198(1):1059–1106, 2023. 17. Tianjiao Li, Guanghui Lan, and Ashwin Pananjady. Accelerated and instance-optimal policy evaluation with linear function approximation. SIAM Journal on Mathematics of Data Science , 5(1):174–200, 2023. 18. Tianjiao Li, Feiyang Wu, and Guanghui Lan. Stochastic first-order methods for average-reward markov decision pro-cesses. Mathematics of Operations Research , 50(4):3125–3160, 2025. 19. Yan Li and Guanghui Lan. Policy mirror descent inherently explores action space. SIAM Journal on Optimization ,35(1):116–156, 2025. 20. Yan Li, Guanghui Lan, and Tuo Zhao. First-order policy optimization for robust markov decision process. arXiv preprint arXiv:2209.10579 , 2022. 21. Pascal Massart. Concentration inequalities and model selection: Ecole d’Et´ e de Probabilit´ es de Saint-Flour XXXIII-2003 . Springer, 2007. 22. R´ emi Munos and Andrew Moore. Influence and variance of a markov chain: Application to adaptive discretization in optimal control. In Proceedings of the 38th IEEE Conference on Decision and Control (Cat. No. 99CH36304) ,volume 2, pages 1464–1469. IEEE, 1999. 23. Ashwin Pananjady and Martin J Wainwright. Instance-dependent l∞-bounds for policy evaluation in tabular reinforce-ment learning. IEEE Transactions on Information Theory , 67(1):566–585, 2020. 24. Martin L Puterman. Markov decision processes: discrete stochastic dynamic programming . John Wiley & Sons, 2014. 25. John Schulman, Sergey Levine, Pieter Abbeel, Michael Jordan, and Philipp Moritz. Trust region policy optimization. In International conference on machine learning , pages 1889–1897. PMLR, 2015. 26. John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algo-rithms. arXiv preprint arXiv:1707.06347 , 2017. 27. Lloyd S Shapley. Stochastic games. Proceedings of the national academy of sciences , 39(10):1095–1100, 1953. 28. Aaron Sidford, Mengdi Wang, Xian Wu, Lin Yang, and Yinyu Ye. Near-optimal time and sample complexities for solving markov decision processes with a generative model. Advances in Neural Information Processing Systems , 31, 2018. 29. Aaron Sidford, Mengdi Wang, Xian Wu, and Yinyu Ye. Variance reduced value iteration and faster algorithms for solving markov decision processes. Naval Research Logistics (NRL) , 70(5):423–442, 2023. 30. Matthew J Sobel. The variance of discounted markov decision processes. Journal of Applied Probability , 19(4):794–802, 1982. 31. Mengdi Wang. Primal-dual π learning: Sample complexity and sublinear run time for ergodic markov decision problems. 
+
+arXiv preprint arXiv:1710.06100 , 2017. 32. Christopher JCH Watkins and Peter Dayan. Q-learning. Machine learning , 8(3):279–292, 1992. 33. Wenhao Zhan, Shicong Cen, Baihe Huang, Yuxin Chen, Jason D Lee, and Yuejie Chi. Policy mirror descent for regularized reinforcement learning: A generalized framework with linear convergence. SIAM Journal on Optimization ,33(2):1061–1091, 2023.

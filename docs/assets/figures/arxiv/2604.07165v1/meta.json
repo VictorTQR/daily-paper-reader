@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-001.webp",
+      "caption": "Table 1: Performance on interactive and embodied tasks. Success rate (%) for ALFWorld subtasks and score/success for WebShop. T-STAR consistently outperforms across all baselines and architectures.",
+      "page": 6,
+      "index": 1,
+      "width": 721,
+      "height": 608
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-002.webp",
+      "caption": "Figure 5: Training dynamics on (a) ALFWorld, (b) WebShop, and (c) Multi-hop QA. T-STAR achieves faster convergence and higher final performance. Shaded regions indicate standard deviation across three seeds.",
+      "page": 6,
+      "index": 2,
+      "width": 940,
+      "height": 261
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-003.webp",
+      "caption": "Table 3: Performance on logical planning tasks. T-STAR enables recovery from dead-ends through thought grafting.",
+      "page": 7,
+      "index": 3,
+      "width": 461,
+      "height": 432
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-004.webp",
+      "caption": "Table 2: Performance on search-augmented QA tasks (Exact Match). T-STAR shows largest gains on multi-hop reasoning. Best performance (highlighted in bold) is always achieved by T-STAR.",
+      "page": 7,
+      "index": 4,
+      "width": 775,
+      "height": 650
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-005.webp",
+      "caption": "Table 7: Dataset statistics across four task categories.",
+      "page": 14,
+      "index": 5,
+      "width": 385,
+      "height": 315
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-006.webp",
+      "caption": "Figure 2: Overview of T-STAR. Given M sampled trajectories per task, T-STAR consolidates them into a Cognitive Tree by merging functionally equivalent nodes, then computes structural values via Bellman backup that propagate downstream success rates to intermediate nodes. This enables trajectory stitching where successful reasoning steps receive appropriate credit even within failed rollouts. At divergence points where children exhibit large value differences, the agent performs self-rectification by generating corrective reasoning that transfers successful logic to failed contexts, producing preference pairs for surgical policy optimization.",
+      "page": 3,
+      "index": 6,
+      "width": 943,
+      "height": 255
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-007.webp",
+      "caption": "Figure 3: Thought grafting mechanism. At divergence points identified by large value spreads among children, the agent observes contrasting outcomes between successful and failed branches, then generates rectified reasoning that transfers the successful logic to the failed context. The resulting preference pairs provide steplevel supervision for surgical policy optimization.",
+      "page": 4,
+      "index": 7,
+      "width": 453,
+      "height": 409
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07165v1/fig-008.webp",
+      "caption": "Figure 4: Training dynamics of T-STAR on WebShop and Sokoban, showing success rate, grafting coverage and anchor reuse, and value spread ∆V at divergence points across training iterations.",
+      "page": 5,
+      "index": 8,
+      "width": 450,
+      "height": 597
+    }
+  ]
+}

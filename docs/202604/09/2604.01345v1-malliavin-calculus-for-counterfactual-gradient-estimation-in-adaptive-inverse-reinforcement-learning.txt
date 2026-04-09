@@ -1,0 +1,998 @@
+Title: Malliavin Calculus for Counterfactual Gradient Estimation in Adaptive Inverse Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.01345v1
+
+Published Time: Fri, 03 Apr 2026 00:09:08 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Malliavin Calculus for Counterfactual Gradient Estimation in Adaptive Inverse Reinforcement Learning 
+
+Vikram Krishnamurthy, Luke Snow 
+
+Abstract — Inverse reinforcement learning (IRL) recovers the loss function of a forward learner from its observed responses. Adaptive IRL aims to reconstruct the loss function of a forward learner by passively observing its gradients as it performs reinforcement learning (RL). This paper proposes a novel passive Langevin-based algorithm that achieves adaptive IRL. The key difficulty in adaptive IRL is that the required gradients in the passive algorithm are counterfactual: they are conditioned on events of probability zero under the forward learner’s trajectory. Therefore, naive Monte Carlo estimators are prohibitively inefficient, and kernel smoothing, though common, suffers from slow convergence. We overcome this by employing Malliavin calculus to efficiently estimate the required counterfactual gradients; we reformulate the counterfactual conditioning as a ratio of unconditioned expectations involving Malliavin quantities, thus recovering standard estimation rates. We derive the necessary Malliavin derivatives and their adjoint Skorohod integral formulations for a general Langevin structure, and provide a concrete algorithmic approach which exploits these for counterfactual gradient estimation. 
+
+I. I NTRODUCTION 
+
+Inverse reinforcement learning (IRL) aims to estimate the loss function of optimizing agents by observing their actions (estimates). Classical IRL is off-line: given a data set of actions chosen according to the optimal policy of a Markov decision process, [ 1] formulated a set of inequalities that the loss function must satisfy. This paper constructs and analyzes an adaptive (real time) IRL algorithm by observing optimizing agents that are performing real time reinforcement learning (RL). The problem we consider is this: Suppose we observe estimates of multiple (randomly initialized) stochastic gradient algorithms (reinforcement learners) that maximize a (possibly non-convex) loss. How to design another stochastic gradient algorithm (inverse learner) to estimate the loss function? Existing techniques for adaptive IRL [ 2], [ 3], [ 4 ] in-corporate the agent’s learning dynamics through a passive 
+
+kernel-based passive Langevin dynamics, which converges asymptotically to a stationary measure encoding the loss function L to be learned; this allows for adaptive IRL through Markov chain Monte Carlo (MCMC) sampling of the stationary measure of this passive Langevin chain. Similar passive schemes and stochastic approximation analyses have been investigated in [3], [5], [6], [7]. In this work we propose an enhanced alternative to these kernel-based passive Langevin algorithms: we derive  
+
+> This research was supported in part by the National Science Foundation grants CCF-2312198 and Army Research Office grant W911NF-24-1-0083. Luke Snow
+
+las474@cornell.edu , and Vikram Krishnamurthy 
+
+vikramk@cornell.edu are with the School of Electrical and Com-puter Engineering, Cornell University, Ithaca, NY 14853, USA 
+
+a Malliavin calculus-based counterfactual gradient estimate which replaces the passive kernel. This allows us to bypass kernel bandwidth scale limitations and compute the necessary Langevin gradient directly from the mis-specified dynamics of the learning agent. In this sense we evaluate a counterfactual 
+
+gradient 1: we observe only gradient dynamics from the agent’s learning trajectory and we compute from this the loss gradient at a distinct point which is not observed in the trajectory. This counterfactual estimate is formulated as an expected gradient conditioned on the measure-zero event that the learning trajectory passes through our distinct evaluation point; this conditioning prohibits classical Monte Carlo since the conditioning event has zero probability. We exploit tools from Malliavin calculus to reformulate this conditional expected gradient as a ratio of unconditioned expectations involving Malliavin derivatives and their adjoint Skorohod integrals of the observed learning dynamics; thus, recovering classical Monte Carlo estimation rates even in this rare or measure-zero event regime. This efficient reformulation is enabled by 
+
+exploitation of the structure of the learning dynamics through the Malliavin quantities. This Malliavin-based gradient estimator then enables adaptive IRL by replacing the kernel-based Langevin gradient in existing techniques [ 2], [ 4]. Compared to sequential MCMC approaches, which suffer from particle degeneracy, require large ensembles, and exhibit variance explosion over long time horizons, the Malliavin calculus method of [ 9] yields unbiased Monte Carlo estimators for the counterfactual conditional expectations that achieve the optimal √N convergence rate independent trajectories of the Langevin dynamics, without resampling or kernel smoothing. To give additional context, estimating a loss function given the response of agents is studied in the area of revealed preferences in microeconomics [ 10 ], [ 11 ]. In comparison, the current paper uses misspecified gradients to recover the loss function in real time via a Langevin algorithm. The paper is organized as follows: Section II introduces our approach to adaptive IRL. Section III provides an introduction to Malliavin calculus, and presents the key conditional expec-tation reformulation which we exploit to achieve adaptive IRL. In Section IV we derive the full Malliavin-based algorithmic approach to adaptive IRL. Section V provides a numerical implementation of our algorithm, demonstrating effective counterfactual gradient computation and recovery of the forward learner’s loss function.         
+
+> 1Counterfactual gradient estimation asks: Given sample paths of Xtthat we cannot control, how can we evaluate ∇L(Xt)under the hypothetical condition that the sample paths Xtpass through specific point α[8].
+> arXiv:2604.01345v1 [cs.LG] 1 Apr 2026
+
+II. F ORWARD AND INVERSE LEARNER MODELS 
+
+We describe the adaptive IRL problem from two points of view: The forward learner that comprises multiple agents performing reinforcement learning (RL). These agents act sequentially to perform RL by using stochastic gradient algorithms to minimize a loss function. Second, we discuss the inverse learner that deploys a passive Langevin dynamics algorithm. We also motivate the counterfactual gradient estimation problem for the inverse learner. 
+
+A. Forward Learning Dynamics 
+
+We model the forward learner as a discrete stochastic gradi-ent Langevin dynamics (SGLD) with episodic re-initialization, as in [2], [4]. Let 
+
+0 = τ0 < τ 1 < τ 2 < · · · 
+
+denote stopping times, and suppose that at the beginning of each episode, 
+
+Xτi ∼ π0.
+
+For k ∈ { τi, τ i + 1 , . . . , τ i+1 − 1}, let Xk ∈ Rd follow 
+
+Xk+1 = Xk − ε b∇L(Xk) + √2ε ξ k+1 ,ξk+1 ∼ N (0 , I ), (1) where b∇L(Xk) is a noisy gradient estimate. This is an Euler-Maruyama discretization of the continuous Langevin diffusion. Indeed, under the standard two-time-scale averag-ing assumptions [revise. cite:JMLR], the piecewise-constant interpolation of (Xk) converges weakly, as ε → 0, to the Langevin diffusion 
+
+dX t = −∇ L(Xt) dt + √2 dW t, t ∈ [τi, τ i+1 ), (2) with re-initialization θτi ∼ π0 at each stopping time, and where W denotes d-dimensional standard Brownian motion. Thus, for the remainder we consider (2) as the continuous-time forward learning process, capturing the asymptotic slow time-scale behavior of its discrete SGLD recursion. The forward learner is designed to generate informative gradient samples across the state space rather than solely to converge to a minimizer of L. To this end, we employ gradient-based dynamics augmented with injected Langevin noise and random restarts. These mechanisms serve complementary roles: local stochastic perturbations regularize the dynamics and prevent collapse onto deterministic trajectories, while restarts provide occasional global reinitialization, ensuring sustained exploration over long horizons. This allows for global nonconvex optimization [ 12 ] and Bayesian posterior sampling [13], for instance. 
+
+B. Inverse Learning Dynamics 
+
+Next, we adopt the perspective of the inverse learner . The inverse learner observes the forward process (2) passively: the trajectory of the forward learner is not controlled, but instead the inverse learner seeks to reconstruct the unknown loss function L(·) from samples provided by the forward learner. The goal of the inverse learner is not merely to estimate the loss L at a single point, but to recover the loss function L(α)
+
+over the entire state space. The key idea is to estimate, for any chosen query point 
+
+α ∈ Rd, the gradient ˆ∇L(α) using only the observed forward trajectories. Once such pointwise gradient estimates are available, we may construct an inverse Langevin dynamics on the variable α:
+
+dα t = − ˆ∇L(αt) dt + p2β−1 dW t, (3) where β > 0 is an inverse-temperature parameter chosen by the designer. Under standard conditions (see Theorem 5), the diffusion (3) admits the Gibbs measure 
+
+π∞(·) ∝ exp  −βL (·) (4) as invariant distribution. Therefore, if we can simulate (3) ,or a consistent discretization of it, using estimated gradients, then samples from its stationary regime encode the unknown loss function itself. In particular, 
+
+L(α) ∝ − 1
+
+β log π∞(α). (5) 
+
+C. Estimating the Counterfactual Gradient 
+
+The central difficulty for the inverse learner is that the gradient needed in (3) is counterfactual . The forward learner generates trajectories (Xt)t⩾0 according to (2) , but the inverse learner requires the value of ∇L(α) at a designer-chosen point 
+
+α, which need not lie on the observed trajectory. To implement the adaptive IRL, we will compute 
+
+∇L(α) = E[∇L(Xs) | Xs = α]. (6) for some fixed evaluation time s ∈ [0 , τ ]. This equation can be re-expressed as the ratio 
+
+∇L(α) = E[∇L(Xs)δ(Xs − α)] 
+
+E[δ(Xs − α)] (7) where δ is the Dirac delta function. However, the event {Xs = α} has probability zero, so direct conditional Monte Carlo is infeasible. Existing passive IRL methods address this using kernel localization around α,but such estimates suffer from bandwidth selection and slow convergence in low-probability regions. In this work, we instead use the integration-by-parts formula in Malliavin calculus to integrate the delta function in (7) to a step function and simultaneously Malliavin-differentiate ∇L(Xs). This removes the singular conditioning event from the estimator and yields a computable expression based on pathwise quantities of the observed forward diffusion. These gradient estimates are then used in the outer Langevin dynamics (3) to recover the Gibbs law (4) , and hence the loss L(·).To summarize, the outcome of our Malliavin calculus approach is that we construct an efficient nonparametric estimate of the counterfactual gradient (6) , which enables adaptive IRL through the Langevin dynamics (3). III. M ALLIAVIN CALCULUS APPROACH TO ESTIMATE 
+
+CONDITIONAL LOSS 
+
+In this paper, to achieve adaptive IRL, we will compute the conditional expectation (6) efficiently using tools in Malliavin calculus. This section briefly introduces the necessary tools. Malliavin calculus [ 14 ] was developed in the 1970s as a probabilistic method to prove H ¨ormander theorem for the solution of SDEs. It was later adapted in mathematical finance to compute sensitivities (Greeks) of option prices. Here, as in [ 15 ], [ 9], [ 16 ], we employ Malliavin calculus to efficiently 
+
+evaluate the conditional loss E{ℓ(Xθ )|g(Xθ ) = 0 }, even when the conditioning event {g(Xθ ) = 0 } has vanishing or zero probability. 
+
+A. Preliminaries. Malliavin Calculus. 
+
+We recall the two central objects. 
+
+1) Malliavin derivative: Consider the probability space 
+
+(Ω , F, P) with a d-dimensional Brownian motion W =(W 1, . . . , W d) and the natural filtration {F t}t⩾0. For a smooth functional F of W , the Malliavin derivative DtF is defined as the process measuring the infinitesimal sensitivity of F to perturbations of the Brownian path at time t. Formally, for cylindrical random variables of the form 
+
+F = f
+
+ Z T
+
+> 0
+
+h1(s) dW s, . . . , 
+
+Z T
+
+> 0
+
+hn(s) dW s
+
+
+
+,
+
+with f ∈ C∞ 
+
+> b
+
+(Rn) and hi ∈ L2([0 , T ]; Rd), the derivative is 
+
+DtF =
+
+> n
+
+X
+
+> i=1
+
+∂f ∂x i
+
+ Z T
+
+> 0
+
+h1 dW, . . . , 
+
+Z T
+
+> 0
+
+hn dW 
+
+
+
+hi(t).
+
+The closure of this operator in Lp leads to the Sobolev space 
+
+D1,p of Malliavin differentiable random variables. 
+
+2) Skorohod integral: The adjoint of the Malliavin deriva-tive is the Skorohod integral , denoted S(u). Indeed, for a process u ∈ L2([0 , T ] × Ω; Rd), u is in the domain of S if there exists a square-integrable random variable S(u) such that for all F ∈ D1,2,
+
+E[F S(u)] = E
+
+"Z T
+
+> 0
+
+⟨DtF, u t⟩ dt 
+
+#
+
+. (8) The above adjoint relationship serves as the definition of the Skorohod integral can be written abstractly as 
+
+⟨F, S(u)⟩L2(Ω) = ⟨DF, u ⟩L2([0 ,T ]×Ω) .
+
+When u is adapted to the filtration {F t}t⩾0, the Skorohod integral S(u) coincides with the It ˆo integral R T 
+
+> 0
+
+ut dW t. In general, S(u) extends stochastic integration to non-adapted processes and is sometimes called the divergence operator .
+
+3) Integration by parts: The duality relation (8) yields the Malliavin integration-by-parts formula, which underpins many applications, including Monte Carlo estimation of conditional expectations and sensitivity analysis for SDEs (see [ 14 ], [ 15 ], [9]). 
+
+4) Computing Malliavin Derivative and Skorohod Integral: 
+
+The following properties are the key tools which allow us to compute the Malliavin derivative and Skorohod integral: 1) Malliavin derivative of diffusion . For {Xt}t⩾0 a diffu-sion process, the Malliavin derivative DsXt is [17] 
+
+DsXt = YtZsσ(Xs, s )1s⩽t (9) where Yt := ∇xXt is the Jacobian matrix and Zt is its inverse Zt := Y −1 
+
+> t
+
+. This, together with the Malli-avin chain rule [ 14 ], facilitates evaluating Malliavin derivatives of general functions of diffusions. 2) Skorohod expansion . For random variable F ∈ D1,2
+
+and Skorohod-integrable process v, we have [ 17 , eq. 2.2] (we use S instead of δ for the Skorohod integral to avoid notational clash with the Dirac delta function): 
+
+S(F v ) = F S(v) −
+
+Z T
+
+> 0
+
+DtF · vtdt (10) In general, the Skorohod integrand {ut}t∈[0 ,T ] of interest may be non-adapted. However, in the special case where u factorizes into the product of an adapted process v = {vt}t∈[0 ,T ] and an anticipative random variable F , this formula gives a constructive expression. Specifically, we can expand S(u) = S(F v ) using (10) and compute it in terms of a standard It ´o integral of the adapted part v together with the Malliavin derivative of the anticipatory random variable F .
+
+B. Malliavin Calculus for Conditional Expectation 
+
+In this section we present the general conditional expecta-tion reformulation using Malliavin calculus; we will exploit this in Section II as the key tool enabling our passive adaptive IRL algorithm. The following main result expresses the conditional expec-tation (6) as the ratio of unconditional expectations. 
+
+Theorem 1: Assume ℓ(Xθ ), g (Xθ ) ∈ L2(Ω) and 
+
+Dtℓ(Xθ ), D tg(Xθ ) ∈ L2(Ω × [0 , T ]) . Then the following conditional expectation reformulation holds 
+
+E[ℓ(Xθ ) | g(Xθ ) = 0] = Eθ
+
+> 1
+
+Eθ
+
+> 2
+
+where 
+
+Eθ 
+
+> 1
+
+= E
+
+
+
+1{g(Xθ )>0} ℓ(Xθ )S(u) −
+
+Z T
+
+> 0
+
+(Dtℓ(Xθ )) utdt 
+
+! 
+
+Eθ 
+
+> 2
+
+= E[1{g(Xθ )>0}S(u)] 
+
+(11) Here u is any process that satisfies 
+
+Z T
+
+> 0
+
+Dtg(Xθ )ut = 1 almost surely (12) 
+
+Proof outline : We start with (11) and write S(g(Xθ )) as 
+
+S(G). Then, by the Malliavin chain rule, the adjoint relation (8) and the Skorohod integrand condition (12), we have 
+
+E[ℓ(Xθ ) S(G)] = E
+
+"Z T
+
+> 0
+
+(Dt(ℓ(Xθ )) 1{g(Xθ )>0})) ut dt 
+
+#
+
+= E
+
+h
+
+1{g(Xθ )>0} ℓ(Xθ )S(u) −
+
+Z T
+
+> 0
+
+(Dtℓ(Xθ )) ut dt 
+
+! i
+
+.
+
+The denominator in (11) can be derived similarly. 
+
+Remarks: (i) There is considerable flexibility in the choice of u in the above theorem. The canonical choice is: For g(Xθ ) ∈ D1,2 with Malliavin derivative Dg (Xθ ) = 
+
+{Dtg(Xθ )}t∈[0 ,T ] ∈ L2(Ω; H), choose (see [14]) 
+
+ut = Dtg(Xθ )
+
+∥Dg (Xθ )∥2
+
+> H
+
+, t ∈ [0 , T ] (13) where H is the Cameron–Martin space with norm 
+
+∥h∥2 
+
+> H
+
+:= 
+
+Z T
+
+> 0
+
+|h(t)|2 dt. 
+
+The choice (13) ensures that u ∈ H and is always well-defined. However, in certain special cases one may use simpler (though less general) expressions. For example if Dtg(Xθ )̸ =0 a.e., one can choose 
+
+ut =
+
+( 1  
+
+> T D tg(Xθ)
+
+Dtg(Xθ )̸ = 0 1 Dtg(Xθ ) = 0 . (14) But one has to be careful with the choice (20) . For g(Xθ ) = R t 
+
+> 0
+
+Wsds , then Dtg(Xθ ) = T − t so that ut = 1  
+
+> T D tg(Xθ)
+
+=   
+
+> 1
+> T(T−t)
+
+/∈ H. In comparison, choosing u according to (13) yields ut = 3( T − t)/T 3 ∈ H.(ii) The representation (11) requires evaluation of Malliavin derivatives and Skorohod integrals, see [ 17 ] for several examples. There are several important consequences. First, it restores the N −1/2 Monte–Carlo convergence rate even under singular conditioning, as the event {g(Xθ ) = 0 } no longer needs to be sampled directly. Second, the estimator admits substantial variance–reduction flexibility: the choice of localizing function (indicator versus smooth approximation) and of admissible weight process u strongly influence efficiency, with optimal choices characterizable via variational principles in Malliavin calculus. Third, the representation is compatible with standard discretizations of the forward SDE: the Malliavin derivatives DtXθ admit recursive Euler– Maruyama approximations, so one avoids additional kernel bandwidths or curse–of–dimensionality issues inherent in regression–based methods. IV. M ALLIAVIN ESTIMATOR IN PASSIVE IRL A LGORITHM 
+
+In this section we detail how the Malliavin calculus tools introduced in Section III can be used to evaluate the gradient 
+
+∇L(α) of the loss function L(α) (unknown to the inverse learner) at a point α given the forward learner’s evaluation (2) at a different point Xs. This counterfactual gradient evaluation is the key component allowing us to perform passive IRL: we embed this gradient estimate in a slower time-scale passive Langevin chain, from which we can recover L(·) in its entirety by MCMC sampling. For simplicity of notation and clarity of presentation, in this section we consider a one dimensional diffusion (2) .Multi-dimensional analogues are handled similarly, see [ 9]or [18]. 
+
+A. Computing conditional gradient (6) .
+
+Recall that the key to our passive learning procedure lies in computing (6) efficiently. We exploit the representation from Theorem 1 as: 
+
+L′(α) = E[L′(Xs) | Xs = α]= E [1Xs>α (L′(Xs)S(u) − ⟨ D(L′(Xs)) , u ⟩)] 
+
+E [1Xs>α S(u)] 
+
+(15) where 
+
+ut =
+
+( 1 
+
+> T D tXs
+
+, DtXs̸ = 0 1, DtXs = 0 s ∈ (0 , T ] (16) and s is a designer-specified evaluation time. Recall that the sample paths from (2) we (as the inverse learner) observe are 
+
+{Xt, L ′(Xt), L ′′ (Xt)}t∈[0 ,τ i], i = 0 , 1, . . . (17) where τi are measurable stopping times. 
+
+B. Malliavin Derivative and Skorohod Integral for Langevin Dynamics 
+
+We now present explicit formulations of the necessary Malliavin quantities arising in the numerator and denominator of (15) , which are computable from (17) . Specifically, we compute the quantities DtXs, ut, and S(u) appearing in (15) and (16) , exploiting the Langevin structure of the forward process (2). 
+
+Lemma 2 (Malliavin derivative of the Langevin Diffusion): 
+
+Let (Xt)t⩾0 satisfy 
+
+dX t = −L′(Xt) dt + √2 dW t, X0 = x. (18) Then, for 0 ⩽ t ⩽ s,
+
+DtXs = √2 exp 
+
+
+
+−
+
+Z st
+
+L′′ (Xu) du 
+
+
+
+1{t≤s}. (19) 
+
+Proof: See Appendix VII-B.1 To apply the Malliavin reformulation (15) , we require a process u satisfying 
+
+Z T
+
+> 0
+
+DtXs ut dt = 1 a.s. A convenient choice is the following. 
+
+Lemma 3 (Choice of Skorohod Integrand): The choice of 
+
+ut in (16) can now be written explicitly as 
+
+ut = 1
+
+√2T exp 
+
+Z st
+
+L′′ (Xu) du 
+
+
+
+, 0 ≤ t ≤ T. (20) Equivalently, ut = Γ vt with 
+
+Γ = exp 
+
+Z s
+
+> 0
+
+L′′ (Xu) du 
+
+
+
+,vt = 1
+
+√2T exp 
+
+
+
+−
+
+Z t
+
+> 0
+
+L′′ (Xu) du 
+
+
+
+.
+
+(21) Here Γ is anticipative, while v is adapted. 
+
+Proof: This follows immediately. 
+
+C. Computing Skorohod integral S(u)
+
+Now, by (21) , and recalling (10) , we may compute S(u)
+
+using (10) 
+
+S(u) = Γ S(v) −
+
+Z T
+
+> 0
+
+DtΓ · vtdt 
+
+where S(v) is a standard It ´o integral. However, recall that we only have access to first L′(Xt) and second order 
+
+L′′ (Xt) derivatives. We now introduce a simple trick. Naively computing DtΓ gives 
+
+DtΓ = Γ 
+
+Z s
+
+> 0
+
+L′′′ (Xu)DtXudu 
+
+which relies on L′′′ . Instead, we show below that we can express DtΓ only in terms of L′(Xt), L′′ (Xt).
+
+Lemma 4: 
+
+S(u) = Γ S(v) −
+
+Z T
+
+> 0
+
+DtΓ · vtdt (22) where 
+
+Γ = exp 
+
+Z s
+
+> 0
+
+L′′ (Xu)du 
+
+
+
+DtΓ = 
+
+Z s
+
+> 0
+
+˜Γu [dL ′(Xu) − L′′ (Xu)dX u]
+
+vt = 1
+
+√2T exp 
+
+
+
+−
+
+Z t
+
+> 0
+
+L′′ (Xu)du 
+
+
+
+Proof: See Appendix VII-B.3. Thus, we may compute (15) directly using (22) and 
+
+D(L′(Xs)) , u ⟩ =
+
+Z s
+
+> 0
+
+L′′ (Xs)DtXsutdt 
+
+with ut in (20) and DtXs in (19). Next, we proceed from computation of gradient estimates at individual points α, through (15) , to a full passive learning procedure. This passive learning algorithm integrates these gradient estimates into the external Langevin chain (3) running on a slower time-scale, and converges to the Gibbs measure (4) proportional to exp( −βL (·)) , thus enabling recovery of L through MCMC. 
+
+D. Passive Learning by Malliavin Gradient Estimation 
+
+Now that we have constructed a principled way to evaluate the gradient ∇L(α) for any α, from only mis-specified forward process data (17) , we integrate these estimates into a slow time-scale Langevin dynamics to recover L(·)
+
+asymptotically as the potential function of the stationary Gibbs measure. Algorithm 1 displays the full passive learning procedure, implemented in discrete-time with gradient estimates eval-uated via Monte Carlo. The final loss estimate is recov-ered through the log-transform of empirical histogram ˆπ
+
+formed through MCMC samples. The following theorem demonstrates the asymptotic consistency of this reconstruction, i.e., that this discrete stochastic algorithm converges in an appropriate weak sense to the Langevin diffusion (3) which has (4) as its stationary measure. 
+
+Theorem 5 (Asymptotic consistency of Algorithm 1): 
+
+Assume that L is C2, and L′ is locally Lipschitz, and that L
+
+is confining in the sense that 
+
+L(α) → ∞ as |α| → ∞ , Z β := 
+
+Z
+
+> R
+
+e−βL (a) da < ∞. (23) Then, as k → ∞ , η → 0, and N → ∞ , the empirical law of 
+
+αk converges to π∞.
+
+Proof: The outline follows the standard SGLD scheme. First, as N → ∞ , the Malliavin Monte Carlo estimator 
+
+d∇L(α) converges to the true drift ∇L(α). Hence the outer recursion in Algorithm 1 is, for small η, an Euler–Maruyama discretization of the Langevin diffusion 
+
+dα t = −∇ L(αt) dt + p2β−1 dW t.
+
+Second, under the stated confining assumptions, this diffusion admits the Gibbs measure π∞(dα ) ∝ e−βL (α) dα as invariant law, and converges to it as t → ∞ . Therefore, letting first 
+
+N → ∞ and η → 0 and then k → ∞ , the empirical law of the outer chain converges to π∞. See Appendix VII-B.4 for more details and comments on finite-sample analysis. Hence, Algorithm 1 asymptotically recovers L(α) through 
+
+L(α) ∝ − β−1 log π∞(α) (24) In other words, the estimate ˆL(·) recovered through Algorithm 1 is consistent, in that it converges to the true loss (24) as k → ∞ , η → 0, N → ∞ .V. N UMERICAL EXAMPLE 
+
+We illustrate the passive inverse-learning procedure on the one-dimensional Langevin diffusion 
+
+dX t = −L′(Xt) dt + √2 dW t, (25) with hidden potential 
+
+L(x) = x4
+
+4 + x2
+
+2 , L′(x) = x3 + x, L′′ (x) = 3 x2 + 1 .
+
+(26) Specifically, we observe sample trajectories from (25) , and recover the loss (26) in its entirety, through our adaptive IRL approach. We first validate the Malliavin conditional-gradient estimator (15) at a prescribed conditioning time s, and then use these pointwise gradient estimates as inputs to the passive Langevin chain in Algorithm 1. Algorithm 1 Malliavin-based Adaptive Inverse Reinforcement Learning  
+
+> 1:
+
+Forward Learner: dX t = −L′(Xt)dt + √2dW t, t ∈ [0 , τ i], τi stopping time , i = 1 , 2, . . .  
+
+> 2:
+
+Observable Information: {Xt, L ′(Xt), ∇2L(Xt)}t∈[0 ,τ i], i = 1 , 2, . . .  
+
+> 3:
+
+Initialize α0 ∈ R, step-size η, inverse temperature β. 
+
+> 4:
+
+for k ∈ [0 , K ] do ▷ passive Langevin chain discrete updates  
+
+> 5:
+
+for i ∈ [0 , N ] do ▷ gradient estimator Monte-Carlo samples  
+
+> 6:
+
+Observe {Xt, L ′(Xt), L ′′ (Xt)}t∈[0 ,τ i] 
+
+> 7:
+
+Compute S(u) as in Lemma 4.  
+
+> 8:
+
+Compute D(L′(Xs)) , u ⟩ = R s 
+
+> 0
+
+L′′ (Xs)DtXsutdt , with DtXs in (19).  
+
+> 9:
+
+Evaluate numerator Ni and denominator Di of (15) with α = αk 
+
+> 10:
+
+end for  
+
+> 11:
+
+Compute N = 1
+
+> N
+
+PN 
+
+> i=1
+
+Ni, D = 1
+
+> N
+
+PN 
+
+> i=1
+
+Di as Monte-Carlo estimates of (15).  
+
+> 12:
+
+Assign bL′(αk) = N/D  
+
+> 13:
+
+αk+1 = αk − η bL′(αk) + p2ηβ −1wk, wk ∼ N (0 , 1) ▷ ⇒ π∞ ∝ exp( −βL (·))  
+
+> 14:
+
+if k ⩾ ˆk then : ▷ ˆk burn-in time  
+
+> 15:
+
+ˆπ.append( αk) ▷ Empirical histogram ˆπ of MCMC samples αk 
+
+> 16:
+
+end if  
+
+> 17:
+
+end for  
+
+> 18:
+
+ˆL(·) = − 1 
+
+> β
+
+log(ˆ π(·)) ▷ Final loss estimate 
+
+A. Simulation of Malliavin Quantities. 
+
+For each simulated path of (25) we store only the observ-able quantities (17) . We fix a conditioning time s = 0 .8. For each simulated path, we evaluate the Malliavin derivative using the explicit formula (19) . We then construct the reciprocal weight (20) , which factorizes as (21) , allowing us to compute the Skorohod weight via 
+
+S(u) = Γ S(v) −
+
+Z s
+
+> 0
+
+DtΓ vt dt, 
+
+where S(v) = R s 
+
+> 0
+
+vt dW t. The term DtΓ is computed pathwise using the identity 
+
+L′′′ (Xt) dt = dL ′(Xt) − L′′ (Xt) dX t, (27) so that no third derivative needs to be computed. 
+
+B. Monte Carlo gradient estimator. 
+
+For a fixed target location α, we estimate the numerator and denominator of the Malliavin ratio formula (15) by Monte Carlo averaging over the simulated paths: 
+
+bN (α) = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1{X(i) 
+
+> s>α }
+
+
+
+L′(X(i) 
+
+> s
+
+)S(u(i))
+
+−
+
+D
+
+D(L′(X(i) 
+
+> s
+
+)) , u (i)E
+
+,
+
+bD(α) = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1{X(i) 
+
+> s>α }
+
+S(u(i)),
+
+with ⟨D(L′(Xs)) , u ⟩ = R s 
+
+> 0
+
+L′′ (Xs)DtXsut dt. The resulting gradient estimate is 
+
+bL′(α) = bN (α)
+
+bD(α) . (28) Now we validate the numerical evaluation of (28) . We first evaluate bL′(α) on a grid of target points α ∈ [−1, 1] and compare it to the true gradient L′(α) = α3 + α (26) . This provides a direct check of the accuracy of the Malliavin reformulation before embedding it in the slower passive Langevin chain. Figure 1 compares this estimated gradient 
+
+bL′(α) against the ground truth L′(α) for N = 5000 simulated Monte Carlo paths. We see that there is a slight bias across α,due to the quotient form of the Malliavin gradient estimator (15) , but that otherwise the estimate has small error and tracks the true gradient across the domain. 
+
+C. MCMC Recovery of L(·)
+
+Having obtained pointwise estimates of the gradient L′(α)
+
+from the Malliavin conditional expectation formula, we next embed these estimates into the slow-time-scale inverse-learning chain proposed in Algorithm 1: 
+
+αk+1 = αk −η bL′(αk)+ p2ηβ −1 ξk, ξk ∼ N (0 , 1) , (29) where η > 0 is the outer step size and bL′(αk) is the Monte Carlo Malliavin estimator (28) obtained from the forward trajectories at the current target location αk.We initialize the outer chain at α0 ∈ R, evolve (29) for 
+
+2000 iterations, discard the first 300 samples as burn-in, and retain the remaining iterates {αk} as approximate MCMC samples from the stationary law of the inverse dynamics. Figure 2 compares the estimated gradient bL′(αk) with the true gradient L′(αk) along the outer Langevin trajectory. We observe that, for the majority of iterations, the Malliavin esti-mator tracks the true derivative closely, with only occasional outliers. We next compare the empirical histogram of the retained samples with the target Gibbs density 
+
+πβ (α) ∝ Z−1 
+
+> β
+
+exp( −βL (α)) , (30) where L is given by (26) . Figure 3 shows that the empirical stationary distribution of the outer chain closely matches Fig. 1. Estimated gradient bL′(α) versus the true gradient L′(α) over a grid of target locations α, using Monte Carlo estimation with sample size 
+
+N = 5000 .
+
+Fig. 2. Sequential gradient estimates bL′(α) versus the true gradient L′(α)
+
+across iterations of the outer passive Langevin chain (29) .Occasional outliers appear, yet the overall procedure recovers the target Gibbs distribution and hidden loss function accurately (see Figure 3 and 4) 
+
+the target Gibbs law. Finally, Figure 4 displays the loss reconstructed from the empirical histogram via 
+
+bL(α) = −β−1 log bπ(α),
+
+up to an additive constant. The reconstructed potential agrees closely with the true loss, confirming that the proposed passive learning procedure successfully recovers the underlying objective from observed stochastic gradient dynamics. VI. C ONCLUSION 
+
+We developed a Malliavin calculus-based framework for adaptive inverse reinforcement learning. The key tool is a reformulation of the counterfactual gradient required for passive IRL as a ratio of unconditional expectations. This avoids the measure-zero conditioning problem that plagues direct Monte Carlo and kernel-based methods. For Langevin forward dynamics, the requisite Malliavin derivative and Skorohod integral terms admit explicit expressions in terms of observed trajectories, producing a practical estimator that depends only on first- and second-order pathwise derivatives. Embedding this estimator within an outer Langevin chain yields a fully passive learning algorithm whose stationary distribution recovers the unknown loss. Numerical experi-ments confirm accurate gradient estimation, faithful recovery of the target Gibbs distribution, and effective reconstruction 
+
+Fig. 3. Empirical histogram of the stationary distribution of the Langevin chain {αk } (2000 MCMC steps after a 300 -step burn-in), compared with the target Gibbs density πβ (α) ∝ e−βL (α).
+
+Fig. 4. Adaptive IRL for reconstructing the loss function L(·) from MCMC samples of exp( −βL (·). Specifically, L(·) = − 1 
+
+> β
+
+log(ˆ π(·)) , where ˆπ(·)
+
+is the empirical MCMC distribution in Fig. 3. 
+
+of the hidden loss function. These results establish Malliavin-based counterfactual estimation as an efficient and scalable alternative to kernel-based approaches for passive IRL. 
+
+Note . The numerical results are fully reproducible with open-source python code available at 
+
+https://github.com/LukeSnow0/ .REFERENCES [1] A. Ng and S. Russell, “Algorithms for inverse reinforcement learning,” in International Conference on Machine Learning , 2000, pp. 663–670. [2] V. Krishnamurthy and G. Yin, “Langevin dynamics for adaptive inverse reinforcement learning of stochastic gradient algorithms,” Journal of Machine Learning Research , vol. 22, pp. 1–49, 2021. [3] ——, “Multikernel passive stochastic gradient algorithms and transfer learning,” IEEE Transactions on Automatic Control , vol. 67, no. 4, pp. 1792–1805, 2022. [4] L. Snow and V. Krishnamurthy, “Finite-sample bounds for adaptive inverse reinforcement learning using passive langevin dynamics,” IEEE Transactions on Information Theory , vol. 71, no. 6, pp. 4637–4670, 2025. [5] G. Yin and K. Yin, “Passive stochastic approximation with constant step size and window width,” IEEE Transactions on Automatic Control ,vol. 41, no. 1, pp. 90–106, 1996. [6] H. J. Kushner and G. Yin, Stochastic Approximation Algorithms and Recursive Algorithms and Applications , 2nd ed. Springer-Verlag, 2003. [7] A. V. Nazin, B. T. Polyak, and A. B. Tsybakov, “Passive stochastic approximation,” Automation and Remote Control , no. 50, pp. 1563– 1569, 1989. [8] V. Krishnamurthy and L. Snow, “Malliavin calculus with weak derivatives for counterfactual stochastic optimization,” arXiv preprint arXiv:2510.00297 , 2025. [9] B. Bouchard, I. Ekeland, and N. Touzi, “On the Malliavin approach to Monte Carlo approximation of conditional expectations,” Finance and Stochastics , vol. 8, no. 1, pp. 45–71, 2004. [10] S. N. Afriat, “Efficiency estimation of production functions,” Interna-tional economic review , pp. 568–598, 1972. [11] W. Diewert, “Afriat’s theorem and some extensions to choice under uncertainty,” The Economic Journal , vol. 122, no. 560, pp. 305–331, 2012. [12] M. Raginsky, A. Rakhlin, and M. Telgarsky, “Non-convex learning via stochastic gradient Langevin dynamics: a nonasymptotic analysis,” in 
+
+Conference on Learning Theory , 2017, pp. 1674–1703. [13] M. Welling and Y. W. Teh, “Bayesian learning via stochastic gradient Langevin dynamics,” in International Conference on Machine Learning ,2011, pp. 681–688. [14] D. Nualart, The Malliavin calculus and related topics . Springer, 2006. [15] E. Fourni ´e, J.-M. Lasry, J. Lebuchoux, and P.-L. Lions, “Applications of Malliavin calculus to Monte-Carlo methods in finance. II,” Finance and Stochastics , vol. 5, no. 2, pp. 201–236, 2001. [16] D. Crisan, K. Manolarakis, and N. Touzi, “On the Monte Carlo simulation of BSDEs: An improvement on the Malliavin weights,” 
+
+Stochastic Processes and their Applications , vol. 120, no. 7, pp. 1133– 1158, 2010. [17] E. Gobet and R. Munos, “Sensitivity analysis using Ito–Malliavin calculus and martingales, and application to stochastic optimal control,” 
+
+SIAM Journal on control and optimization , vol. 43, no. 5, pp. 1676– 1713, 2005. [18] A. Kohatsu-Higa and K. Yasuda, “Estimating multidimensional density functions using the malliavin–thalmaier formula,” SIAM Journal on Numerical Analysis , vol. 47, no. 2, pp. 1546–1575, 2009. 
+
+VII. A PPENDIX 
+
+A. Supporting Lemmas Lemma 6: L′′′ (Xt)dt = dL ′(Xt) − L′′ (Xt)dX t
+
+B. Proofs 1) Proof of Lemma 2: Let Ys := ∇xXs. Differentiating (18) with respect to the initial condition gives 
+
+Ys = 1 −
+
+Z s
+
+> 0
+
+∇2L(Xu)Yu du, 
+
+or equivalently 
+
+dds Ys = −∇ 2L(Xs)Ys, Y0 = 1 .
+
+Hence 
+
+Ys = exp 
+
+
+
+−
+
+Z s
+
+> 0
+
+∇2L(Xu) du 
+
+
+
+.
+
+2) Proof of Lemma 6: It´ o’s Lemma tells us that 
+
+dL ′(Xt) = ( L′′′ (Xt) − L′(Xt)L′′ (Xt)) dt + √2L′′ (Xt)dW t
+
+and furthermore we may write dW t as 
+
+dW t = ( dX t + L′(Xt)dt )/√2
+
+by definition of the forward Langevin dynamics. Thus, substituting and rearranging terms gives us 
+
+L′′′ (Xt)dt = dL ′(Xt) − L′′ (Xt)dX t
+
+3) Proof of Lemma 4: By Lemma 6, we may write out 
+
+DtΓ as 
+
+DtΓ = Γ 
+
+Z s
+
+> 0
+
+DtXu[dL ′(Xu) − L′′ (Xu)dX u]= √2Γ 
+
+Z s
+
+> 0
+
+exp 
+
+
+
+−
+
+Z ut
+
+L′′ (Xγ )dγ 
+
+
+
+[dL ′(Xu)
+
+− L′′ (Xu)dX u]
+
+Thus, 
+
+S(u) = Γ S(˜ u) −
+
+Z T
+
+> 0
+
+DtΓ · ˜utdt 
+
+= exp 
+
+Z s
+
+> 0
+
+L′′ (Xu)du 
+
+
+
+·
+
+Z T
+
+> 0
+
+1
+
+√2T exp 
+
+
+
+−
+
+Z t
+
+> 0
+
+L′′ (Xu)du 
+
+
+
+dW t
+
+−
+
+Z T
+
+> 0
+
+Γ
+
+Z s
+
+> 0
+
+exp 
+
+
+
+−
+
+Z ut
+
+L′′ (Xγ )dγ 
+
+
+
+[dL ′(Xu)
+
+− L′′ (Xu)dX u] · 1
+
+T exp 
+
+
+
+−
+
+Z t
+
+> 0
+
+L′′ (Xu)du 
+
+
+
+dt 
+
+(31) 
+
+4) Proof of Theorem 5: The main idea is as follows. By the law of large numbers, the empirical numerator and denominator in Algorithm 1 converge almost surely to their population counterparts, so the Malliavin estimator is consistent. Substituting this estimator into the outer update yields an Euler–Maruyama scheme, 
+
+αk+1 = αk −η d∇LN (αk)+ p2β−1η ξ k+1 , ξk+1 ∼ N (0 , 1) ,
+
+whose continuous-time interpolation converges weakly, as 
+
+N → ∞ and η → 0, to (3) by standard stochastic approximation results [ 6]. The stationary Fokker–Planck equation for (3) is 
+
+0 = ddα 
+
+ L′(α)ρ(α) + β−1 d2
+
+dα 2 ρ(α),
+
+and direct substitution shows that 
+
+ρ(α) = Z−1 
+
+> β
+
+e−βL (α)
+
+is a solution. The confining assumption (23) ensures normal-izability, so this defines the invariant measure π∞. Hence the limiting diffusion converges to π∞, and therefore the empirical law of the outer chain converges to π∞ as k → ∞ .
+
+Finite-sample perspective. A corresponding finite-sample analysis can follow the techniques in [ 4], [ 12 ]. Writing μk := 
+
+L(αk) for the discrete outer chain law, νkη := L(α(kη )) for the limiting diffusion law, and π∞ for its Gibbs stationary law, one decomposes the 2-Wasserstein distance 
+
+W2(μk, π ∞) ≤ W2(μk, ν kη ) + W2(νkη , π ∞).
+
+The first term is the diffusion-approximation error, controlled by comparing the Euler scheme to the limiting diffusion; the second is the diffusion-convergence error, controlled by ergodicity of the limiting diffusion, e.g. via log-Sobolev and entropy-decay arguments. In the asymptotic regime these two terms vanish, yielding μk ⇒ π∞ and hence 
+
+L(α) ∝ − β−1 log π∞(α).

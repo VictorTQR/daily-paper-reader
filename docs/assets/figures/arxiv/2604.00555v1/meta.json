@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-001.webp",
+      "caption": "Figure 1: Closed-loop neurosymbolic architecture. Solid arrows indicate implemented mechanisms; dashed arrows indicate proposed extensions.",
+      "page": 11,
+      "index": 1,
+      "width": 1038,
+      "height": 231
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-002.webp",
+      "caption": "Figure 4: C3 (Ontology) scores by industry and metric. Vietnamese industries (banking_vn, insurance_vn) show lower TF scores but strong RS, consistent with the inverse parametric knowledge effect.",
+      "page": 15,
+      "index": 2,
+      "width": 943,
+      "height": 202
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-003.webp",
+      "caption": "Table 4: Mean scores by industry and condition. Grand means are weighted by per-industry sample size (n); simple averages of the industry rows differ due to unequal n across industries.",
+      "page": 15,
+      "index": 3,
+      "width": 667,
+      "height": 212
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-004.webp",
+      "caption": "Table 3: Selected per-task scores (tested metric, mean of 3 reps). ∆ = C3 − C1.",
+      "page": 14,
+      "index": 4,
+      "width": 663,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-005.webp",
+      "caption": "Figure 3: Mean scores by condition for each metric (5 industries, 600 runs). MA and RS show the clearest separation between C1 and grounded conditions. High variance reflects task-level heterogeneity in LLM parametric knowledge across English and Vietnamese domains.",
+      "page": 14,
+      "index": 5,
+      "width": 943,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-006.webp",
+      "caption": "Figure 2: Four-metric profile by grounding condition (5 industries, 600 runs). C2 (RAG) and C3 (Ontology) both expand the profile relative to C1 (Ungrounded), with the largest gains on MA and RS. C4 (Ontology+Process) closely tracks C3.",
+      "page": 13,
+      "index": 6,
+      "width": 521,
+      "height": 454
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-007.webp",
+      "caption": "Table 1: Neurosymbolic Coupling Maturity Model",
+      "page": 8,
+      "index": 7,
+      "width": 661,
+      "height": 483
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-008.webp",
+      "caption": "Table 6: Complete evaluation task set (50 tasks, 10 per industry).",
+      "page": 20,
+      "index": 8,
+      "width": 721,
+      "height": 1078
+    },
+    {
+      "url": "assets/figures/arxiv/2604.00555v1/fig-009.webp",
+      "caption": "Table 5: Comparison of Grounding Approaches for Enterprise AI Agents",
+      "page": 16,
+      "index": 9,
+      "width": 625,
+      "height": 276
+    }
+  ]
+}

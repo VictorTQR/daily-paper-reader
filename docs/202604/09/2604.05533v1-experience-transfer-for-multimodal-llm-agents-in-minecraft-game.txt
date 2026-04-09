@@ -1,0 +1,436 @@
+Title: Experience Transfer for Multimodal LLM Agents in Minecraft Game
+
+URL Source: https://arxiv.org/pdf/2604.05533v1
+
+Published Time: Wed, 08 Apr 2026 00:40:19 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# Experience Transfer for Multimodal LLM Agents in Minecraft Game 
+
+Chenghao Li 1, Jun Liu 1, Songbo Zhang 1, Huadong Jian 1, Hao Ni 2,Lik-Hang Lee 3, Sung-Ho Bae 4, Guoqing Wang 1, Yang Yang 1, Chaoning Zhang 1∗???? ??
+
+“Although tools, weapons, and armor differ in materials (wood, stone, iron, diamond), the patterns in their crafting materials are consistent. Therefore, one can apply transfer learning based on the successfully crafted recipes, without needing to relearn the crafting recipe for each individual item.” 
+
++ =
+
++            
+
+> Reflection Process Chin Reuse “Given the process “ stone pickaxe →mine iron →smelt →iron pickaxe ,” we can analogically infer “ iron pickaxe →mine copper →smelt →copper pickaxe. ”In other words, the task structure remains the same, only the materials differ. This demonstrates how one can infer an unseen process from a remembered task sequence and engage in reflective practice.”
+
+mine craft craft smelt smelt mine 4 damage 
+
+5 damage 
+
+6 damage 
+
+More harm? 
+
+“The wooden sword deals 4 damage, the stone sword deals 5
+
+damage, and the iron sword deals 6 damage. 
+
+Is the diamond sword even stronger? 
+
+Assuming that the better material, the greater damage.” “A gray, rock-like surface with a stony texture, embedded with particles of various colors. 
+
+> Can these also be smelted to produce new materials? ”
+
+++
+
++ ? ???
+
+? ???
+
+? ??? 
+
+> “Memory: The central area is centered around a well or bell tower, surrounded by villagers’ houses. Farmland is usually located on the outskirts of the village or near water sources, growing crops such as wheat, carrots, potatoes, or beetroot. Some buildings, such as the grapher’s house or the library, may also contain resources like books and paper.”
+
+“Observe: In front of me is the village’s central well. To gather resourc es, I should.. .”    
+
+> “The surface is composed of horizontal wooden planks, with subtle gaps between each plank to create a sense of layered assembly. The differences lie in their colors: dark olive brown, pinkish brown, light taupe, pale khaki, reddish chestnut, ash white, dark mahogany, and dark umber. Same look, same function. ”“Each type of plank can be used individually to build a boat.”
+
+Figure 1. Conceptual illustration of Echo. The agent learns from experience and discovers transferable patterns, enabling interpretable analogy-based reasoning and cross-task generalization. In some classical methods, such as DEPS [44] and JARVIS-1 [45], ICL is mainly used to retrieve few-shots from the memory bank to assist in generating sub-task sequences for the current goal. Echo, on the other hand, treats ICL learning as an active process — it proactively retrieves potentially new tasks from the memory bank for validation and execution. 
+
+Abstract 
+
+Multimodal LLM agents operating in complex game envi-ronments must continually reuse past experience to solve new tasks efficiently. In this work, we propose Echo, a transfer-oriented memory framework that enables agents to derive actionable knowledge from prior interactions rather than treating memory as a passive repository of static records. To make transfer explicit, Echo decomposes reusable knowledge into five dimensions: structure, at-tribute, process, function, and interaction. This formulation allows the agent to identify recurring patterns shared across 
+
+∗ Corresponding author. 1University of Electronic Science and Tech-nology of China; 2KAIST; 3The Hong Kong Polytechnic University; 
+
+4Kyung Hee University. Project: https://github.com/CatworldLee/Echo 
+
+different tasks and infer what prior experience remains ap-plicable in new situations. Building on this formulation, Echo leverages In-Context Analogy Learning (ICAL) to re-trieve relevant experiences and adapt them to unseen tasks through contextual examples. Experiments in Minecraft show that, under a from-scratch learning setting, Echo achieves a 1.3 ×–1.7 × speed-up on object-unlocking tasks. Moreover, Echo exhibits a burst-like chain-unlocking phe-nomenon, rapidly unlocking multiple similar items within a short time interval after acquiring transferable experience. These results suggest that experience transfer is a promis-ing direction for improving the efficiency and adaptability of multimodal LLM agents in complex interactive environ-ments. 
+
+1
+
+> arXiv:2604.05533v1 [cs.AI] 7 Apr 2026
+
+1. Introduction 
+
+Driven by embodied intelligence and complex interactive tasks, planning-oriented multimodal large language model (MLLM) agents have rapidly emerged [36, 38, 42, 44, 45, 51, 58]. Representative works such as Voyager [42] and JARVIS-1 [45] in environments like Minecraft demonstrate open-ended exploration driven by a “perception-reasoning-action-memory” loop, where agents continuously self-improve through environmental feedback. These systems reveal the potential to decompose goals, plan subtasks, and invoke tools without large-scale task-specific supervision. Such agents [42, 45] typically integrate chain-of-thought reasoning from language models with environment inter-action trajectories to generate executable strategies, codes, and action sequences—paving the way for agents that move from “speaking” to “doing.” Alongside this trend, the demand for task memory and reasoning-based planning becomes particularly prominent. Long-term persistent memory enables an agent to reuse skills and support reasoning about the current task in com-plex scenarios [37, 42, 45]. Cross-modal perception en-ables fine-grained scene understanding [34]. Moreover, explainable reasoning–action coupling allows for hierar-chical planning [1] and self-verification [48] under uncer-tainty. Existing research has shown that explicit memory structures—such as spatiotemporal event indices [36], mul-timodal knowledge graphs [23], and structured graph mem-ories [16, 32]—together with retrieval augmentation (ex-tracting examples from historical trajectories, rules, and recipes) can significantly enhance retrieval efficiency, envi-ronmental understanding, and long-horizon planning stabil-ity, providing support for multi-step reasoning and strategy generation [42, 45]. However, despite the promising outlook, most existing methods still treat “transfer” only superficially. Memory is often regarded as a passive warehouse [7, 25, 42, 45, 61], an index of past behaviors, or a library of reusable skills [42, 45], while the deeper structures that enable experience to be truly transferable remain underexplored. Experience trans-fer lies at the heart of embodied intelligence [13, 42]. Once an agent has accumulated sufficient experience and mem-ory, it should be able to infer new knowledge from past experiences—many patterns repeat themselves in subtle, structural ways. Similar landscapes hide similar logic: the same crafting patterns, the same material hierarchies, the same causal chains linking raw resources to useful tools. In worlds like Minecraft, the “shape prototypes” of tools and armor, the “substitutability” among material families, the common processing chains (gathering → smelting → craft-ing), and even the functional symmetry between weapons all reveal recurring motifs of transfer. If such transfer axes-shape, material, process, and function—can be ex-plicitly represented and aligned with multimodal embed-1.3×Faster 1.7×Faster      
+
+> Rapid Unlocking
+> Tech Line
+> Figure 2. Comparison of item unlocking progress across differ-ent agents. The x-axis represents the iteration steps, and the y-axis indicates the number of unique items unlocked. Our method shows a significantly faster progression, exhibiting a “rapid unlocking”
+> phenomenon in the mid-stage, where similar items are unlocked in an explosive manner. Compared to previous methods (MP5 [38], Voyager [42], JARVIS-1 [45], and MrSteve [36]), our approach achieves equivalent milestones about 1.3 ×–1.7 ×faster.
+
+dings, an agent would no longer need to relearn what it al-ready knows. Instead, it could rapidly adapt, recombine, and repurpose its existing knowledge to thrive in unfamiliar worlds. To bridge this gap, we introduce a memory-transfer-augmented MLLM planning agent Echo (Figure 1), de-signed to learn “how to transfer and when to transfer mem-ory”. The agent decomposes environmental and experi-ential knowledge into five explicit transfer dimensions— 
+
+Structural, Attribute, Procedural, Functional, and Interac-tion —forming a unified description of “what the world is, how it evolves, what can be done, and how to act.” Within this representation, a Contextual State Descriptor (CSD) en-codes visual, textual, and interactive signals into compact, comparable semantic snapshots, aligning multimodal infor-mation across the transfer axes. Finally, a structured in-context analogical learning (ICAL) [19] module allows the agent to retrieve, adapt, and build upon past experiences, enabling interpretable reasoning, dynamic self-verification, and knowledge reuse across worlds and tasks. As shown in the Figure 2, after accumulating a cer-tain amount of knowledge during the cold-start phase, our method exhibits a significant increase in learning ability during the mid-to-late phase (item unlocking), resulting in an “explosive” item unlocking phenomenon. In addition, we conducted several experiments to evaluate cross-world adaptation, task generalization, and continuous learning ef-ficiency in complex interactive tasks. The results show that our method, by combining explicit transfer axes, ICAL, self-consistency checking, and memory replay, significantly improves the model’s learning efficiency, task success rates, and interpretability, particularly in long-term learning and cross-task transfer scenarios. 2Our main contributions are as follows: • To the best of our knowledge, we are the first to ex-plore how to explicitly transfer multimodal memory ex-periences in multimodal embodied agents. • To address the challenges of structuring and transferring multimodal memory, we propose five explicit transfer di-mensions and combine them with ICAL to effectively or-ganize and leverage multimodal memory. • To validate the effectiveness of our approach, we com-pared it with four agents [36, 38, 42, 45] with different focuses. In learning from scratch tasks, our agent demon-strated clear advantages in learning ability. 
+
+2. Related Work 
+
+Embodied Agents in Minecraft. Open-world agents learn-ing in complex environments [4, 6, 9, 12, 14, 15, 17, 24, 29, 40–42, 50–53, 55–57, 59]. MineDojo [14] and Voyager [42] leveraged internet-scale knowledge and large models to achieve open-ended exploration. Some works enhanced the agents’ active perception capabilities [38, 55, 58]. The Optimus series [25, 26] and Jarvis series [45, 46] adopted modular or hierarchical architectures to enable skill reuse. GITM [7] and Odyssey [30] combined large-scale pre-training with skill libraries to achieve exploratory trans-fer. In complex interactive environments (e.g., Minecraft), agents need to possess cross-modal perception and long-term memory capabilities to associate contextual informa-tion and reuse past experiences. For example, MrSteve [36] proposed a What-Where-When memory model that sup-ports event retrospection based on temporal–spatial index-ing; VistaWise [16] constructed a cross-modal knowledge graph to enable efficient knowledge storage and semantic association; and the GROOT series [7, 8] employed graph neural networks to build structured memory. 
+
+In-Context Learning. In-Context Learning [11, 19] was first systematically introduced in GPT-3 [5], referring to the ability to perform new tasks without parameter updates by providing a few demonstrations within the input con-text. ICL exhibits strong few-shot generalization capabili-ties. Existing research mainly focuses on three directions: (1) Prompt design and example selection : improving ICL accuracy and robustness [18, 22, 27, 39, 43, 54, 60]; (2) 
+
+Retrieval-augmented ICL : combining external knowledge bases to dynamically retrieve demonstrations and mitigate context-length limitations [3, 10, 21, 33]; (3) Structured ICL : explicitly modeling structural patterns-e.g., tables, log-ical chains, or code—to improve transfer [28, 31, 47]. In multimodal domains, models such as CoCa [49] and Flamingo [2] can rapidly adapt to visual question answer-ing and image understanding with few image–text exam-ples. In interactive environments, ICL facilitates policy and skill transfer; e.g., ReAct [48] integrates reasoning traces and action trajectories for context-aware planning. Observe  
+
+> Complex Real World
+> Control
+> MLLMs
+> understand,  plan, reason
+> Interact  Agent
+> different state transitions,
+> different causal elations
+> hard to transfer
+> MLLM hallucination
+> unstable control
+> Observe
+> Complex Real World
+> Control
+> MLLMs
+> understand,  plan, reason
+> Interact
+> Agent
+> Read
+> Instruction
+> Tuning
+> Contextual State Descriptor
+> Struct  Attr  Proc  Func  Inter
+> Write
+> stabilize generation
+> (a) (b)
+> structure the transfer
+
+Figure 3. Overview of motivation and Problem Framework. 
+
+(a) Traditional MLLM-based agents struggle to generalize across complex real-world environments due to different state transitions and causal relations ( hard to transfer ) and may exhibit unstable control arising from hallucinations. (b) The proposed Structured In-Context Learning framework introduces a unified CSD that de-composes environmental knowledge into five explicit transfer di-mensions. 
+
+3. Proposed Method 
+
+Motivation and Challenges. In open, interactive, and mul-timodal environments, our goal is to use retrieval proac-tively to achieve rapid, stable, and interpretable generaliza-tion to new tasks, rather than merely serving current objec-tives reactively [42, 45]. At present, we face two major chal-lenges. First, the real world exhibits highly complex regu-larities and structural dependencies. Distinct tasks often in-volve significantly different state transitions and causal re-lationships, making effective transfer and generalization in-herently difficult. Second, MLLMs tend to suffer from hal-lucinations and uncontrolled reasoning in open-ended sce-narios [20], undermining both the stability and verifiability of their generalization performance. As illustrated in Figure 3, these challenges can lead to unstable control and limited transferability in traditional MLLM-based agents when deployed in complex real-world environments. To address these issues, we propose a Struc-tured ICL framework [19] based on explicit transfer dimen-sions (§3.1). This framework decomposes environmental representations and historical experiences into multiple di-mensions within the multimodal space, explicitly modeling task transfer relationships along five axes: Structural, At-tribute, Procedural, Functional, and Interaction. By mod-eling these dimensions explicitly, the model can semanti-cally interpret the correspondence and similarity between tasks, thereby enabling interpretable cross-task alignment and analogy-based reasoning. 3The entire process is grounded in a unified CSD (§3.2) that integrates heterogeneous environmental and experi-ential information. Building upon this representation, an instruction-tuned MLLM performs structured reasoning and planning, achieving efficient and stable generalization to new tasks without parameter updates. 
+
+3.1. Explicit Transfer Dimensions 
+
+This section anchors the five “learning-by-analogy” dimen-sions within a unified, MLLM-driven framework for ex-plicit knowledge transfer. In this formulation, a single MLLM serves as the central mechanism to represent, align, and evaluate cross-modal correspondences along five inter-pretable axes: structural, attribute, procedural, functional, and interaction .These five dimensions are not arbitrary-they form a holistic grammar of understanding for any agent operating in open-world environments. From a theoretical standpoint, an embodied agent seeking to transfer or reconstruct knowl-edge must simultaneously grasp three fundamental ques-tions: • What the world is like —captured through its structures and attributes; • How the world changes —revealed through its proce-dures and functions; • How the agent engages with the world —embodied in its interactions. These aspects are deeply interdependent and hierarchi-cally organized. The structural and attribute dimensions ground understanding in the physical and spatial regularities of the environment, providing the static scaffolding upon which transfer can occur. The procedural and functional di-mensions capture the world’s dynamics—its causes, effects, and transformations—enabling the reuse and adaptation of strategies across contexts. Finally, the interaction dimen-sion closes the loop, modeling the continuous feedback be-tween perception and action that allows an agent to learn not only from observation but from participation. Although our approach appears similar to MrSteve’s “What-Where-When Memory,” [36] MrSteve primarily aims to introduce episodic memory into agents, whereas our method focuses on leveraging structured memory to enable task transfer. • Structural Axis—“How the world is organized.” Focuses on spatial layout and hierarchical relationships—how en-tities are arranged and connected. It provides the geo-metric framework of the environment, helping the agent understand spatial structure, reachability, and coherence during transfer. • Attribute Axis—“What physical properties things have.” 
+
+Describes the visual and physical traits of objects, such as color, texture, hardness, and material composition. It enables reasoning about substitution, support, and com-patibility in different contexts. Meta Data (JSON)                                   
+
+> {Agent Position :[12,64,-3] ,
+> Facing Direction :West ,
+> Time Step :10234 ,
+> World Time :Day ,
+> Biome :Plains ,
+> Current Task :Smelting Iron,
+> Objects :[Furnace,Ore,...] }
+> Structural Data (JSON)
+> {Description: "There is a furnace one block in front of the Agent. Iron ore is placed in the top slot, charcoal in the bottom slot, and an iron ingot in the
+> right output slot." }
+> Functional Data (JSON)
+> {"furnace": " A processing device used to convert ore and fuel into finished products .", "iron_ore": ...
+> "charcoal": ... "iron_ingot":
+> ... }
+> Attribute Data (JSON)
+> {"furnace": " color": "gray",
+> " shape": "cube", " texture":
+> "rough stone surface"
+> "iron_ore": ... "charcoal": ...
+> "iron_ingot": ... }
+> Procedural Data (JSON)
+> {Description: "Iron ore
+> occupies the top slot of the furnace and charcoal the bottom slot as fuel . When ignited, the furnace smelts the ore, producing iron ingots that ..." }
+> Interaction Data (JSON)
+> {Interaction: "The Agent walks up to the furnace and opens its interface..."
+> History: [ "The Agent
+> collected iron ore and
+> charcoal.", "The Agent ...] }
+
+Figure 4. Overview of the CSD schema. 
+
+• Procedural Axis—“How the world changes.” Captures the causal rules and state transitions that define how ac-tions alter the environment. It models sequences and dependencies—clarifying what to do, when, and why. • Functional Axis—“What things do.” Describes the pur-pose and role of objects—what they can do and how they contribute to tasks. It supports semantic-level generaliza-tion and creative reuse across domains. • Interaction Axis—“How the agent interacts with the world.” Characterizes the perception–action loop, show-ing how operations lead to feedback and environmental response. It connects knowledge to execution, ensuring actions are both understandable and performable. To enable the agent to better transfer knowledge across the five dimensions, we design a standardized CSD-ICAL paradigm (§ 3.2). 
+
+3.2. Contextual State Descriptor 
+
+This section introduces the overall design goals, data schema, generation pipeline, and system contracts of the CSD. The core idea of CSD is to compress heterogeneous multimodal inputs—visual, textual, and interactive—into a unified, comparable, and verifiable semantic snapshot. This unified representation enables Echo to perform stable re-trieval and reasoning within a structured semantic space. Specifically, the CSD organizes multimodal content along explicit transfer dimensions, including structural, attribute, procedural, functional, and interaction axes. By aligning these axes through vectorized encoding and quality eval-uation, the CSD serves as a reliable foundation for inter-pretable cross-task generalization and anomaly detection. 
+
+Design Goals and Constraints. A CSD consists of six core components: metadata and five semantic dimensions. The meta field records the generation timestamp, source envi-ronment, and model versions. The five fields—struct, attr, proc, func, and inter—correspond to the five transfer dimen-sions, as illustrated in Fig. 4, each containing symbolic con-tent as well as global embeddings for fast vector-based re-trieval. In addition, during training, we apply instruction 4Retrieval 
+
+> Key-Value Query
+> Long-term Memory Bank
+> Task Selection-Most successful tasks/ Recently learned tasks
+> <Meta>;<Attr>;<Struct>;<Func>;<Proc>;<Inter>
+> Learning Examples-Compute semantic similarity
+> <Meta>;<Attr>;<Struct>;<Func>;<Proc>;<Inter>
+> Next Transfer Dimension
+> Transferred Knowledge-Action seqs & Auxiliary context
+> Iteratively In Context Analogical Learning
+> Planner
+
+Figure 5. ICL-based analogical learning workflow using the CSD memory bank. 
+
+fine-tuning to enable the MLLM to produce well-formatted CSD structures more reliably. Throughout this process, the model learns from large numbers of structured task exam-ples to align task descriptions with evidence across the five semantic axes, generating normalized outputs that follow a unified specification. The training data consists of multi-modal task instructions, historical execution traces, and ver-ifier feedback, enabling the model to develop basic capabil-ities in comprehension, structured organization, and consis-tency assurance when generating CSD. 
+
+ICL-Based Analogical Learning. As illustrated in Fig. 5, CSD entries are aligned with the Minecraft task workflow: only successful tasks are written to long-term memory. The CSD library is periodically maintained offline through con-solidation, cleaning, deduplication, and clustering. Clus-tered CSD supports knowledge inference and pattern ab-straction (e.g., extending “smelting iron ore → iron ingot” to “smelting gold ore → gold ingot” or deriving new craft-ing routes), enabling autonomous knowledge expansion. Based on this representation, we build an ICL-based ana-logical workflow. (1) Task Selection : choose a represen-tative task (e.g., most successful or most recently learned) and extract its complete CSD; (2) Example Retrieval : re-trieve the top-K most relevant tasks by computing multi-dimensional semantic similarity across five CSD compo-nents (attr, struct, func, proc, Inter); (3) ICL Context Con-struction : combine these samples to form the ICL input context; (4) New Task Induction : the model generalizes from the context and outputs potential new tasks only as action sequences; (5) Execution & Validation : the ac-tions are executed and evaluated; successful trajectories are stored, while failures are logged. This workflow enables continuous experience accumulation, knowledge transfer, and autonomous task discovery. 
+
+3.3. Overall Iterative Process 
+
+The system follows the classical agent model [42, 45] and achieves efficient use of internal knowledge for open-world task transfer by combining ICAL with explicit transfer axes, thereby improving the agent’s performance and capabilities in the open world, as shown in Figure 6. Environment  State 
+
+> e.g. <position>, <health>, <inventory>, <task status>
+> MLLM
+> Visual Input
+> e.g. <camera>, <GUI>
+> Prompt Builder
+> instructions, environment data
+> Visual Caption
+> scene caption, object list, spatial relations
+> Planner (MLLM)
+> plan and command sequence
+> Pre-checker
+> e.g. resource / position
+> Affects Game World
+
+Action  
+
+> Result Observation
+> execution results, position, inventory, health, screenshots
+> No Yes Successful ？
+> Error Recovery
+> calls MLM to repair command
+> Task Manager Update
+> task progress/ next subgoal
+> Short-term Memory
+> e.g. current objective, constraints
+> Perception Layer Decision Layer Execution Layer Memory Layer
+> Long-term Memory Bank  e.g. facts, experiences, failures,  CSD
+> Contextual State Descriptor
+> meta, struct, attr, proc, func, inter
+> Transfer
+> Write Read
+
+Figure 6. Overview of our iterative framework. The system performs perception, memory retrieval, planning, verification, and execution in a loop. A three-layer architecture (perception, de-cision, execution) interacts with short- and long-term memory to support structured ICAL and case-based transfer. 
+
+Transfer System Formalization. The iterative reason-ing process is formalized as follows: (1) Memory: The memory M = {mi} stores multimodal trajectories, their CSDs, plans, validation results, and execution traces. It maintains dual representations: symbolic graphs for inter-pretability and vector embeddings for fast retrieval. (2) 
+
+Transfer Space (Five Axes): The transfer space T =
+
+{struct , attr , proc , func , inter } represents the structural, at-tribute, procedural, functional, and interaction dimensions of transferable knowledge. (3) Retrieval Operator: The retrieval operator SK = R(xt, M, T) retrieves K exem-plars and their corresponding cross-axis similarity evidence from the memory bank. (4) Instruction-tuned MLLM: 
+
+The instruction-tuned MLLM, denoted as fθ (with frozen parameters θ), performs structured in-context learning: 
+
+[πt, Ass t] = fθ (xt, SK , protocol ), (1) where πt represents a hierarchical plan, and Ass t corre-sponds to self-verification assertions. (5) Verifier: The verifier {pass , fail } = V(πt, Ass t, x t), report ensures the internal logical consistency and external task feasibility of the plan and assertions. (6) Executor: The executor Exec (πt) → trace t executes the plan and collects the result-ing trajectory. (7) Memory Update: The memory update function M′ = U(M, trace t) updates both symbolic and vector channels for continual learning. 5Table 1. From-scratch learning in Minecraft (Success@0 →10 / Success@0 →30) . Higher is better. Results are averaged over worlds, map variants, and resource configurations. v denotes full model; u denotes component disabled.                                                                                                                                                                                                                
+
+> Method Recipe (Succ@0 →10 / 30) ↑Functional Eq. (Succ@0 →10 / 30) ↑Crafting Chain (Succ@0 →10 / 30) ↑Utility Blocks (Succ@0 →10 / 30) ↑
+> Bed Iron Pickaxe Shield BridgeEq SmeltEq WeaponEq WeaponSet ToolBench ArmorSet CraftGrid CraftTable Furnace
+> Memory-enhanced Models
+> vVoyager [42] 35.0 / 62.5 30.0 / 57.5 25.0 / 50.0 17.5 / 40.0 15.0 / 35.0 15.0 / 32.5 22.5 / 45.0 27.5 / 55.0 17.5 / 40.0 45.0 / 77.5 35.0 / 65.0 25.0 / 47.5
+> uSelf Verification [42] 25.0 / 47.5 25.0 / 45.0 17.5 / 37.5 12.5 / 27.5 10.0 / 25.0 7.5 / 20.0 15.0 / 32.5 17.5 / 40.0 10.0 / 27.5 30.0 / 55.0 22.5 / 45.0 12.5 / 32.5
+> vMrSteve [36] 22.5 / 40.0 20.0 / 37.5 17.5 / 35.0 47.5 / 77.5 45.0 / 77.5 42.5 / 72.5 15.0 / 32.5 17.5 / 35.0 12.5 / 27.5 25.0 / 45.0 17.5 / 35.0 10.0 / 22.5
+> vMP5 [38] 40.0 / 67.5 37.5 / 65.0 35.0 / 60.0 45.0 / 75.0 42.5 / 70.0 37.5 / 65.0 35.0 / 65.0 35.0 / 62.5 30.0 / 57.5 42.5 / 72.5 35.0 / 65.0 27.5 / 52.5
+> uPatroller [38] 35.0 / 55.0 32.5 / 52.5 27.5 / 47.5 35.0 / 60.0 35.0 / 55.0 30.0 / 50.0 27.5 / 50.0 25.0 / 45.0 22.5 / 42.5 35.0 / 57.5 30.0 / 50.0 22.5 / 37.5
+> vJARVIS-1 [45] 60.0 / 87.5 50.0 / 85.0 50.0 / 80.0 47.5 / 77.5 45.0 / 75.0 40.0 / 70.0 37.5 / 72.5 42.5 / 75.0 30.0 / 65.0 52.5 / 80.0 55.0 / 82.5 35.0 / 67.5
+> uSelfCheck [45] 45.0 / 75.0 42.5 / 70.0 37.5 / 65.0 35.0 / 60.0 32.5 / 57.5 27.5 / 50.0 25.0 / 50.0 27.5 / 57.5 17.5 / 40.0 45.0 / 72.5 32.5 / 60.0 20.0 / 45.0
+> Few-shot Variants
+> vEcho (1-shot) 50.0 / 80.0 50.0 / 80.0 42.5 / 75.0 37.5 / 60.0 32.5 / 65.0 27.5 / 50.0 37.5 / 72.5 32.5 / 67.5 20.0 / 60.0 55.0 / 92.5 55.0 / 75.0 35.0 / 62.5
+> vEcho (2-shot) 62.5 / 90.0 50.0 / 87.5 52.5 / 80.0 35.0 / 65.0 37.5 / 62.5 40.0 / 65.0 37.5 / 72.5 40.0 / 70.0 22.5 / 67.5 55.0 / 92.5 55.0 /87.5 35.0 / 62.5
+> vEcho (4-shot) 62.5 /92.5 50.0 / 87.5 52.5 / 85.0 40.0 / 72.5 35.0 / 62.5 40.0 / 65.0 37.5 / 72.5 40.0 / 75.0 22.5 / 67.5 55.0 / 92.5 55.0 /87.5 35.0 / 65.0
+> vEcho (8-shot) 62.5 /92.5 52.5 /87.5 55.0 /87.5 50.0 /80.0 47.5 /80.0 45.0 /75.0 40.0 /77.5 42.5 /82.5 27.5 / 67.5 57.5 /92.5 55.0 /87.5 37.5 /70.0
+
+4. Experiment 
+
+Experimental Objectives. Integrate multimodal long-term memory with transfer learning to address the open-world distribution shift problem. (1) To demonstrate that ex-plicit transfer axes combining structured ICAL outperform methods based solely on memory or policy transfer in cross-world and cross-task generalization; (2) To show that consistency self-checking contributes to stability in long-horizon planning; (3) To illustrate how memory replay (con-tinual learning) leads to progressive performance improve-ment and enhanced interpretability. 
+
+4.1. Cross-world Learning from Scratch 
+
+Multi-task Evaluation Under Cold-starting. As shown in Table 1, the primary objective of this section is to evalu-ate an agent’s generalization ability and learning efficiency from scratch under open-world testing. Specifically, this ex-periment examines whether a model, when initialized with no prior task knowledge, can rapidly acquire crafting and reasoning skills within the first 10 and 30 learning episodes. 
+
+Evaluation Tasks and Metrics. The tasks are grouped into four families: Recipe (e.g., Iron Pickaxe, Bed, Shield) evaluates structural and shape-based recipe transfer. Functional Equivalence (BridgeEq, SmeltEq, WeaponEq) tests the agent’s ability to perform functionally equiv-alent reasoning—i.e., using alternative equivalent items when the required ones are unavailable. Crafting Chain (WeaponSet—crafting wooden, stone, and iron swords; ToolBench—crafting a stone pickaxe, shovel, and hoe; ArmorSet—crafting a full set of iron armor) mea-sures multi-step dependency reasoning. Finally, Util-ity Blocks (Crafting Grid, Crafting Table, Furnace) eval-uate the agent’s ability to correctly utilize functional blocks to complete short-horizon, dependency-based tasks. Success@0 →10 and Success@0 →30 represent average success rates within the first 10 and 30 episodes, respec-tively (higher is better). 
+
+2-Shot is Competitive. The comparison includes sev-eral strong baselines and ablation variants: Voyager [42], MrSteve [36], MP5 [38], and JARVIS-1 [45], each with cor-responding component removal experiments. Voyager [42] without the Self-Verification mechanism shows a signifi-cant drop in performance, indicating that self-verification is crucial for stable learning. MrSteve performs best on functional-equivalence tasks but is weaker on structural and multi-step reasoning tasks. MP5 demonstrates consis-tent robustness, and its Patroller module (inspection mod-ule) [38] significantly improves task success rates under complex visual variations. JARVIS-1 stands out as the most stable overall baseline, achieving leading scores across nearly all task families. Removing its SelfCheck mod-ule [45] leads to a 10–20 point drop in success rates for most tasks, further confirming that self-consistency check-ing is vital for cross-world stability. Echo exhibits compet-itive performance even in the 2-shot setting. 
+
+Few-Shot Gains Saturate. In the few-shot setting, our method introduces ICAL during planning with 1–8 contex-tual examples. Results show steady improvement as the number of examples ( k) increases, especially for multi-step and long-term tasks. The 1-shot variant already matches or surpasses most baselines, while the 4-shot and 8-shot variants achieve the highest overall success rates—up to 62.5/92.5 on the Recipe and Crafting Table families. Al-though functional-equivalence tasks in the 8-shot setting do not reach JARVIS-1 [45]’s absolute peak, their learning curves are smoother, indicating that ICAL effectively accel-erates cross-world adaptation during cold-start learning. 
+
+4.2. Continuous Learning Test 
+
+This experiment (Fig. 8) aims to evaluate the proposed method’s continuous learning efficiency and stability un-6-15%                    
+
+> -10%
+> -5%
+> 0%
+> Keep Only
+> Recipe
+> Attribute
+> Structural
+> Procedural
+> Functional
+> Interaction
+> -15%
+> -10%
+> -5%
+> 0%
+> Remove
+> -15%
+> -10%
+> -5%
+> 0% Functional Eq.
+> Attribute
+> Structural
+> Procedural
+> Functional
+> Interaction
+> -15%
+> -10%
+> -5%
+> 0%
+> -15%
+> -10%
+> -5%
+> 0% Crafting Chain
+> Attribute
+> Structural
+> Procedural
+> Functional
+> Interaction
+> -15%
+> -10%
+> -5%
+> 0%
+> -15%
+> -10%
+> -5%
+> 0% Utility Blocks
+> Attribute
+> Structural
+> Procedural
+> Functional
+> Interaction
+> -15%
+> -10%
+> -5%
+> 0%
+> Attribute
+> Structural
+> Procedural
+> Functional
+> Interaction
+> Recipe
+> Functional Eq.
+> Crafting Chain
+> Utility Blocks
+> 0.83 0.37 0.35 0.29 0.30
+> 0.20 0.67 0.43 0.73 0.34
+> 0.18 0.71 0.73 0.40 0.50
+> 0.21 0.48 0.71 0.24 0.71
+> Task Axis Correlation
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Figure 7. Comparison of task performance when keeping or removing individual design axes. Left: bar charts for each task showing median performance change under “Keep Only” and “Remove” scenarios. Right: correlation heatmap between task outcomes and design axes (thicker borders indicate stronger correlations). 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30                
+
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> 60 (a) Continuous Learning Group 1 (Detailed)
+> Ours
+> JARVIS-1
+> MP5
+> MrSteve
+> Voyager
+> 0510 15 20 25 30
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60 (b) Learning Group 2 (Coarse)
+> 0510 15 20 25 30
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60 (c) Smooth + Confidence Interval
+> Episode
+> Success Rate (%)
+
+Figure 8. Continuous learning performance comparison. The figure shows the success rate (%) over 31 training episodes (0–30) across five agents: Ours , JARVIS-1 , MP5 , MrSteve , and Voy-ager . The shaded region (episodes 5–15) highlights the fast learn-ing phase of our method. Compared to all baselines, our method demonstrates a faster learning rate in the mid-phase .
+
+der open-world tasks. Specifically, we focus on the follow-ing aspects: (1) the adaptation speed during the early cold-start phase (episodes 0–10); (2) the improvement and sta-bility during the mid-to-late phase (episodes 20–30) driven by long-horizon planning and memory replay; and (3) the crossover points and final convergence performance com-pared with strong baselines, including JARVIS-1, MP5, MrSteve, and Voyager. The goal is to validate the effective-ness of our method in achieving sustainable adaptation and cross-task generalization in long-term learning scenarios. 
+
+Mid-to-Late Phase Performance. Our method shows slower progress in the early episodes but accelerates rapidly after episode 10, reaching a stable plateau around 46–48% in the final stage. In contrast, JARVIS-1 learns faster initially but saturates after 20 episodes, while MP5 im-proves steadily, and both MrSteve and Voyager remain at lower performance levels. At episode 30, the suc-cess rate ranking is: Echo (45), MP5 (43) [38], JARVIS-1 (35) [45], MrSteve (33) [36], and Voyager (18) [42]. From a “fast start vs. strong finish” perspective, JARVIS-1 [45] excels in the cold-start phase (0–10) due to its pre-trained policy library and self-checking mechanism, but its growth plateaus beyond 20 episodes, indicating limited scalability in multi-task and long-horizon reason-ing. Although ours starts slower, it maintains steady gains from episodes 10–30, validating that explicit transfer axes (Attr/Struct/Proc/Func/Inter) and structured ICL fos-ter stronger long-term planning and knowledge reuse once sufficient experience is accumulated. This trend is consis-tent with the task-family sensitivity and stability analyses in §4.1 and §4.3. 
+
+4.3. Ablation of Explicit Transfer Axes 
+
+Single-Axis Removal/Retention. As shown in Figure 7, this experiment aims to verify the necessity and advantages of using explicit transfer axes in multi-axis similarity mod-eling. By comparing two ablation settings-Keep-Only (re-taining only one axis) and Remove (removing one axis)— we quantify the independent contribution and sensitivity of each semantic axis across four task families (Recipe, Func-tional Eq., Crafting Chain, Utility Blocks). The goal is to examine whether explicit axis alignment provides higher stability and interpretability than implicit holistic similarity modeling. The setup involves four task families and five explicit transfer axes, resulting in ten ablation scenarios: five Remove-Axis (removing one axis) and five Keep-Only-Axis (retaining only one axis). The evaluation metric is the relative change in success rate ( ∆Success%), where nega-tive values indicate performance degradation. 
+
+Axis Interactions. The experimental results show that dif-ferent semantic transfer axes have a significant impact on task performance: • The Attribute axis is crucial for recipe tasks. Removing it leads to a significant drop in Recipe (-11%). • The Structural axis affects functional equivalence and crafting chain tasks. Removing it causes declines in Func-7tional Eq. (-7%) and Crafting Chain (-9%). • The Procedural axis has the greatest impact on long-horizon tasks (e.g., Crafting Chain). Removing it leads to severe degradation (-12%). • The Functional axis dominates functional equivalence tasks. Removing it almost disables the tasks (-9%). • The Interaction axis affects short-term tasks. Removing it causes a major drop in Utility Blocks (-7%). The experimental results show that removing a single axis causes a significant performance drop, much greater than the drop when only retaining a single axis. The Structural axis primarily affects geometric and recipe-related tasks; the Attribute axis is crucial for functional equivalence and crafting chain tasks; the Procedural axis has a decisive im-pact on long-horizon tasks like Crafting Chain and Crafting Table; the Functional axis dominates functional equivalence tasks; and the Interaction axis strongly influences utilities operation tasks. Explicit transfer axes help clarify the de-pendencies between tasks and effectively locate the sources of errors, such as process reasoning errors or interface posi-tioning errors. 
+
+4.4. Case Study 
+
+This section demonstrates an experimental example for in-terpretability analysis. The target sample is retrieved and matched through the Func axe (since the functions of planks and stone are similar). After performing ICL, a similar ex-ample for the stone pickaxe is inferred. The specific process is shown in the Figure 9. The key CSD for the entire transfer process is shown below. 
+
+Transfer Example. Crafting a Wooden Pickaxe. 
+
+Task Steps. (1) Convert oak logs into oak planks. (2) Turn planks into sticks. (3) Attempt to craft the pickaxe directly but fail, realizing that a crafting table is required. (4) Craft and place the crafting table. (5) Arrange planks and sticks on the crafting table to craft the wooden pickaxe. 
+
+Retrieved Item Descriptions (Func Content). Oak Planks: Used as materials for crafting tools, and as building materials. Stone: Serve as components for crafting tools and construction materials. 
+
+ICAL Result. Crafting a Stone Pickaxe. 
+
+Task Steps. (1) Use the wooden pickaxe to mine stone blocks and acquire stone. (2) Collect planks and craft planks into sticks. (3) Craft and place the crafting table. (4) Arrange stones and sticks on the crafting table to craft the stone pickaxe. 
+
+Analysis. The key point of this transfer is the functional similarity between materials (oak planks and stone), which allows the task structure for crafting a wooden pickaxe to be applied to crafting a stone pickaxe. ICAL recognizes the pattern in task steps (gather materials, use the crafting table, arrange materials) and adapts it, transferring the knowledge from one task to the other. (a) Find planks (b) Craft wooden pickaxe (c) Find stones (d) Craft stone pickaxe 
+
+> Figure 9. Transferring from a wooden pickaxe to a stone pickaxe.
+
+5. Conclusion and Discussion 
+
+Research Focus Comparison. Compared with representa-tive works [38, 42, 45], our approach emphasizes skill ac-quisition and learning rather than exploration or perception. As a result, Echo is less effective in actively exploring un-familiar environments. For instance, MP5 employs active perception to continuously gather new information [38], whereas Echo relies more on prior knowledge and retrieval, which weakens its performance in information-sparse set-tings. In addition, our method shows a slower initial learn-ing rate. 
+
+Applicability to the Real Physical World. Our method is evaluated mainly in Minecraft, an open-ended and com-plex but still idealized environment with simple and consis-tent rules [35]. While such predictability facilitates efficient skill learning and transfer, it also limits real-world applica-bility. Compared with Minecraft, real-world tasks are more diverse, ambiguous, and causally complex, making transfer learning more reliant on the reasoning and generalization abilities of large models. Therefore, skill transfer in the real world is unlikely to be as straightforward as in Minecraft. 
+
+Conclusion. This study explores explicit multimodal mem-ory transfer in multimodal embodied agents. To address challenges in structuring and transferring multimodal mem-ory, we propose five explicit transfer dimensions and inte-grate them with ICAL for effective organization and use. Compared with four baseline agents focusing on different aspects, our model achieves superior learning efficiency and task generalization in learning-from-scratch settings. We hope this framework inspires future research on enhancing planning and reasoning in interactive multimodal agents. 
+
+Acknowledgments. This work was partially supported by the National Natural Science Foundation of China under grant 62572104, and 62220106008. 8References 
+
+[1] Anurag Ajay, Seungwook Han, Yilun Du, Shuang Li, Abhi Gupta, Tommi Jaakkola, Josh Tenenbaum, Leslie Kaelbling, Akash Srivastava, and Pulkit Agrawal. Compositional foun-dation models for hierarchical planning. Conference on Neu-ral Information Processing Systems (NeurIPS) , 36:22304– 22325, 2023. 2 [2] Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Men-sch, Katherine Millican, Malcolm Reynolds, et al. Flamingo: a visual language model for few-shot learning. Conference on Neural Information Processing Systems (NeurIPS) , 35: 23716–23736, 2022. 3 [3] Akari Asai, Zeqiu Wu, Yizhong Wang, Avirup Sil, and Han-naneh Hajishirzi. Self-rag: Learning to retrieve, generate, and critique through self-reflection. International Confer-ence on Learning Representations (ICLR) , 2024. 3 [4] Bowen Baker, Ilge Akkaya, Peter Zhokov, Joost Huizinga, Jie Tang, Adrien Ecoffet, Brandon Houghton, Raul Sampe-dro, and Jeff Clune. Video pretraining (vpt): Learning to act by watching unlabeled online videos. Conference on Neu-ral Information Processing Systems (NeurIPS) , 35:24639– 24654, 2022. 3 [5] Tom Brown, Benjamin Mann, Nick Ryder, Melanie Sub-biah, Jared D Kaplan, Prafulla Dhariwal, Arvind Neelakan-tan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. Lan-guage models are few-shot learners. Conference on Neural Information Processing Systems (NeurIPS) , 33:1877–1901, 2020. 3 [6] Shaofei Cai, Zihao Wang, Xiaojian Ma, Anji Liu, and Yitao Liang. Open-world multi-task control through goal-aware representation learning and adaptive horizon prediction. In 
+
+Conference on Computer Vision and Pattern Recognition (CVPR) , pages 13734–13744, 2023. 3 [7] Shaofei Cai, Bowei Zhang, Zihao Wang, Xiaojian Ma, Anji Liu, and Yitao Liang. Groot: Learning to follow instructions by watching gameplay videos. In The Twelfth International Conference on Learning Representations , 2023. 2, 3 [8] Shaofei Cai, Bowei Zhang, Zihao Wang, Haowei Lin, Xiao-jian Ma, Anji Liu, and Yitao Liang. Groot-2: Weakly su-pervised multi-modal instruction following agents. In The Thirteenth International Conference on Learning Represen-tations , 2024. 3 [9] Qi Chai, Zhang Zheng, Junlong Ren, Deheng Ye, Zichuan Lin, and Hao Wang. Causalmace: Causality empowered multi-agents in minecraft cooperative tasks. In Confer-ence on Empirical Methods in Natural Language Processing (EMNLP) , pages 14410–14426, 2025. 3 [10] Tong Chen, Hongwei Wang, Sihao Chen, Wenhao Yu, Kaixin Ma, Xinran Zhao, Hongming Zhang, and Dong Yu. Dense x retrieval: What retrieval granularity should we use? In Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 15159–15177, 2024. 3 [11] Qingxiu Dong, Lei Li, Damai Dai, Ce Zheng, Jingyuan Ma, Rui Li, Heming Xia, Jingjing Xu, Zhiyong Wu, Baobao Chang, et al. A survey on in-context learning. In Confer-ence on Empirical Methods in Natural Language Processing (EMNLP) , pages 1107–1128, 2024. 3 [12] Yubo Dong, Xukun Zhu, Zhengzhe Pan, Linchao Zhu, and Yi Yang. Villageragent: A graph-based multi-agent framework for coordinating complex task dependencies in minecraft. In Annual Meeting of the Association for Compu-tational Linguistics (ACL) , pages 16290–16314, 2024. 3 [13] Danny Driess, Fei Xia, Mehdi SM Sajjadi, Corey Lynch, Aakanksha Chowdhery, Brian Ichter, Ayzaan Wahid, Jonathan Tompson, Quan Vuong, Tianhe Yu, et al. Palm-e: an embodied multimodal language model. In ICML (Interna-tional Conference on Machine Learning) , pages 8469–8488, 2023. 2 [14] Linxi Fan, Guanzhi Wang, Yunfan Jiang, Ajay Mandlekar, Yuncong Yang, Haoyi Zhu, Andrew Tang, De-An Huang, Yuke Zhu, and Anima Anandkumar. Minedojo: Build-ing open-ended embodied agents with internet-scale knowl-edge. Conference on Neural Information Processing Systems (NeurIPS) , 35:18343–18362, 2022. 3 [15] Yicheng Feng, Yuxuan Wang, Jiazheng Liu, Sipeng Zheng, and Zongqing Lu. Llama-rider: Spurring large language models to explore the open world. In Conference of the North American Chapter of the Association for Computational Lin-guistics (NAACL) , pages 4705–4724, 2024. 3 [16] Honghao Fu, Junlong Ren, Qi Chai, Deheng Ye, Yujun Cai, and Hao Wang. Vistawise: Building cost-effective agent with cross-modal knowledge graph for minecraft. In EMNLP (Conference on Empirical Methods in Natural Language Processing) , 2025. 2, 3 [17] William H Guss, Brandon Houghton, Nicholay Topin, Phillip Wang, Cayden Codel, Manuela Veloso, and Ruslan Salakhutdinov. Minerl: a large-scale dataset of minecraft demonstrations. In International Joint Conference on Artifi-cial Intelligence (IJCAI) , pages 2442–2448, 2019. 3 [18] Or Honovich, Uri Shaham, Samuel Bowman, and Omer Levy. Instruction induction: From few examples to natural language task descriptions. In Annual Meeting of the Asso-ciation for Computational Linguistics (ACL) , pages 1935– 1952, 2023. 3 [19] Xiaoyang Hu, Shane Storks, Richard L Lewis, and Joyce Chai. In-context analogical reasoning with pre-trained lan-guage models. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , 2023. 2, 3 [20] Lei Huang, Weijiang Yu, Weitao Ma, Weihong Zhong, Zhangyin Feng, Haotian Wang, Qianglong Chen, Weihua Peng, Xiaocheng Feng, Bing Qin, et al. A survey on hal-lucination in large language models: Principles, taxonomy, challenges, and open questions. ACM Transactions on Infor-mation Systems (TIS) , 43(2):1–55, 2025. 3 [21] Gautier Izacard, Patrick Lewis, Maria Lomeli, Lucas Hos-seini, Fabio Petroni, Timo Schick, Jane Dwivedi-Yu, Ar-mand Joulin, Sebastian Riedel, and Edouard Grave. Atlas: Few-shot learning with retrieval augmented language mod-els. Journal of Machine Learning Research (JMLR) , 24 (251):1–43, 2023. 3 [22] Hyuhng Joon Kim, Hyunsoo Cho, Junyeob Kim, Taeuk Kim, Kang Min Yoo, and Sang-goo Lee. Self-generated in-context 
+
+9learning: Leveraging auto-regressive language models as a demonstration generator. arXiv preprint arXiv:2206.08082 ,2022. 3 [23] Jonathan Leung, Yongjie Wang, and Zhiqi Shen. Knowledge retrieval in llm gaming: A shift from entity-centric to goal-oriented graphs. arXiv preprint arXiv:2505.18607 , 2025. 2 [24] Hao Li, Xue Yang, Zhaokai Wang, Xizhou Zhu, Jie Zhou, Yu Qiao, Xiaogang Wang, Hongsheng Li, Lewei Lu, and Jifeng Dai. Auto mc-reward: Automated dense reward design with large language models for minecraft. In Conference on Com-puter Vision and Pattern Recognition (CVPR) , pages 16426– 16435, 2024. 3 [25] Zaijing Li, Yuquan Xie, Rui Shao, Gongwei Chen, Dong-mei Jiang, and Liqiang Nie. Optimus-1: Hybrid mul-timodal memory empowered agents excel in long-horizon tasks. Conference on Neural Information Processing Sys-tems (NeurIPS) , 37:49881–49913, 2024. 2, 3 [26] Zaijing Li, Yuquan Xie, Rui Shao, Gongwei Chen, Dongmei Jiang, and Liqiang Nie. Optimus-2: Multimodal minecraft agent with goal-observation-action conditioned policy. In 
+
+Conference on Computer Vision and Pattern Recognition (CVPR) , 2025. 3 [27] Jiachang Liu, Dinghan Shen, Yizhe Zhang, William B Dolan, Lawrence Carin, and Weizhu Chen. What makes good in-context examples for gpt-3? In Deep Learning Inside Out Workshop (DeeLIO) , pages 100–114, 2022. 3 [28] Sheng Liu, Haotian Ye, Lei Xing, and James Y Zou. In-context vectors: Making in context learning more effective and controllable through latent space steering. In Inter-national Conference on Machine Learning (ICML) , pages 32287–32307, 2024. 3 [29] Shaoteng Liu, Haoqi Yuan, Minda Hu, Yanwei Li, Yukang Chen, Shu Liu, Zongqing Lu, and Jiaya Jia. Rl-gpt: Integrat-ing reinforcement learning and code-as-policy. Conference on Neural Information Processing Systems (NeurIPS) , 37: 28430–28459, 2024. 3 [30] Shunyu Liu, Yaoru Li, Kongcheng Zhang, Zhenyu Cui, Wenkai Fang, Yuxuan Zheng, Tongya Zheng, and Mingli Song. Odyssey: Empowering minecraft agents with open-world skills. In Proceedings of the Thirty-Fourth Interna-tional Joint Conference on Artificial Intelligence , 2025. 3 [31] Yao Lu, Max Bartolo, Alastair Moore, Sebastian Riedel, and Pontus Stenetorp. Fantastically ordered prompts and where to find them: Overcoming few-shot prompt order sensitiv-ity. In Annual Meeting of the Association for Computational Linguistics (ACL) , pages 8086–8098, 2022. 3 [32] Jianwen Luo, Yiming Huang, Jinxiang Meng, Fangyu Lei, Shizhu He, Xiao Liu, Shanshan Jiang, Bin Dong, Jun Zhao, and Kang Liu. Gate: Graph-based adaptive tool evolution across diverse tasks. arXiv preprint arXiv:2502.14848 , 2025. 2[33] Xinbei Ma, Yeyun Gong, Pengcheng He, Hai Zhao, and Nan Duan. Query rewriting in retrieval-augmented large language models. In Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 5303–5315, 2023. 3 [34] Nicola Messina, Giuseppe Amato, Andrea Esuli, Fabrizio Falchi, Claudio Gennaro, and St´ ephane Marchand-Maillet. Fine-grained visual textual alignment for cross-modal re-trieval using transformer encoders. ACM Transactions on Multimedia Computing, Communications, and Applications (ACM TOMM) , 17(4):1–23, 2021. 2 [35] Ruaridh Mon-Williams, Gen Li, Ran Long, Wenqian Du, and Christopher G Lucas. Embodied large language models en-able robots to complete complex tasks in unpredictable envi-ronments. Nature Machine Intelligence , 2025. 8 [36] Junyeong Park, Junmo Cho, and Sungjin Ahn. Mrsteve: Instruction-following agents in minecraft with what-where-when memory. In International Conference on Learning Representations (ICLR) , 2025. Poster. 2, 3, 4, 6, 7 [37] Joon Sung Park, Joseph O’Brien, Carrie Jun Cai, Mered-ith Ringel Morris, Percy Liang, and Michael S Bernstein. Generative agents: Interactive simulacra of human behavior. In UIST (ACM Symposium on User Interface Software and Technology) , 2023. 2 [38] Yiran Qin, Enshen Zhou, Qichang Liu, Zhenfei Yin, Lu Sheng, Ruimao Zhang, Yu Qiao, and Jing Shao. Mp5: A multi-modal open-ended embodied system in minecraft via active perception. In Conference on Computer Vision and Pattern Recognition (CVPR) , 2024. 2, 3, 6, 7, 8 [39] Ohad Rubin, Jonathan Herzig, and Jonathan Berant. Learn-ing to retrieve prompts for in-context learning. In NAACL (Conference of the North American Chapter of the Asso-ciation for Computational Linguistics) , pages 2655–2671, 2022. 3 [40] Elias Stengel-Eskin, Archiki Prasad, and Mohit Bansal. Re-gal: Refactoring programs to discover generalizable abstrac-tions. In International Conference on Machine Learning (ICML) , pages 46605–46624. PMLR, 2024. 3 [41] Ryan Volum, Sudha Rao, Michael Xu, Gabriel Des-Garennes, Chris Brockett, Benjamin Van Durme, Olivia Deng, Akanksha Malhotra, and William B Dolan. Craft an iron sword: Dynamically generating interactive game char-acters by prompting large language models tuned on code. In Wordplay 2022 workshop , 2022. [42] Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Mandlekar, Chaowei Xiao, Yuke Zhu, Linxi Fan, and Anima Anandku-mar. Voyager: An open-ended embodied agent with large language models. Transactions on Machine Learning Re-search , 2024. 2, 3, 5, 6, 7, 8 [43] Xinyi Wang, Wanrong Zhu, Michael Saxon, Mark Steyvers, and William Yang Wang. Large language models are latent variable models: Explaining and finding good demonstra-tions for in-context learning. Conference on Neural Informa-tion Processing Systems (NeurIPS) , 36:15614–15638, 2023. 3[44] Zihao Wang, Shaofei Cai, Guanzhou Chen, Anji Liu, Xi-aojian Ma, and Yitao Liang. Describe, explain, plan and se-lect: interactive planning with large language models enables open-world multi-task agents. In Conference on Neural In-formation Processing Systems (NeurIPS) , 2023. 1, 2 [45] Zihao Wang, Shaofei Cai, Anji Liu, Yonggang Jin, Jin-bing Hou, Bowei Zhang, Haowei Lin, Zhaofeng He, Zi-long Zheng, Yaodong Yang, Xiaojian Ma, and Yitao Liang. Jarvis-1: Open-world multi-task agents with memory-
+
+10 augmented multimodal language models. IEEE Transac-tions on Pattern Analysis and Machine Intelligence (IEEE TPAMI) , 2024. 1, 2, 3, 5, 6, 7, 8 [46] Zihao Wang, Shaofei Cai, Zhancun Mu, Haowei Lin, Ceyao Zhang, Xuejie Liu, Qing Li, Anji Liu, Xiaojian Shawn Ma, and Yitao Liang. Omnijarvis: Unified vision-language-action tokenization enables open-world instruction following agents. Conference on Neural Information Processing Sys-tems (NeurIPS) , 37:73278–73308, 2024. 3 [47] Zhe Yang, Damai Dai, Peiyi Wang, and Zhifang Sui. Not all demonstration examples are equally beneficial: Reweighting demonstration examples for in-context learning. In Confer-ence on Empirical Methods in Natural Language Processing (EMNLP) , pages 13209–13221, 2023. 3 [48] Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R Narasimhan, and Yuan Cao. React: Synergizing reasoning and acting in language models. In International Conference on Learning Representations (ICLR) , 2022. 2, 3 [49] Jiahui Yu, Zirui Wang, Vijay Vasudevan, Legg Yeung, Mo-jtaba Seyedhosseini, and Yonghui Wu. Coca: Contrastive captioners are image-text foundation models. Transactions on Machine Learning Research , 2022. 3 [50] Shu Yu and Chaochao Lu. ADAM: An embodied causal agent in open-world environments. In International Confer-ence on Learning Representations (ICLR) , 2025. 3 [51] Jiaquan Zhang, Chaoning Zhang, Shuxu Chen, Yibei Liu, Chenghao Li, Qigan Sun, Shuai Yuan, Fachrina Dewi Pus-pitasari, Dongshen Han, Guoqing Wang, Sung-Ho Bae, and Yang Yang. Text summarization via global structure aware-ness. In International Conference on Learning Representa-tions (ICLR) , 2026. Poster. 2 [52] Jiaquan Zhang, Chaoning Zhang, Shuxu Chen, Xudong Wang, Zhenzhen Huang, Pengcheng Zheng, Shuai Yuan, Sheng Zheng, Qigan Sun, Jie Zou, Lik-Hang Lee, and Yang Yang. Learning global hypothesis space for enhancing syn-ergistic reasoning chain. In International Conference on Learning Representations (ICLR) , 2026. Poster. [53] Malu Zhang, Shuai Wang, Jibin Wu, Wenjie Wei, Dehao Zhang, Zijian Zhou, Siying Wang, Fan Zhang, and Yang Yang. Toward energy-efficient spike-based deep reinforce-ment learning with temporal coding. IEEE Computational Intelligence Magazine , 20(2):45–57, 2025. 3 [54] Yiming Zhang, Shi Feng, and Chenhao Tan. Active example selection for in-context learning. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Pro-cessing , 2022. 3 [55] Zhonghan Zhao, Wenhao Chai, Xuan Wang, Boyi Li, Shengyu Hao, Shidong Cao, Tian Ye, and Gaoang Wang. See and think: Embodied agent in virtual environment. In 
+
+European Conference on Computer Vision (ECCV) , pages 187–204. Springer, 2024. 3 [56] Zhonghan Zhao, Kewei Chen, Dongxu Guo, Wenhao Chai, Tian Ye, Yanting Zhang, and Gaoang Wang. Hierarchical auto-organizing system for open-ended multi-agent naviga-tion. In International Conference on Learning Representa-tions (ICLR), Workshop on Large Language Model (LLM) Agents , 2024. [57] Pengcheng Zheng, Chaoning Zhang, Jiarong Mo, GuoHui Li, Jiaquan Zhang, Jiahao Zhang, Sihan Cao, Sheng Zheng, Caiyan Qin, Guoqing Wang, and Yang Yang. LLaVA-FA: Learning fourier approximation for compressing large mul-timodal models. In International Conference on Learning Representations (ICLR) , 2026. Poster. 3 [58] Sipeng Zheng, Jiazheng Liu, Yicheng Feng, and Zongqing Lu. Steve-eye: Equipping llm-based embodied agents with visual perception in open worlds. In International Confer-ence on Learning Representations (ICLR) , 2024. 2, 3 [59] Xinyue Zheng, Haowei Lin, Kaichen He, Zihao Wang, Qiang Fu, Haobo Fu, Zilong Zheng, and Yitao Liang. Mcu: An evaluation framework for open-ended game agents. In In-ternational Conference on Machine Learning (ICML) , 2025. 3[60] Yongchao Zhou, Andrei Ioan Muresanu, Ziwen Han, Keiran Paster, Silviu Pitis, Harris Chan, and Jimmy Ba. Large lan-guage models are human-level prompt engineers. In Inter-national Conference on Learning Representations (ICLR) ,2022. 3 [61] Xizhou Zhu, Yuntao Chen, Hao Tian, Chenxin Tao, Wei-jie Su, Chenyu Yang, Gao Huang, Bin Li, Lewei Lu, Xiao-gang Wang, et al. Ghost in the minecraft: Generally capable agents for open-world environments via large language mod-els with text-based knowledge and memory. arXiv preprint arXiv:2305.17144 , 2023. 2 
+
+11

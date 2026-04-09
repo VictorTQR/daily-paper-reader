@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-001.webp",
+      "caption": "Figure 12: An example hierarchical trace is depicted, produced by an option-enabled agent with primitive actions {𝑎1, 𝑎2, 𝑎3} and options {𝜔1 = (Φ𝜔1 , 𝜋𝜔1 , 𝛽𝜔1), 𝜔2 = (Φ𝜔2 , 𝜋𝜔2 , 𝛽𝜔2)} with corresponding state abstractions 𝜙𝜔1 : S ↦→ Φ𝜔1 and 𝜙𝜔2 : S ↦→ Φ𝜔2 respectively.",
+      "page": 30,
+      "index": 1,
+      "width": 742,
+      "height": 186
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-002.webp",
+      "caption": "Figure 11: Three tasks are depicted. Each task consists of subtasks, the abstractions of which are shown in the middle. The third task, 𝑀𝛾 , is made up of some of the subtasks that recur in 𝑀𝛼 and 𝑀𝛽 . The mapping between subtasks of different tasks is effected by state abstractions.",
+      "page": 29,
+      "index": 2,
+      "width": 431,
+      "height": 300
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-003.webp",
+      "caption": "Figure 18: Distribution of areas under the reward curve for target Lightworld tasks with different numbers of rooms. Three settings are shown: without options, with discovered OPSR options and with discovered agent-space options.",
+      "page": 39,
+      "index": 3,
+      "width": 645,
+      "height": 297
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-004.webp",
+      "caption": "Figure 13: Left: depiction of a Craftworld task. The diagram on the right illustrates crafting dependencies.",
+      "page": 34,
+      "index": 4,
+      "width": 950,
+      "height": 342
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-005.webp",
+      "caption": "Figure 7",
+      "page": 23,
+      "index": 5,
+      "width": 779,
+      "height": 269
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-006.webp",
+      "caption": "Figure 4: Two transfer settings, each showing the same two states with two different state abstractions. In each setting the abstract state ?̄?2 falls outside of the transfer cover.",
+      "page": 13,
+      "index": 6,
+      "width": 771,
+      "height": 244
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-007.webp",
+      "caption": "Figure 19: Distribution of areas under the reward curve in the Lightworld domain with transfer between and within subdomains. Results labeled ‘extra subdomain’ have always been learned from tasks with only 2 rooms, whereas results labeled ‘intra subdomain’ have been learned from tasks with the same number of rooms as indicated.",
+      "page": 40,
+      "index": 7,
+      "width": 644,
+      "height": 339
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-008.webp",
+      "caption": "Figure 15: Craftworld for OPSR 1-3.",
+      "page": 36,
+      "index": 8,
+      "width": 645,
+      "height": 316
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-009.webp",
+      "caption": "Figure 14: Learning curves for an agent without options and agents with three discovered OPSR 𝜙𝜎,𝑘 options, with 𝑘 ranging from 1 to 4. A higher accumulated reward is better.",
+      "page": 36,
+      "index": 9,
+      "width": 667,
+      "height": 373
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-010.webp",
+      "caption": "Figure 9",
+      "page": 27,
+      "index": 10,
+      "width": 941,
+      "height": 469
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-011.webp",
+      "caption": "Figure 16: Option occupancy for 100 traces following the same story. 𝜋𝐻 denotes when the high-level controller picks a primitive actions instead of an option.",
+      "page": 37,
+      "index": 11,
+      "width": 643,
+      "height": 355
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07016v1/fig-012.webp",
+      "caption": "Figure 2: On the left hand side is depicted an MDP with 5 states and the action set {𝑎, 𝑏}. Arcs between states denote deterministic transitions following the labelled action, receiving the annotated reward 𝑟. An abstraction is shown as grouping together states. The resulting abstract states are depicted on the right.",
+      "page": 5,
+      "index": 12,
+      "width": 766,
+      "height": 225
+    }
+  ]
+}

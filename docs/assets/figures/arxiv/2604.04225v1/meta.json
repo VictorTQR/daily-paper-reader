@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04225v1/fig-001.webp",
+      "caption": "Figure 2: Grid-World environment: (a): Blue indicates start location at the top-left, red is the goal at the bottom-right, and the black cells are obstacles; (b) Example demonstrations that violate the TBT specification by visiting an unsafe cell. (c) Heatmaps of the extracted potential functions from the cleaned trajectories; (d) Comparison of the mean episodic rewards and success rates.",
+      "page": 7,
+      "index": 1,
+      "width": 818,
+      "height": 509
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04225v1/fig-002.webp",
+      "caption": "Table 1: PPO Hyperparameters for grid-world, safety-gymnasium single-agent (SG-Single), and multi-agent (SG-Multi). Unlisted hyperparameters are set to the default values in [22]; the neural networks are all fully connected.",
+      "page": 10,
+      "index": 2,
+      "width": 556,
+      "height": 301
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04225v1/fig-003.webp",
+      "caption": "Figure 3: Reach-avoid navigation task: (a) A close-up of our experiment setup showing a mobile robot (indicated by a car-like object) tasked with navigating to a uniformly randomized 2D goal location (green cylinder); (b) Multi-agent extension of the single-agent environment. The robots are indicated by red and blue car-like objects and the goals are indicated by red and blue cylinders. (c)–(e) Each robot must avoid two types of obstacles: a traversable soft constraint (purple discs) and hard constraints that inhibit motion upon collision (cyan cubes). These hazards incur costs that the agent must minimize while learning to safely navigate to the goal.",
+      "page": 8,
+      "index": 3,
+      "width": 814,
+      "height": 457
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04225v1/fig-004.webp",
+      "caption": "Figure 4: Comparisons between the proposed framework and RL baselines in the SafetyGymnasium reach-avoid tasks.",
+      "page": 9,
+      "index": 4,
+      "width": 814,
+      "height": 227
+    }
+  ]
+}

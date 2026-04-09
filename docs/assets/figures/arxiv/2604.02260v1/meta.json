@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.02260v1/fig-001.webp",
+      "caption": "Fig. 2. Dynamic regret under time-varying dynamics for different decay rates. The stationary baseline SOMBRL accumulates large regret due to stale data, while R-OMBRL and SW-OMBRL improve tracking by restricting the data buffer. We report the mean regret compared to an estimate of the optimal performance over five seeds with standard error.",
+      "page": 6,
+      "index": 1,
+      "width": 867,
+      "height": 207
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02260v1/fig-002.webp",
+      "caption": "Fig. 5. Ablation of the soft reset parameter α1 = α2 = α from (15) for R-OMBRL under non-stationary dynamics. We vary the strength of the parameter perturbations applied to the dynamics model and policy after replay-buffer resets. Moderate perturbations yield the best trade-off between stability and plasticity, while aggressive policy perturbations are particularly detrimental.",
+      "page": 15,
+      "index": 2,
+      "width": 584,
+      "height": 526
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02260v1/fig-003.webp",
+      "caption": "Fig. 4. Hardware experiments on a real RC car. The task is a parking maneuver that transitions from drift-based behavior to standard parking as the maximum throttle decays at N = 14 episodes. The top row shows rollouts after N = 30, where R-OMBRL successfully completes the task while SOMBRL fails to adapt. The bottom row shows the mean return and error bands along trajectories τN on the real system over episodes, averaged over 6 random seeds. Restricting the data buffer enables adaptation to changing dynamics and improves performance compared to the stationary baseline.",
+      "page": 7,
+      "index": 3,
+      "width": 498,
+      "height": 442
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02260v1/fig-004.webp",
+      "caption": "Fig. 3. Dynamic regret across multiple environments. The top row shows the evolution of the maximum admissible torque ūn and its decay over environment training steps, while the bottom rows report the cumulative regret Rn averaged over five seeds with standard error. Under stationary dynamics, all methods perform similarly. After the onset of non-stationarity, R-OMBRL and SW-OMBRL significantly reduce regret compared to the stationary baseline.",
+      "page": 7,
+      "index": 4,
+      "width": 1039,
+      "height": 331
+    },
+    {
+      "url": "assets/figures/arxiv/2604.02260v1/fig-005.webp",
+      "caption": "TABLE I HYPERPARAMETERS FOR ENSEMBLE-BASED EXPERIMENTS WITH SAC IN SECTION VII.",
+      "page": 13,
+      "index": 5,
+      "width": 991,
+      "height": 318
+    }
+  ]
+}
