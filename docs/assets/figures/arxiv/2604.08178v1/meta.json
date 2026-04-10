@@ -1,0 +1,126 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-001.webp",
+      "caption": "Figure 15: Chosen Trajectory: Heroic Recovery",
+      "page": 25,
+      "index": 1,
+      "width": 950,
+      "height": 402
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-002.webp",
+      "caption": "Figure 16: Reject Trajectory: Syntax Error & Blind Retry",
+      "page": 25,
+      "index": 2,
+      "width": 950,
+      "height": 416
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-003.webp",
+      "caption": "Figure 5: Tool environment",
+      "page": 21,
+      "index": 3,
+      "width": 950,
+      "height": 788
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-004.webp",
+      "caption": "Table 1: High-level comparison of RM/agent-evaluator benchmarks. MT = multi-turn context; Tools = multiple tools available; Exec = executed tool/environment feedback included; Plan = planning/process quality; Rec = error recovery; Safety = safety/refusal/tool-misuse handling. ctx→resp denotes step-level evaluation on a single assistant response conditioned on its dialogue/tool context (often obtained by slicing longer trajectories). Plan-RewardBench targets trajectory-level preference judgment in complex tool-augmented settings.",
+      "page": 2,
+      "index": 4,
+      "width": 663,
+      "height": 215
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-005.webp",
+      "caption": "Table 3: Statistics of Plan-RewardBench pairs. We report Avg Tool Tokens (shared environment context) separately. The Avg Tokens and Max Tokens columns represent the total input length, encompassing the tool registry, user query, and the full agent trajectory. Note that within each pair, the tool registry is fixed; length differences between Chosen and Rejected stem solely from the trajectory content.",
+      "page": 7,
+      "index": 5,
+      "width": 796,
+      "height": 265
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-006.webp",
+      "caption": "Figure 8: Rejected suffix (unsafe compliance)",
+      "page": 22,
+      "index": 6,
+      "width": 950,
+      "height": 335
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-007.webp",
+      "caption": "Figure 6: Shared prefix (Long context trajectory)",
+      "page": 22,
+      "index": 7,
+      "width": 950,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-008.webp",
+      "caption": "Figure 7: Chosen suffix",
+      "page": 22,
+      "index": 8,
+      "width": 950,
+      "height": 202
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-009.webp",
+      "caption": "Figure 1: Plan-RewardBench overview. (Left) Evaluation scope. RewardBench evaluates only the final response, while FC-RewardBench focuses on tool-call name/arguments; both can miss tool-grounded contradictions (e.g., a fluent answer that contradicts the tool output). (Right) Construction pipeline. We source tasks and tool environments from Toucan/MCP, expand candidates via natural rollouts and perturbations, perform multi-judge scoring with meta-review and human audit, and assemble difficulty-/bias-controlled preference pairs for trajectorylevel evaluation and training.",
+      "page": 3,
+      "index": 9,
+      "width": 950,
+      "height": 592
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-010.webp",
+      "caption": "Figure 10: Tool environment",
+      "page": 23,
+      "index": 10,
+      "width": 950,
+      "height": 198
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-011.webp",
+      "caption": "Table 5: Model details across all stages: generation/perturbation, judge panel, and evaluated models.",
+      "page": 13,
+      "index": 11,
+      "width": 950,
+      "height": 889
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-012.webp",
+      "caption": "Table 4: Main results on Plan-RewardBench (pairwise accuracy, %). Multi-E/H and Sngl-E/H denote Multi-turn and Single-turn Planning (Easy/Hard). Specific Scenarios: Robust (Error Recovery), Safety (Refusal), and Irrel. (Tool Irrelevance/Unavailability). Avg represents the macro-average across all 7 evaluation columns. Results are sorted by Avg. In: pairwise; ○ pointwise. Out: ✓ choice; ♢ critique; r scalar reward.",
+      "page": 8,
+      "index": 12,
+      "width": 948,
+      "height": 700
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-013.webp",
+      "caption": "Figure 20: Reject Trajectory: Redundant Tool Use",
+      "page": 27,
+      "index": 13,
+      "width": 950,
+      "height": 235
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-014.webp",
+      "caption": "Figure 4: Macro-accuracy vs. input length. (a) Pairwise LLM judges show sharp degradation and collapse in the extreme tail (> 32k tokens). (b) Pointwise RMs exhibit a more linear decay. The dashed line indicates random chance (0.5).",
+      "page": 9,
+      "index": 14,
+      "width": 931,
+      "height": 315
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08178v1/fig-015.webp",
+      "caption": "Table 7: Best-of-N reranking on BFCL v4 (N = 4; base agent: Qwen3-32B-Instruct in function-calling mode).",
+      "page": 20,
+      "index": 15,
+      "width": 771,
+      "height": 254
+    }
+  ]
+}

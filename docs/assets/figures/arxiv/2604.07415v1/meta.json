@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-001.webp",
+      "caption": "Table 6: SubSearch case study 2 (successful): SubSearch can decompose the initial information need into sequential subqueries (we need the answer of one to formulate the other) and aggregate the retrieved documents to answer correctly.",
+      "page": 15,
+      "index": 1,
+      "width": 838,
+      "height": 1236
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-002.webp",
+      "caption": "Figure 1: SubSearch query decomposition and intermediate reward computation. The rewards are calculated at different stages of the reasoning traces, but only after the entire reasoning trace has been generated.",
+      "page": 2,
+      "index": 2,
+      "width": 819,
+      "height": 669
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-003.webp",
+      "caption": "Table 3: Main results. Bold indicates the best performance within each supervision category. †/∗ represent in-domain/out-domain datasets. REINF. refers to the REINFORCE algorithm, and r. indicates a reproduced method. Our method (SubSearch) achieves state-of-the-art results among SFT-free RL agents.",
+      "page": 7,
+      "index": 3,
+      "width": 824,
+      "height": 444
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-004.webp",
+      "caption": "Table 2: Comparison of search agent methods. ✓/–: present/absent. Evidence: retrieved external documents. Decomp.: query decomposition. Interm.: subquery-level intermediate reward. 1g+2i: 1 global + 2 intermediate.",
+      "page": 7,
+      "index": 4,
+      "width": 826,
+      "height": 505
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-005.webp",
+      "caption": "Table 5: SubSearch case study 1 (successful): SubSearch can decompose the initial information need into parallel subqueries and aggregate the retrieved documents to answer correctly.",
+      "page": 14,
+      "index": 5,
+      "width": 838,
+      "height": 1288
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-006.webp",
+      "caption": "Figure 5: SubSearch notation for query decomposition and intermediate rewards computation. l denotes the decomposition layer (root = 0), i denotes the index within each layer, xl,i represents a subquery at layer l and index i, and Dl,i represents the retrieved documents for subquery xl,i.",
+      "page": 13,
+      "index": 6,
+      "width": 811,
+      "height": 465
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-007.webp",
+      "caption": "Figure 6: Adaptive beta (β) evolution over training steps. A higher value highlights more weight to the intermediate rewards, while a lower value shows the model becomes better at giving a correct answer and therefore gives priority to the binary outcome reward. Higher EMA highlights giving more weight to recent reasoning traces compared to older ones.",
+      "page": 13,
+      "index": 7,
+      "width": 414,
+      "height": 346
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-008.webp",
+      "caption": "Figure 2: Training Progress of Qwen2.5-3B-base (a) with and without query decomposition via prompting on NQ and HotpotQA, (b) using EM, answerability and decomposition as reward signals, and (c) using weighted sum, residual or adaptive residual reward aggregation.",
+      "page": 8,
+      "index": 8,
+      "width": 817,
+      "height": 336
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-009.webp",
+      "caption": "Figure 4: Training progress of Qwen2.5-3B-base on NQ with GRPO and EM as reward, with and without using a format signal.",
+      "page": 12,
+      "index": 9,
+      "width": 397,
+      "height": 392
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-010.webp",
+      "caption": "Figure 3: Relative improvements on Qwen2.5-3B-base (a) with and without query decomposition via prompting on NQ and HotpotQA, (b) using EM, answerability and decomposition as reward signals, and (c) using weighted sum, residual or adaptive residual reward aggregation.",
+      "page": 9,
+      "index": 10,
+      "width": 817,
+      "height": 355
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07415v1/fig-011.webp",
+      "caption": "Table 1: Prompt template for SubSearch. The question is appended during training and inference.",
+      "page": 5,
+      "index": 11,
+      "width": 826,
+      "height": 475
+    }
+  ]
+}

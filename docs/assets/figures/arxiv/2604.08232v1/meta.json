@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08232v1/fig-001.webp",
+      "caption": "Figure 1. Illustration of HiRO-Nav agent adaptively determining whether to perform thinking based on its own action entropy Hπθ (at,xt). Based on our observations, high-entropy actions often steer the agent toward novel scenes or critical objects, which are located on key waypoints over the navigation trajectory, i.e., the black dashed line in the bird-eye-view map. HiRO-Nav accordingly activates reasoning only for these high-entropy actions (red points), improving the trade-off between reasoning efficiency and performance compared to dense-thinking and no-thinking agents, as demonstrated in Fig. 4.",
+      "page": 1,
+      "index": 1,
+      "width": 496,
+      "height": 348
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08232v1/fig-002.webp",
+      "caption": "Figure 11. Two action entropy calculation method show the same relationship between action entropy and Q-value.",
+      "page": 15,
+      "index": 2,
+      "width": 1042,
+      "height": 881
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08232v1/fig-003.webp",
+      "caption": "Figure 2. The distribution of action entropy (AE) over navigation trajectories. We analyze the AE distribution of a VLM agent finetuned using expert trajectories on CHORES-S ObjectNav tasks. (a): Only a small fraction (∼30%) of actions exhibits high entropy (AE ≥ 0.6). (b): High-entropy actions (red points in the map) often steer the agent to explore novel areas or approach critical objects. An extended version of the figure (b) can be found in Fig. 10 of Appendix.",
+      "page": 2,
+      "index": 3,
+      "width": 1017,
+      "height": 222
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08232v1/fig-004.webp",
+      "caption": "Figure 7. Ablation study. Fig. (a)&(b): Vanilla RL fails to effectively enhance hybrid reasoning ability due to a decline in no-thinking ability. In contrast, our two-stage training paradigm successfully improves the agent’s no-thinking ability in Stage I and maintained by KL constraint in Stage II, which subsequently enhance the hybrid reasoning ability. Fig. (c): The superior performance of NTW>0 highlights its effectiveness. Our hybrid reasoning enables the agent to achieve improved performance with a reduced thinking ratio (indicated by high τ ), reaching a SOTA result at τ=0.6 and NTW=5.",
+      "page": 7,
+      "index": 4,
+      "width": 1012,
+      "height": 302
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08232v1/fig-005.webp",
+      "caption": "Figure 10. Additional visualization examples of action entropy at each navigation waypoint.",
+      "page": 14,
+      "index": 5,
+      "width": 1036,
+      "height": 1066
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08232v1/fig-006.webp",
+      "caption": "Figure 9. An example of annotated semantic map.",
+      "page": 12,
+      "index": 6,
+      "width": 518,
+      "height": 362
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08232v1/fig-007.webp",
+      "caption": "Figure 5. Overview of HiRO-Nav training pipeline and the proposed hybrid reasoning strategy. which consists of two part: (1) Hybrid supervised fine-tuning (left). We first collect a hybrid reasoning dataset (HRD) containing a no-reasoning dataset and a reasoning dataset annotated by Gemini2.0-Flash on high-entropy actions . We then fine-tune a VLM on the HRD as a cold start to enable the agent with hybrid-thinking abilities. (2) Two-stage online reinforcement learning (bottom right). In stage I, we collect no-thinking rollouts and train the agent’s no-thinking ability. In Stage II, we collect rollouts with proposed hybrid reasoning strategy and train agent’s thinking ability. The proposed Hybrid reasoning strategy (top right) encourages the agent to activate thinking only for high-entropy actions.",
+      "page": 5,
+      "index": 7,
+      "width": 1027,
+      "height": 464
+    }
+  ]
+}

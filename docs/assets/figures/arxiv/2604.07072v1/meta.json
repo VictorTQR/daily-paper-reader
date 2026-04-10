@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07072v1/fig-001.webp",
+      "caption": "Table 7. Average episodic returns on Atari 2600 environments using fixed offline datasets from Minari. Results are reported as mean ± standard deviation over three random seeds. ERSAC variants are compared against standard offline RL baselines in high-dimensional visual domains.",
+      "page": 25,
+      "index": 1,
+      "width": 975,
+      "height": 198
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07072v1/fig-002.webp",
+      "caption": "Figure 3. Policy entropy during training across B N, CH N, Ell 0.9, and Ell Epi models in the CartPole and LunarLander environments. Entropy is computed per epoch and averaged over 10 evaluation seeds. Lower entropy indicates more confident, deterministic policies, while higher entropy reflects greater stochasticity in policies.",
+      "page": 25,
+      "index": 2,
+      "width": 937,
+      "height": 360
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07072v1/fig-003.webp",
+      "caption": "Figure 1. State visitation frequency distributions under different expectile policies.",
+      "page": 14,
+      "index": 3,
+      "width": 713,
+      "height": 311
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07072v1/fig-004.webp",
+      "caption": "Figure 2. (a)–(c): Uncertainty sets and worst-case policy evaluations for states 0, 5, and 10 in the machine replacement example at epoch 1. Each subplot illustrates the distribution of ensemble Q-values along with the corresponding box, convex hull, and ellipsoidal uncertainty sets. Markers X indicate the worst-case Q-value q∗ under different policies π.",
+      "page": 14,
+      "index": 4,
+      "width": 1017,
+      "height": 347
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07072v1/fig-005.webp",
+      "caption": "Table 4. Normalized returns with 90% confidence interval achieved by SAC-N, CH-N, Ell-N, and Ell 0.9-N across dataset sizes {10×, 100×, 1000×} and behavior policy risk levels τ ∈ {0.1, 0.5, 0.9} in the Machine Replacement and RiverSwim environments. Scores are computed over 10 evaluation seeds and normalized relative to the random and optimal policy baselines. Bold and underline highlight respectively the best and worst performing method when the margin is larger or equal to one. The final column reports the return of the behavior policy used to generate the offline data.",
+      "page": 23,
+      "index": 5,
+      "width": 867,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07072v1/fig-006.webp",
+      "caption": "Table 1. Returns aggregated across τ ∈ {0.1, 0.5, 0.9} for each dataset size. Bold indicates best method, underline the worst, when mean differences ≥ 1.",
+      "page": 8,
+      "index": 6,
+      "width": 673,
+      "height": 374
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07072v1/fig-007.webp",
+      "caption": "Table 5. Normalized returns with 90% confidence intervals achieved by the five algorithms across dataset sizes {1k, 10k, 100k} and behavior-policy risk levels τ ∈ {0.1, 0.5, 0.9} in CartPole and LunarLander. Scores are averaged over 10 evaluation seeds and normalized against random and optimal baselines. Bold and underline highlight respectively the best and worst performing method when the margin is larger or equal to one.",
+      "page": 24,
+      "index": 7,
+      "width": 875,
+      "height": 550
+    }
+  ]
+}

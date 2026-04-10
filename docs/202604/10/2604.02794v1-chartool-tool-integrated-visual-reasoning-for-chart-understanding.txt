@@ -1,0 +1,1068 @@
+Title: CharTool: Tool-Integrated Visual Reasoning for Chart Understanding
+
+URL Source: https://arxiv.org/pdf/2604.02794v1
+
+Published Time: Mon, 06 Apr 2026 00:36:09 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# CHAR TOOL : Tool-Integrated Visual Reasoning for Chart Understanding 
+
+Situo Zhang 1 * Yifan Zhang 1 * Zichen Zhu 1 Da Ma 1 Lei Pan 2 Danyang Zhang 1 Zihan Zhao 1
+
+Lu Chen 1 3 4 5 Kai Yu 1 4 5 
+
+## Abstract 
+
+Charts are ubiquitous in scientific and financial literature for presenting structured data. However, chart reasoning remains challenging for multi-modal large language models (MLLMs) due to the lack of high-quality training data, as well as the need for fine-grained visual grounding and precise numerical computation. To address these challenges, we first propose D UO CHART , a scalable dual-source data pipeline that combines synthesized charts with real-world charts to con-struct diverse, high-quality chart training data. We then introduce C HAR TOOL , which equips MLLMs with external tools, including image cropping for localized visual perception and code-based computation for accurate numerical reason-ing. Through agentic reinforcement learning on DUO CHART , C HAR TOOL learns tool-integrated reasoning grounded in chart content. Extensive experiments on six chart benchmarks show that our method consistently improves over strong MLLM baselines across model scales. Notably, CHAR TOOL -7B outperforms the base model by 
+
++8.0% on CharXiv (Reasoning) and +9.78% on ChartQAPro, while achieving competitive per-formance with substantially larger or proprietary models. Moreover, C HAR TOOL demonstrates positive generalization to out-of-domain visual math reasoning benchmarks. 
+
+## 1. Introduction 
+
+Charts serve as a fundamental medium for presenting struc-tured data in scientific papers and financial reports, com-
+
+> *
+
+Equal contribution 1X-LANCE Lab, School of Computer Sci-ence, Shanghai Jiao Tong University, Shanghai, China 2AISpeech Co., Ltd., Suzhou, China 3Shanghai Innovation Institution, Shang-hai, China 4Jiangsu Key Lab of Language Computing, Suzhou, China 5Suzhou Laboratory, Suzhou, China. Correspondence to: Situo Zhang <situozhang@sjtu.edu.cn >, Yifan Zhang <zhang-yifan@sjtu.edu.cn >, Lu Chen <chenlusz@sjtu.edu.cn >, Kai Yu 
+
+<kai.yu@sjtu.edu.cn >.
+
+Preprint. April 6, 2026. 
+
+bining textual annotations with structured visual elements to convey quantitative relationships. Although recent mul-timodal large language models (MLLMs) have achieved strong performance in general visual understanding and rea-soning (OpenAI, 2023; Liu et al., 2023c; Comanici et al., 2025; Bai et al., 2025a; Huang et al., 2025), they continue to struggle with chart reasoning, which requires fine-grained visual perception as well as precise relational and numerical reasoning over densely structured information (Masry et al., 2022; Wang et al., 2024; Xu et al., 2023). To tackle chart reasoning, existing research has primarily focused on either scaling up training data through synthe-sis or improving models’ reasoning capabilities for chart question answering (Liu et al., 2023b; Han et al., 2023; Liu et al., 2024b; Meng et al., 2024). However, current works suffer from two key limitations. 1) Existing synthesized chart datasets often lack sufficient diversity and com-plexity (Wang et al., 2024). Early approaches rely on fixed templates and cover only a limited set of chart types (Han et al., 2023; Kantharaj et al., 2022). More recent code-driven pipelines are more scalable, but they still struggle to capture real-world, long-tail chart patterns and often produce de-graded layouts (e.g., overlapping text) as chart complexity increases (He et al., 2025; Yang et al., 2025b). 2) Current chart reasoning methods are constrained by the limita-tions of chain-of-thought text-based reasoning . Unlike general visual question answering, chart reasoning requires fine-grained visual and numerical analysis to interpret com-plex elements such as overlapping data points, intersecting trend lines, and dense numerical annotations, while simulta-neously modeling their spatial arrangements and semantic meanings. However, existing methods typically generate answers either directly or through textual reasoning (Chen et al., 2025; Masry et al., 2025b; Wei et al., 2022) (Fig-ure 1-Right), focusing on textual logical inference rather than grounded visual processing. As a result, they are often reliant on language priors, making them prone to hallucina-tion (Bai et al., 2024) and limiting their ability to perform precise numerical computation or capture complex relation-ships encoded in charts (Zheng et al., 2025; Zhang et al., 2025b). To address these limitations and further improve the chart reasoning capabilities of MLLMs, we propose D UO CHART ,1
+
+> arXiv:2604.02794v1 [cs.AI] 3 Apr 2026
+
+Submission and Formatting Instructions for ICML 2026 Question : Which rank has the lowest                  
+
+> eigenfunction to begin with? 120
+> Chart Reasoning QA Motivation 1: better charts Motivation 2: tool integration
+> low -diversity
+> code -rendered charts
+> more
+> diverse
+> text -overlapped low -quality
+> code -rendered chart cleaner chart
+> 160
+> errors due to
+> lack of local focus
+> 120
+> image cropping tool
+> correctness improved through
+> image cropping for local focus
+
+Figure 1. Motivation for our method. (Left) Chart reasoning requires fine-grained visual perception and numerical reasoning. (Middle) Synthetic charts often lack diversity and visual quality. (Right) Purely textual reasoning leads to errors on complex layouts, while explicit tool grounding enables accurate, localized analysis. (Only cropping is illustrated; see Appendix F for more examples.) 
+
+a dual-source chart synthesis pipeline (§2.1.1). The two data sources offer complementary strengths: real-world charts from scientific literature provide broad coverage and high visual quality, while code-driven synthetic charts provide precise underlying data for answer generation and verifica-tion. To combine these advantages, we sample diverse and fine-grained specifications, including chart types, layouts, and difficulty levels, to generate varied chart-rendering code. We further incorporate high-quality charts from scientific literature to better capture real-world chart distributions. In addition, we design a dedicated question-answer synthesis pipeline with multi-stage checking and scoring to construct high-quality, challenging QA training data grounded in the generated charts (§2.1.2). Using this pipeline, we construct DUO CHART -100k, which contains high-quality charts and 100k challenging QA samples. Second, to address the limitations of text-based reason-ing for fine-grained visual and numerical chart understand-ing, we introduce CHAR TOOL , which equips MLLMs with tool-integrated reasoning capabilities (§2.2). In particu-lar, CHAR TOOL introduces an image-cropping tool for capturing localized visual cues, together with code-based computation tools for accurate numerical calculation. We train the model using end-to-end reinforcement learning (Jin et al., 2025; Li et al., 2025b; Qian et al., 2025; Song et al., 2025) within an isolated sandbox environment, with tool-aware reward to guide effective tool usage. This enables the model to learn how to invoke tools, generate executable tool actions, and incorporate returned observations into sub-sequent reasoning, thereby supporting effective multi-step, tool-integrated reasoning. Experimental results on six chart reasoning benchmarks show that CHAR TOOL , trained on DUO CHART and equipped with tool-grounded reasoning, consistently im-proves performance across different model scales (§3.3). Notably, on the challenging real-world benchmark CharXiv (Wang et al., 2024), CHAR TOOL -7B achieves an accuracy of 50.5%, corresponding to an 8.0% absolute im-provement . Moreover, CHAR TOOL -7B yields a 9.78% ab-solute improvement on ChartQAPro (Masry et al., 2025a). Furthermore, CHAR TOOL demonstrates strong generaliza-tion to three out-of-domain visual mathematical reasoning benchmarks (§3.4), indicating that the tool-integrated rea-soning ability learned from charts can transfer beyond the chart domain. Our main contributions are summarized as follows: • We develop a multi-agent chart synthesis and ques-tion–answer generation pipeline that produces diverse, high-quality charts and challenging QA pairs. • We enable MLLMs to leverage external tools for precise numerical computation and fine-grained visual reasoning, with agentic reinforcement learning used to train effective tool-integrated chart reasoning. • We demonstrate the effectiveness of our approach across six chart reasoning benchmarks, achieving substantial gains on challenging real-world datasets and showing strong generalization to out-of-domain visual mathemati-cal reasoning tasks. 
+
+## 2. Method 
+
+In this section, we first describe D UO CHART , our multi-agent chart data synthesis pipeline, with a focus on chart image construction and question-answer generation. We then introduce C HAR TOOL , our tool-integrated reasoning framework for chart understanding. 
+
+2.1. Multi-Agent Chart Data Synthesis 
+
+2.1.1. H YBRID CHART IMAGE CONSTRUCTION 
+
+We observe a fundamental trade-off between the two data sources. Real-world charts collected from scientific liter-ature exhibit broad distributions and generally high visual quality, but they do not provide accessible underlying data values, making it difficult to construct complex reasoning 2Submission and Formatting Instructions for ICML 2026 B. Question & Answer Synthesis  C. Cold-start Trajectory  
+
+> A. Chart Image Construction
+> arXiv Mining
+> QA Agent
+> LLM-Code Synthesis
+> Reference
+> Code
+> Idea
+> (Personality, Subplot,
+> Layout,
+> Type)
+> Plot
+> Agent
+> Code
+> Sandbox
+> Synthetic Images
+> Extractor
+> Images
+> Context
+> Filter
+> Chart Images
+> Visual
+> Quality
+> Semantic
+> Completeness
+> Image + Context
+> Image + Plot Code
+> Checker Agent
+> Final Chart Database
+> Chart Image Database
+> QA Metadata
+> Database
+> Tool-Use Trajectories
+> Fails
+> High Quality
+> Q&A
+> QA-Image
+> Alignment Reasoning Verification
+> Difficulty Scoring
+> Majority
+> Voting
+> QA
+> Agent
+> Tool Agent
+> Code
+> Sandbox
+> DuoChart -100K
+
+Figure 2. Data synthesis pipeline of D UO CHART . (A). Chart images are constructed from two sources prior to quality filtering: a scalable LLM-based code synthesis pipeline and real-world chart mining. (B). High-quality QAs, named D UO CHART , are generated by metadata-guided QA generation followed by rigorous four-stage quality validation. (C). Cold-start trajectories are synthesized by an advanced MLLM-powered Tool Agent. 
+
+questions and derive verifiable ground-truth answers. In contrast, code-driven synthetic charts provide precise un-derlying data for answer generation and verification, yet often fall short in visual quality and diversity compared with real-world charts. To leverage their complementary strengths, we construct a hybrid chart image corpus from two sources, as illustrated in Figure 2-A: (i) code-driven synthetic charts for controllable diversity and precise labels, and (ii) real-world charts mined from scientific papers for realistic visual complexity and broader chart distributions. By combining both sources, our corpus balances controllability, annotation quality, and realism, providing a stronger foundation for downstream chart QA generation. 
+
+Code-Based Synthetic Chart Generation. To ensure consistency to real-world chart distributions, we curate a 
+
+Reference Code library by reproducing real-world charts with MLLM-generated Python code and manually verifying alignment with the originals. This process yields a set of 112 reference charts, including both single-plot and multi-subplot layouts. To promote topic diversity, we adopt a persona-based sampling strategy (Chan et al., 2024). Condi-tioned on sampled attributes such as subplot count, layout, and chart type, a Plot Agent generates plotting code, which is executed in a sandbox environment with iterative correc-tion and refinement until valid charts are rendered. This pipeline enables scalable synthesis of diverse charts while preserving realistic structure and accurate underlying data. 
+
+Mining Real-World Charts from Papers. To expose the model to realistic chart layouts and visual diversity, we mine charts from arXiv papers 1 spanning eight fields. We use MinerU (Niu et al., 2025) to extract figure images together with their associated textual context. Semantic filtering is then applied using an MLLM to retain only valid data visualizations and remove non-chart figures or overly cluttered elements. This real-world collection complements the synthetic charts by introducing visual complexity, layout variation, and domain diversity. 
+
+Image Quality Filtering. We apply automatic filtering to ensure both visual usability and semantic completeness. A MLLM-based judge scores each candidate chart along two axes: (1) visual quality , which penalizes severe overlap, misalignment, and unreadable text; and (2) semantic com-pleteness , which checks whether essential elements such as axes, legends, and labels are present for self-contained interpretation. Charts failing either criterion are discarded, yielding a final high-quality chart image database suitable for fine-grained chart reasoning. 2.1.2. R ELIABILITY -D RIVEN QA G ENERATION 
+
+Question-Answer Synthesis. As shown in Figure 2-B, given a chart image and its associated context, the multi-modal QA Agent generates candidate question-answer pairs spanning two complementary categories: recognition ques-
+
+> 1
+
+https://arxiv.org/ . We collect papers from 2410 to 2510, with no overlap with CharXiv (Wang et al., 2024). 
+
+3Submission and Formatting Instructions for ICML 2026 
+
+tions for element identification and structural extraction, and reasoning questions that require multi-step visual anal-ysis and numerical reasoning. To enable both diversity and complexity, we construct questions by conditioning the QA Agent on fine-grained analytical aspects drawn from a QA metadata pool. These aspects explicitly specify what type of visual or numerical reasoning is required, such as legend in-terpretation, cross-subplot comparison, trend estimation, or multi-variable aggregation. By sampling across these fine-grained aspects and conditioning the generation process accordingly, the resulting questions cover a broad spectrum of reasoning behaviors with varying difficulty levels. 
+
+QA Quality Control. Following the generation phase, we apply a Checker Agent to filter hallucinations and retain reliable supervision. Specifically, we (1) enforce QA-image alignment to remove questions that depend on non-visual knowledge or unsupported claims; (2) perform reasoning verification to ensure the answer is correct and the reason-ing is consistent with the chart evidence; (3) use majority voting to discard ambiguous cases with low agreement; and (4) assign difficulty scores and keep questions that require non-trivial visual and numerical reasoning. This process yields our high-quality QA dataset D UO CHART -100k. We present the statistics of our data in Figure 3. 2.1.3. C OLD -START TRAJECTORIES SYNTHESIS .To initialize tool-use behavior, we construct a cold-start dataset of executable trajectories (Figure 2-C) sampled from DUO CHART . For each chart question, a Tool Agent is prompted to solve the problem step by step, invoking image cropping or computation tools as needed. Each tool call is executed in a code sandbox, with outputs appended to the context for subsequent reasoning. The full sequence of reasoning steps, tool calls, and observations forms a trajectory. We retain only those with successful execution and correct final answers, resulting in about 9k reliable demonstrations for cold-start supervised fine-tuning. 
+
+2.2. Tool-Intergrated Chart Reasoning 
+
+We introduce tool-integrated reasoning (TIR) for chart un-derstanding, where an MLLM alternates between internal reasoning and external tool invocation. Given an input chart image I and a question q, the model follows a policy πθ
+
+that iteratively generates reasoning tokens and selects tool actions based on the current context. This interaction con-tinues until the model outputs a final answer. Formally, the model generates a trajectory 
+
+τ = ( I, q, r 1, a 1, o 1, . . . , r n, a n, o n, r n+1 , y ), (1) where ri denotes the reasoning tokens at step i, ai rep-resents the selected tool action (e.g., image cropping or computation), oi is the observation returned by the tool ex-ecution, and y is the final predicted answer. Observations 
+
+oi may consist of text outputs or processed visual inputs, which are appended to the model context for subsequent reasoning. 2.2.1. R EINFORCEMENT LEARNING FOR TIR Starting from the cold-start model, we further optimize the policy πθ with reinforcement learning to improve tool usage and multi-step reasoning. The objective is to maximize the expected reward over trajectories: 
+
+J (θ) = Eτ ∼πθ [R(τ )] , (2) where R(τ ) evaluates the quality of the final answer y with respect to the ground-truth answer y∗. In our implementa-tion, the reward is defined at the trajectory level based on answer correctness, while intermediate reasoning and tool usage are optimized implicitly through policy gradients. 2.2.2. P OLICY OPTIMIZATION WITH GRPO To optimize the policy, we adopt Group Relative Policy Opti-mization (GRPO) (Shao et al., 2024). Let M ⊆ { 1, . . . , L }
+
+denote the set of token indices corresponding to reasoning steps, tool calls, and final answer tokens that are not masked during RL training. Tokens outside M (e.g., prompt or observation tokens) are masked for training. At each update step, we sample a group of G trajectories 
+
+{τg }Gg=1 from the previous policy πθold . The GRPO objec-tive is defined as 
+
+JGRPO (θ) = E{τg }Gg=1 ∼πθold 
+
+"
+
+1
+
+G
+
+> G
+
+X
+
+> g=1
+
+1
+
+|M| 
+
+X
+
+> j∈M
+
+min 
+
+
+
+wjg (θ)Ajg , clip  wjg (θ), 1 − ϵ, 1 + ϵAjg
+
+#
+
+,
+
+(3) where wjg (θ) = πθ (xj |x<j )    
+
+> πθold (xj|x<j )
+
+, and ϵ is the clipping threshold, and Ajg denotes the token-level advantage computed by normalizing the trajectory-level reward within each group: 
+
+Ag = rg − mean ({Rg }Gg=1 )
+
+std ({Rg }Gg=1 ) . (4) 
+
+Tools. In this work we focus on two tools that are most critical for chart understanding: an image cropping tool for fine-grained visual perception, and a code compuation tool for explicit numerical operations such as aggregation and statistical analysis. This design enables the model to seam-lessly interleave visual localization and precise computation with reasoning process. 4Submission and Formatting Instructions for ICML 2026 Categories  
+
+> Line Chart
+> Bar Chart
+> Scatter Chart
+> Heatmap
+> Pie Chart
+> Area Chart
+> Box Chart
+> Histogram
+> Radar Chart
+> Others
+> Information Extraction
+> Counting
+> Pattern Recognition
+> Enumeration
+> Extreme Value Analysis
+> Conditional Reasoning
+> Comparative Analysis
+> Trend Analysis
+> Aggregation & Calculation
+> Ranking & Ordering
+> Pattern & Correlation
+> Proportional & Distributional Analysis
+> Axis Label Extraction
+> Color Extraction
+> Title Extraction
+> Tick Extraction
+> Number Extraction
+> (8694; 52.10%)
+> LLM-Code
+> arXiv
+> (7994; 47.90%)
+> Number of Subcharts
+> Data Source
+
+Chart Metadata  
+
+> 1
+> 2–4
+> 9+
+> 5-9
+> Answer Type
+> Question Type
+> Text
+> Number
+> List/Range
+> Binary
+> (60096; 57.18%)
+> Recognition
+> Reasoning
+> (45000; 42.82%)
+
+Q&A Metadata 
+
+> (48766; 46.40%)
+> (16249; 15.46%)
+> (15045; 14.32%)
+> (13954; 30.07%)
+
+Figure 3. Data statistics of the charts (Left) and QAs (Right) in D UO CHART .
+
+Reward Design. We design the reward function compris-ing three parts: (1) Accuracy reward Racc , which evaluates the correctness of the generated response; (2) Format re-ward Rformat , which enforces structural compliance across reasoning and tool-calling templates to ensure reliable pars-ing; and (3) Tool reward Rtool , which encourages the explo-ration of tool-assisted trajectories to balance the exploitative tendency of Racc . Each of these reward components is im-plemented as a binary signal (1.0/0.0). The total reward is defined as: 
+
+R(τ ) = Racc (τ ) + λ1 · Rformat (τ ) + λ2 · IRacc (τ )>0 · Rtool (τ ),
+
+(5) where IRacc (τ )>0 is an indicator function that is 1 if the answer is correct and 0, ensuring that tool calls are encour-aged only when the answer is correct. We empirically set 
+
+λ1 = 0 .1 and λ2 = 0 .2 in experiments. 
+
+## 3. Experiments 
+
+In this section, we thoroughly evaluate our method from three perspectives. First, we assess the quality of our synthe-sized dataset D UO CHART . Second, we implement C HAR -TOOL and evaluate its performance on a diverse set of chart reasoning benchmarks, as well as out-of-domain visual rea-soning tasks. Third, we conduct ablation studies to analyze the impact of key design components. 
+
+3.1. Quality of the Synthesized Dataset 
+
+As shown in Figure 3, our dataset covers a wide variety of chart layouts, chart types, and question types. We further evaluate the quality of our synthesized dataset DUO CHART through both quantitative and model-based evaluation. Specifically, we report average entropy of chart images and employ GPT-5.2 to judge four key metrics: visual quality, question-image alignment, answer correct-ness, and reasoning difficulty (further details are provided in supplementary material). For comparison, we benchmark DUO CHART against widely adopted synthetic chart datasets, including ReachQA (He et al., 2025) and ECD (Yang et al., 2025b). As shown in Figure 4, D UO CHART consistently surpasses Avg. Entropy Visual Quality QA-alignment Answer Correctness Difficulty    
+
+> Metric
+> 2345
+> Score
+> 2.22 2.98 4.56 4.52 2.45 1.85 2.96 4.68 4.46 3.14 2.35 3.25 4.71 4.67 3.30
+> ECD ReachQA
+> DuoChart
+
+Figure 4. Comparison of synthesized dataset quality. 
+
+both ReachQA and ECD across all evaluation criteria. No-tably, it achieves higher image entropy, which indicates the presence of more complex layouts. It also demonstrates superior visual quality and includes a greater proportion of challenging, high-difficulty reasoning questions. These re-sults demonstrate that D UO CHART more accurately reflects the complexity and diversity of real-world chart analysis tasks. Takeaway 1 
+
+Our multi-agent data synthesis pipeline produces high-quality and challenging chart questions with strong visual grounding and accurate answers. 
+
+3.2. Experimental Setup Setup. We implement C HAR TOOL using the Qwen2.5-VL architecture with both 3B and 7B parameter variants (Bai et al., 2025b). Training is conducted in two stages: super-vised fine-tuning (SFT) on cold-start trajectories, followed by reinforcement learning on D UO CHART . Additional train-ing hyperparameters and implementation details are pro-vided in the supplementary material. 
+
+Evaluation. We conduct a comprehensive evaluation of our models across a diverse set of standard chart bench-marks, categorized into: (1) Real-world Benchmarks ,comprising charts extracted from real-world sources, in-cluding CharXiv (Wang et al., 2024), ChartQAPro (Masry et al., 2025a), and ChartQA (Masry et al., 2022); and (2) 
+
+Synthetic Benchmarks , containing synthesized images or 5Submission and Formatting Instructions for ICML 2026 
+
+queries: ChartBench (Xu et al., 2023), ChartX (Xia et al., 2025), and ReachQA (He et al., 2025). Furthermore, to assess the out-of-domain generalization capabilities of our approach, we include three visual math reasoning bench-marks: MathVista (Lu et al., 2024), WeMath (Qiao et al., 2025), and MathVerse (Zhang et al., 2024c). Further evalua-tion details are available in supplementary material. 
+
+Baselines. We compare C HAR TOOL against three classes of models: (1) Proprietary and general-purpose MLLMs ,including GPT-4o (OpenAI, 2024), Claude 3.5 Sonnet (An-thropic, 2024), InternVL3-8B (Zhu et al., 2025), Qwen3-VL-8B (Bai et al., 2025a), and the Qwen2.5-VL series (Bai et al., 2025b); (2) Chart-specialized models , including TinyChart (Zhang et al., 2024b), ChartGemma (Masry et al., 2025c), ChartMoE (Xu et al., 2025), and ECD-Qwen2.5-VL-7B (Yang et al., 2025b); and (3) think-with-image mod-els , including DeepEyes (Zheng et al., 2025), DeepEyes-V2 (Hong et al., 2025) and Thyme (Zhang et al., 2025b). 
+
+3.3. Main Results 
+
+To thoroughly evaluate C HAR TOOL , we present the per-formance on benchmarks covering diverse chart types in Table 1. CHAR TOOL demonstrates consistently notable gains across diverse benchmarks and model sizes. Based on the quantitative results, we make the following key observa-tions: 
+
+CHAR TOOL yields notable improvements over baselines across all benchmarks. Compared to the Qwen2.5-VL backbone models, C HAR TOOL achieves substantial im-provements across all evaluation metrics. On the challeng-ing real-world benchmark CharXiv, C HAR TOOL -3B and CHAR TOOL -7B achieve absolute improvements of 10.1% 
+
+and 8.0% in reasoning accuracy, respectively. Compared to previous chart-specialized models, C HAR TOOL demon-strates superior performance on real-world datasets and achieves significant gains in average accuracy. These consis-tent improvements confirm that our tool-integrated approach effectively enhances the model’s ability to interpret and rea-son over chart data. 
+
+Comparable Performance with Proprietary and Large-Scale Models. Despite using only 7B parameters, C HAR -TOOL -7B achieves performance comparable to advanced proprietary and large-scale open-source models. As shown in Table 1, C HAR TOOL -7B attains an average score of 
+
+66.52 , outperforming GPT-4o (61.52) and Claude 3.5 Son-net (63.62), and the much larger Qwen2.5-VL-72B (66.02). These results suggest that our tool-integrated reasoning framework provides a more parameter-efficient approach to chart reasoning than scaling model size alone. 
+
+Comparison with Think-with-Image Models. CHAR -TOOL outperforms recent “think-with-image” baselines such as DeepEyes and Thyme. We attribute this advan-tage to the high-quality training data constructed by our data engine, which specifically targets the unique characteristics of scientific charts—such as high information density and 
+
+multi-subplot layouts . Unlike generic reasoning models that treat charts as standard images, C HAR TOOL benefits from fine-grained instruction tuning that explicitly models the structural relationships within complex subplots, leading to more precise visual grounding and reasoning. 
+
+3.4. Results on Out-of-Domain Visual Reasoning Benchmarks 
+
+To verify the generalization ability of C HAR TOOL beyond the chart domain, we additionally evaluate our model on three general visual reasoning benchmarks: MathVista (Lu et al., 2024), WeMath (Qiao et al., 2025), and Math-Verse (Zhang et al., 2024c). These benchmarks involve visual understanding combined with multi-step numerical and logical reasoning, and are not limited to chart-based inputs. As shown in Table 2, despite not being trained on these tasks, C HAR TOOL shows performance gains across multi-ple benchmarks. These results indicate that C HAR TOOL ’s tool-integrated reasoning framework enables explicit numer-ical computation and fine-grained visual perception, which in turn generalize effectively to visual mathematical rea-soning. By invoking code execution for structured com-putation, C HAR TOOL achieves improved performance on out-of-domain visual reasoning benchmarks. Takeaway 2  
+
+> Benefiting from our dataset and tool-integrated reasoning, CHAR TOOL outperforms both chart-specialized models and think-with-image models on chart reasoning tasks, while also demonstrating performance gains on out-of-domain visual reasoning benchmarks.
+
+3.5. Ablation Studies 
+
+In this section we perform ablation studies on several key components in C HAR TOOL .
+
+Effect of Tool-Integrated Reinforcement Learning. Ta-ble 3 evaluates Qwen2.5-VL-3B with different reasoning augmentation methods. Chain-of-Thought prompting alone fails to improve performance and even degrades descriptive accuracy, indicating that pure prompt engineering cannot quip the model with sufficient capacity for chart understand-ing. Text-only reinforcement learning yields only marginal gains, as language-level optimization cannot resolve er-rors in fine-grained perception and numerical computation. 6Submission and Formatting Instructions for ICML 2026 
+
+Table 1. Performance comparison across diverse chart benchmarks. The best result in each column is highlighted in bold , the second-best result is underlined, and relative improvements over base model ( ∆) are shown in red .
+
+Method Param. CharXiv ChartQA ChartQAPro ChartBench ChartX ReachQA Avg. 
+
+Reas. Desc. Avg. Overall NQA Binary QA Reas. Recog. 
+
+Proprietary and General Model 
+
+GPT-4o – 47.10 84.45 85.70 37.67 52.88 81.03 58.33 39.70 66.80 61.52 Claude Sonnet 3.5 – 60.20 84.30 90.80 43.58 48.29 76.72 42.71 51.70 74.30 63.62 InternVL3-8B 8B 39.50 75.33 82.72 37.78 45.95 84.18 54.60 30.50 59.40 56.66 Qwen3-VL-8B 8B 46.40 83.00 84.44 42.65 57.86 76.83 59.72 47.70 70.70 61.89 Qwen2.5-VL-72B 72B 49.70 87.40 89.50 47.04 59.62 84.45 60.68 43.90 71.90 66.02 Qwen2.5-VL-3B 3B 31.30 58.60 76.64 30.28 48.10 77.26 53.91 26.80 59.20 51.34 Qwen2.5-VL-7B 7B 42.50 73.60 84.72 39.84 57.67 87.58 60.85 37.70 70.50 61.66 
+
+Chart-Specialized Model 
+
+TinyChart 3B 12.20 16.12 70.00 13.25 29.67 47.87 32.29 6.20 21.10 27.63 ChartGemma 3B 21.60 15.88 65.12 6.84 29.86 85.94 27.78 7.30 26.90 31.91 ChartMOE 8B 28.30 47.42 69.68 29.10 31.48 62.86 34.38 11.50 37.30 39.11 ECD Qwen2.5-VL-7B 7B 41.80 75.08 81.44 22.50 53.90 75.52 60.76 36.20 69.50 57.41 
+
+Think-with-Image Model 
+
+Thyme 7B 42.50 65.33 82.24 46.55 53.10 90.52 59.11 38.80 66.90 60.56 Deepeyes 7B 41.40 64.95 79.76 45.55 55.95 87.63 58.42 38.50 68.30 60.05 Deepeyes-V2 7B 48.90 78.60 83.60 47.88 57.76 71.05 58.16 43.10 68.00 61.89 
+
+CHAR TOOL (Ours) 
+
+CHAR TOOL -3B 3B 41.40 74.75 81.68 42.54 51.71 84.51 55.38 36.70 61.40 58.90 
+
+∆ (vs Qwen2.5-VL-3B) +10.10 +16.15 +5.04 +12.26 +3.61 +7.25 +1.47 +9.90 +2.20 +7.55 CHAR TOOL -7B 7B 50.50 80.30 86.76 49.62 58.95 91.58 62.33 46.30 72.30 66.52 
+
+∆ (vs Qwen2.5-VL-7B) +8.00 +6.70 +2.04 +9.78 +1.28 +4.00 +1.48 +8.60 +1.80 +4.85 
+
+Table 2. Results on out-of-domain visual reasoning benchmarks. 
+
+Method MathVista WeMath MathVerse 
+
+Qwen2.5-VL-3B 62.30 49.77 34.30 
+
+CHAR TOOL -3B 60.50 58.45 37.80 
+
+∆ (vs Base) -1.80 +8.68 +3.50 
+
+Qwen2.5-VL-7B 68.20 64.94 45.50 
+
+CHAR TOOL -7B 70.10 67.13 47.10 
+
+∆ (vs Base) +1.90 +2.19 +1.60 
+
+Table 3. Ablation study on the effectiveness of tool-integrated reinforcement learning. We compare C HAR TOOL CoT prompting, and Text-only RL. 
+
+Model CharXiv ChartQAPro ReachQA 
+
+Reas. Desc. Overall Reas. Recog. 
+
+Qwen2.5-VL-3B 33.50 60.62 30.28 26.80 59.20 + CoT prompt 32.40 52.00 30.64 29.70 53.30 + Text-only RL 36.00 60.38 30.69 26.70 61.60 
+
++ C HAR TOOL 41.40 74.75 42.54 36.70 61.40 
+
+In contrast, C HAR TOOL ’s tool-integrated reasoning leads to substantial improvements across all metrics, with espe-cially large gains on reasoning-intensive benchmarks such as CharXiv and ChartQAPro. These results show that ex-plicit tool invocation is essential for robust chart reasoning. 
+
+Comparison with Other Synthesized Training Data. 
+
+To evaluate the effectiveness of our synthesized training data D UO CHART , we train C HAR TOOL on ReachQA (He et al., 2025) and ECD (Yang et al., 2025b) using the same training pipeline. As shown in Table 4, models trained on D UO CHART consistently outperform those trained on ReachQA or ECD across benchmarks. This further supports our results in Section 3.1 and highlights the superior quality and complexity of D UO CHART , leading to more robust and generalizable chart reasoning capabilities. 
+
+Impact of Data Composition. We analyze the effect of different training data sources in Table 5. Training with only real-world arXiv chart data substantially improves de-scriptive performance on CharXiv, reflecting the benefit of exposure to diverse layouts and visual artifacts in scientific figures. In contrast, incorporating code-synthesized data is crucial for reasoning, as programmatically generated ques-tions involving trend analysis and exact numerical compari-son significantly boost the CharXiv reasoning score to 41.40. Combining both data sources enables C HAR TOOL to jointly learn robust visual generalization and precise computational reasoning. 
+
+Effect of Different Tools. We analyze the contributions of the two primary tools used in C HAR TOOL : image cropping and code computation. As shown in Table 6, both tools 7Submission and Formatting Instructions for ICML 2026 
+
+Table 4. Performance comparison using different training data sources. 
+
+Training Data CharXiv ChartX ChartBench ReachQA ChartQA ChartQAPro Avg. 
+
+Reas. Recog. NQA Binary Reas. Recog. Avg. Overall 
+
+Qwen2.5-VL-3B 33.50 60.62 53.91 48.10 77.26 26.80 59.20 76.64 30.28 51.81 ReachQA 35.00 72.10 54.51 48.24 83.81 37.40 59.90 79.52 40.83 56.81 ECD 36.00 74.40 53.82 50.43 78.17 36.00 60.20 79.80 38.97 56.42 
+
+DUO CHART 41.40 74.75 55.38 51.71 84.51 36.70 61.40 81.68 42.54 58.90 
+
+Table 5. Ablation study on the training data source. We investigate the impact of arXiv real-world charts and LLM-synthesized charts. 
+
+Data Source CharXiv ReachQA 
+
+arXiv LLM-Syn Reas. Desc. Reas. Recog. 
+
+Qwen2.5-VL-3B 33.50 60.62 26.80 59.20 
+
+✓ 37.50 76.05 33.50 57.40 
+
+✓ 37.80 72.85 35.70 59.50 
+
+✓ ✓ 41.40 74.75 36.70 61.40 
+
+Table 6. Tool usage ablation. We analyze the impact of image cropping and code computation tools. 
+
+Tool Usage ChartBench ReachQA CharXiv Avg. 
+
+Crop Code 
+
+Qwen2.5-VL-3B 48.10 26.80 33.50 36.13 
+
+✓ 51.95 32.20 37.90 40.68 
+
+✓ 45.52 35.60 40.20 40.44 
+
+✓ ✓ 51.71 36.70 41.40 43.27 
+
+improve overall performance and exhibit complementary strengths. We compare C HAR TOOL with single-tool vari-ants (Crop-only and Code-Computation-only) as well as the base model. The results show that using either tool individ-ually yields gains over the baseline, while integrating both tools achieves the best average performance by jointly sup-porting fine-grained visual perception (Crop) and multi-step logical and numerical reasoning (Code). 
+
+Dynamic Tool Selection Strategy. We analyze tool call distributions to characterize the dynamic tool selection be-havior of C HAR TOOL . As shown in Figure 5, CharXiv features more complex layouts and therefore predominantly triggers Crop tool calls. In contrast, benchmarks with sim-pler layouts but higher numerical complexity rely more on computation tool calls, which constitute 60.43% of actions 0 20 40 60 80 100               
+
+> Percentage (%)
+> CharXiv 15.70 84.31
+> ChartBench 26.10 73.90
+> ReachQA 56.98 43.02
+> ChartX 54.98 45.02
+> ChartQAPro 60.29 39.71
+> ChartQA 60.43 39.57
+> MathVista 77.17 22.83
+> Code
+> Crop
+
+Figure 5. Distribution of tool calls under different benchmarks. 
+
+on ChartQA and increase to 77.17% on MathVista. These results indicate that C HAR TOOL dynamically adapts tool usage to the structural complexity of the task. 
+
+3.6. Case Study 
+
+As illustrated in Figure 7, when a task requires detailed visual perception, such as focusing on a specific subplot, CHAR TOOL leverages the image cropping tool to focus on the relevant region and ground its reasoning in direct visual evidence. For questions that require numerical computation, as shown in Figure 11 (an example of mathematical visual reasoning), C HAR TOOL invokes code-based calculation to ensure accurate and reliable answers. Figure 12 demon-strates the combined use of both tools, where the model first applies the crop tool to extract visual information and then uses code computation to reach a rigorous conclusion. This structured approach highlights that C HAR TOOL goes beyond simple pattern matching, adopting an agentic, step-by-step reasoning workflow. The model displays distinct, interpretable reasoning patterns that closely mirror human cognitive processes. Appendix F demonstrate more exam-ples of C HAR TOOL ’s tool-integrated reasoning process. 
+
+## 4. Related Works 
+
+Chart Reasoning. Chart reasoning is typically formulated as question answering over charts, requiring both visual un-derstanding and numerical reasoning. Early studies (Lee et al., 2023; Liu et al., 2023a;b; Chen et al., 2024; Xia et al., 2025) converted charts into textual representations to exploit the reasoning ability of LLMs, but such modality conver-sion leads to information loss. Subsequent works (Han et al., 2023; Xu et al., 2024; Carbune et al., 2024; Liu et al., 2024b; Meng et al., 2024; Ye et al., 2023a;b) adopted end-to-end instruction tuning for MLLMs to directly comprehend charts. More recent studies (Liu et al., 2024c; Wang et al., 2023; Li et al., 2024; Zhang et al., 2024b) introduced Chain-of-Thoughts or Program-of-Thoughts strategies to enhance reasoning, yet they still mainly rely on internal knowledge of MLLMs. In contrast, C HAR TOOL integrates MLLMs with external tools, such as code execution for precise nu-merical computation and localized visual operations (e.g., cropping), to further strengthen reasoning accuracy and vi-sual perception in chart reasoning. 8Submission and Formatting Instructions for ICML 2026 
+
+Tool-Integrated Reasoning. Many studies (Qian et al., 2025; Jin et al., 2025; Song et al., 2025; Li et al., 2025b) on text-based LLMs have demonstrated that incorporating external tools can significantly enhance the reasoning ability of models, giving rise to the paradigm of Tool-Integrated Reasoning (TIR). Recent MLLM works (Zheng et al., 2025; Hong et al., 2025; Wu et al., 2025; Lai et al., 2025; Fan et al., 2025; Liu et al., 2025b; Jiang et al., 2025; Zhang et al., 2025a) further adopt TIR and employs reinforcement learning techniques to improve multimodal reasoning perfor-mance. However, most of these works focus on natural im-ages, where reasoning mainly involves semantic understand-ing and high-level perception. In contrast, chart reasoning requires finer-grained analysis, such as precise numerical computation and trend interpretation, which poses greater challenges. To address this, we construct chart-specific data for TIR and enables the model to better handle complex reasoning. 
+
+Data Synthesis for MLLMs Training. Training MLLMs requires paired image-text data. Some works (Zhang et al., 2024a; Yin et al., 2023; Abaskohi et al., 2024; Cheng et al., 2025) synthesize instructions based on existing im-age datasets. While others directly generates paired im-ages and texts, aiming to circumvent the need for large-scale image collection. Unlike natural images, charts can be losslessly generated from structured markups or pro-gramming code, which provides an opportunity to leverage code-capable LLMs for chart synthesis (Yang et al., 2024; 2025a;b; He et al., 2025). However, current code-driven synthesis pipelines often suffer from limited diversity and suboptimal visual quality. To overcome these limitations, we propose a hybrid framework that integrates code-driven synthesis with real-world chart collection to produce high-quality chart data. 
+
+## 5. Conclusion 
+
+In this paper, we introduce D UO CHART and C HAR TOOL 
+
+for chart understanding. We design a multi-agent data syn-thesis pipeline with rigorous verification and filtering to produce a diverse and challenging dataset that overcomes the limitations of existing synthetic data. By integrating tool-based reasoning with image cropping and code computation, CHAR TOOL supports both fine-grained visual perception and precise numerical reasoning. These capabilities are essential for interpreting complex real-world charts. Exten-sive experiments on chart benchmarks and out-of-domain visual math reasoning tasks demonstrate that C HAR TOOL 
+
+achieves consistent performance improvements and strong generalization ability. 
+
+## Impact Statement 
+
+This paper presents work whose primary goal is to advance the field of Machine Learning, specifically in enhancing the reliability and accuracy of Multimodal Large Language Models (MLLMs) for complex chart analysis. By inte-grating tool-assisted reasoning, our method aims to ensure precise visual recognition and reliable numerical computa-tion, thereby fostering more trustworthy automated chart reasoning in critical domains such as scientific research and financial analysis. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. 
+
+## References 
+
+Abaskohi, A., Gella, S., Carenini, G., and Laradji, I. H. FM2DS: few-shot multimodal multihop data synthe-sis with knowledge distillation for question answering. 
+
+CoRR , abs/2412.07030, 2024. doi: 10.48550/ARXIV. 2412.07030. Anthropic. Claude 3.5 sonnet model card addendum, 2024. Bai, S., Cai, Y., Chen, R., Chen, K., Chen, X.-H., Cheng, Z., Deng, L., Ding, W., Fang, R., Gao, C., Ge, C., Ge, W., Guo, Z., Huang, Q., Huang, Q., Huang, F., Hui, B., Jiang, S., Li, Z., Li, M., Li, M., Li, K., Lin, Z., Lin, J., Liu, X., Liu, J., Liu, C., Liu, Y., Liu, D., Liu, S., Lu, D., Luo, R., Lv, C., Men, R., Meng, L. Y., Ren, X., yi Ren, X., Song, S., Sun, Y.-C., Tang, J., Tu, J., Wan, J., Wang, P., Wang, P., Wang, Q., Wang, Y., Xie, T., Xu, Y., Xu, H., Xu, J., Yang, Z., Yang, M., Yang, J., Yang, A., Yu, B., Zhang, F., Zhang, H., Zhang, X., Zheng, B., Zhong, H., Zhou, J., Zhou, F., Zhou, J., Zhu, Y., and Zhu, K. Qwen3-vl technical report. ArXiv , abs/2511.21631, 2025a. Bai, S., Chen, K., Liu, X., Wang, J., Ge, W., Song, S., Dang, K., Wang, P., Wang, S., Tang, J., Zhong, H., Zhu, Y., Yang, M., Li, Z., Wan, J., Wang, P., Ding, W., Fu, Z., Xu, Y., Ye, J., Zhang, X., Xie, T., Cheng, Z., Zhang, H., Yang, Z., Xu, H., and Lin, J. Qwen2.5-vl technical report. 
+
+CoRR , abs/2502.13923, 2025b. doi: 10.48550/ARXIV. 2502.13923. Bai, Z., Wang, P., Xiao, T., He, T., Han, Z., Zhang, Z., and Shou, M. Z. Hallucination of multimodal large language models: A survey. arXiv preprint arXiv:2404.18930 ,2024. Bytedance-Seed-Foundation-Code-Team, :, Cheng, Y., Chen, J., Chen, J., Chen, L., Chen, L., Chen, W., Chen, Z., Geng, S., Li, A., Li, B., Li, B., Li, L., Liu, B., Liu, J., Liu, K., Liu, Q., Liu, S., Liu, S., Liu, T., Liu, T., Liu, Y., Long, R., Mai, J., Ning, G., Peng, Z. Y., Shen, K., Su, J., Su, J., Sun, T., Sun, Y., Tao, Y., Wang, G., Wang, 9Submission and Formatting Instructions for ICML 2026 
+
+S., Wang, X., Wang, Y., Wang, Z., Xia, J., Xiang, L., Xiao, X., Xiao, Y., Xi, C., Xin, S., Xu, J., Xu, S., Yang, H., Yang, J., Yang, Y., Yuan, J., Zhang, J., Zhang, Y., Zhang, Y., Zheng, S., Zhu, H., and Zhu, M. Fullstack bench: Evaluating llms as full stack coders, 2025. URL 
+
+https://arxiv.org/abs/2412.00535 .Carbune, V., Mansoor, H., Liu, F., Aralikatte, R., Baech-ler, G., Chen, J., and Sharma, A. Chart-based reasoning: Transferring capabilities from llms to vlms. In Find-ings of the Association for Computational Linguistics: NAACL 2024, Mexico City, Mexico, June 16-21, 2024 ,volume NAACL 2024 of Findings of ACL , pp. 989–1004. Association for Computational Linguistics, 2024. doi: 10.18653/V1/2024.FINDINGS-NAACL.62. Chan, X., Wang, X., Yu, D., Mi, H., and Yu, D. Scaling syn-thetic data creation with 1,000,000,000 personas. arXiv ,abs/2406.20094, 2024. Chen, J., Kong, L., Wei, H., Liu, C., Ge, Z., Zhao, L., Sun, J., Han, C., and Zhang, X. Onechart: Purify the chart structural extraction via one auxiliary token. In 
+
+Proceedings of the 32nd ACM International Conference on Multimedia, MM 2024, Melbourne, VIC, Australia, 28 October 2024 - 1 November 2024 , pp. 147–155. ACM, 2024. doi: 10.1145/3664647.3681167. Chen, L., Zhao, X., Zeng, Z., Huang, J., Zhong, Y., and Ma, L. Chart-r1: Chain-of-thought supervision and re-inforcement for advanced chart reasoner. arXiv preprint arXiv:2507.15509 , 2025. Cheng, D., Huang, S., Zhu, Z., Zhang, X., Zhao, W. X., Luan, Z., Dai, B., and Zhang, Z. On domain-adaptive post-training for multimodal large language models. In 
+
+Findings of the Association for Computational Linguis-tics: EMNLP 2025 , pp. 274–296, Suzhou, China, Novem-ber 2025. Association for Computational Linguistics. doi: 10.18653/v1/2025.findings-emnlp.17. Comanici, G., Bieber, E., Schaekermann, M., Pasupat, I., Sachdeva, N., Dhillon, I., Blistein, M., Ram, O., Zhang, D., Rosen, E., et al. Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities. arXiv preprint arXiv:2507.06261 , 2025. Fan, Y., He, X., Yang, D., Zheng, K., Kuo, C.-C., Zheng, Y., Narayanaraju, S. J., Guan, X., and Wang, X. E. Grit: Teaching mllms to think with images. ArXiv ,abs/2505.15879, 2025. Gu, J., Jiang, X., Shi, Z., Tan, H., Zhai, X., Xu, C., Li, W., Shen, Y., Ma, S., Liu, H., et al. A survey on llm-as-a-judge. The Innovation , 2024. Han, Y., Zhang, C., Chen, X., Yang, X., Wang, Z., Yu, G., Fu, B., and Zhang, H. Chartllama: A multimodal llm for chart understanding and generation. arXiv preprint arXiv:2311.16483 , 2023. He, W., Xi, Z., Zhao, W., Fan, X., Ding, Y., Shan, Z., Gui, T., Zhang, Q., and Huang, X. Distill visual chart reasoning ability from LLMs to MLLMs. In Findings of the Association for Computational Linguistics: EMNLP 2025 , pp. 3224–3250, Suzhou, China, November 2025. Association for Computational Linguistics. ISBN 979-8-89176-335-7. doi: 10.18653/v1/2025.findings-emnlp. 172. Hong, J., Zhao, C., Zhu, C., Lu, W., Xu, G., and Yu, X. Deepeyesv2: Toward agentic multimodal model. ArXiv ,abs/2511.05271, 2025. Huang, W., Jia, B., Zhai, Z., Cao, S., Ye, Z., Zhao, F., Xu, Z., Hu, Y., and Lin, S. Vision-r1: Incentivizing reasoning capability in multimodal large language models. 
+
+CoRR , abs/2503.06749, 2025. doi: 10.48550/ARXIV. 2503.06749. Jiang, C., Heng, Y., Ye, W., Yang, H., Xu, H., Yan, M., Zhang, J., Huang, F., and Zhang, S. Vlm-r3: Region recognition, reasoning, and refinement for enhanced mul-timodal chain-of-thought. ArXiv , abs/2505.16192, 2025. Jin, B., Zeng, H., Yue, Z., Yoon, J., Arik, S. O., Wang, D., Zamani, H., and Han, J. Search-r1: Training LLMs to reason and leverage search engines with reinforcement learning. In Second Conference on Language Modeling ,2025. Kantharaj, S., Do, X. L., Leong, R. T., Tan, J. Q., Hoque, E., and Joty, S. Opencqa: Open-ended question answering with charts. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , pp. 11817–11837, 2022. Lai, X., Li, J., Li, W., Liu, T., Li, T., and Zhao, H. Mini-o3: Scaling up reasoning patterns and interaction turns for visual search. ArXiv , abs/2509.07969, 2025. Lee, K., Joshi, M., Turc, I. R., Hu, H., Liu, F., Eisensch-los, J. M., Khandelwal, U., Shaw, P., Chang, M., and Toutanova, K. Pix2struct: Screenshot parsing as pretrain-ing for visual language understanding. In International Conference on Machine Learning, ICML 2023, 23-29 July 2023, Honolulu, Hawaii, USA , volume 202 of Proceed-ings of Machine Learning Research , pp. 18893–18912. PMLR, 2023. Li, D., Jiang, B., Huang, L., Beigi, A., Zhao, C., Tan, Z., Bhattacharjee, A., Jiang, Y., Chen, C., Wu, T., Shu, K., Cheng, L., and Liu, H. From generation to judgment: 10 Submission and Formatting Instructions for ICML 2026 
+
+Opportunities and challenges of LLM-as-a-judge. In Pro-ceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , pp. 2757–2791, Suzhou, China, 2025a. Association for Computational Linguistics. ISBN 979-8-89176-332-6. Li, X., Zou, H., and Liu, P. Torl: Scaling tool-integrated rl, 2025b. URL https://arxiv.org/abs/2503. 23383 .Li, Z., Jasani, B. A., Tang, P., and Ghadar, S. Synthesize step-by-step: Tools, templates and llms as data gener-ators for reasoning-based chart vqa. 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 13613–13623, 2024. Liu, A., Feng, B., Xue, B., Wang, B., Wu, B., Lu, C., Zhao, C., Deng, C., Zhang, C., Ruan, C., et al. Deepseek-v3 technical report. arXiv preprint arXiv:2412.19437 ,2024a. Liu, F., Eisenschlos, J. M., Piccinno, F., Krichene, S., Pang, C., Lee, K., Joshi, M., Chen, W., Collier, N., and Altun, Y. Deplot: One-shot visual language reasoning by plot-to-table translation. In Findings of the Association for Com-putational Linguistics: ACL 2023, Toronto, Canada, July 9-14, 2023 , volume ACL 2023 of Findings of ACL , pp. 10381–10399. Association for Computational Linguistics, 2023a. doi: 10.18653/V1/2023.FINDINGS-ACL.660. Liu, F., Piccinno, F., Krichene, S., Pang, C., Lee, K., Joshi, M., Altun, Y., Collier, N., and Eisenschlos, J. MatCha: Enhancing visual language pretraining with math reason-ing and chart derendering. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 12756–12770, Toronto, Canada, July 2023b. Association for Computa-tional Linguistics. doi: 10.18653/v1/2023.acl-long.714. Liu, F., Wang, X., Yao, W., Chen, J., Song, K., Cho, S., Yacoob, Y., and Yu, D. MMC: Advancing multimodal chart understanding with large-scale instruction tuning. In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 1287–1310, Mexico City, Mexico, June 2024b. Association for Computational Linguistics. doi: 10.18653/v1/2024.naacl-long.70. Liu, H., Li, C., Wu, Q., and Lee, Y. J. Visual instruction tuning. arXiv , abs/2304.08485, 2023c. Liu, M., Chen, D., Li, Y., Fang, G., and Shen, Y. Chart-thinker: A contextual chain-of-thought approach to op-timized chart summarization. ArXiv , abs/2403.11236, 2024c. Liu, S., Liu, H., Liu, J., Xiao, L., Gao, S., Lyu, C., Gu, Y., Zhang, W., Wong, D. F., Zhang, S., and Chen, K. Com-passVerifier: A unified and robust verifier for LLMs eval-uation and outcome reward. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , pp. 33466–33494, Suzhou, China, November 2025a. Association for Computational Linguistics. ISBN 979-8-89176-332-6. doi: 10.18653/v1/2025.emnlp-main. 1698. Liu, Z., Zang, Y., Zou, Y., Liang, Z., wen Dong, X., Cao, Y., Duan, H., Lin, D., and Wang, J. Visual agentic reinforce-ment fine-tuning. ArXiv , abs/2505.14246, 2025b. Lu, P., Bansal, H., Xia, T., Liu, J., Li, C., Hajishirzi, H., Cheng, H., Chang, K.-W., Galley, M., and Gao, J. Math-vista: Evaluating mathematical reasoning of foundation models in visual contexts. In International Conference on Learning Representations (ICLR) , 2024. Masry, A., Long, D. X., Tan, J. Q., Joty, S., and Hoque, E. ChartQA: A benchmark for question answering about charts with visual and logical reasoning. In 
+
+Findings of the Association for Computational Linguis-tics: ACL 2022 , pp. 2263–2279, Dublin, Ireland, May 2022. Association for Computational Linguistics. doi: 10.18653/v1/2022.findings-acl.177. Masry, A., Islam, M. S., Ahmed, M., Bajaj, A., Kabir, F., Kartha, A., Laskar, M. T. R., Rahman, M., Rah-man, S., Shahmohammadi, M., Thakkar, M., Parvez, M. R., Hoque, E., and Joty, S. ChartQAPro: A more diverse and challenging benchmark for chart question answering. In Findings of the Association for Com-putational Linguistics: ACL 2025 , pp. 19123–19151, Vienna, Austria, July 2025a. Association for Compu-tational Linguistics. ISBN 979-8-89176-256-5. doi: 10.18653/v1/2025.findings-acl.978. Masry, A., Puri, A., Hashemi, M., Rodriguez, J. A., Thakkar, M., Mahajan, K., Yadav, V., Madhusudhan, S. T., Pich ´e, A., Bahdanau, D., Pal, C., Vazquez, D., Hoque, E., Taslakian, P., Rajeswar, S., and Gella, S. Bigcharts-r1: Enhanced chart reasoning with visual reinforcement fine-tuning. In Second Conference on Language Modeling ,2025b. Masry, A., Thakkar, M., Bajaj, A., Kartha, A., Hoque, E., and Joty, S. Chartgemma: Visual instruction-tuning for chart reasoning in the wild. In Proceedings of the 31st International Conference on Computational Linguistics: Industry Track , pp. 625–643, 2025c. Meng, F., Shao, W., Lu, Q., Gao, P., Zhang, K., Qiao, Y., and Luo, P. ChartAssistant: A universal chart multi-modal language model via chart-to-table pre-training and 11 Submission and Formatting Instructions for ICML 2026 
+
+multitask instruction tuning. In Findings of the Asso-ciation for Computational Linguistics: ACL 2024 , pp. 7775–7803, Bangkok, Thailand, August 2024. Associa-tion for Computational Linguistics. doi: 10.18653/v1/ 2024.findings-acl.463. Niu, J., Liu, Z., Gu, Z., Wang, B., Ouyang, L., Zhao, Z., Chu, T., He, T., Wu, F., Zhang, Q., et al. Mineru2.5: A decou-pled vision-language model for efficient high-resolution document parsing. arXiv preprint arXiv:2509.22186 ,2025. OpenAI. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 , 2023. OpenAI. Hello gpt-4o, 2024. URL https://openai. com/index/hello-gpt-4o/ .Qian, C., Acikgoz, E. C., He, Q., WANG, H., Chen, X., Hakkani-T ¨ur, D., Tur, G., and Ji, H. ToolRL: Reward is all tool learning needs. In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,2025. Qiao, R., Tan, Q., Dong, G., MinhuiWu, M., Sun, C., Song, X., Wang, J., GongQue, Z., Lei, S., Zhang, Y., Wei, Z., Zhang, M., Qiao, R., Zong, X., Xu, Y., Yang, P., Bao, Z., Diao, M., Li, C., and Zhang, H. We-math: Does your large multimodal model achieve human-like mathematical reasoning? In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 20023–20070, Vienna, Austria, July 2025. Association for Compu-tational Linguistics. ISBN 979-8-89176-251-0. doi: 10.18653/v1/2025.acl-long.983. Shao, Z., Wang, P., Zhu, Q., Xu, R., Song, J., Zhang, M., Li, Y. K., Wu, Y., and Guo, D. Deepseekmath: Pushing the limits of mathematical reasoning in open language models. CoRR , abs/2402.03300, 2024. doi: 10.48550/ ARXIV.2402.03300. Sheng, G., Zhang, C., Ye, Z., Wu, X., Zhang, W., Zhang, R., Peng, Y., Lin, H., and Wu, C. Hybridflow: A flexible and efficient rlhf framework. In Proceedings of the Twentieth European Conference on Computer Systems , EuroSys ’25, pp. 1279–1297, New York, NY, USA, 2025. Association for Computing Machinery. ISBN 9798400711961. doi: 10.1145/3689031.3696075. Song, H., Jiang, J., Min, Y., Chen, J., Chen, Z., Zhao, W. X., Fang, L., and Wen, J.-R. R1-searcher: Incentivizing the search capability in llms via reinforcement learning. 
+
+arXiv preprint arXiv:2503.05592 , 2025. Wang, P., Golovneva, O., Aghajanyan, A., Ren, X., Chen, M., Celikyilmaz, A., and Fazel-Zarandi, M. Domino: A dual-system for multi-step visual language reasoning. 
+
+ArXiv , abs/2310.02804, 2023. Wang, Z., Xia, M., He, L., Chen, H., Liu, Y., Zhu, R., Liang, K., Wu, X., Liu, H., Malladi, S., Chevalier, A., Arora, S., and Chen, D. Charxiv: Charting gaps in realistic chart understanding in multimodal llms. In Advances in Neural Information Processing Systems 38: Annual Conference on Neural Information Processing Systems 2024, NeurIPS 2024, Vancouver, BC, Canada, December 10 - 15, 2024 , 2024. Wei, J., Wang, X., Schuurmans, D., Bosma, M., brian ichter, Xia, F., Chi, E. H., Le, Q. V., and Zhou, D. Chain of thought prompting elicits reasoning in large language models. In Advances in Neural Information Processing Systems , 2022. Wu, M., Yang, J., Jiang, J., Li, M., Yan, K., Yu, H., Zhang, M., Zhai, C., and Nahrstedt, K. Vtool-r1: Vlms learn to think with images via reinforcement learning on multi-modal tool use. ArXiv , abs/2505.19255, 2025. Xia, R., Ye, H., Yan, X., Liu, Q., Zhou, H., Chen, Z., Shi, B., Yan, J., and Zhang, B. Chartx and chartvlm: A versatile benchmark and foundation model for complicated chart reasoning. IEEE Trans. Image Process. , 34:7436–7447, 2025. doi: 10.1109/TIP.2025.3607618. Xu, P., Ding, Y., and Fan, W. Chartadapter: Large vision-language model for chart summarization. CoRR ,abs/2412.20715, 2024. doi: 10.48550/ARXIV.2412. 20715. Xu, Z., Du, S., Qi, Y., Xu, C., Yuan, C., and Guo, J. Chartbench: A benchmark for complex visual rea-soning in charts. CoRR , abs/2312.15915, 2023. doi: 10.48550/ARXIV.2312.15915. Xu, Z., Qu, B., Qi, Y., Du, S., Xu, C., Yuan, C., and Guo, J. Chartmoe: Mixture of diversely aligned expert connector for chart understanding. In The Thirteenth International Conference on Learning Representations, ICLR 2025, Singapore, April 24-28, 2025 . OpenReview.net, 2025. Yang, C., Shi, C., Liu, Y., Shui, B., Wang, J., Jing, M., Xu, L., Zhu, X., Li, S., Zhang, Y., Liu, G., Nie, X., Cai, D., and Yang, Y. Chartmimic: Evaluating lmm’s cross-modal reasoning capability via chart-to-code generation. In The Thirteenth International Conference on Learning Rep-resentations, ICLR 2025, Singapore, April 24-28, 2025 .OpenReview.net, 2025a. Yang, Y., Zhang, Z., Hou, Y., Li, Z., Liu, G., Payani, A., Ting, Y.-S., and Zheng, L. Effective training data syn-thesis for improving MLLM chart understanding. In 
+
+Proceedings of the IEEE/CVF International Conference on Computer Vision , pp. 2653–2663, 2025b. 12 Submission and Formatting Instructions for ICML 2026 
+
+Yang, Z., Zhou, Z., Wang, S., Cong, X., Han, X., Yan, Y., Liu, Z., Tan, Z., Liu, P., Yu, D., Liu, Z., Shi, X., and Sun, M. Matplotagent: Method and evaluation for llm-based agentic scientific data visualization. In Findings of the Association for Computational Linguistics, ACL 2024, Bangkok, Thailand and virtual meeting, August 11-16, 2024 , volume ACL 2024 of Findings of ACL , pp. 11789– 11804. Association for Computational Linguistics, 2024. doi: 10.18653/V1/2024.FINDINGS-ACL.701. Ye, J., Hu, A., Xu, H., Ye, Q., Yan, M., Xu, G., Li, C., Tian, J., Qian, Q., Zhang, J., Jin, Q., He, L., Lin, X., and Huang, F. Ureader: Universal ocr-free visually-situated language understanding with multimodal large language model. In 
+
+Conference on Empirical Methods in Natural Language Processing , 2023a. Ye, Q., Xu, H., Ye, J., Yan, M., Hu, A., Liu, H., Qian, Q., Zhang, J., Huang, F., and Zhou, J. mplug-owi2: Revolutionizing multi-modal large language model with modality collaboration. 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 13040–13051, 2023b. Yin, Z., Wang, J., Cao, J., Shi, Z., Liu, D., Li, M., Huang, X., Wang, Z., Sheng, L., Bai, L., Shao, J., and Ouyang, W. LAMM: language-assisted multi-modal instruction-tuning dataset, framework, and benchmark. In Advances in Neural Information Processing Systems 36: Annual Conference on Neural Information Processing Systems 2023, NeurIPS 2023, New Orleans, LA, USA, December 10 - 16, 2023 , 2023. Zhang, J., Xue, L., Song, L., Wang, J., Huang, W., Shu, M., Yan, A., Ma, Z., Niebles, J. C., Savarese, S., Xiong, C., Chen, Z., Krishna, R., and Xu, R. Provision: Pro-grammatically scaling vision-centric instruction data for multimodal language models. ArXiv , abs/2412.07012, 2024a. Zhang, L., Hu, A., Xu, H., Yan, M., Xu, Y., Jin, Q., Zhang, J., and Huang, F. TinyChart: Efficient chart understand-ing with program-of-thoughts learning and visual to-ken merging. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Process-ing , pp. 1882–1898, Miami, Florida, USA, November 2024b. Association for Computational Linguistics. doi: 10.18653/v1/2024.emnlp-main.112. Zhang, R., Jiang, D., Zhang, Y., Lin, H., Guo, Z., Qiu, P., Zhou, A., Lu, P., Chang, K., Qiao, Y., Gao, P., and Li, H. MATHVERSE: does your multi-modal LLM truly see the diagrams in visual math problems? In 
+
+Computer Vision - ECCV 2024 - 18th European Confer-ence, Milan, Italy, September 29-October 4, 2024, Pro-ceedings, Part VIII , volume 15066 of Lecture Notes in Computer Science , pp. 169–186. Springer, 2024c. doi: 10.1007/978-3-031-73242-3 \ 10. Zhang, X., Gao, Z., Zhang, B., Li, P., Zhang, X., Liu, Y., Yuan, T., Wu, Y., Jia, Y., Zhu, S.-C., and Li, Q. Adaptive chain-of-focus reasoning via dynamic visual search and zooming for efficient vlms. 2025a. Zhang, Y., Lu, X., Yin, S., Fu, C., Chen, W., Hu, X., Wen, B., Jiang, K., Liu, C., Zhang, T., Fan, H., Chen, K., Chen, J., Ding, H., Tang, K., Zhang, Z., Wang, L., Yang, F., Gao, T., and Zhou, G. Thyme: Think beyond images. 
+
+CoRR , abs/2508.11630, 2025b. doi: 10.48550/ARXIV. 2508.11630. Zhao, Y., Huang, J., Hu, J., Wang, X., Mao, Y., Zhang, D., Jiang, Z., Wu, Z., Ai, B., Wang, A., Zhou, W., and Chen, Y. Swift: A scalable lightweight infrastructure for fine-tuning. Proceedings of the AAAI Conference on Artificial Intelligence , 39(28):29733–29735, Apr. 2025. doi: 10.1609/aaai.v39i28.35383. Zheng, Z., Yang, M., Hong, J., Zhao, C., Xu, G., Yang, L., Shen, C., and Yu, X. Deepeyes: Incentivizing ”think-ing with images” via reinforcement learning. CoRR ,abs/2505.14362, 2025. doi: 10.48550/ARXIV.2505. 14362. Zhu, J., Wang, W., Chen, Z., Liu, Z., Ye, S., Gu, L., Tian, H., Duan, Y., Su, W., Shao, J., Gao, Z., Cui, E., Wang, X., Cao, Y., Liu, Y., Wei, X., Zhang, H., Wang, H., Xu, W., Li, H., Wang, J., Deng, N., Li, S., He, Y., Jiang, T., Luo, J., Wang, Y., He, C., Shi, B., Zhang, X., Shao, W., He, J., Xiong, Y., Qu, W., Sun, P., Jiao, P., Lv, H., Wu, L., Zhang, K., Deng, H., Ge, J., Chen, K., Wang, L., Dou, M., Lu, L., Zhu, X., Lu, T., Lin, D., Qiao, Y., Dai, J., and Wang, W. Internvl3: Exploring advanced training and test-time recipes for open-source multimodal models. 
+
+CoRR , abs/2504.10479, 2025. doi: 10.48550/ARXIV. 2504.10479. 13 Submission and Formatting Instructions for ICML 2026 
+
+## A. Limitations and Impacts 
+
+While our approach achieves substantial improvements across diverse chart reasoning benchmarks, several limitations point to promising directions for future work. First, although our framework currently focuses on two core tools, visual cropping and code computation, these tools are unified under a single code execution interface. This design makes it straightforward to extend our approach to support additional vision or reasoning tools in the future. Second, this work focuses on chart understanding, and extending the methodology to broader visual reasoning domains, such as tables, manuals, and geometric figures, remains an important direction. Third, more fine-grained, process-level reward signals in agentic reinforcement learning may further improve tool usage and multi-step reasoning behaviors. Despite these limitations, C HAR TOOL introduces a high-quality chart dataset and a tool-integrated reasoning framework that significantly advances agentic chart understanding. By grounding reasoning in explicit visual operations and computation, our approach enables more reliable and robust chart analysis, with potential impact on scientific research, financial analysis, and other data-driven decision-making scenarios. We hope this work inspires further exploration of tool-integrated reasoning for chart understanding. 
+
+## B. Training Details 
+
+B.1. Cold Start SFT Details 
+
+We utilize the Qwen2.5-VL series (Bai et al., 2025b) as our base models. During the Cold-Start SFT stage, we fine-tune the models to establish basic instruction-following and tool-usage capabilities. The detailed hyperparameters employed for both the 3B and 7B model variants are summarized in Table 7. The cold-start SFT is implemented using SWIFT (Zhao et al., 2025) framework.                  
+
+> Table 7. Detailed hyperparameter configuration for the Cold-Start SFT stage.
+> Hyperparameter 3B 7B
+> num train epochs 33
+> train batch size 64 64
+> per device train batch size 21
+> gradient accumulation steps 48
+> learning rate 1e-5 1e-5
+> warmup ratio 0.05 0.05
+> max length 32768 32768
+
+B.2. Reinforcement Learning Details 
+
+We perform reinforcement learning starting from the cold-start model, utilizing the widely adopted VeRL (Sheng et al., 2025) framework. During the RL stage, we train on D UO CHART , excluding all samples used for cold-start to avoid data leakage. Because our training data primarily consists of open-ended text-answer questions (Figure 3), exact matching can lead to inaccurate rewarding. To address this, we employ an LLM-as-a-Judge approach (Gu et al., 2024; Li et al., 2025a) to evaluate answer accuracy. Specifically, we use CompassVerifier-7B (Liu et al., 2025a), an efficient and reliable judge model that outperforms GPT-4o (OpenAI, 2024) and DeepSeek-V3 (Liu et al., 2024a), to compare model predictions with ground-truth answers. 
+
+Tool Execution Environment. We unify all external tools through a code execution interface. Specifically, we follow ToRL (Li et al., 2025b) and adopt SandboxFusion (Bytedance-Seed-Foundation-Code-Team et al., 2025) as the execution backend to safely run generated code within isolated sandboxed environments. SandboxFusion supports asynchronous and parallel code execution, which allows us to efficiently perform large-scale rollouts during reinforcement learning. This environment ensures both execution safety and high throughput, enabling stable and scalable RL training. 
+
+Training Hyperparameters We employ Group Relative Policy Optimization (GRPO) (Shao et al., 2024) for the RL training stage. Table 8 presents the key training configurations. Unless explicitly listed, all other hyperparameters follow standard default practices. 14 Submission and Formatting Instructions for ICML 2026                              
+
+> Table 8. Hyperparameters used for GRPO RL training. We report parameters for both model scales.
+> Hyperparameter 3B 7B
+> trainer.total epochs 11
+> data.train batch size 128 128
+> actor rollout ref.actor.ppo mini batch size 128 128
+> actor rollout ref.actor.optim.lr 1e-6 1e-6
+> data.max prompt length 8192 8192
+> data.max response length 16384 16384
+> actor rollout ref.actor.kl loss coef 0.001 0.001
+> actor rollout ref.actor.entropy coeff 00
+> actor rollout ref.rollout.n 88
+> actor rollout ref.rollout.temperature 1.0 1.0
+> actor rollout ref.rollout.max num batched tokens 32768 32768
+> actor rollout ref.rollout.multi turn.max user turns 54
+> actor rollout ref.rollout.multi turn.max assistant turns 54
+
+## C. Evaluation Details 
+
+C.1. Dataset Quality Assessment 
+
+Following ECD (Yang et al., 2025b), we assessed the complexity of chart image through the Average Pixel Entropy Criteria . Concretely, the average pixel entropy of the whole Dataset D = {x1 . . . x N } can be defined as: 
+
+Havg (D) = − 1
+
+N
+
+> N
+
+X
+
+> j=1
+> L
+
+X
+
+> i=1
+
+p(i|xj ) log p(i|xj ) (6) where p(i|xj ) is the normalized histogram probability of intensity value i, L is the number of discrete intensity levels ( e.g. ,256 for 8-bit images), and N is the size of Dataset D.We also employed GPT-5.2 to conduct a comprehensive evaluation, scoring all metrics on a scale of 1 to 5. Specifically, we randomly sampled 500 chart images from each dataset for the model to assess Visual Quality . For questions-related metrics, we selected 500 recognition and 500 reasoning questions randomly and prompted model to assess QA-alignment and 
+
+Answer Correctness , calculating the average scores. Finally, Reasoning Difficulty was evaluated solely on the reasoning subset. 
+
+C.2. Baseline Details 
+
+We evaluate all models on the benchmarks concerning chart reasoning, following each benchmark’s official protocol and reporting accuracy as the primary matric. For proprietary models, we evaluate them by accessing their official APIs. For general-purpose, chart-specialized, and think-with-image models, we load the released checkpoints from HuggingFace 2 and follow the official inference code provided in their repositories to ensure a reproducible and fair evaluation environment. 
+
+C.3. Benchmark Details 
+
+We evaluated C HAR TOOL across a suite of benchmarks to assess its performance in understanding and reasoning of charts, using charts derived from both the real world and the synthetic pipeline. We also assessed the out-of-domain generality of our method on three visual-mathematical reasoning benchmarks. The details of these benchmarks are listed below. For real-word chart data, CharXiv (Wang et al., 2024) benchmark contains 2,323 challenging charts collected from arXiv academic papers. We used the official validation split that includes 4,000 descriptive questions and 1,000 reasoning questions for evaluation. ChartQA (Masry et al., 2022) benchmark comprises charts crawled from four different sources and questions acquired from human-generated and augmented segments. We used the official test set consisting of 1,509 images and the corresponding 2,500 QA pairs. ChartQAPro (Masry et al., 2025a) benchmark includes 1,341 chart images from 157 online platforms and 1948 QA pairs annotated by human-VLM collaboration processes. We used the whole dataset for evaluation. 
+
+> 2https://huggingface.co/
+
+15 Submission and Formatting Instructions for ICML 2026 
+
+Among the synthetic benchmarks, ChartBench (Xu et al., 2023) benchmark consists of 2,100 chart images paired with 18,900 questions (2,100 numerical questions (NQA) and 16,800 binary “yes/no”). Each chart data within ChartX (Xia et al., 2025) benchmark includes four modalities such as image, Comma-Separated Values (CSV), python code and text description. We only used the images and the corresponding 1,152 QA pairs in the official test set for evaluation. For ReachQA (He et al., 2025), we used the test split containing 500 chart images and 2,000 questions (1,000 recognition-oriented and 1,000 reasoning-oriented questions). Finally, we introduced three visual-mathematical reasoning benchmarks to evaluate the generality of our method. Math-Vista (Lu et al., 2024) is a benchmark designed to combine difficulty from diverse mathematical and visual tasks, challenging the model’s fine-grained perception and compositional reasoning capabilities. We used the official testmini split which includes 1,000 images and 1,000 QA pairs. WeMath (Qiao et al., 2025) is a visual mathematical benchmark spaning hierarchical knowledge concepts and knowledge granularity. We used the official testmini subset containing 1,740 examples for evaluation. MathVerse (Zhang et al., 2024c) is an all-around visual math benchmark designed for an equitable and in-depth evaluation of MLLMs. We evaluated our method using the testmini split consisting of 2,364 images and 3,940 QA pairs. We evaluate all models using the default prompts provided by each benchmark and set the sampling temperature to 0 to ensure deterministic generation. For C HAR TOOL , we deploy the same code sandbox environment as used during the reinforcement learning stage. 
+
+## D. More Results                                               
+
+> Table 9. Effect of different training stages. Results are reported for the baseline, cold-start SFT, and C HAR TOOL at both 3B and 7B model scales.
+> Model CharXiv ChartQAPro ReachQA Avg.
+> Reas. Desc. Overall Reas. Recog.
+> 3B Scale
+> Qwen2.5-VL-3B 33.50 60.62 30.28 26.80 59.20 42.08 Cold-start SFT 33.80 72.10 41.64 33.40 55.20 47.23
+> CHAR TOOL -3B 41.40 74.75 42.54 36.70 61.40 51.36
+> 7B Scale
+> Qwen2.5-VL-7B 42.90 74.15 39.84 37.70 70.50 53.02 Cold-start SFT 44.40 82.00 49.24 44.70 63.20 56.71
+> CHAR TOOL -7B 50.50 80.30 49.62 46.30 72.30 59.80
+
+Effect of training stages. As shown in Table 9, the two-stage training procedure leads to progressive performance improvements. Cold-start supervised fine-tuning provides a strong initialization by enabling the model to acquire basic tool-use behaviors, while the subsequent reinforcement learning stage further refines tool invocation and multi-step reasoning strategies, resulting in consistent gains across benchmarks.                                       
+
+> Table 10. Distribution of tool usage across different benchmarks. The values represent the percentage (%) of calls for Code Computation
+> versus Image Cropping . The order is arranged from perception-heavy tasks (left) to computation-heavy tasks (right), illustrating the model’s adaptive strategy.
+> Tool Type CharXiv ChartQA ChartQA Chart ChartX ReachQA Math We Math
+> Reas. Desc. Pro Bench Vista Math Verse
+> Code Computation 18.31 13.08 60.43 60.29 26.10 54.98 56.98 77.17 80.46 80.46 Image Crop 81.69 86.92 39.57 39.71 73.90 45.02 43.02 22.83 19.54 19.54
+
+Dynamic Tool Selection Strategy. Detailed tool usage distribution across all benchmarks, including six chart benchmarks and three out-of-domain visual reasoning tasks, are presented in Table 6. We observe that tasks with more complex layouts, such as CharXiv, predominantly trigger the use of visual cropping tools, while benchmarks focused on mathematical 16 Submission and Formatting Instructions for ICML 2026 
+
+reasoning with simpler images, such as MathVista, rely more heavily on computation tools. These findings demonstrate that CHAR TOOL dynamically adapts its tool selection strategy to the structural and cognitive demands of each task. 
+
+## E. Data Statistics 
+
+We present detailed data statistics in this section, covering the distribution of chart image sources (Table 11), chart types at both the figure level (Table 12) and subplot level (Table 14), the distribution of the number of subplots per figure (Table 13), answer types (Table 15), and question types (Table 16). 
+
+Table 11. Distribution of Chart Sources. 
+
+Source Share (%) Count 
+
+LLM-code 52.08 8691 arXiv 47.92 7997 
+
+Total 16688 
+
+Table 12. Distribution of Chart Types (Figure Level). 
+
+Category Share (%) Count One-plot 51.32 8565 Line chart 15.17 2531 Bar chart 6.75 1126 Area chart 5.13 856 Scatter chart 5.08 848 Box chart 4.46 744 Radar chart 4.22 705 Pie chart 3.24 541 Heatmap 1.77 296 Histogram 0.63 105 Specific chart (Others) 4.87 813 
+
+Multi-subplot 48.68 8123 Only one type 37.81 6309 Composite 10.87 1814 
+
+Total 16688 
+
+Table 13. Distribution of the Number of Subplots per Figure. 
+
+# Charts Share (%) Count 
+
+1 51.32 8565 2–4 29.61 4941 5–9 18.26 3047 9+ 0.81 135 
+
+Average # Subplots 2.78 
+
+17 Submission and Formatting Instructions for ICML 2026 
+
+Table 14. Distribution of Chart Types (Subplot Level). 
+
+Category Share (%) Count 
+
+Line chart 30.07 13954 Bar chart 20.37 9451 Scatter chart 11.45 5312 Heatmap 9.14 4240 Pie chart 8.14 3775 Area chart 4.59 2132 Box chart 4.14 1922 Histogram 2.44 1132 Radar chart 1.67 775 Special charts (Others) 8.00 3711 
+
+Total 46404 
+
+Table 15. Distribution of Answer Types. 
+
+Answer Type Share (%) Count 
+
+Text 74.26 78045 Numeric value 18.59 19533 Binary 5.51 5791 List / Range 1.64 1727 
+
+Total 105096 
+
+Table 16. Distribution of Question Types. 
+
+Question Type Share (%) Count Recognition 57.18 60096 Axis label extraction 14.32 15045 Color extraction 13.62 14312 Title extraction 7.34 7716 Tick extraction 5.58 5869 Numerical value extraction 5.56 5847 Counting 5.94 6246 Pattern Recognition 4.78 5027 Enumeration 0.03 34 
+
+Reasoning 42.82 45000 Extreme Value Analysis 15.46 16249 Conditional Reasoning 9.34 9813 Comparative Analysis 6.01 6316 Trend Analysis 3.32 3484 Aggregation & Calculation 3.20 3366 Ranking & Ordering 2.22 2329 Proportional & Distributional Analysis 1.78 1874 Pattern & Correlation 1.49 1569 
+
+Total 105096 
+
+18 Submission and Formatting Instructions for ICML 2026 
+
+## F. Case Studies 
+
+This section provides case studies demonstrating how our tool-integrated reasoning model operates on a variety of reasoning tasks. Question 
+
+Which rank has the lowest eigenfunction to begin with? 
+
+* Your final answer must be grounded to some text that is explicitly written and relevant to the question in the chart. 
+
+* If you need to answer multiple terms, separate them with commas. 
+
+* Unless specified in the question (such as answering with a letter), you are required to answer the full names of subplots and/or labels by default. 
+
+CoT 
+
+<think> 
+
+The question asks which rank has the lowest eigenfunction to begin with. Looking at the chart, the y-axis represents "number of eigenfunctions with mean relative error below threshold," and the x-axis is labeled "σ" on a logarithmic scale. The legend indicates five different ranks: rank = 120 (red), rank = 140 (yellow), rank = 160 (green), rank = 180 (blue), and rank = 200 (purple). To determine which rank has the lowest eigenfunction count at the beginning (i.e., at the leftmost part of the x-axis, near σ = 10^0), I need to compare the starting values of each curve. Visually, the red line (rank = 120) appears to start at a lower value than the others — around 45–50 — while the purple line (rank = 200) starts highest (~80). However, to be precise, I should zoom in on the leftmost region of the plot to read the exact starting points or confirm the visual estimation. I will use `zoom_in` to focus on the region where σ is between 10^0 and 10^1, as this is where the curves begin. 
+
+</think> 
+
+<code> 
+
+from PIL import Image 
+
+img = Image.open("chart.png") 
+
+cropped = img.crop((69, 30, 345, 517)) 
+
+cropped.save("output.png") 
+
+</code> 
+
+<sandbox_output> 
+
+<image> 
+
+</sandbox_output> 
+
+<think> 
+
+After zooming in on the leftmost part of the chart (σ from ~10^0 to ~10^1), I can clearly see the starting values for each rank: - Red line (rank = 120): starts at approximately 45. - Yellow line (rank = 140): starts at approximately 58. - Green line (rank = 160): starts at approximately 57. - Blue line (rank = 180): starts at approximately 60. - Purple line (rank = 200): starts at approximately 79. The red line (rank = 120) has the lowest starting value among all ranks. Therefore, rank = 120 has the lowest eigenfunction count to begin with. I will now provide the final answer. 
+
+</think> 
+
+<answer> 
+
+\boxed{"rank = 120"} 
+
+</answer> 
+
+> chart.png
+> output.png
+
+Figure 6. A C HAR TOOL example using Crop Tool. 
+
+19 Submission and Formatting Instructions for ICML 2026 Question 
+
+For the bottom right subplot, what is the leftmost labeled tick on the x-axis? 
+
+* Your final answer should be the tick value on the x-axis that is explicitly written, including the case when x-axis is shared across multiple subplots. When the x-axis is present on both the top and bottom of the plot, answer based on the axis at the bottom. Ignore units or scales that are written separately from the tick, such as units and scales from the axis label or the corner of the plot. 
+
+CoT 
+
+<think> 
+
+I need to identify the leftmost labeled tick on the x-axis of the bottom-right subplot (labeled 'D'). I will zoom in on subplot 'D' to clearly read the x-axis labels. 
+
+</think> 
+
+<code> 
+
+from PIL import Image 
+
+img = Image.open("chart.png") 
+
+cropped = img.crop((308, 712, 654, 1029)) 
+
+cropped.save("output.png") 
+
+</code> 
+
+<sandbox_output> 
+
+<image> 
+
+</sandbox_output> 
+
+<think> 
+
+From the zoomed-in view of subplot 'D', I can clearly see the x-axis labels: $M_{\alpha^+}$, $M_{\alpha^-}$, $M_\delta$, and $M_\mu$. The leftmost labeled tick is $M_{\alpha^+}$. 
+
+</think> 
+
+<answer> 
+
+\boxed{M_{\alpha^+}} 
+
+</answer> 
+
+> chart.png
+> output.png
+
+Figure 7. A C HAR TOOL example using Crop Tool. 
+
+20 Submission and Formatting Instructions for ICML 2026 Question 
+
+How many discrete labels are there in the legend? 
+
+* Your final answer should account for only labels relevant to the plot in the legend, even if the legend is located outside the plot. 
+
+* If the plot does not have a legend or no legend is not considered relevant to this plot, answer "Not Applicable". 
+
+CoT 
+
+<think> 
+
+I need to identify the subplot at row 3 and column 1. From the image, that corresponds to subplot (e). I will zoom in on subplot (e) to inspect its legend closely. 
+
+</think> 
+
+<code> 
+
+from PIL import Image 
+
+img = Image.open("chart.png") 
+
+cropped = img.crop((0, 674, 332, 1058)) 
+
+cropped.save("output.png") 
+
+</code> 
+
+<sandbox_output> 
+
+<image> 
+
+</sandbox_output> 
+
+<think> 
+
+After zooming in on subplot (e), I can see that there is no visible legend within the plot area. The plot contains two lines (solid and dashed) and shaded regions, but no text labels or entries that would constitute a legend. Therefore, there are no discrete labels in the legend for this subplot. 
+
+</think> 
+
+<answer> 
+
+\boxed{"Not Applicable"} 
+
+</answer> 
+
+> chart.png
+> output.png
+
+Figure 8. A C HAR TOOL example using Crop Tool. 
+
+21 Submission and Formatting Instructions for ICML 2026 Question 
+
+Identifty the policy with the least (closest to 0) effect on the positive rate. 
+
+CoT 
+
+<think> 
+
+I need to find the policy with the least (closest to 0) effect on the "Positive rate". I will look at the row or column corresponding to "Positive rate" and find the value closest to 0. From the chart: - The "Positive rate" row/column has values: -0.3619, -0.3418, -0.4522, -0.3755, -0.2681, -0.09398, 0.3167, -0.3843, 0.03838, 0.02614, 1.0, -0.4091, 0.5516, 0.05641, -0.1485, 0.4192, 0.4762, 0.5993. 
+
+</think> 
+
+<code> 
+
+import numpy as np 
+
+# Define the values for the Positive rate row/column 
+
+positive_rate_values = [-0.3619, -0.3418, -0.4522, -0.3755, -0.2681, -0.09398, 0.3167, -0.3843, 0.03838, 0.02614, 1.0, -0.4091, 0.5516, 0.05641, -0.1485, 0.4192, 0.4762, 0.5993] 
+
+# Find the value closest to 0 
+
+closest_to_zero = min(positive_rate_values, key=lambda x: abs(x)) 
+
+print(f"Closest to zero: {closest_to_zero}") 
+
+</code> 
+
+<sandbox_output> 
+
+Closest to zero: 0.02614 
+
+</sandbox_output> 
+
+<think> 
+
+The value closest to 0 is 0.02614, which corresponds to "Reproduction rate" in the chart. Therefore, the policy with the least effect on the positive rate is "Reproduction rate". 
+
+</think> 
+
+<answer> 
+
+\boxed{"Reproduction rate"} 
+
+</answer> 
+
+Figure 9. A C HAR TOOL example using Code Computation Tool. 
+
+22 Submission and Formatting Instructions for ICML 2026 Question 
+
+Is the sum of largest two bars is greater then the sum of smallest 3 bars? 
+
+CoT 
+
+<think> 
+
+I need to verify if the sum of the largest two bars is greater than the sum of the smallest three bars. First, I will identify the values of all bars from the chart: - United Arab Emirates: 94% - Mauritania: 91% - Spain: 88% - Armenia: 73% - South Korea: 72% Next, I will calculate the sum of the largest two bars (94% + 91%) and the sum of the smallest three bars (72% + 73% + 88%). Then, I will compare these sums. 
+
+</think> 
+
+<code> 
+
+import numpy as np 
+
+# Define the values of the bars 
+
+values = np.array([94, 91, 88, 73, 72]) 
+
+# Calculate the sum of the largest two bars 
+
+sum_largest_two = np.sum(sorted(values)[-2:]) 
+
+# Calculate the sum of the smallest three bars 
+
+sum_smallest_three = np.sum(sorted(values)[:3]) 
+
+# Print the results 
+
+print(f"Sum of largest two bars: {sum_largest_two}") 
+
+print(f"Sum of smallest three bars: {sum_smallest_three}") 
+
+</code> 
+
+<sandbox_output> 
+
+Sum of largest two bars: 185 
+
+Sum of smallest three bars: 233 
+
+</sandbox_output> 
+
+<think> 
+
+The sum of the largest two bars is 185, and the sum of the smallest three bars is 233. Since 185 is less than 233, the statement "Is the sum of largest two bars is greater then the sum of smallest 3 bars?" is false. 
+
+</think> 
+
+<answer> 
+
+\boxed{No} 
+
+</answer> 
+
+Figure 10. A C HAR TOOL example using Code Computation Tool. 
+
+23 Submission and Formatting Instructions for ICML 2026 Question 
+
+Please first conduct reasoning, and then answer the question and provide the final value, e.g., 1, 2.5, 300, at the end. 
+
+Question: A square prism has sides of length 11cm, 11cm and 15cm as shown. 
+
+Now, we want to find $y$, the length of the diagonal $DF$. 
+
+Calculate $y$ to two decimal places. 
+
+CoT 
+
+<think> 
+
+I need to find the length of the diagonal $DF$ in the given square prism. The prism has two square bases (each side 11 cm) and a rectangular face (length 15 cm). The diagonal $DF$ spans from vertex $D$ to vertex $F$, which are not in the same plane — $D$ is on the top square, and $F$ is on the bottom square along the long edge. Since $DF$ is the space diagonal of a rectangular box with dimensions 11 cm × 11 cm × 15 cm, I can use the 3D distance formula: $$ y = \sqrt{x^2 + y^2 + z^2} $$ Where: - $x = 11$ cm (one side of the square base) - $y = 11$ cm (the other side of the square base) - $z = 15$ cm (the height/length of the prism) I will calculate this using `python_interpreter`. 
+
+</think> 
+
+<code> 
+
+import numpy as np 
+
+# Define the dimensions 
+
+dimensions = [11, 11, 15] 
+
+# Calculate the space diagonal 
+
+space_diagonal = np.sqrt(np.sum(np.array (dimensions)*[2)) 
+
+print(f"Length of diagonal DF (to two decimal places): {space_diagonal:.2f}") 
+
+</code> 
+
+<sandbox_output> 
+
+Length of diagonal DF (to two decimal places): 21.61 
+
+</sandbox_output> 
+
+<answer> 
+
+\boxed{21.61} 
+
+</answer> 
+
+Figure 11. A C HAR TOOL example using Code Computation Tool on MathVerse (Zhang et al., 2024c) benchmark. 
+
+24 Submission and Formatting Instructions for ICML 2026 Question 
+
+Which sampling method in the KITTIFog subplot achieves the highest mAP at 2600 labeled instances? 
+
+* Your final answer must be grounded to some text that is explicitly written and relevant to the question in the chart. 
+
+* If you need to answer multiple terms, separate them with commas. 
+
+* Unless specified in the question (such as answering with a letter), you are required to answer the full names of subplots and/or labels by default. 
+
+CoT 
+
+<think> 
+
+The question asks which sampling method in the "KITTIFog" subplot achieves the highest mAP at 2600 labeled instances. I need to focus on the top-right subplot labeled "KITTIFog". I will zoom in on this specific subplot to clearly read the data points and identify the highest mAP value at 2600 labeled instances. 
+
+</think> 
+
+<code> 
+
+from PIL import Image 
+
+img = Image.open("chart.png") 
+
+cropped = img.crop((738, 45, 1024, 390)) 
+
+cropped.save("output.png") 
+
+</code> 
+
+<sandbox_output> 
+
+<image> 
+
+</sandbox_output> 
+
+<think> 
+
+After zooming in on the "KITTIFog" subplot, I can see the mAP values for different sampling methods at 2600 labeled instances. I will use the `python_interpreter` tool to estimate the mAP value for each method at 2600 labeled instances based on the visual data. 
+
+</think> 
+
+<code> 
+
+import numpy as np 
+
+# Estimate mAP at 2600 labeled instances from the KITTIFog subplot 
+
+# Based on visual inspection: STREAMLINE (red dashed) ~0.58, ENTROPY (green) ~0.42, MARGIN (blue) ~0.50, LEAST_CONF. (yellow) ~0.52, SUBMODULAR (purple) ~0.54, RANDOM (black) ~0.50 
+
+mAP_values = {'STREAMLINE': 0.58, 'ENTROPY': 0.42, 'MARGIN': 0.50, 'LEAST_CONF.': 0.52, 'SUBMODULAR': 0.54, 'RANDOM': 0.50} 
+
+# Find the method with the highest mAP at 2600 labeled instances 
+
+max_method = max(mAP_values, key=mAP_values.get) 
+
+max_mAP = mAP_values[max_method] 
+
+print(f"Method with highest mAP at 2600 labeled instances: {max_method}, mAP: {max_mAP}") 
+
+</code> 
+
+<sandbox_output> 
+
+Method with highest mAP at 2600 labeled instances: STREAMLINE, mAP: 0.58 
+
+</sandbox_output> 
+
+<think> 
+
+The numerical estimation confirms that the "STREAMLINE" method achieves the highest mAP at 2600 labeled instances, with an estimated value of 0.58. This aligns with the visual observation from the subplot. Therefore, the final answer is "STREAMLINE". 
+
+</think> 
+
+<answer> 
+
+\boxed{"STREAMLINE"} 
+
+</answer> 
+
+> chart.png
+> output.png
+
+Figure 12. A C HAR TOOL example using both Crop Tool and Code Computation Tool. 
+
+25

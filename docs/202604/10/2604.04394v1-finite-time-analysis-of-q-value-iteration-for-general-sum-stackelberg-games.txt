@@ -1,0 +1,1030 @@
+Title: Finite-Time Analysis of Q-Value Iteration for General-Sum Stackelberg Games
+
+URL Source: https://arxiv.org/pdf/2604.04394v1
+
+Published Time: Tue, 07 Apr 2026 01:39:37 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Finite-Time Analysis of Q-Value Iteration for General-Sum Stackelberg Games 
+
+Narim Jeong and Donghwan Lee 
+
+Abstract — Reinforcement learning has been successful both empirically and theoretically in single-agent settings, but ex-tending these results to multi-agent reinforcement learning in general-sum Markov games remains challenging. This paper studies the convergence of Stackelberg Q-value iteration in two-player general-sum Markov games from a control-theoretic perspective. We introduce a relaxed policy condition tailored to the Stackelberg setting and model the learning dynamics as a switching system. By constructing upper and lower comparison systems, we establish finite-time error bounds for the Q-functions and characterize their convergence properties. Our results provide a novel control-theoretic perspective on Stackelberg learning. Moreover, to the best of the authors’ knowledge, this paper offers the first finite-time convergence guarantees for Q-value iteration in general-sum Markov games under Stackelberg interactions. 
+
+I. INTRODUCTION Reinforcement learning (RL) has been successfully ap-plied to a wide range of sequential decision-making problems and has demonstrated remarkable empirical performance in complex domains. Among the many RL algorithms, Q-learning [1] has been one of the most fundamental and widely studied methods, with well-established convergence guarantees in single-agent Markov decision processes [2]– [5]. These theoretical foundations, together with strong em-pirical success, have contributed to the widespread adoption of RL in practice. In many real-world applications, however, decision-making involves multiple interacting agents whose outcomes depend on one another’s actions. This motivates the study of multi-agent reinforcement learning (MARL) [6], which ex-tends classical RL to multi-agent environments. A common modeling approach in general-sum Markov games assumes that agents aim to reach a Nash equilibrium at each state, leading to algorithms such as Nash Q-learning [7]. While this framework provides a natural extension of minimax Q-learning [8] and captures a wide range of mixed coop-erative–competitive interactions, it also introduces signifi-cant analytical challenges. In particular, it is known that establishing convergence for MARL in general-sum Markov games is notoriously difficult. There are equilibrium selection issues and non-ergodic learning dynamics [9] since the Nash equilibrium operator is not a contraction [7] in general, and multiple equilibria may exist at a given state. As a result, convergence guarantees for Nash-based MARL are typically limited to restrictive settings or weaker solution concepts  
+
+> N. Jeong and D. Lee are with the Department of Electrical Engineering, Korea Advanced Institute of Science and Technology (KAIST), Daejeon, 34141, South Korea
+
+{nrjeong, donghwan }@kaist.ac.kr 
+
+such as correlated equilibria [9]–[13]. Moreover, even value iteration in general-sum Markov games may fail to converge and instead exhibit cyclic behaviors [14], [15]. Consequently, a general and intuitive convergence theory for MARL under Nash equilibria remains largely underdeveloped. In contrast to Nash equilibria, many real-world multi-agent systems exhibit inherently asymmetric or hierarchical interactions, where one agent acts as the leader and others respond accordingly. Such scenarios arise naturally in ap-plications such as autonomous driving [16], [17], auction design [18], and security games [19]. In these settings, the Stackelberg equilibrium [20] provides a more appropriate solution concept, as it explicitly models sequential decision-making, with the follower observing the leader’s action and responding optimally. Such scenarios have motivated recent interest in Stackelberg learning in both static and dynamic games [21]–[23]. Despite its practical relevance, analyzing Stackelberg learning in Markov games is even more chal-lenging than the Nash case [24]. The induced Bellman op-erator becomes inherently asymmetric and policy-dependent because the follower’s best response depends on the leader’s action, which in turn depends on the value function. This creates a nested optimization structure and leads to highly nonlinear and potentially non-contractive dynamics. As a result, existing theoretical results for Stackelberg learning are limited to local convergence [21], [22], [25], [26] and rely on strong assumptions, such as a myopic follower or centralized coordination [27]–[29]. In this paper, we study the convergence properties of Stackelberg Q-value iteration in two-player general-sum Markov games. Our approach departs from equilibrium-based analyses and instead focuses on the evolution of Q-functions under the induced learning dynamics. By intro-ducing a relaxed policy condition tailored to the Stackelberg setting, we provide a more intuitive and structured under-standing of the learning process. In particular, we model the Stackelberg Q-value iteration as a switching system [30], where the switching behavior naturally captures the evolution of Q-function-induced dynamics over time. By constructing upper and lower comparison systems, we establish finite-time error bounds for the Q-functions and characterize their convergence behavior. The main contributions of this paper can be summarized as follows: (i) We introduce a relaxed policy condition for the Stackelberg setting by adapting the worst-case response as-sumption commonly used in Nash Q-learning analyses [31]. As this minimax-based assumption is overly restrictive and does not directly apply to asymmetric structure, we replace 
+
+> arXiv:2604.04394v1 [cs.LG] 6 Apr 2026
+
+it with an ϵ-relaxation on the upper bound. We show that this condition is valid and admits a natural interpretation in terms of best-response behavior. (ii) We establish finite-time error bounds for Stackelberg Q-value iteration in two-player general-sum Markov games. Existing works primarily provided asymptotic or local convergence guarantees [21], [22], [25], [26] or relied on restrictive assumptions [27]–[29] in Stackelberg learning in general-sum games. While [32] presented finite-time analysis in Stackelberg general sum settings, it did not extend to Markov games or Q-value iter-ation. In contrast, our analysis establishes an explicit finite-time convergence result under a relaxed policy condition. To the best of the authors’ knowledge, this is the first work that provides finite-time convergence guarantees for Q-value iteration in general-sum Markov games under Stackelberg interactions. (iii) We develop a novel analytical framework based on switching systems to characterize the evolution of Stackelberg Q-functions. This framework captures the time-varying structure of Stackelberg-type interactions and enables a systematic comparison-based analysis. Our results extend recent switching-system-based analyses beyond the single-agent and zero-sum settings [33]–[36]. II. PRELIMINARIES AND PROBLEM FORMULATION 
+
+Stackelberg Markov games and learning dynamics. We consider a two-player general-sum Markov game [37], in which the two agents are referred to as leader and follower. The state space is defined as S := {1, 2, . . . , |S|} , and the action spaces of the leader and the follower are given by 
+
+A := {1, 2, . . . , |A|} and B := {1, 2, . . . , |B|} , respectively, where |S| , |A| , and |B| denote the cardinalities of the corresponding spaces. In the Stackelberg setting [22], [26], [38], the leader first selects an action a ∈ A and then the follower observes a and selects b ∈ B. The policies of the leader and the follower are defined as π1(a | s) and 
+
+π2(b | s, a ), respectively, where the policy of the follower explicitly depends on the leader’s action. Then, the state s
+
+transitions to the next state s′ according to the transition probability P (s′ | s, a, b ). Each player i ∈ { 1, 2} receives reward ri(s, a, b ), which we denote by ri.For a policy pair (π1, π 2), the value function of player i
+
+is defined as 
+
+V iπ1,π 2 (s) := E
+
+" ∞X
+
+> k=0
+
+γkrik+1 s0 = s
+
+#
+
+, i ∈ { 1, 2},
+
+where rik := ri(sk, a k, b k) denotes the reward received by player i at time step k, and γ ∈ [0 , 1) is the discount factor. The best response of the follower given π1 is defined as 
+
+π2∗(π1) ∈ arg max  
+
+> π2
+
+V 2 
+
+> π1,π 2
+
+(s). (1) Based on this best response, the leader chooses a policy that maximizes its own value, i.e., 
+
+π1∗ ∈ arg max  
+
+> π1
+
+V 1
+
+> π1,π 2∗(π1)
+
+(s). (2) Then, a policy pair (π1∗, π 2∗) is said to be a Stackelberg equilibrium if it satisfies (1) and (2). This leads to the following bilevel optimization formulation: 
+
+max  
+
+> π1
+
+V 1
+
+> π1,π 2∗(π1)
+
+(s), where π2∗(π1) = arg max  
+
+> π2
+
+V 2 
+
+> π1,π 2
+
+(s).
+
+In this paper, we assume that the policy is deterministic as 
+
+ak(s) and bk(s, a ) at iteration k, and the arg max operator returns a unique maximizer. At each state s, the best response of the follower to the leader’s action is defined as 
+
+bk(s, a ) ∈ arg max  
+
+> b∈B
+
+Q2
+
+> k
+
+(s, a, b ),
+
+where Qik represents the Q-function estimate for the leader and the follower at iteration k, respectively. Given this, the leader selects its action according to 
+
+ak(s) ∈ arg max  
+
+> a∈A
+
+Q1 
+
+> k
+
+(s, a, b k(s, a )) . (3) Then, the Q-functions for the leader and the follower are updated using the following recursion: 
+
+Q1
+
+> k+1
+
+(s, a, b ) = r1(s, a, b )+ γ X
+
+> s′∈S
+
+P (s′ | s, a, b ) max  
+
+> a∈A
+
+Q1 
+
+> k
+
+(s′, a, b k(s′, a )) (4) and 
+
+Q2
+
+> k+1
+
+(s, a, b ) = r2(s, a, b )+ γ X
+
+> s′∈S
+
+P (s′ | s, a, b ) max  
+
+> b∈B
+
+Q2
+
+> k
+
+(s′, a k(s′), b ). (5) When a policy pair (a∗, b ∗) satisfies 
+
+b∗(s, a ) ∈ arg max  
+
+> b∈B
+
+Q2
+
+> ∗
+
+(s, a, b )
+
+and 
+
+a∗(s) ∈ arg max  
+
+> a∈A
+
+Q1 
+
+> ∗
+
+(s, a, b ∗(s, a )) ,
+
+the pair (a∗, b ∗) constitutes a Stackelberg equilibrium. Given the induced learning dynamics on the Q-functions, the iterates may converge to a fixed point under suitable conditions [22], [26]. However, in the absence of such conditions, the updates can exhibit non-convergent behaviors such as limit cycles. In such cases, the resulting policies form a periodic orbit rather than a stationary Stackelberg equilibrium. 
+
+Switching system. A switching system [30] is a class of nonlinear systems [39] that operates among multiple subsystems according to a switching signal. Regarding the various types of switching systems, this paper focuses on an 
+
+affine switching system defined as 
+
+xk+1 = Aσk xk + bσk ,
+
+where xk ∈ Rn denotes the system state at time step k, σk ∈M := 1 , 2, . . . , M denotes the switching signal, and Aσk ∈
+
+Rn×n and bσk ∈ Rn are the active subsystems. Both Aσk
+
+and bσk depend on σk, which can be chosen either arbitrarily or according to a policy. It is known that the presence of the affine term bσk can make stability analysis more challenging. Problem formulation. Throughout the paper, we will use the following assumptions and notations to simplify the analysis. 
+
+Assumption 2.1: 
+
+1) The reward is bounded within a unit interval: 
+
+max (s,a,b )∈S×A×B |r(s, a, b )| ≤ 1.2) The initial values of the Q-functions are bounded within a unit interval: Q10 ∞ ≤ 1 and Q20 ∞ ≤ 1.
+
+Definition 2.1: 
+
+1) Q-function vector: 
+
+Q := 
+
+
+
+Q1,1
+
+...
+
+Q|A| ,|B| 
+
+ , Q a,b := 
+
+
+
+Q(1 , a, b )
+
+...
+
+Q(|S| , a, b )
+
+ ,
+
+where Q ∈ R|S||A||B| and Qa,b ∈ R|S| .2) State transition probability matrix: 
+
+P := 
+
+
+
+P1,1
+
+...
+
+P|A| ,|B| 
+
+ ,Pa,b := 
+
+
+
+P (1 | 1, a, b ) · · · P (|S| | 1, a, b )
+
+... . . . ...
+
+P (1 | |S| , a, b ) · · · P (|S| | |S| , a, b )
+
+ ,
+
+where P ∈ R|S||A||B|×|S| and Pa,b ∈ R|S|×|S| .3) Stackelberg action-selection matrix: For any leader policy ϕ : S → A and the follower policy ψ : S → B ,define 
+
+M[ϕ,ψ ] := 
+
+
+
+eTϕ(1) ⊗ eTψ(1) ⊗ eT
+
+> 1
+
+...
+
+eTϕ(|S| ) ⊗ eTψ(|S| ) ⊗ eT
+
+> |S|
+
+ ,
+
+where eϕ(s), eψ(s), and es denote the standard basis vectors in R|A| , R|B| , and R|S| , respectively, ⊗ denotes the Kronecker product, and M[ϕ,ψ ] ∈ R|S|×|S||A||B| .Note that we can express the transition matrix applied to the selected Q-values with the aforementioned definitions as 
+
+Pa,b M[ak ,b k ]Qk
+
+=
+
+P 
+
+> s′∈S
+
+P (s′|1, a, b )Qk(s′, a k(s′), b k(s′, a k(s′))) 
+
+...P 
+
+> s′∈S
+
+P (s′||S| , a, b )Qk(s′, a k(s′), b k(s′, a k(s′))) 
+
+ .
+
+III. STACKELBERG Q-FUNCTION INEQUALITIES AND EPSILON-RELAXATION In [31], it is assumed that each player treats the opponent’s policy as a worst-case response, which is natural in Nash-type formulations of stochastic games. However, this worst-case assumption can be overly restrictive since it is rooted in the minimax structure of Nash formulations. Moreover, it cannot be directly applied to the Stackelberg setting due to its inherent asymmetry. Therefore, instead of assuming mutual worst-case responses, we adopt a Stackelberg setting and relax this assumption by introducing an ϵ-relaxation on the upper bound. First, we establish the following lemma that shows in-equalities between Q-function values in the Stackelberg setting. 
+
+Lemma 3.1 (Stackelberg Q-function inequalities): For any state s, policies μ1, μ 2, and iteration k ≥ 0, the following inequalities hold: 
+
+Q1
+
+> k
+
+(s, μ 1(s), b k(s, μ 1(s))) ≤ Q1
+
+> k
+
+(s, a k(s), b k(s, a k(s))) ,Q2
+
+> k
+
+(s, a k(s), μ 2(s)) ≤ Q2
+
+> k
+
+(s, a k(s), b k(s, a k(s))) ,
+
+and 
+
+Q1
+
+> ∗
+
+(s, μ 1(s), b ∗(s, μ 1(s))) ≤ Q1
+
+> ∗
+
+(s, a ∗(s), b ∗(s, a ∗(s))) ,Q2
+
+> ∗
+
+(s, a ∗(s), μ 2(s)) ≤ Q2
+
+> ∗
+
+(s, a ∗(s), b ∗(s, a ∗(s))) .
+
+Proof: We first consider the inequality for Q1
+
+> k
+
+. Recall that 
+
+ak(s) ∈ arg max  
+
+> a∈A
+
+Q1 
+
+> k
+
+(s, a, b k(s, a )) 
+
+from (3). It follows that for any a ∈ A ,
+
+Q1
+
+> k
+
+(s, a, b k(s, a )) ≤ Q1
+
+> k
+
+(s, a k(s), b k(s, a k(s))) .
+
+Substituting a = μ1(s) yields the desired result. The remain-ing inequalities follow analogously. Note that the inequalities involving Qi 
+
+> ∗
+
+follow directly from the definition of a Stackelberg equilibrium in (1) and (2). Next, we revisit the assumption in [31], which was originally introduced for Nash settings under a worst-case response framework. We move beyond the mutual worst-case response assumption and instead introduce an ϵ-relaxation on the upper bound within the Stackelberg framework as follows: 
+
+Assumption 3.1 ( ϵ-relaxed best response): For some ϵ > 
+
+0, for any state s, policies μ1, μ 2, and iteration k ≥ 0, we assume that 
+
+Q1
+
+> k
+
+(s, a k(s), b k(s, a k(s))) ≤ Q1
+
+> k
+
+(s, a k(s), μ 2(s)) + ϵ, Q2
+
+> k
+
+(s, a k(s), b k(s, a k(s))) ≤ Q2
+
+> k
+
+(s, μ 1(s), b k(s, a k(s))) + ϵ, 
+
+and 
+
+Q1
+
+> ∗
+
+(s, a ∗(s), b ∗(s, a ∗(s))) ≤ Q1
+
+> ∗
+
+(s, a ∗(s), μ 2(s)) + ϵ, Q2
+
+> ∗
+
+(s, a ∗(s), b ∗(s, a ∗(s))) ≤ Q2
+
+> ∗
+
+(s, μ 1(s), b ∗(s, a ∗(s))) + ϵ. 
+
+To justify Assumption 3.1, we show that there exists a constant ϵ > 0 satisfying the required condition. To this end, we establish the following lemma by adopting the proof approach in [40]. 
+
+Lemma 3.2: For every k ≥ 0,
+
+Qik ∞ ≤ 11 − γ , i = 1 , 2.Proof: From (4), one obtains 
+
+|Qik+1 (s, a, b )|≤| ri(s, a, b )|
+
++ γ X
+
+> s′∈S
+
+P (s′ | s, a, b ) max  
+
+> a∈A
+
+Q1 
+
+> k
+
+(s′, a, b k(s′, a )) 
+
+≤| ri(s, a, b )|
+
++ γ X
+
+> s′∈S
+
+P (s′ | s, a, b ) max  
+
+> a∈A
+
+Q1 
+
+> k
+
+(s′, a, b k(s′, a )) 
+
+≤1 + γ X
+
+> s′∈S
+
+P (s′ | s, a, b ) Q1 
+
+> k
+
+(s′, a k(s′), b k(s′, a )) 
+
+≤1 + γ max  
+
+> s′∈S
+
+|Qik(s′, a k(s′), b k(s′, a k(s′)) |,
+
+where the second inequality follows from the triangu-lar inequality, and the third inequality follows from As-sumption 2.1. Applying this inequality recursively yields 
+
+∥Qik∥∞ ≤ 1 + γ + · · · + γk ≤ 11−γ , which completes the proof. Then, we establish the existence of ϵ satisfying Assump-tion 3.1. 
+
+Lemma 3.3 ( ϵ-existence): For any state s, policies μ1, μ 2
+
+and iteration k ≥ 0, there exists ϵ > 0 such that Assump-tion 3.1 holds. 
+
+Proof: We first consider Q1
+
+> k
+
+. For any state s and actions 
+
+a, b , we have 
+
+|Q1
+
+> k
+
+(s, a, b )| ≤ 11 − γ
+
+by utilizing Lemma 3.2. Then, 
+
+Q1
+
+> k
+
+(s, a k(s), b k(s, a k(s))) − Q1
+
+> k
+
+(s, a k(s), μ 2(s)) 
+
+≤| Q1
+
+> k
+
+(s, a k(s), b k(s, a k(s))) | + |Q1
+
+> k
+
+(s, a k(s), μ 2(s)) |≤ 21 − γ .
+
+Thus, choosing ϵ ≥ 21−γ ensures that the inequality for Q1
+
+> k
+
+in Assumption 3.1 holds. The remaining inequalities can be derived in the same manner. In summary, Lemma 3.1 follows directly from the defini-tion, while Assumption 3.1 is imposed as an assumption. These results will be used in the analysis of Stackelberg Q-value iteration in the next section. IV. FINITE-TIME ANALYSIS OF STACKELBERG Q-VALUE ITERATION IN GENERAL-SUM MARKOV GAMES 
+
+A. Construction of Upper and Lower Comparison Systems 
+
+In this section, we first analyze the problem from the perspective of the leader. To study the convergence of (4), we reduce the analysis to the stability of an affine switching system. Two straightforward comparison iterations are used, which are easier to analyze: the upper iteration provides an upper bound on (4), while the lower iteration provides a lower bound. Then, we transform both iterations into comparison switching systems. Based on (4), the upper iteration can be represented as 
+
+QUk+1 (s, a, b ) − Q1
+
+> ∗
+
+(s, a, b )=γ X
+
+> s′∈S
+
+P (s′|s, a, b ) Q1
+
+> k
+
+(s′, a k(s′), b ∗(s, a k(s′))) 
+
+− Q1
+
+> ∗
+
+(s′, a k(s′), b ∗(s, a k(s′))) + γϵ 
+
+and the lower iteration as 
+
+QLk+1 (s, a, b ) − Q1
+
+> ∗
+
+(s, a, b )=γ X
+
+> s′∈S
+
+P (s′|s, a, b ) Q1
+
+> k
+
+(s′, a ∗(s′), b k(s, a ∗(s′))) 
+
+− Q1
+
+> ∗
+
+(s′, a ∗(s′), b k(s, a ∗(s′))) − γϵ, 
+
+which are established by the following propositions: 
+
+Proposition 4.1: Assume that QU 
+
+> 0
+
+(s, a, b ) ≥ Q0(s, a, b )
+
+for all (s, a, b ). Then, QUk (s, a, b ) ≥ Qk(s, a, b ) holds for all 
+
+(s, a, b ) and k ≥ 0.
+
+Proof: Suppose that the statement holds for some k ≥
+
+0. Then, 
+
+Q1
+
+> k+1
+
+(s, a, b ) − Q1
+
+> ∗
+
+(s, a, b )=γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> k
+
+(s′, a k(s′), b k(s, a k(s′))) 
+
+− γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> ∗
+
+(s′, a ∗(s′), b ∗(s, a ∗(s′))) 
+
+≤γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> k
+
+(s′, a k(s′), b k(s, a k(s′))) 
+
+− γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> ∗
+
+(s′, a k(s′), b ∗(s, a k(s′))) 
+
+≤γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> k
+
+(s′, a k(s′), b ∗(s, a k(s′))) + γϵ 
+
+− γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> ∗
+
+(s′, a k(s′), b ∗(s, a k(s′))) =γ X
+
+> s′∈S
+
+P (s′|s, a, b ) Q1
+
+> k
+
+(s′, a k(s′), b ∗(s, a k(s′))) 
+
+− Q1
+
+> ∗
+
+(s′, a k(s′), b ∗(s, a k(s′))) + γϵ 
+
+≤γ X
+
+> s′∈S
+
+P (s′|s, a, b ) QUk (s′, a k(s′), b ∗(s, a k(s′))) 
+
+− Q1
+
+> ∗
+
+(s′, a k(s′), b ∗(s, a k(s′))) + γϵ 
+
+=QUk+1 (s, a, b ) − Q1
+
+> ∗
+
+(s, a, b ),
+
+where the first equality follows from (4) and the assumption that the maximizer is unique for all states, the first and second inequalities follow from Lemma 3.1 and Assumption 3.1, and the last inequality follows from the assumption QUk (s, a, b ) ≥
+
+Qk(s, a, b ). The proof is completed by induction. 
+
+Proposition 4.2: Assume that QL 
+
+> 0
+
+(s, a, b ) ≤ Q0(s, a, b )
+
+for all (s, a, b ). Then, QLk (s, a, b ) ≤ Qk(s, a, b ) holds for all 
+
+(s, a, b ) and k ≥ 0.Proof: Suppose that the statement holds for some k ≥
+
+0. Then, 
+
+Q1
+
+> k+1
+
+(s, a, b ) − Q1
+
+> ∗
+
+(s, a, b )=γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> k
+
+(s′, a k(s′), b k(s, a k(s′))) 
+
+− γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> ∗
+
+(s′, a ∗(s′), b ∗(s, a ∗(s′))) 
+
+≥γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> k
+
+(s′, a ∗(s′), b k(s, a ∗(s′)) 
+
+− γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> ∗
+
+(s′, a ∗(s′), b ∗(s, a ∗(s′))) 
+
+≥γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> k
+
+(s′, a ∗(s′), b k(s, a ∗(s′)) 
+
+− γ X
+
+> s′∈S
+
+P (s′|s, a, b )Q1
+
+> ∗
+
+(s′, a ∗(s′), b k(s, a ∗(s′)) − γϵ 
+
+=γ X
+
+> s′∈S
+
+P (s′|s, a, b ) Q1
+
+> k
+
+(s′, a ∗(s′), b k(s, a ∗(s′)) 
+
+− Q1
+
+> ∗
+
+(s′, a ∗(s′), b k(s, a ∗(s′)) − γϵ 
+
+≥γ X
+
+> s′∈S
+
+P (s′|s, a, b ) QLk (s′, a ∗(s′), b k(s, a ∗(s′)) 
+
+− Q1
+
+> ∗
+
+(s′, a ∗(s′), b k(s, a ∗(s′)) − γϵ 
+
+=QLk+1 (s, a, b ) − Q1
+
+> ∗
+
+(s, a, b )
+
+where the first equality follows from (4) and the assumption that the maximizer is unique for all states, the first and second inequalities follow from Lemma 3.1 and Assumption 3.1, and the last inequality follows from the assumption QLk (s, a, b ) ≤
+
+Qk(s, a, b ). The proof is completed by induction. Then, using Definition 2.1, the upper comparison system can be expressed as 
+
+QUk+1 − Q1 
+
+> ∗
+
+= γP M [ak ,b ∗]
+
+ QUk − Q1
+
+> ∗
+
+ + γϵ 1, (6) where 1 is the all-ones column vector. Moreover, the lower comparison system can be expressed as 
+
+QLk+1 − Q1 
+
+> ∗
+
+= γP M [a∗,b k ]
+
+ QLk − Q1
+
+> ∗
+
+ − γϵ 1. (7) Equations (6) and (7) can be interpreted as switching sys-tems, where M[ak ,b ∗] and M[a∗,b k ] vary with Qk. The term 
+
+γϵ 1 acts as a constant affine term. 
+
+B. Finite-Time Error Bound 
+
+By analyzing the two comparison systems (6) and (7), we establish the convergence of Stackelberg Q-value iteration in general-sum Markov games as follows: 
+
+Theorem 4.1: For all k ≥ 0,
+
+Q1 
+
+> k
+
+− Q1  
+
+> ∗∞
+
+≤ 61 − γ γk + 3ϵ
+
+1 − γ . (8) 
+
+Proof: Taking into account the norm of (6), one gets 
+
+QUk+1 − Q1 
+
+> ∗∞
+
+≤γ ∥P ∥∞ M[ak ,b ∗] ∞ QUk − Q1  
+
+> ∗∞
+
++ γϵ ∥1∥∞
+
+=γ QUk − Q1  
+
+> ∗∞
+
++ γϵ. 
+
+Then, unrolling the aforementioned inequality from i = 0 to 
+
+k − 1,
+
+QUk+1 − Q1  
+
+> ∗∞
+
+≤γk QU 
+
+> 0
+
+− Q1  
+
+> ∗∞
+
++ ϵ
+
+> k
+
+X
+
+> i=1
+
+γ
+
+≤γk   QU  
+
+> 0∞
+
++ Q1 
+
+> ∗∞
+
+ + ϵ
+
+> ∞
+
+X
+
+> i=0
+
+γ
+
+≤ 21 − γ γk + ϵ
+
+1 − γ , (9) where the last inequality utilizes Assumption 2.1 and Lemma 3.2. Similarly, one can also prove the same finite-time error bound for the lower comparison system. By using the relation 
+
+Q1 
+
+> k
+
+− Q1 
+
+> ∗∞
+
+= Q1 
+
+> k
+
+− QLk + QLk − Q1 
+
+> ∗∞
+
+≤ QLk − Q1  
+
+> ∗∞
+
++ Q1 
+
+> k
+
+− QLk ∞
+
+≤ QLk − Q1  
+
+> ∗∞
+
++ QUk − QLk ∞
+
+≤ QLk − Q1  
+
+> ∗∞
+
++ QUk − Q1 
+
+> ∗
+
++ Q1 
+
+> ∗
+
+− QLk ∞
+
+≤ QLk − Q1  
+
+> ∗∞
+
++ QUk − Q1  
+
+> ∗∞
+
++ Q1 
+
+> ∗
+
+− QLk ∞
+
+=2 QLk − Q1  
+
+> ∗∞
+
++ QUk − Q1  
+
+> ∗∞
+
+,
+
+the final result is obtained by combining (9) with the cor-responding error bound for the lower comparison system. Here, the first and fourth inequalities follow from the triangle inequality, while the second inequality follows from the fact that QUk − QLk ≥ Qk − QLk ≥ 0.By examining the right side of (8), the first term dimin-ishes as k goes to infinity with γ ∈ [0 , 1) . Moreover, it is apparent that the second term is a constant error that can be reduced by the smaller ϵ. This suggests that the error between the Q-value at the k-th iteration and Q1 
+
+> ∗
+
+is confined within a bounded range. For the follower, we can also get the same finite-time error bound using a similar method. V. NUMERICAL EXPERIMENTS We consider the following two-player general-sum Markov game to validate the theoretical results. The environment consists of a single state S = {1}, with action spaces 
+
+A = {1, 2} for the leader and B = {1, 2} for the follower. The transition is deterministic and always remains in the same state. The discount factor is set to γ = 0 .8.The reward functions for the two players are defined as 
+
+r1(s, a, b ) = 
+
+
+
+0.8 (a = 1 , b = 1) 0.2 (a = 1 , b = 2) 0.5 (a = 2 , b = 1) 0.9 (a = 2 , b = 2) Fig. 1: Illustration of epsilon values satisfying Assump-tion 3.1. and 
+
+r2(s, a, b ) = 
+
+
+
+0.3 (a = 1 , b = 1) 0.9 (a = 1 , b = 2) 0.8 (a = 2 , b = 1) 0.1 (a = 2 , b = 2) 
+
+.
+
+Under this setup, the follower’s best response to the leader’s action is given by b∗(s, 1) = 2 and b∗(s, 2) = 1 . Based on this best response, the leader evaluates r1(s, 1, b ∗(s, 1)) = 0.2 and r1(s, 2, b ∗(s, 2)) = 0 .5. Then, the leader selects action a∗(s) = 2 , while the follower selects b∗(s, a ∗(s)) = 1 .Therefore, the unique Stackelberg policy pair is given by 
+
+(a∗, b ∗) ≡ (2 , 1) .Since the environment contains a single state, Qi 
+
+> ∗
+
+ad-mits a closed-form expression. We can get Qi 
+
+> ∗
+
+values as Q1
+
+> ∗
+
+(s, a, b ) = r1(s, a, b ) + γr 1(s, 2, 1) /(1 − γ) and 
+
+Q2
+
+> ∗
+
+(s, a, b ) = r2(s, a, b ) + γr 2(s, 2, 1) /(1 − γ).We evaluate the convergence behavior of the Q-function value by measuring the sup-norm error ∥Qik − Qi
+
+> ∗
+
+∥∞ across iterations. The empirical error is compared against our the-oretical upper bounds derived from Theorem 4.1, where ϵ
+
+is computed from the current Q-values at each iteration to ensure that the condition in Assumption 3.1 holds. All experiments are repeated over five different seeds, where the Q-functions are initialized randomly at the beginning of training. Figure 1 illustrates the epsilon values required to sat-isfy Assumption 3.1 across iterations. Here, we consider three types of epsilon values: the maximum value of iteration-dependent epsilon ϵk across different seeds (purple line), the mean value of ϵk across different seeds (blue line), and the minimum constant value that satisfies As-sumption 3.1 over the entire trajectory ϵglobal = max k ϵk
+
+(gray dashed line). We observe that the required epsilon values are large during the initial iterations. This is because the Q-functions are randomly initialized, leading to unstable policies and large value discrepancies across actions. As 
+
+Fig. 2: Illustration of Q-function error of the leader and its corresponding bounds from Theorem 4.1. 
+
+Fig. 3: Illustration of Q-function error of the follower and its corresponding bounds from Theorem 4.1. learning progresses, however, the required epsilon value 
+
+ϵk decreases as the policy becomes more stable and the differences between Q-values diminish. This highlights that the global slack ϵglobal is dominated by early iterations and can be overly conservative compared to the iteration-dependent ϵk.Figures 2 and 3 depict the sup-norm error of the Q-functions for both players and the corresponding theoretical upper bounds derived in Theorem 4.1 across iterations. The results show that the empirical Q-errors of both players remain consistently below the theoretical upper bounds for all iterations k. This confirms the validity of the bound in Theorem 4.1. Moreover, both the empirical errors and the corresponding theoretical upper bounds decrease geometri-cally, which aligns with the theoretical convergence rate. In Figures 2 and 3, the upper bound based on ϵglobal 
+
+(gray line) is significantly looser, as it depends on a worst-case value dominated by early iterations. In contrast, the adaptive upper bound using ϵk (blue, purple lines) provides a substantially tighter characterization of the empirical error, demonstrating that the conservativeness of the global bound primarily arises from a few initial iterations. One thing to note is that none of the upper bounds converges to zero, since all epsilon values required to satisfy Assumption 3.1 are strictly positive. This leads to a non-vanishing residual term in the upper bound. VI. CONCLUSIONS In this paper, we investigated the convergence behavior of Stackelberg Q-value iteration in two-player general-sum Markov games. We proposed a novel perspective that focuses on the dynamics of Q-functions and introduced a relaxed pol-icy condition tailored to the asymmetric nature of Stackelberg interactions. By modeling the learning process as a switching system, we developed a systematic analytical framework that captures the time-varying and Q-function-dependent nature of Stackelberg learning dynamics. Through the construction of upper and lower comparison systems, we established ex-plicit finite-time error bounds for the Q-functions. Our results bridge a gap in the theoretical understanding of Stackelberg learning and extend switching-system-based analysis beyond single-agent and zero-sum settings. Promising directions for future work include extending the framework to Stackelberg Q-learning with stochastic approximation and relaxing the current assumptions to obtain tighter error bounds and more general convergence guarantees. REFERENCES [1] C. J. Watkins and P. Dayan, “Q-learning,” Machine learning , vol. 8, no. 3, pp. 279–292, 1992. [2] J. Fan, Z. Wang, Y. Xie, and Z. Yang, “A theoretical analysis of deep q-learning,” in Learning for dynamics and control . PMLR, 2020, pp. 486–489. [3] G. Li, Y. Wei, Y. Chi, Y. Gu, and Y. Chen, “Sample complexity of asynchronous Q-learning: sharper analysis and variance reduction,” 
+
+arXiv preprint arXiv:2006.03041 , 2020. [4] Z. Chen, S. T. Maguluri, S. Shakkottai, and K. Shanmugam, “A Lyapunov theory for finite-sample guarantees of asynchronous Q-learning and TD-learning variants,” arXiv preprint arXiv:2102.01567 ,2021. [5] D. Lee and N. He, “Periodic Q-learning,” in Learning for dynamics and control , 2020, pp. 582–598. [6] M. Tan et al. , “Multi-agent reinforcement learning: Independent vs. cooperative agents,” in Proceedings of the tenth international confer-ence on machine learning , 1993, pp. 330–337. [7] J. Hu and M. P. Wellman, “Nash q-learning for general-sum stochastic games,” Journal of machine learning research , vol. 4, no. Nov, pp. 1039–1069, 2003. [8] M. L. Littman, “Markov games as a framework for multi-agent rein-forcement learning,” in Machine learning proceedings 1994 . Elsevier, 1994, pp. 157–163. [9] A. Greenwald, K. Hall, R. Serrano et al. , “Correlated q-learning,” in 
+
+ICML , vol. 3, 2003, pp. 242–249. [10] M. L. Littman, “Value-function reinforcement learning in markov games,” Cognitive systems research , vol. 2, no. 1, pp. 55–66, 2001. [11] P. Cisneros-Velarde and S. Koyejo, “Finite-sample guarantees for nash q-learning with linear function approximation,” in Uncertainty in Artificial Intelligence . PMLR, 2023, pp. 424–432. [12] Z. Song, S. Mei, and Y. Bai, “When can we learn general-sum markov games with a large number of players sample-efficiently?” arXiv preprint arXiv:2110.04184 , 2021. [13] L. Erez, T. Lancewicki, U. Sherman, T. Koren, and Y. Mansour, “Regret minimization and convergence to equilibria in general-sum markov games,” in International Conference on Machine Learning .PMLR, 2023, pp. 9343–9373. [14] M. Zinkevich, A. Greenwald, and M. Littman, “Cyclic equilibria in markov games,” Advances in neural information processing systems ,vol. 18, 2005. [15] A. Giannou, K. Lotidis, P. Mertikopoulos, and E.-V. Vlatakis-Gkaragkounis, “On the convergence of policy gradient methods to nash equilibria in general stochastic games,” Advances in Neural Information Processing Systems , vol. 35, pp. 7128–7141, 2022. [16] D. Sadigh, S. Sastry, S. A. Seshia, and A. D. Dragan, “Planning for autonomous cars that leverage effects on human actions.” in Robotics: Science and systems , vol. 2. Ann Arbor, MI, USA, 2016, pp. 1–9. [17] M. Wang, Z. Wang, J. Talbot, J. C. Gerdes, and M. Schwager, “Game-theoretic planning for self-driving cars in multivehicle competitive scenarios,” IEEE Transactions on Robotics , vol. 37, no. 4, pp. 1313– 1325, 2021. [18] V. Krishna, Auction theory . Academic press, 2009. [19] A. Sinha, F. Fang, B. An, C. Kiekintveld, and M. Tambe, “Stackelberg security games: Looking beyond a decade of success.” IJCAI, 2018. [20] T. Bas ¸ar and G. J. Olsder, Dynamic noncooperative game theory .SIAM, 1998. [21] T. Fiez, B. Chasnov, and L. Ratliff, “Implicit learning dynamics in stackelberg games: Equilibria characterization, convergence analysis, and empirical study,” in International conference on machine learning .PMLR, 2020, pp. 3133–3144. [22] T. Fiez, B. Chasnov, and L. J. Ratliff, “Convergence of learning dynamics in stackelberg games,” arXiv preprint arXiv:1906.01217 ,2019. [23] Q.-L. Vu, Z. Alumbaugh, R. Ching, Q. Ding, A. Mahajan, B. Chasnov, S. Burden, and L. J. Ratliff, “Stackelberg policy gradient: Evaluating the performance of leaders and followers,” in ICLR 2022 Workshop on Gamification and Multiagent Solutions , 2022. [24] Y. Beck, I. Ljubi´ c, and M. Schmidt, “A survey on bilevel optimization under uncertainty,” European Journal of Operational Research , vol. 311, no. 2, pp. 401–426, 2023. [25] L. Zheng, T. Fiez, Z. Alumbaugh, B. Chasnov, and L. J. Ratliff, “Stack-elberg actor-critic: Game-theoretic reinforcement learning algorithms,” in Proceedings of the AAAI conference on artificial intelligence ,vol. 36, no. 8, 2022, pp. 9217–9224. [26] J. He, A. L. Liu, and Y. Chen, “Learning in stackelberg markov games,” arXiv preprint arXiv:2509.16296 , 2025. [27] H. Zhong, Z. Yang, Z. Wang, and M. I. Jordan, “Can reinforcement learning find stackelberg-nash equilibria in general-sum markov games with myopic followers?” arXiv preprint arXiv:2112.13521 , 2021. [28] Y. Yu, H. Xu, and H. Chen, “Learning correlated stackelberg equi-librium in general-sum multi-leader-single-follower games,” arXiv preprint arXiv:2210.12470 , 2022. [29] A. Niu, K. Wang, and J. Ziani, “Finding a multiple follower stackelberg equilibrium: A fully first-order method,” arXiv preprint arXiv:2509.08161 , 2025. [30] D. Liberzon, Switching in systems and control . Springer, 2003, vol. 190. [31] M. Bowling, “Convergence problems of general-sum multiagent rein-forcement learning,” in ICML , 2000, pp. 89–94. [32] Y. Bai, C. Jin, H. Wang, and C. Xiong, “Sample-efficient learning of stackelberg equilibria in general-sum games,” Advances in Neural Information Processing Systems , vol. 34, pp. 25 799–25 811, 2021. [33] D. Lee and N. He, “A unified switching system perspective and convergence analysis of Q-learning algorithms,” in 34th Conference on Neural Information Processing Systems, NeurIPS 2020 , 2020. [34] D. Lee, J. Hu, and N. He, “A discrete-time switching system analysis of Q-learning,” SIAM Journal on Control and Optimization (accepted) ,2022. [35] N. Jeong and D. Lee, “Finite-time error analysis of soft q-learning: Switching system approach,” in 2024 IEEE 63rd Conference on Decision and Control (CDC) . IEEE, 2024, pp. 3897–3904. [36] ——, “Finite-time analysis of minimax q-learning,” in Reinforcement Learning Conference , 2025. [37] L. S. Shapley, “Stochastic games,” Proceedings of the national academy of sciences , vol. 39, no. 10, pp. 1095–1100, 1953. [38] C. Zhu, W. Yu, and H. Wang, “A multi-agent q-learning with value function approximation based on single-leader multi-followers stack-elberg game,” in 2023 IEEE 13th International Conference on CYBER Technology in Automation, Control, and Intelligent Systems (CYBER) .IEEE, 2023, pp. 1229–1234. [39] H. K. Khalil, “Nonlinear systems third edition (2002),” 2002. [40] A. Gosavi, “Boundedness of iterates in Q-learning,” Systems & Control letters , vol. 55, no. 4, pp. 347–349, 2006.

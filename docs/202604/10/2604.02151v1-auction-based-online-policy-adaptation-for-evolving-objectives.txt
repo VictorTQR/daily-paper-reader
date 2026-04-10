@@ -1,0 +1,294 @@
+Title: Auction-Based Online Policy Adaptation for Evolving Objectives
+
+URL Source: https://arxiv.org/pdf/2604.02151v1
+
+Published Time: Fri, 03 Apr 2026 01:05:54 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# Auction-Based Online Policy Adaptation for Evolving Objectives 
+
+Guruprerana Shabadi 1, Kaushik Mallik 2
+
+> 1
+
+University of Pennsylvania, United States, 2IMDEA Software Institute, Spain 
+
+We consider multi-objective reinforcement learning problems where objectives come from an iden-tical family—such as the class of reachability objectives—and may appear or disappear at runtime. Our goal is to design adaptive policies that can efficiently adjust their behaviors as the set of active objectives changes. To solve this problem, we propose a modular framework where each objective is supported by a selfish local policy, and coordination is achieved through a novel auction -based mechanism: policies bid for the right to execute their actions, with bids reflecting the urgency of the current state. The highest bidder selects the action, enabling a dynamic and interpretable trade-off among objectives. Going back to the original adaptation problem, when objectives change, the sys-tem adapts by simply adding or removing the corresponding policies. Moreover, as objectives arise from the same family, identical copies of a parameterized policy can be deployed, facilitating im-mediate adaptation at runtime. We show how the selfish local policies can be computed by turning the problem into a general-sum game, where the policies compete against each other to fulfill their own objectives. To succeed, each policy must not only optimize its own objective, but also reason about the presence of other goals and learn to produce calibrated bids that reflect relative priority. In our implementation, the policies are trained concurrently using proximal policy optimization (PPO). We evaluate on Atari Assault and a gridworld-based path-planning task with dynamic targets. Our method achieves substantially better performance than monolithic policies trained with PPO. 
+
+# 1 Introduction 
+
+Figure 1: Cat Feeder env. Consider the problem of controlling a mobile robot deployed in a cat shelter whose task is to deliver food to cats roaming around the facility (Figure 1). New food requests from hungry cats may arrive at arbitrary times and locations, while existing requests may disappear if a cat wanders away before being served. Since the robot can serve only one cat at a time, fulfilling one request may delay others, potentially allowing some 1
+
+> arXiv:2604.02151v1 [cs.LG] 2 Apr 2026
+
+cats to move farther away. Thus, the robot must dynamically adapt to the set of active requests to maximize the number of cats fed before they disappear. In this work, we model the above control problem as a multi-objective reinforcement learning task in which all the objectives come from an identical family, such as reachability in this case. These objectives can be conflicting and any number of them may be active at a given time. Moreover, we make no assumptions about their distribution or arrival pattern. Our goal is to design adaptive policies that update their behavior seamlessly as objectives appear or disappear. This is a natural problem relevant to many real-world sce-narios and has been extensively studied in the planning literature [Fox et al., 2006], typically assuming that a precise environment model (like a graph) is available and there is no uncertainties. In contrast, within reinforcement learning (RL) settings—where the environment may be uncertain and a model may not be available—this problem has not been studied to the best of our knowledge. To solve this problem, we propose a compositional RL framework, where each objective is served using a local policy, selfishly maximizing its assigned objective by competing against the other policies. Coordina-tion between these policies is achieved through a novel auction-based mechanism: at every decision step, policies submit bids for the right to execute their actions, where bids reflect the urgency of the current state with respect to their objectives. The highest bidder selects the action, enabling a dynamic and interpretable trade-off among objectives. Returning to the cat feeder example, suppose the robot approaches an intersec-tion with two active requests, the policy for the first request recommends turning left, while the policy for the second recommends turning right. Since both actions cannot be executed simultaneously, a trade-off is unavoidable. The auction mechanism determines which objective is prioritized, based on the relative urgency encoded in the bids. This compositional design yields strong modularity, facilitating fast adaptation: when an objective appears or disappears, only the corresponding policy needs to be added or removed. Furthermore, when objectives belong to the identical family—which is reachability in our case—a single generalized policy can be trained for the entire family. We can deploy identical copies of this policy when new objectives arrive, enabling immediate adaptation. Modularity also permits us to define objective-specific reward signals while the auction mechanism takes care of the trade-offs between objectives. For example, we can easily define a distance-based dense reward signal for each policy controlling the cat feeder to move closer to its assigned cat. In contrast, it is challenging to define such a dense reward signal to train a monolithic policy to trade-off between the multiple objectives. We have to resort to imposing a preference ordering over the multi-dimensional reward vector, or stick to sparse rewards. We show in our experiments that monolithic policies, trained with both sparse rewards and different types of scalarized dense rewards, fall much short of the payoffs achieved by our modular approach. Yet another advantage of our modular framework is interpretability. At any moment, we can determine the policy in control, and thereby the objective currently being pursued by the agent. This explanation is beneficial in a range of real-world situations, like providing post-hoc explanations of failures, and also feedback on biases in pursuing different objectives. We implement our modular framework as a general-sum game between agents that control the local poli-cies to fulfill their assigned objectives, and this game is set up using a simple wrapper around existing multi-objective environments. Each agent’s action space is augmented with an additional numeric vari-able representing the bids, and the transitions between the game’s states encode the execution of the action selected by the highest bidder. However, we still need to address some challenges. 
+
+Challenge I: Enforcing honest bids. While the auction mechanism treats all policies fairly, the policies must still place honest bid in proportion to their urgency. Otherwise, they may learn to overbid and suppress competitors, resulting in suboptimal results. To prevent this, we impose penalties during training that scale with the bid values. As a consequence, excessive bidding reduces the net return of a policy, thus aligning its incentives with truthful urgency estimation—a policy only bids high when it is sure to receive a reward (when it feeds the cat) or to avoid a penalty (when a cat is close to disappearing). 
+
+Challenge II: Achieving environment awareness. Effective bidding depends not only on the current state and the local objective, but also on the configuration of competing objectives. For instance, in the cat feeder problem, if two requests are spatially close, their policies need not compete aggressively. Conversely, if 2requests lie in opposite directions, the urgent policy must bid sufficiently high to win. To enable such environment-aware bidding, we allow the policies to observe all the objectives, i.e., the policies have in-formation about the global state. Additionally, the policies are trained concurrently so that they learn to optimize payoffs in the presence of opponents. 
+
+Challenge III: Unbounded objective count. When policies have to compete with many objectives, provid-ing each with the global state results in a very high dimensional observation space. This makes training slow with a standard neural network policy. We address this with an attention pooling mechanism that aggregates information about an arbitrary number of competing objectives into a fixed-dimensional repre-sentation. Each local policy is equipped with its own pooling module which is co-trained with the policy. A bonus of this architecture is that it allows policies to compete with more objectives than those during training, since the pooling mechanism can extract useful features from an arbitrary number of objective states. We test our framework on two multi-objective environments: the cat feeder environment implemented as a gridworld, and the Atari Assault game from the Arcade Learning Environment [Bellemare et al., 2013]. To train our policies, we take inspiration from Yu et al. [2022] who provide guidance on using proximal policy optimization (PPO; Schulman et al. [2017]) in multi-agent systems. We observe empirical convergence of training and substantially better performance compared to baselines in both environments. Lastly, to aid interpretability in renderings of rollouts, we implement visualization of the policy in control and the objective being pursued. 
+
+# Related Work 
+
+A large body of work in multi-objective reinforcement learning (MORL) relies on scalarization , where mul-tiple reward functions are aggregated into a single scalar objective so that standard RL algorithms can be applied. The simplest approach uses weighted sums of rewards [Gass and Saaty, 1955], though nonlin-ear scalarization methods have also been proposed [Van Moffaert et al., 2013]. A key limitation is that the induced importance among rewards may not reflect the designer’s intent, often leading to a tedious debug-ging process [Hayes et al., 2022]. In contrast, our approach achieves a trade-off among reward components without collapsing them into a fixed scalar objective. Other works address trade-offs by adopting a specific optimality notion, such as Pareto optimality [Van Mof-faert and Nowé, 2014] and its approximations [Pirotta et al., 2015], or fairness-based criteria across re-wards [Park et al., 2024, Byeon et al., 2025, Siddique et al., 2020]. These approaches typically learn a single monolithic policy satisfying the chosen criterion. By contrast, we learn independent, selfish policies for each reward component and compose them at runtime, preserving modularity while achieving a coherent global trade-off. Only a few works consider distributed policies for multiple rewards. W-learning [Humphrys, 1995] and its deep RL extension [Rosero et al., 2024] train separate policies alongside meta-functions that score states by urgency, selecting the policy with the highest score at runtime. Other methods aggregate decisions through ranked voting [Méndez-Hernández et al., 2019] or fixed rules such as summing action values [Russell and Zimdars, 2003]. Our approach is simpler: it uses an engineered reward structure that enables standard RL algorithms (e.g., PPO) without additional meta-policies or complex aggregation. Moreover, to the best of our knowledge, we are the first to study the incremental MORL setting, where reward components can be added or removed at runtime. The idea of bidding-based selfish policies is inspired by auction mechanisms for multi-objective path plan-ning on graphs [Avni et al., 2024] and by the literature on bidding games [Lazarus et al., 1999, Avni et al., 2019, 2025]. These works use explicit model-based approaches and do not readily extend to the model-free setting of RL. Besides, they are restricted to the setting with two objectives. 32 Auction-Based Multi-Policy Framework for Multi-Objective RL 
+
+Preliminaries: multi-objective RL. We use multi-objective Markov decision processes (MO-MDP) to model uncertain environments and multiple objectives. An MO-MDP with m ∈ N>0 objectives is specified by a tuple M = ( S, A, T, R, γ, μ 0) where S is the set of states, A is the set of actions, T : S × A × S → R is the transition function so that s′ 7 → T (s, a, s ′) forms a probability distribution over S for all (s, a ) ∈ S × A,
+
+R = {Ri : S × A × S → R}i∈[1; m] is the set of reward functions corresponding to the m objectives, γ ∈ (0 , 1) 
+
+is the discount factor, and μ0 ∈ D(S) is the initial state distribution. A policy in an MO-MDP M is a function 
+
+π : ( S × A)∗ × S → D(A) that maps a history of state-action pairs and the current state to a distribution over actions. The policy π gives rise to a random sequence of states and actions s0, a 0, s 1, a 1, . . . , that produces a sequence of rewards r0 
+
+> i
+
+r1 
+
+> i
+
+. . . for each objective i ∈ [1; m], where rti = Ri(st, a t, a t+1 ) for every t ∈ N. The 
+
+value of π, denoted V π , is a vector in Rm such that V πi = Est,a t [P∞ 
+
+> t=0
+
+γtrti ]. In the multi-objective setting, a commonly studied problem is to find a policy in the pareto-frontier of the value function which balances the trade-offs between the objectives [Van Moffaert and Nowé, 2014]. 
+
+The auction-based multi-policy framework. We consider the compositional approach to policy synthesis for MO-MDPs, where we will design a selfish, local policy maximizing each individual value component, towards the fulfillment of some required global coordination requirements. The main crux is in the compo-sition process, where each local policy may propose a different action, but the composition must decide the action that will actually be executed. Importantly, the composition must be implementable in a distributed manner, meaning we will not use any global policy that would pick an action by analyzing all local policies and their reward functions. We present a novel auction -based RL framework for compositional policy synthesis for MO-MDPs. In our framework, not only do the local policies emit actions, but they also bid for the privilege of executing their actions for a given number of time steps τ ∈ Z>0 in future. The bids are all non-negative integers bounded by a given constant β ∈ Z≥0, and the highest bidder’s actions get executed for the following τ consecutive steps, with bidding ties being resolved uniformly at random. To discourage policies from always bidding high, we penalize the policies proportional to their bids scaled with a constant ρ ∈ (0 , 1) . We consider two intuitive alternatives for the penalty model, namely Winner-Pays and All-Pay : in the Winner-Pays setting, only the executed policy (one of the highest bidders) pays the penalty, whereas in the All-Pay setting, all policies pay penalties. Through this mechanism, policies select their bids to reflect how critical their action is in the current state, and the bidding penalty incentivizes truthful urgency. This way, we obtain a purely decentralized scheme to coordinate local policies in a given MO-MDP. The parameters τ , β, and ρ denote the bidding interval , maximum bid , and bid penalty coefficient , respectively. Ablation studies in Section 3 highlight their importance. If τ is too small, policies switch too frequently, risking suboptimal outcomes. If β is too small, policies cannot express preference strength, leading to near-random control. If ρ is too large, policies tend to abstain from bidding. 
+
+Local policies via multiplayer Markov games. We formalize our framework as an m-player general-sum Markov game [Littman, 1994], where each player optimizes one of the m objectives of the original MO-MDP. The game encodes the bidding mechanism in its transitions and rewards, and we therefore call it a 
+
+Markov bidding game . Each state records the current MO-MDP state, the policy selected in the last bidding round, and the remaining time until the next bidding. At each state, players independently choose an action and a bid; transitions determine the winning policy based on the bids, while rewards capture the corresponding bidding penalties. 
+
+Definition 1 (Markov bidding games) . Let M = ( S, A, T, R, γ, μ 0) be an MO-MDP with m objectives, τ be the bidding interval, β be the maximum bid, ρ be the bid penalty coefficient, and ∆ ∈ { Winner-Pays , All-Pay }
+
+be the used penalty model. We define the m-player Markov bidding game as a tuple GM 
+
+> τ,β,ρ
+
+= ( ˆS, ˆA, ˆT , ˆR, γ, ˆμ0)
+
+where • ˆS = S × [1; m] × [0; τ − 1] is the state space. An element of ˆS is denoted (s, k, t ).• ˆA = ( A × Z≥0)m represents the joint extended action space of the m players, where each player 4independently selects an action from A and a nonnegative bid from Z≥0. We denote a set of actions chosen by the m players with (a, b) = ( ai, b i)i∈[1; m] ∈ ˆA.• ˆT : ˆS × ˆA × ˆS → R is the new transition function defined as, 
+
+ˆT (( s, k, t ), (a, b), (s′, k ′, t ′)) := 
+
+
+
+T (s, a k′ , s ′) t > 0 ∧ t′ = t − 1 ∧ k′ = k,  
+
+> 1
+> |bmax |
+
+T (s, a k′ , s ′) t = 0 ∧ t′ = τ − 1 ∧ k′ ∈ bmax ,
+
+0 otherwise ,
+
+where bmax := {i | bi = max {b1, . . . , b m}} is the set of agents with the highest bid. • { ˆRi : ˆS × ˆA × ˆS → R}i∈[1; m] is the set of reward functions for the m agents with 
+
+ˆRi(( s, k, t ), (a, b), (s′, k ′, t ′)) := 
+
+(
+
+Ri(s, a k′ , s ′) − ρ · bi t = 0 ∧ (i = k′ ∨ ∆ = All-Pay ) ,Ri(s, a k′ , s ′) otherwise .
+
+• ˆμ0 is the initial state distribution over ˆS defined as, 
+
+ˆμ0(s, k, t ) := 
+
+(
+
+μ0(s) t = 0 ∧ k = i, 
+
+0 otherwise ,
+
+where i ∈ [1; m] is an arbitrary agent. In the Markov game GM
+
+> τ,β,ρ
+
+, each player i aims to compute its own selfish local policy of the form πi : ( ˆS ×
+
+ˆA)∗ × ˆS 7 → (ai, b i) ∈ A × Z≥0, such that the discounted sum of its own reward is maximized, given that the other players are selfishly fulfilling their own objectives. 
+
+Learning policies in Markov bidding games. Since the transitions of the original MO-MDP are unknown, the transitions of the constructed Markov game in Definition 1 will also be unknown. Our goal is to learn the local policy of each player using RL. Yu et al. [2022] demonstrate that proximal policy optimization (PPO; Schulman et al. [2017]) can be effective to train multiple policies concurrently for multi-agent settings. We follow their recipe and train all the local policies with PPO. Similar to Yu et al. [2022], since the objectives in our environments share the same characteristics, we use the same actor and critic network for all the policies. At each iteration of PPO, we collect all the rollouts from each policy’s perspective and sample minibatches from this pool to perform the PPO updates. Additionally, to cope with varying number of objectives and varying number of players in the resulting Markov game, we employ the attention pooling architecture to compress any number of objectives into a fixed-sized embedding. This design enables the agent to operate with an arbitrary number of policies (i.e., objectives) at deployment time. Each objective information vector is first processed by a fully connected neural network to produce a target embedding. These embeddings are then aggregated through a weighted sum, where the weights are computed by taking the dot product between each embedding and a learned query vector. This attention mechanism produces a fixed-dimensional representation that summarizes the set of objectives while allowing the model to adapt to varying objective counts. 
+
+# 3 Experimental Results 
+
+We conduct experiments to show the superior performance of our method compared to the baselines. We also perform ablations with respect to all the key components of the framework; and draw insights on their importance and how we can tune them. A detailed description of the environments and the baseline approaches is provided in Appendix A, below we include a summary. 
+
+Environments. We evaluate our approach on two environments: a mobile cat feeder, introduced in Sec-tion 1, and the Atari game Assault. In the Cat Feeder environment, a robot moves on a 30 × 30 grid to 5Figure 2: Atari Assault env. feed up to m cats that move according to unknown stochastic processes. Each cat disappears after a fixed number of steps; feeding it yields a reward, while expiration incurs a penalty of equal magnitude. We train with m = 7 cats and test with up to 14 . Each cat is served by a dedicated policy whose observation includes the robot position, the locations of active cats, and their remaining lifetimes. In Assault (Figure 2), the agent controls a missile launcher to destroy incoming alien ships while avoiding enemy missiles [Bellemare et al., 2013]. We treat each ship as a separate objective and assign a local policy to pursue it, enabling a modular and interpretable design. Destroying a target yields reward, losing a life incurs a penalty, and performance is measured using the game score. We also consider two variants of each environment: one without the attention pooling module (only for Cat Feeder; we do not use attention pooling for Atari Assault since there are only up to 3 targets) and another in which the local policies can only observe their own objectives (denoted Local Obs). Our codebase 1 includes recorded rollouts of our bidding-based policies on the two environments. 
+
+Baseline approaches. We compare against two baselines: a single PPO policy with aggregated rewards and deep W-learning (DWN) [Rosero et al., 2024]. The PPO baseline is implemented using CleanRL [Huang et al., 2022]; for the Cat Feeder environment (with variable objective count) we additionally test sparse rewards and two shaping strategies. DWN trains one DQN policy per objective together with W-networks that estimate urgency scores of states. Hyperparameters are provided in Section B, with Cat Feeder tuned using Optuna [Akiba et al., 2019]. 
+
+Learning dynamics. Figure 3 shows the learning curves for multi-policy bidding and single-policy PPO algorithms on the two environments. While the curves are more noisy with Atari Assault, they exhibit clearly distinguishable sigmoidal shapes with Cat Feeder. The curves for All-Pay and Winner-Pays methods start growing around the same time. Meanwhile, the variants with only local observations for each policy start growing much earlier. The variants with no attention pooling for targets only start growing much later. This validates the use of the attention pooling architecture to learn useful embeddings of targets. We remark that, based on the multi-agent PPO recipe of Yu et al. [2022], we also found that using a small clip coefficient ( ∼0.05 ) and large batch sizes was crucial to obtain slower but stable convergence of the policies towards a joint-equilibrium. 
+
+> 1https://github.com/guruprerana/bidding-rl
+
+6Table 1: Performance (mean and standard deviation across 5 seeds) at the best evaluation iteration. Cat Feeder values measure performance as the difference between number of feeding requests completed and those that expired. Atari Assault values are the game score. 
+
+Method Cat Feeder Atari Assault 
+
+Winner-Pays 51 .17 (4 .49) 663.92 (23 .73) 
+
+w. Local Obs 67 .21 (5 .75) 644 .00 (28 .31) 
+
+w. No Attn. Pool. 58 .41 (5 .09) —
+
+All-Pay 79.46 (3 .68) 668.48 (21 .34) 
+
+w. Local Obs 69 .73 (3 .57) 648 .72 (53 .85) 
+
+w. No Attn. Pool. 48 .78 (47 .10) —
+
+DWN −2.28 (2 .22) 310 .80 (159 .54) 
+
+Single-Policy PPO 430.08 (16 .43) 
+
+w. No Reward Shaping −48 .75 (4 .30) —w. Nearest Shaping 22.17 (36 .34) —w. Expiry Shaping −44 .34 (1 .38) —
+
+Figure 3: Learning curves for different methods on Cat Feeder (left) and Atari Assault (right). We plot mean over 5 seeds at each evaluation iteration and the shaded region is ± standard deviation. 
+
+Comparison with baselines. Table 1 lists the performance of our method as well as the baselines on both environments. Our multi-policy methods outperform the baselines by a substantial margin. Across both the environments, we speculate that the poor performance of the single-policy PPO learner is due to the difficulty of credit assignment over a rollout in which there are multiple objectives that provide a positive reward. Additional reward shaping only provides moderate gains. In the Atari Assault environment, there is a delay between shooting a missile and it reaching its target. Since we only supply information from one frame in the observation, the learner could find it hard to associate the action of shooting and the reward from the death of a ship, especially if there is subsequent firing. On the other hand, the credit assignment becomes easier when we separate the objectives and each learner only has to focus on one target. DWN performs poorly in all experiments. We recall that this method learns a W-network trained to predict the negative TD-error for each policy when the policy does not play its action. However, in our environ-ments, we have a long horizon and all the objectives are symmetric with similar Q-values. This means that the TD-error is small and does not provide a strong signal to choose between policies at most timesteps. In contrast, our approach allows the policies themselves to indicate the importance of playing an action. 
+
+Interpretability of policies and bidding behaviors. Video rollouts show that bidding-based policies take control when they can accumulate reward within the action window, while each policy pursues only its 7(a) Cat Feeder: Control distribution (b) Cat Feeder: Bid distribution  
+
+> (c) Atari Assault: Control distribution
+> (d) Atari Assault: Bid Distribution (Winner-Pays )
+
+Figure 4: Comparison of control and bid distributions across environments and methods. The control dis-tribution is the number of timesteps controlled by each policy, while the bid distribution is the distribution over bids picked by the policies. own objective. Figure 4 presents the distribution of control time and bids. Control is well distributed among policies. In Assault, bids are usually 0, indicating that random control assignment suffices since targets do not expire. In contrast, the Cat Feeder environment shows a wider bid spread (0–6). Here, All-Pay yields more conservative policies with mostly low bids, while Winner-Pays produces a more even distribution, reflecting greater willingness to bid high. 
+
+Scaling number of targets. We conduct an experiment with the Cat Feeder environment in which the number of cats seen during testing is larger than that during training. Figure 5a shows that the policies continue to perform well up to 14 targets even though they were only trained to compete with up to 7 other policies. The attention pooling mechanism plays a critical role as it can generate useful embeddings of an arbitrary number of competing targets. 
+
+Further ablations. Figure 5b shows that at least two bid levels are needed for good performance; with only one level, policies cannot compete effectively. Figure 5c evaluates the bid penalty factor: without penalties all policies overbid, hurting performance, while overly large penalties discourage bidding. Finally, Figure 6 studies the action window size, revealing an optimal value. Smaller windows cause excessive switching between policies, while larger ones prevent sufficient switching to serve all objectives. 8(a) Scaling number of targets. (b) Ablation: Bid upper bound (c) Ablation: Bid penalty 
+
+Figure 5: Scaling number of targets and ablations on the Cat Feeder environment. 
+
+Figure 6: Effect of action window on per-formance: Cat Feeder (top) and Atari As-sault (bottom). 94 Conclusion and Future Directions 
+
+We consider the problem of adapting RL policies due to evolving objectives, where any number of objec-tives may appear or disappear at runtime, and the agent must adapt as swiftly as possible. We present a compositional solution where each objective is served using a dedicated local policy, and each local policy competes against the other policies through an auction-based mechanism to select its preferred action. The training is formulated as a nonzerosum game between the local policies, and it is implemented using PPO in our framework. Using two challenging benchmarks, we demonstrate that our framework produces in-terpretable policies that achieve superior learning rate and dramatic performance improvement compared to the baseline approaches. While we have only considered multi-objective environments in which the objectives belong to the same family, we will extend the framework to combinations of objective classes. The difficulty lies in the fact that a policy learned to compete against opponents from a given class may not work against opponents for a novel class of objectives seen at runtime. Additionally, richer bidding mechanisms might be necessary. For instance, while combining reachability and safety objectives, usually safety needs to get the priority when there is a tie in the bidding, instead of a random resolution. 
+
+# References 
+
+Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, and Masanori Koyama. Optuna: A next-generation hyperparameter optimization framework. In Proceedings of the 25th ACM SIGKDD international conference on knowledge discovery & data mining , pages 2623–2631, 2019. Guy Avni, Thomas A Henzinger, and Ventsislav Chonev. Infinite-duration bidding games. Journal of the ACM (JACM) , 66(4):1–29, 2019. Guy Avni, Kaushik Mallik, and Suman Sadhukhan. Auction-based scheduling. In International Conference on Tools and Algorithms for the Construction and Analysis of Systems , pages 153–172. Springer, 2024. Guy Avni, Martin Kureˇ cka, Kaushik Mallik, Petr Novotn ` y, and Suman Sadhukhan. Bidding games on markov decision processes with quantitative reachability objectives. In Proceedings of the 24th International Conference on Autonomous Agents and Multiagent Systems , pages 161–169, 2025. M. G. Bellemare, Y. Naddaf, J. Veness, and M. Bowling. The arcade learning environment: An evaluation platform for general agents. Journal of Artificial Intelligence Research , 47:253–279, jun 2013. Woohyeon Byeon, Giseung Park, Jongseong Chae, Amir Leshem, and Youngchul Sung. Multi-objective reinforcement learning with max-min criterion: A game-theoretic approach. arXiv preprint arXiv:2510.20235 , 2025. Quentin Delfosse, Jannis Blüml, Bjarne Gregori, Sebastian Sztwiertnia, and Kristian Kersting. Ocatari: Object-centric atari 2600 reinforcement learning environments, 2023. Maria Fox, Alfonso Gerevini, Derek Long, Ivan Serina, et al. Plan stability: Replanning versus plan repair. In ICAPs , volume 6, pages 212–221, 2006. Saul Gass and Thomas Saaty. The computational algorithm for the parametric objective function. Naval research logistics quarterly , 2(1-2):39–45, 1955. Conor F Hayes, Roxana R˘ adulescu, Eugenio Bargiacchi, Johan Källström, Matthew Macfarlane, Mathieu Reymond, Timothy Verstraeten, Luisa M Zintgraf, Richard Dazeley, Fredrik Heintz, et al. A practical guide to multi-objective reinforcement learning and planning: Cf hayes et al. Autonomous Agents and Multi-Agent Systems , 36(1):26, 2022. 10 Shengyi Huang, Rousslan Fernand Julien Dossa, Chang Ye, Jeff Braga, Dipam Chakraborty, Kinal Mehta, and JoÃG , o GM AraÃšjo. Cleanrl: High-quality single-file implementations of deep reinforcement learn-ing algorithms. Journal of Machine Learning Research , 23(274):1–18, 2022. Mark Humphrys. W-learning: Competition among selfish q-learners. 1995. Andrew J Lazarus, Daniel E Loeb, James G Propp, Walter R Stromquist, and Daniel H Ullman. Combinato-rial games under auction play. Games and Economic Behavior , 27(2):229–264, 1999. Michael L Littman. Markov games as a framework for multi-agent reinforcement learning. In Machine learning proceedings 1994 , pages 157–163. Elsevier, 1994. Beatriz M Méndez-Hernández, Erick D Rodríguez-Bazan, Yailen Martinez-Jimenez, Pieter Libin, and Ann Nowé. A multi-objective reinforcement learning algorithm for jssp. In International Conference on Artificial Neural Networks , pages 567–584. Springer, 2019. Giseung Park, Woohyeon Byeon, Seongmin Kim, Elad Havakuk, Amir Leshem, and Youngchul Sung. The max-min formulation of multi-objective reinforcement learning: From theory to a model-free algorithm. 
+
+arXiv preprint arXiv:2406.07826 , 2024. Matteo Pirotta, Simone Parisi, and Marcello Restelli. Multi-objective reinforcement learning with continu-ous pareto frontier approximation. In Proceedings of the AAAI conference on artificial intelligence , volume 29, 2015. Juan C Rosero, Nicolás Cardozo, and Ivana Dusparic. Multi-objective deep reinforcement learning op-timisation in autonomous systems. In 2024 IEEE International Conference on Autonomic Computing and Self-Organizing Systems Companion (ACSOS-C) , pages 97–102. IEEE, 2024. Stuart J Russell and Andrew Zimdars. Q-decomposition for reinforcement learning agents. In Proceedings of the 20th international conference on machine learning (ICML-03) , pages 656–663, 2003. John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimiza-tion algorithms. arXiv preprint arXiv:1707.06347 , 2017. Umer Siddique, Paul Weng, and Matthieu Zimmer. Learning fair policies in multi-objective (deep) rein-forcement learning with average and discounted rewards. In International Conference on Machine Learning ,pages 8905–8915. PMLR, 2020. Kristof Van Moffaert and Ann Nowé. Multi-objective reinforcement learning using sets of pareto dominat-ing policies. The Journal of Machine Learning Research , 15(1):3483–3512, 2014. Kristof Van Moffaert, Madalina M Drugan, and Ann Nowé. Scalarized multi-objective reinforcement learn-ing: Novel design techniques. In 2013 IEEE symposium on adaptive dynamic programming and reinforcement learning (ADPRL) , pages 191–199. IEEE, 2013. Chao Yu, Akash Velu, Eugene Vinitsky, Jiaxuan Gao, Yu Wang, Alexandre Bayen, and Yi Wu. The surprising effectiveness of ppo in cooperative multi-agent games. Advances in neural information processing systems ,35:24611–24624, 2022. 
+
+# A Experimental Setup (Detailed) 
+
+We consider two multi-objective environments for our empirical studies, namely a mobile cat feeder and the Atari game called Assault. These environments are described below. 
+
+Environment I: Cat Feeder. The environment is as described in Section 1 and is modeled using a 30 × 30 
+
+grid with up to m cats that are moving continuously according to unknown stochastic processes. The value of m was set as 8 during the training time, whereas it was varied up to 14 during the testing time. 11 Each cat disappears after a given number of time steps. If the agent reaches a cat before it disappears, it receives a reward, and otherwise it receives a penalty of equal magnitude. To avoid sparsity of the reward function, we provide each policy a small reward for going closer to its target. Performance is measured as the difference between the number of feeding requests completed and the number of those that expired. In our modular framework, each cat will be chased by a dedicated local policy. The observation space of each local policy includes the current position of the robot, the current locations of the active requests, and the time steps until the expiration of the requests. 
+
+Environment II: Atari Assault. We consider the Atari game called Assault, where the agent controls a missile launcher to shoot oncoming alien ships while avoiding enemy missiles. The standard approach is to view this as a single-objective environment, where the agent’s policy observes the entire image or the 128 byte raw RAM state observations to determine the optimal actions [Bellemare et al., 2013]. For our modular framework, we break the objective down to a multi-objective problem, where each alien ship is viewed as a separate objective, and each local policy attempts to destroy its assigned target while avoiding enemy missiles. Not only does this facilitate an improvement in the performance, as we will demonstrate, but also we obtain a transparent design, because which target is being chased is revealed at each point. This modular design is made possible by the object-centric variant of the Atari environment [Delfosse et al., 2023], which exposes the states of each individual target and the missiles by decoding the RAM states. The full observation space of each local policy also include the current position of the missile launcher, the current health, and the number of remaining lives. The local policy gets a reward or a penalty upon destroying its target enemy ship or losing a life, respectively. Lastly, we use the game score as the metric for evaluation. 
+
+Baseline approaches. We compare our method against two baselines: a single policy PPO with weighted rewards and deep W-learning (DWN; Rosero et al. [2024]). For the PPO baseline, since all the objectives have the same importance across the two environments, we use the total reward across objectives at each step as the reward function. We note that in the Atari Assault environment we do not use the game score as a reward and instead use the same rewards perceived by the bidding-based policies to ensure a fair compar-ison. The observation space remains the same as the multi-policy setting. In the Cat Feeder environment, we implement three reward mechanisms to help guide learning: one only with the sparse rewards from the environment, one with distance-based dense reward with respect to the nearest feeding request (denoted Nearest Shaping/NS in the experiments), and finally one where we provide distance-based reward with respect to the request that has the least amount of time until expiration (denoted Expiry Shaping/ES). The PPO implementation is taken from CleanRL [Huang et al., 2022]. We use the specified PPO hyperparame-ters from CleanRL for Atari Assault and we tune the hyperparameters for the Cat Feeder environment with 40 Optuna iterations [Akiba et al., 2019]. DWN is another multi-policy method for multi-objective RL that uses DQN for each of the local policies and additionally learns a W-network for each policy that predict scalar weights. These weights are used to choose which policy’s action should be played at each step. The W-network is trained alongside the Q-network by updating it with a gradient step to predict the negative temporal difference (TD) error when the policy does not get to play its action. The assertion here is that the negative TD-error quantifies how important it is for the policy to play its action. The implementation is borrowed from the repository of Rosero et al. [2024]. All hyperparameters for the baselines are listed in Section B. 
+
+# B Reproducibility Details 
+
+The code for all experiments is included in the supplementary materials. All experiments use 5 random seeds: {1825, 410, 4507, 4013, 3658}. 12 Parameter Value Grid size 30 × 30 
+
+Number of agents / targets 8Target reward 50.0 Target expiry steps 200 Target expiry penalty 50.0 Max episode steps 2000 Moving targets True Direction change probability 0.1 Target move interval 5Table 2: Cat Feeder shared (training) environment parameters. 
+
+# B.1 Cat Feeder Environment B.2 Assault Environment 
+
+13 Parameter Value 
+
+Auction 
+
+Bid upper bound 6Bid penalty 0.1 Action window 5Distance reward scale 0.6 
+
+Training 
+
+Iterations 400 Parallel environments 4096 Steps per rollout 256 Minibatches 256 PPO epochs 4Learning rate 2.5 × 10 −4 (annealed) Discount γ 0.99 GAE λ 0.95 Clip coefficient 0.05 Entropy coefficient 0.03 Value function coefficient 1.0 Max gradient norm 0.5 
+
+Network 
+
+Actor hidden layers [128 , 128 , 128 , 128] 
+
+Critic hidden layers [256 , 256 , 256 , 256] 
+
+Target attention pooling True Target embedding dim 64 Target encoder hidden layers [64 , 64] 
+
+Table 3: Cat Feeder multi-agent PPO hyperparameters ( All-Pay and Winner-Pays ). Parameter Value 
+
+Training 
+
+Iterations 400 Parallel environments 4096 Steps per rollout 256 Minibatches 512 PPO epochs 8Learning rate 1.74 × 10 −4 (annealed) Discount γ 0.963 GAE λ 0.970 Clip coefficient 0.327 Entropy coefficient 1.03 × 10 −4
+
+Value function coefficient 1.076 Max gradient norm 0.840 Distance reward scale 0.0 Target attention pooling False 
+
+Network (shared with multi-agent PPO) 
+
+Actor hidden layers [128 , 128 , 128 , 128] 
+
+Critic hidden layers [256 , 256 , 256 , 256] 
+
+Table 4: Cat Feeder single-agent PPO baseline hyperparameters. Hyperparameters were tuned using Op-tuna with 40 trials. The nearest-target shaping variant is identical but uses a distance reward scale of 0.6 with shaping toward the nearest target. 14 Parameter Value 
+
+Training 
+
+Total timesteps 5 × 10 7
+
+Parallel environments 256 Discount γ 0.99 Replay buffer size 1 × 10 6
+
+Batch size 256 Learning starts 1 × 10 5
+
+Train frequency 2560 W-network train delay 1 × 10 6
+
+Target network update frequency 1000 Target network τ 1.0 
+
+Networks 
+
+Q-network hidden layers [256 , 256 , 256 , 256] 
+
+W-network hidden layers [128 , 128 , 128] 
+
+Q-network learning rate 1 × 10 −4
+
+W-network learning rate 1 × 10 −4
+
+Epsilon schedules 
+
+Q ε start / min / decay 0.99 / 0.01 / 0.99 W ε start / min / decay 0.99 / 0.01 / 0.99 Table 5: Cat Feeder DWN baseline hyperparameters. Parameter Value Number of agents 3Max enemies 3Max episode steps 10000 Enemy destroy reward 10.0 Life loss penalty 10.0 Fire-while-hot penalty 8.0 Action window 15 Bid upper bound 2Bid penalty 0.3 Table 6: Assault shared environment parameters. 15 Parameter Value 
+
+Training 
+
+Iterations 150 Parallel environments 128 Steps per rollout 512 Minibatches 8PPO epochs 8Learning rate 1 × 10 −4 (annealed) Discount γ 0.99 GAE λ 0.95 Clip coefficient 0.05 Entropy coefficient 0.05 Value function coefficient 0.5 Max gradient norm 0.5 Target KL 0.02 
+
+Network 
+
+Actor hidden layers [128 , 128 , 128 , 128] 
+
+Critic hidden layers [256 , 256 , 256 , 256] 
+
+Table 7: Assault multi-agent PPO hyperparameters ( All-Pay and Winner-Pays ). Parameter Value Learning rate 2.5 × 10 −4 (annealed) Clip coefficient 0.1 Entropy coefficient 0.01 Target KL —Table 8: Assault single-agent PPO baseline hyperparameters (differences from multi-agent PPO only; all other parameters are shared). 16 Parameter Value 
+
+Training 
+
+Total timesteps 1 × 10 7
+
+Parallel environments 8Discount γ 0.99 Replay buffer size 5 × 10 5
+
+Batch size 256 Learning starts 1 × 10 4
+
+Train frequency 80 W-network train delay 1 × 10 5
+
+Target network update frequency 1000 Target network τ 1.0 
+
+Networks 
+
+Q-network hidden layers [256 , 256 , 256] 
+
+W-network hidden layers [128 , 128 , 128] 
+
+Q-network learning rate 1 × 10 −4
+
+W-network learning rate 1 × 10 −4
+
+Epsilon schedules 
+
+Q ε start / min / decay 0.99 / 0.01 / 0.995 W ε start / min / decay 0.99 / 0.01 / 0.995 Table 9: Assault DWN baseline hyperparameters. 17

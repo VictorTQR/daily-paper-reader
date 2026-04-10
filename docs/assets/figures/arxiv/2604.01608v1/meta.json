@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-001.webp",
+      "caption": "Figure 4: Ablation on Text-to-SQL (BIRD-147) and Causal Estimation (average MSA). Both tools and knowledge contribute; their combination (Full) achieves the best result. “Pipe.” = Structured Pipeline skill, which underperforms the full adaptive skill.",
+      "page": 11,
+      "index": 1,
+      "width": 807,
+      "height": 298
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-002.webp",
+      "caption": "Figure 2: Task-level overview across all four tasks, averaged over datasets within each task. (a) Performance: the adaptive skill is the best or near-best single-agent method on every task and outperforms Original MAS on CE, CD, and matches on FE. (b) Latency and (c) Cost: single-agent methods are consistently cheaper and faster, with the gap largest on CD (8×) and FE (15×). Per-dataset breakdowns in Appendix F.",
+      "page": 7,
+      "index": 2,
+      "width": 800,
+      "height": 494
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-003.webp",
+      "caption": "Figure 6: Per-datapoint: Metric Freedom F vs. headroom-normalized skill lift (n=13). Error bars show bootstrap σF .",
+      "page": 18,
+      "index": 3,
+      "width": 620,
+      "height": 370
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-004.webp",
+      "caption": "Table 3: Text-to-SQL results on BIRD-147 and Spider-120. EX = Execution Accuracy (%). Best single-agent results in bold. Costs for single-agent methods are cache-adjusted effective costs.",
+      "page": 8,
+      "index": 4,
+      "width": 682,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-005.webp",
+      "caption": "Figure 3: Freedom spectrum. Large filled circles = metric-level aggregates (n=6); small open circles = individual dataset data points (n=13). Dashed lines connect datasets to their metric mean. The negative trend (ρ=−0.62 at the data-point level; ρ=−0.89 at the metric level) confirms that rigid metrics benefit most from skill augmentation. The strongest evidence comes from comparing CEMSA (F≈0, upper-left) and CE-MRE (F≈0.7–0.9, lower-right), computed from the same outputs.",
+      "page": 8,
+      "index": 5,
+      "width": 628,
+      "height": 372
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-006.webp",
+      "caption": "Table 11: Causal Discovery: per-dataset efficiency metrics (averages per dataset). Costs for singleagent methods are cache-adjusted effective costs (USD).",
+      "page": 19,
+      "index": 6,
+      "width": 460,
+      "height": 619
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-007.webp",
+      "caption": "Table 10: Causal Estimation: per-dataset efficiency metrics (averages per query). Costs for singleagent methods are cache-adjusted effective costs (USD).",
+      "page": 19,
+      "index": 7,
+      "width": 686,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-008.webp",
+      "caption": "Table 8: Metric Freedom (F ) and headroom-normalized skill lift across 13 data points, sorted by F . σF = bootstrap standard error; Base = raw-agent score; liftnorm = lift / (1 − base). CE-Synthetic-MSA is excluded: with 97.8% raw accuracy, no mixed questions remain after filtering.",
+      "page": 17,
+      "index": 8,
+      "width": 644,
+      "height": 318
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-009.webp",
+      "caption": "Table 9: Causal Discovery: complete metrics for all methods and datasets (mean ± std over 3 runs).",
+      "page": 17,
+      "index": 9,
+      "width": 764,
+      "height": 618
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-010.webp",
+      "caption": "Figure 5: Skill iterator trajectories across all four tasks. Val score (solid) and Train score (dashed) per iteration. Green dashed line marks the selected best version. (a) CE-MSA (F≈0): rapid gain to 100% at v2, then oscillation. (b) CD (F=0.24–0.77): v2 achieves best val F1 (90.9%); v1 timed out. (c) T2SQL (F=0.50): steady improvement, val EX plateaus at 86.7% from v3. (d) FE (F≈0.59–0.97): marginal gains, val AUC plateaus near 65.6% after v2, consistent with high freedom.",
+      "page": 12,
+      "index": 10,
+      "width": 794,
+      "height": 553
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-011.webp",
+      "caption": "Table 4: Causal Estimation results. MSA (%) higher is better; MRE (%) lower is better. Cost = avg cost per query (cache-adjusted for single-agent methods). Best single-agent results in bold.",
+      "page": 9,
+      "index": 11,
+      "width": 794,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-012.webp",
+      "caption": "Figure 7: Full per-dataset breakdown. Row 1: performance (EX% / MSA% / F1×100 / AUC×100). Row 2: cache-hit cost (linear scale; T2SQL/CE per-query, CD/FE per-run). Row 3: latency (log scale). Single-agent methods benefit from prompt caching (≈30–40% of uncached cost); Original MAS baselines do not. †FE Original MAS cost estimated: Taobao $7.5–$15, Dia $10–$22 per run.",
+      "page": 20,
+      "index": 12,
+      "width": 810,
+      "height": 656
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01608v1/fig-013.webp",
+      "caption": "Figure 1: System overview. Our two-stage framework converts multi-agent systems into efficient single-agent skills guided by Metric Freedom F = 1− ρ(Dout, Dscore). Stage 1 selectively extracts tools and knowledge; task-decomposition structure is retained or discarded based on F . Stage 2 optionally iterates the skill via a four-agent architecture (Explore, Main, Analyzer, Runner), recommended when F ≲ 0.6.",
+      "page": 5,
+      "index": 13,
+      "width": 826,
+      "height": 352
+    }
+  ]
+}

@@ -1,0 +1,1926 @@
+Title: Model-Based Reinforcement Learning for Control under Time-Varying Dynamics
+
+URL Source: https://arxiv.org/pdf/2604.02260v1
+
+Published Time: Fri, 03 Apr 2026 01:13:27 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# Model-Based Reinforcement Learning for Control under Time-Varying Dynamics 
+
+Klemens Iten, Bruce Lee, Chenhao Li, Lenart Treven, Andreas Krause, Bhavya Sukhija 
+
+Abstract — Learning-based control methods typically assume stationary system dynamics, an assumption often violated in real-world systems due to drift, wear, or changing operating conditions. We study reinforcement learning for control under time-varying dynamics. We consider a continual model-based reinforcement learning setting in which an agent repeatedly learns and controls a dynamical system whose transition dy-namics evolve across episodes. We analyze the problem using Gaussian process dynamics models under frequentist variation-budget assumptions. Our analysis shows that persistent non-stationarity requires explicitly limiting the influence of out-dated data to maintain calibrated uncertainty and meaning-ful dynamic regret guarantees. Motivated by these insights, we propose a practical optimistic model-based reinforcement learning algorithm with adaptive data buffer mechanisms and demonstrate improved performance on continuous control benchmarks with non-stationary dynamics. 
+
+I. INTRODUCTION 
+
+A. Motivation and Setting 
+
+Learning-based control methods have shown strong perfor-mance in complex dynamical systems [1]–[5]. In particular, model-based reinforcement learning (MBRL), where a dy-namics model is learned from data and used for planning, has emerged as a sample-efficient approach for learning in the real-world [4]–[7]. Furthermore, MBRL methods enjoy strong theoretical guarantees for general nonlinear systems in the episodic [8]–[10], non-episodic [10], and safe learning [11] settings. However, a common assumption across these algorithms is that the system dynamics remain constant during learning. This assumption is often violated in real-world systems due to drift, wear, changing operating conditions, or environmental variation. Examples include robotic systems with hardware degradation, vehicles under varying loads, or systems operating across different regimes. In such settings, naively applying existing MBRL tech-niques results in suboptimal performance (Section VI). In particular, with time-varying dynamics, data collected in the past may no longer be representative of the current system. As a result, reusing all historical data can lead to biased models and degraded control performance. This raises a fundamental question: how should RL algorithms adapt to time-varying dynamics?  
+
+> All authors are with ETH Z¨ urich, R¨ amistrasse 101, 8092 Z¨ urich, Switzer-land
+
+{kiten,trevenl,krausea,sukhijab }@ethz.ch 
+
+> B. Lee, C. Li, and A. Krause are with the ETH AI Center at ETH Z¨ urich
+
+{bruce.lee,chenhao.li }@ai.ethz.ch 
+
+> This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible.
+
+We address this question and propose two MBRL algo-rithms, R-OMBRL and SW-OMBRL, for sample-efficient learning in time-varying nonlinear systems with continuous state-action spaces. Fundamental to both algorithms is the use of Bayesian models to learn an uncertainty-aware dy-namics representation of the true system. Moreover, we use the epistemic uncertainty of our learned dynamics model as an intrinsic reward to direct exploration. Furthermore, we address the challenge of time-varying dy-namics by carefully selecting the data used for training the agent. In particular, we consider periodic resets of the data buffer (R-OMBRL) and sliding windows (SW-OMBRL) that retain only recent data. Our key contributions are  
+
+> •
+
+Formulation: We introduce an episodic model-based reinforcement learning framework for control under time-varying dynamics, together with a variation-budget model that captures temporal drift.  
+
+> •
+
+Theory: We derive dynamic regret bounds for opti-mistic MBRL with restricted data buffers, showing how performance depends on the retained data horizon and the total variation in the dynamics.  
+
+> •
+
+Insight: Our analysis reveals that limiting the influence of stale data is necessary to maintain calibrated uncer-tainty and achieve sublinear dynamic regret under non-stationarity.  
+
+> •
+
+Algorithms: Based on the theoretical insights, we pro-pose practical modifications that enable the use of NNs for learning in high-dimensional systems.  
+
+> •
+
+Experiments: We demonstrate improved performance of the proposed methods over MBRL baselines on continuous control tasks with non-stationary dynamics. II. RELATED WORK 
+
+A. Model-Based Reinforcement Learning 
+
+MBRL algorithms are commonly applied for learning in the real-world [5], [12], [13]. Crucially, model-based RL algorithms learn a dynamics model of the underlying true system, and use the learned model for planning. However, to avoid overexploitation of an inaccurate model, [8], [9] learn an uncertainty-aware model of the dynamics and use the uncertainty to enforce optimistic exploration. Recently, [10] propose a scalable and efficient optimistic exploration strategy where the model epistemic uncertainty is used as an intrinsic reward to direct exploration. Under common regularity assumptions on the true system, they provide sub-linear regret bounds for the algorithm in the finite-horizon, discounted infinite-horizon, and average reward RL settings. 
+
+> arXiv:2604.02260v1 [cs.LG] 2 Apr 2026
+
+Nonetheless, crucial to their theoretical analysis is that the true system remains constant during learning. In this work, we go beyond this setting and tackle the more realistic problem of learning under non-stationarity. 
+
+B. Learning under Non-Stationarity 
+
+Learning in non-stationary environments has been exten-sively studied in various contexts. The most developed theory exists in bandit and Bayesian optimization settings. Time-varying GP bandits capture non-stationarity via stochastic drift in function space [14], [15], or using variation bud-gets [16], leading to dynamic regret guarantees. However, these algorithms maximize and observe immediate reward and do not tackle the more general RL setting, where high-dimensional policies are learned using trajectories acquired through rollouts on the true system. In RL, non-stationarity has mainly been studied in tabular settings by controlling cumulative changes in rewards and transitions [17], or even without prior knowledge of the variation in model-free settings [18]. Notably, [19] propose a sliding-window based MBRL algorithm that builds on top of the seminal UCRL [20] algorithm for optimistic exploration. While similar to our approach in spirit, these methods tackle the finite state-action settings and do not consider the continuous case, which is ubiquitous in real-world systems. III. PROBLEM FORMULATION 
+
+A. Control Objective 
+
+We consider finite-horizon control of a dynamical system with state space X ⊂ Rdx and action space U ⊂ Rdu . The performance of a policy π : X → U under dynamics f is measured by the finite-horizon return 
+
+J(π, f ) = Eπ,fw0: T −1
+
+"T −1X
+
+> t=0
+
+r(xt, ut)
+
+#
+
+, (1) where the expectation is taken over the Gaussian noise 
+
+w0: T −1
+
+> iid
+
+∼ N (0 , σ 2I), the superscript π denotes that the in-puts are selected under the policy ut = π(xt), and f denotes that the state evolves according to xt+1 = f (xt, ut) + wt
+
+starting from initial state x0. The summand is given by the reward function r : X × U → [0 , R max ] ⊂ R evaluated at the states and inputs along this trajectory. 
+
+B. Time-Varying Dynamics 
+
+We consider an unknown discrete-time, time-varying dy-namical system. For an episode n ∈ { 1, . . . , N }, the system dynamics are given by 
+
+xn,t +1 = f ∗ 
+
+> n
+
+(xn,t , un,t ) + wn,t , t = 0 , . . . , T − 1, (2) where f ∗ 
+
+> n
+
+denotes the (unknown) dynamics at episode n.We study the episodic RL setting, where at the beginning of each episode the initial state is sampled from an initial state distribution ρ, i.e., x0 ∼ ρ. Then we rollout a policy π ∈
+
+Π for T steps in the environment and collect the resulting trajectory for learning. The goal of the RL agent is to find the policy that maximizes the cumulative sum of rewards, i.e., solve (1) for the dynamics f ∗ 
+
+> n
+
+. For simplicity of notation, consider the case where the dynamics f ∗ 
+
+> n
+
+are fixed within an episode. 1
+
+At the beginning of each episode n, the agent se-lects a policy πn, which is executed for T steps un-der f ∗ 
+
+> n
+
+. The corresponding optimal policy is defined as 
+
+π∗ 
+
+> n
+
+= arg max π∈Π J(π, f ∗ 
+
+> n
+
+). Since the dynamics vary across episodes, the optimal policy also generally varies and depends on the current episode. 
+
+C. Performance Metric 
+
+To evaluate performance in the presence of time-varying dynamics, we consider dynamic regret , defined as 
+
+RN =
+
+> N
+
+X
+
+> n=1
+
+J(π∗
+
+> n
+
+, f ∗ 
+
+> n
+
+) − J(πn, f ∗ 
+
+> n
+
+). (3) Dynamic regret compares the learner against the sequence of episode-wise optimal policies (π∗
+
+> n
+
+)n≥1. This is in contrast to static regret , which compares against a single fixed policy and is inappropriate in non-stationary environments where the optimal policy may change over time. 
+
+D. Non-Stationarity Model 
+
+To quantify temporal variation in the dynamics, we adopt a frequentist model based on reproducing kernel Hilbert spaces (RKHS). We assume that for all episodes n, each component of the dynamics f ∗ 
+
+> n
+
+lies in a common RKHS Hk
+
+with bounded norm: 
+
+Hdx
+
+> k,B
+> def
+
+= {f | ∥ fj ∥Hk ≤ B, j = 1 , . . . , d x}
+
+for some kernel satisfying k(z, z) ≤ σmax for all z ∈ Z .To capture non-stationarity, we impose a variation budget 
+
+on the sequence of dynamics:  
+
+> N−1
+
+X
+
+> n=1
+
+∥f ∗ 
+
+> n+1
+
+− f ∗ 
+
+> n
+
+∥Hdx k
+
+≤ PN , (4) where ∥ · ∥ Hdx k
+
+denotes the dx-dimensional RKHS norm. In particular, for f ∈ H dx 
+
+> k
+
+, let 
+
+∥f ∥Hdx k
+
+=
+
+> dx
+
+X
+
+> j=1
+
+∥fj ∥Hk .
+
+This assumption allows the dynamics to evolve over time while controlling the total amount of variation. Generally, 
+
+PN will increase with N as the dynamics evolve. IV. GAUSSIAN PROCESS DYNAMICS MODELS 
+
+A. GP Model 
+
+For our theoretical analysis, we model the unknown dy-namics with Gaussian processes (GPs). GPs are a particularly promising class of models because they are expressive, Bayesian, and also enable thorough theoretical analysis of 
+
+> 1Our results can be extended to the setting where the dynamics also change during the episode.
+
+the algorithm. Furthermore, they have a closed-form solution for the posterior mean and epistemic uncertainty. Let zn,t 
+
+> def
+
+= ( xn,t , un,t ) ∈ Z def 
+
+= X × U . For each state dimension j ∈ { 1, . . . , d x}, we model the j-th component of the dynamics, f ∗ 
+
+> n,j
+
+: Z → R using an independent GP with kernel k. We assume that this kernel satisfies k(z, z) ≤ σmax 
+
+for all z ∈ Z . Consider then the trajectory at episode n as follows 
+
+τn
+
+> def
+
+= {(zn,t , yn,t ) | 0 ≤ t < T − 1} ,
+
+where the state-action tuples and the observations, 
+
+zn,t 
+
+> def
+
+= ( xn,t , πn(xn,t )) and yn,t 
+
+> def
+
+= xn,t +1 ,
+
+come from the rollout of πn on f ∗ 
+
+> n
+
+. Fitting the GP to the data collected in episodes m, m + 1 , . . . , ℓ results in the posterior mean and covariance functions at arbitrary z ∈ Z given by 
+
+μm:ℓ,j (z) = km:ℓ(z)⊤(Km:ℓ + σ2I)−1yjm:ℓ, (5) 
+
+σ2 
+
+> m:ℓ,j
+
+(z) = k(z, z) − km:ℓ(z)⊤(Km:ℓ + σ2I)−1km:ℓ(z),
+
+where yjm:ℓ denotes the vector of j-th components of the ob-served next states over the episodes m to ℓ, while km:ℓ(z) = k(z, zi,t ) 
+
+> i
+
+and Km:ℓ = k(zh,t , zi,t ) 
+
+> h,i
+
+are the data kernel vector and matrix over the transitions zh,t , zi,t in the dataset recorded over episodes m : ℓ, i.e., Dm:ℓ
+
+> def
+
+= Sℓs=m τs.
+
+B. Maximum Information Gain 
+
+Crucial to our theoretical results is the maximum informa-tion gain of kernel k [21], 
+
+γN (k) = max 
+
+> A⊂X ×U ;|A|≤ N T
+
+12 log det  I + σ−2K(A) . (6) where K(A) = [ k(zh,t , zi,t )] h,i for all pairs zh,t , zi,t ∈A. The maximum information gain γN is a measure of the complexity for learning f ∗ from N episodes and is sublinear for many kernels. 2
+
+C. Stale Data Problem 
+
+In stationary settings, it is natural to fit the GP using all previously observed data. In the present non-stationary case, doing so introduces a systematic mismatch: older samples were generated by past dynamics f ∗ 
+
+> s
+
+, whereas control at episode n depends on the current dynamics f ∗ 
+
+> n
+
+.If the model is fitted to all past data, then the posterior mean μ1: n−1 over n − 1 episodes is biased toward outdated dynamics. Importantly, the GP variance σ21: n−1 does not capture this temporal mismatch, since it reflects only sta-tistical uncertainty under a stationary-function assumption. Thus, even if σ1: n−1 is small, the true prediction error 
+
+∥f ∗ 
+
+> n
+
+(z) − μ1: n−1(z)∥ may remain large due to drift. This motivates explicitly restricting the retained data horizon. 
+
+D. Forgetting Mechanisms 
+
+We consider two mechanisms to control the influence of stale data.        
+
+> 2e.g., O(log dx+du+1 (N T )) for the squared exponential (RBF) kernel,
+> O(( dx+du) log( N T )) for the linear kernel; see [21] for more detail.
+
+Full resets: Fix a reset period H ∈ N. Let 
+
+n0(n) def 
+
+= H
+
+ n − 1
+
+H
+
+
+
++ 1 
+
+such that at n0(n) − 1 the data buffer is emptied, i.e., “stale” data is removed from the buffer. Therefore, at episode n, the model is fitted only on data collected since the last reset, i.e., the dataset Dn0(n): n−1.
+
+Sliding window: Fix a window size w ∈ N. At episode 
+
+n, the model is fitted only on the most recent w episodes, i.e. on the dataset Dn−w:n−1.
+
+E. Calibration Under Drift 
+
+In the stationary case, where the dynamics do not change across episodes, the true dynamics f ∗ 
+
+> j
+
+is fixed. Standard GP concentration results [21]–[23] then imply that, there exists βn(δ) = B + σp2( γn + dx log( 1/δ)) such that with probability at least 1 − δ
+
+|f ∗ 
+
+> j
+
+(z) − μ1: n−1,j (z)| ≤ βn(δ) σ1: n−1,j (z) ∀z ∈ Z . (7) Here, βn(δ) represents the width of the confidence interval around the mean within which the true system is captured. Effectively, in this setting βn(δ) σ1: n−1,j (z) is a proxy for the error of our model estimate μ1: n−1,j (z).However, these results hold for the stationary setting. For time-varying dynamics, the temporal drift introduces an additional bias term that is not captured by the inequality above. In the following Lemma, we extend these confidence bounds to the non-stationary case. 
+
+Lemma 1 (Lemmas 1 and 2 of [16] adapted for vector function f ∗). Assume the dynamics satisfy the RKHS reg-ularity assumptions of Section III. Consider the GP mean and variance estimates (μm:n−1,j , σ m:n−1,j ) with either the full resetting mechanism m = n0(n) or the sliding window 
+
+m = n−w. It holds with probability at least 1−δ that for any episode n ∈ { 1, . . . , N }, any z ∈ Z , and any j = 1 , . . . , d x
+
+f ∗ 
+
+> n,j
+
+(z) − μm:n−1,j (z) ≤ βn(δ, n − m) σm:n−1,j (z)+ ξn−mn−1X
+
+> s=m
+
+f ∗ 
+
+> s+1 ,j
+
+− f ∗ 
+
+> s,j Hk
+
+, (8) 
+
+where the confidence parameter is given by 
+
+βn(δ, n − m) = 
+
+
+
+B + σ
+
+q
+
+2 γn−m + dx log( 1 
+
+> δ
+
+) if full reset 
+
+B + σ
+
+q
+
+2 γn−m + dx log( nT δ ) if sliding window .
+
+and the coefficient on the drift term is 
+
+ξn−m = 2σmax 
+
+p(n − m)(1 + σ2)γn−m
+
+σ2 .
+
+Equation (8) reveals two distinct sources of error: 1) the standard epistemic uncertainty term βσ , and 2) an additive temporal bias term caused by the accumu-lated drift in the dynamics over the past n−m episodes, i.e., since the last reset at episode n0(n) or within the sliding window of size w.V. OPTIMISTIC MODEL-BASED RL UNDER NON-STATIONARY DYNAMICS The analysis in Section IV shows that, under time-varying dynamics, the calibrated uncertainty depends explicitly on the retained data horizon. Motivated by this insight, we adapt an optimistic model-based reinforcement learning framework [10] to the non-stationary setting by restricting the data buffer used for model learning and policy optimization. To this end, we first demonstrate how the model error propagates through the control cost, and use this to propose an optimistic synthesis algorithm. 
+
+A. Performance Difference Bound 
+
+We now relate model error to control performance akin to [24]. To unify the reset and sliding-window cases, let 
+
+μm:n−1 and σm:n−1 denote an arbitrary dynamics model and uncertainty model constructed using (5) from the most recent retained data horizon from episodes m : n − 1, with 
+
+m as defined in Lemma 1. For a policy π, let J(π, f ∗ 
+
+> n
+
+) and J(π, μm:n−1) denote the expected finite-horizon returns from (1) under the true dynamics and the learned model, respectively. We further define the trajectory-wise accumulated epistemic uncertainty for a range of episodes m, . . . , ℓ as 
+
+Σm:ℓ(π, f ) def 
+
+= Eπ,fw0: T −1
+
+"T −1X
+
+> t=0
+
+∥σm:ℓ(xn,t , π(xn,t )) ∥2
+
+#
+
+,
+
+(9) where the expectation is taken over trajectories generated by policy π under the dynamics f with the same process noise as in (2). The bound is then as follows. 
+
+Lemma 2 (Performance difference bound) . Assume the dynamics satisfy the regularity assumptions of Section III. Let 
+
+(μm:n−1, σ m:n−1) be the GP model fit with either resetting or forgetting. Conditioned on the success event of Lemma 1, it holds for every episode n and every policy π that 
+
+J(π, f ∗ 
+
+> n
+
+) − J(π, μm:n−1) ≤ Bn,m (10) 
+
++ λn,m min {Σm:n−1(π, f ∗ 
+
+> n
+
+), Σm:n−1(π, μm:n−1)}.
+
+where 
+
+λn,m 
+
+> def
+
+= Rmax Tσ βn(δ, n − m) (11) 
+
+scales the contribution of epistemic uncertainty, and 
+
+Bn,m 
+
+> def
+
+= ξn−m
+
+Rmax T 2
+
+σ
+
+> n−1
+
+X
+
+> s=m
+
+f ∗ 
+
+> s+1
+
+− f ∗ 
+
+> sHk
+
+(12) 
+
+collects the temporal drift over the recorded n − m episodes. 
+
+Thus, the policy performance difference decomposes into two terms: an uncertainty term, governed by the accumulated posterior standard deviation along the trajectory, and a tem-poral bias term, governed by the amount of drift contained in the retained dataset. Most importantly, the term Bn,m is independent of the policy. We use this key insight to integrate the optimistic MBRL framework in the non-stationary case. 
+
+B. Optimistic MBRL Framework 
+
+At each episode n, the algorithm maintains a policy 
+
+πn, a dynamics model Mn = ( μm:n−1, σm:n−1), and a data buffer Dm:n−1. Given the current model, the policy is updated by solving an optimistic planning problem under the learned mean dynamics: 
+
+πn = arg max 
+
+> π
+
+J(π, μm:n−1) + λn,m Σm:n−1(π, μm:n−1).
+
+(13) Here, the uncertainty term Σm:n−1(π, μm:n−1) acts as an intrinsic reward and directs exploration toward poorly mod-eled regions of the state-action space, and λn,m from (11) is a positive constant which is used to trade off maximizing the reward and model uncertainty. In stationary settings, such optimism-based methods train both the policy and the dynamics model on all data collected so far. In the present non-stationary setting, however, using all previously collected data can induce substantial bias due to stale data. Our main algorithmic modification is therefore to restrict the data buffer to recent data only. 
+
+C. Algorithms 
+
+We consider two mechanisms for limiting stale data. 
+
+R-OMBRL (reset-based, Algorithm 1): The data buffer is reset every H episodes. Hence, at episode n, both the dynamics model and the policy are trained only on data collected since the most recent reset. 
+
+SW-OMBRL (sliding window, Algorithm 2): The data buffer retains only the most recent w episodes, discarding older samples. Hence, at episode n, both the dynamics model and the policy are trained only on transitions from this window. In both cases, restricting the data buffer limits the temporal bias identified in (8,10). We empirically validate our theoretical results for Gaus-sian Processes in Fig. 1. We compare R-OMBRL and SW-OMBRL against SOMBRL from [10], which is a MBRL algorithm that optimizes for the objective in (13), but without restricting the data buffer to train the GP for the model 
+
+(μ1: n−1, σ1: n−1). We use the Pendulum environment from Gym [25], adapted to a non-stationary setting where at one point, the maximum applicable action ut decays rapidly. In this application with GP dynamics, we find that R-OMBRL and SW-OMBRL both outperform SOMBRL: They recover performance and adapt to the changed dynamics, whereas the baseline model (μ1: n−1, σ1: n−1), trained on all past data, remains biased toward outdated dynamics and fails to adapt. VI. THEORETICAL ANALYSIS 
+
+A. Main Regret Bound 
+
+Combining the calibration result with the performance difference bound yields a dynamic regret bound. We state an informal version here and defer the full theorem and proof to Appendix X. Algorithm 1 R-OMBRL: Reset-based optimistic MBRL 
+
+Require: Horizon T , reset period H 
+
+> 1:
+
+Initialize πθ , M0, empty data buffer D = ∅ 
+
+> 2:
+
+for episode n = 1 , 2, . . . , N do  
+
+> 3:
+
+if n mod H = 0 then  
+
+> 4:
+
+D ← ∅  
+
+> 5:
+
+end if  
+
+> 6:
+
+Collect trajectory τ n using πθ 
+
+> 7:
+
+D ← D ∪ τ n 
+
+> 8:
+
+Update Mϕ using D 
+
+> 9:
+
+Update πθ by (13) using (Mϕ, D) 
+
+> 10:
+
+end for Algorithm 2 SW-OMBRL: Sliding-window optimistic MBRL 
+
+Require: Horizon T , window size w 
+
+> 1:
+
+Initialize πθ , M0, empty data buffer D = ∅ 
+
+> 2:
+
+for episode n = 1 , 2, . . . , N do  
+
+> 3:
+
+Collect trajectory τ n using πθ 
+
+> 4:
+
+D ← D ∪ τ n 
+
+> 5:
+
+Remove data older than w episodes from D 
+
+> 6:
+
+Update Mϕ using D 
+
+> 7:
+
+Update πθ by (13) using (Mϕ, D) 
+
+> 8:
+
+end for Theorem 1 (Regret bound) . Assume the dynamics satisfy the RKHS regularity and variation-budget assumptions of Section III. Then, the optimistic MBRL algorithm of (13) 
+
+with either resetting or a sliding window achieves dynamic regret that satisfies 
+
+RN = ˜O
+
+N
+
+s
+
+γ3
+
+> p
+
+p + γpp3/2PN
+
+ , (14) 
+
+where p = H for resetting and p = w for the sliding window, and ˜O hides the dependence of the episode length and factors that are logarithmic in N .B. Interpretation for R-OMBRL 
+
+In the following, we interpret the regret bound for the R-OMBRL algorithm. The analysis is analogous for SW-OMBRL. 0 10 20 30 Episodes 𝑁 
+
+500 1000         
+
+> 𝑅 𝑁
+> SOMBRL R-OMBRL (Ours) SW-OMBRL (Ours)
+> dynamics change
+> Fig. 1. Learning curves for the setting with GP dynamics on the Pendulum environment. We report the mean cumulative regret RNover 5 random seeds. At episode N= 10 , we induce a change in dynamics by limiting the maximum applicable action uN,t to half its original value over time. This leads to a linear regret for the stationary SOMBRL baseline, while R-OMBRL and SW-OMBRL adapt to the change in dynamics.
+
+The regret bound of Theorem 1 decomposes into a learning term and a drift term. For the reset case (R-OMBRL), 
+
+N pγ3 
+
+> H
+
+/H decreases with larger H, reflecting improved performance from reusing more data, whereas γH H3/2PN
+
+increases with H, reflecting the growing influence of stale data if the reset period increases. Hence H controls a bias-variance-type trade-off:  
+
+> •
+
+small H: strong adaptivity to changing dynamics, but less data per model fit,  
+
+> •
+
+large H: more data for training the model but with a larger bias. In the stationary case, OMBRL [10] – where H = N – has a regret of 
+
+RN = O
+
+q 
+
+N γ 3 
+
+> N
+
++ γN N 3/2PN
+
+
+
+,
+
+which is only sublinear if PN = 0 , i.e., no variation in the dynamics takes place. In our case, we can achieve sublinear regret for PN > 0 by carefully selecting H. For instance, similar to [16], by selecting H ∝ γ1/4 
+
+> N
+
+N 1/2, we get 
+
+RN = O
+
+
+
+γ11 /8 
+
+> N
+
+(1 + PN )N 3/4
+
+.
+
+For a specific total variation rate, e.g., PN ∝ log( N ), this results in a regret RN = O
+
+
+
+γ11 /8 
+
+> N
+
+N 3/4 log( N )
+
+
+
+, which is sublinear for common kernels such as the exponential and linear kernel [21]. Moreover, while the current algorithm requires H to be set a priori based on the duration N , for specific choices of γN and PN (e.g., the exponential kernel example above), we can convert our regret to an anytime regret bound by applying the doubling trick [26]. 
+
+C. Practical Modification 
+
+Our theoretical analysis focuses on GP models, where we can guarantee calibration of our learned model and bound the complexity of learning the dynamics, i.e., γn. However, GPs scale poorly to high-dimensional systems. Furthermore, they are also computationally expensive. 3 Accordingly, most MBRL algorithms use neural networks for representing the dynamics. In particular, works such as [9], [27] use Bayesian neural networks (BNNs), specifically deep ensembles [28], to learn an uncertainty-aware dynamics model. To this end, we propose practical modifications to R-OMBRL and SW-OMBRL, which enable learning with BNNs. Moreover, we employ a scalable parametrized uncertainty-aware dynamics model Mϕ = ( μϕ, σϕ) and instantiate it using deep ensembles. The model is trained to maximize the data likelihood using stochastic gradient descent. Similar to [10], we train a parameterized policy πθ
+
+using the MBPO algorithm [29] on the optimistic objective (13). To handle non-stationarity, we restrict the data buffer through resets or sliding windows as described in Section V. In contrast to the theoretically derived exploration weight 
+
+λn,m from (11), which depends explicitly on confidence bounds and the retained data horizon, it can be beneficial in 
+
+> 3Cubic in the number of data points.
+
+practice to treat this coefficient as a tunable parameter. For instance, [30] propose an automatic tuning mechanism for this exploration weight and adapt it online. Moreover, [31] study this trade-off empirically in the model-based setting and demonstrate that adaptive or manually tuned exploration weights can perform well in practice. Furthermore, we additionally employ soft resets of both model and policy parameters. In particular, at predefined intervals, we update using randomly sampled new parameters 
+
+(θ0, ϕ0) by 
+
+ϕ ← (1 − α1)ϕ + α1ϕ0, θ ← (1 − α2)θ + α2θ0. (15) We ablate the effects of (α1, α 2) in Appendix XI-C. VII. E XPERIMENTS 
+
+A. Setup 
+
+We evaluate the proposed methods on continuous control benchmarks from Gym [25] and MuJoCo [32]. To study learning under changing dynamics, we introduce controlled non-stationarity via parameter drift. We evaluate R-OMBRL and SW-OMBRL, which restrict the data buffer through resets and sliding windows, respec-tively. As a baseline, we use a stationary optimistic model-based RL method (OMBRL) [10], a SOTA MBRL method for stationary dynamics, which trains on all collected data without any forgetting mechanism. Additional implementa-tion details and ablations are provided in Appendix XI-A. 
+
+B. Non-Stationary Environments 
+
+We evaluate on the Pendulum, HalfCheetah [33], and Hopper [34] environments by modifying the implementation from [25] by introducing time-varying dynamics via an episode-dependent decay of actuator strength. Specifically, we scale the maximum admissible control as 
+
+¯un = exp( −an ) ( umax − umin ) + umin , (16) where a ≥ 0 controls the rate of change. Here, we treat the reset period H and window size w as tunable hyper-parameters and tune the internal reward weight λn,m using the method from [30]. For the policy and model parameters 
+
+θ and ϕ, we employ soft resets as described in (15) with 
+
+α1 = α2 = 0 .2.Fig. 2 shows results across environments for three decay rates. We report dynamic cumulative regret with respect to an estimate of the optimal policy, obtained by running an RL algorithm (SAC [35]), independently for fixed actuator strengths until convergence. Across all settings, the stationary baseline fails to track the evolving dynamics, leading to rapidly increasing regret. In contrast, both R-OMBRL and SW-OMBRL significantly reduce regret accumulation by limiting the influence of stale data. Overall, we conclude that restricting the data buffer im-proves robustness under non-stationarity and leads to consis-tently better tracking of the underlying time-varying system. 05       
+
+> ×10 3
+> slow decay
+> Pendulum
+> 0.51.0
+> ×10 5
+> slow decay
+> HalfCheetah
+> 0.51.0
+> ×10 4
+> slow decay
+> Hopper
+> 0.00.51.0
+> ×10 4
+> medium decay 2.55.07.5
+> ×10 4
+> medium decay 0.51.0
+> ×10 4
+> medium decay 01×10 4
+> 01
+> ×10 4
+> fast decay 01×10 6
+> 2.55.0
+> ×10 4
+> fast decay 01×10 6
+> 0.51.0
+> ×10 4
+> fast decay
+> Cumulative regret  𝑅 𝑁
+> Environment steps SOMBRL R-OMBRL (Ours) SW-OMBRL (Ours)
+> Fig. 2. Dynamic regret under time-varying dynamics for different decay rates. The stationary baseline SOMBRL accumulates large regret due to stale data, while R-OMBRL and SW-OMBRL improve tracking by restricting the data buffer. We report the mean regret compared to an estimate of the optimal performance over five seeds with standard error.
+
+C. Different Environments 
+
+We evaluate the methods across multiple MuJoCo environ-ments [32], comparing the stationary baseline (SOMBRL) with R-OMBRL and SW-OMBRL. The setup follows the previous experiment. Fig. 3 shows training under initially stationary dynamics, followed by a transition to time-varying dynamics induced by the decay in (16). The top row illustrates the evolution of the environment parameter, while the bottom rows report dynamic regret averaged over five seeds. Under stationary dynamics, all methods perform similarly. After the onset of non-stationarity, the baseline accumulates substantially higher regret, while both R-OMBRL and SW-OMBRL adapt effectively by restricting the data buffer. These results demonstrate that data buffer adaptation improves performance across environments and scales to higher-dimensional control tasks. 
+
+D. Hardware Experiments 
+
+We evaluate the proposed methods on a real-world RC car platform following the setup of [36]. The system consists of a high-torque racecar capable of highly dynamic maneuvers, including drifting, with the state capturing position, orienta-tion, and velocities, and control inputs given by steering and throttle. The task is a dynamic parking maneuver, where the car must rotate and park at a target location. At high actuator strength, the optimal behavior involves aggressive sliding and drifting. To induce non-stationarity, we introduce an episode-dependent decay of the maximum throttle, gradually transforming the task from a drift-based maneuver into a standard parking problem. We compare R-OMBRL against the stationary baseline (SOMBRL) in Fig. 4. The top row shows rollouts of the 1.00.80.60.4
+
+> ¯𝑢 𝑛
+
+InvertedDoublePendulum 
+
+> 1.00.80.60.4
+
+Ant 
+
+> 1.00.80.60.4
+
+Walker2d 
+
+> 1.00.80.60.4
+
+HumanoidStandup 
+
+> 1.00.80.60.4
+
+Humanoid           
+
+> 024
+> ×10 5
+> 012
+> 𝑅 𝑁
+> ×10 9
+> 0.00.51.0
+> ×10 6
+> 02
+> ×10 9
+> 024
+> ×10 6
+> 036
+> ×10 9
+> 0.00.51.0
+> ×10 6
+> 024
+> ×10 10
+> 024
+> ×10 6
+> 05
+> ×10 9
+
+Environment steps SOMBRL R-OMBRL (Ours) SW-OMBRL (Ours) Fig. 3. Dynamic regret across multiple environments. The top row shows the evolution of the maximum admissible torque ¯un and its decay over environment training steps, while the bottom rows report the cumulative regret Rn averaged over five seeds with standard error. Under stationary dynamics, all methods perform similarly. After the onset of non-stationarity, R-OMBRL and SW-OMBRL significantly reduce regret compared to the stationary baseline. 
+
+learned policies after 30 episodes. While SOMBRL fails to adapt and is unable to complete the parking maneuver, R-OMBRL successfully performs the task. The bottom row reports the return on the real system over episodes. Before the onset of non-stationarity, both methods perform similarly, whereas after the throttle decay, R-OMBRL adapts more effectively and achieves higher returns. These results mirror the simulation findings: restricting the data buffer improves adaptation to evolving dynamics. The stationary baseline accumulates outdated transitions gener-ated under earlier, high-throttle regimes, leading to degraded performance. In contrast, R-OMBRL discards stale data and adapts to the current system, resulting in more stable and consistent behavior. VIII. CONCLUSIONS AND FUTURE WORKS 
+
+A. Conclusions 
+
+In this work, we study model-based reinforcement learning under time-varying dynamics. Our analysis shows that, under a variation-budget model of the dynamics, persistent non-stationarity requires explicitly limiting the influence of stale data to maintain calibrated uncertainty and achieve meaning-ful dynamic regret guarantees. Motivated by this insight, we propose practical optimistic MBRL algorithms, R-OMBRL and SW-OMBRL, based on data buffer resets and sliding windows. While similar ideas have been proposed by prior work, such as [19] for finite state-action spaces, to the best of our knowledge, we are the first to provide dynamic regret guarantees for the general setting of continuous spaces and non-linear dynamics. Furthermore, we also empirically vali-date the proposed methods on high-dimensional continuous control benchmarks as well as on real-world hardware. We show both in simulation and the real-world that R-OMBRL and SW-OMBRL significantly outperform the stationary MBRL baseline. This shows that data buffer adaptation is essential, in both theory and practice, for robust learning and control in a non-stationary system. SOMBRL, Episode  N =  30            
+
+> R-OMBRL, Episode N= 30
+> Target position
+> 𝝉 30
+> 𝝉 30
+> t= 0
+> t= 0 t= T
+> 510 20 25 15 Episodes 𝑁
+> 20 40
+> 𝐽  (π𝑁  , f𝑁
+> ∗ ) SOMBRL R-OMBRL (Ours)
+> t = T
+
+Fig. 4. Hardware experiments on a real RC car. The task is a parking maneuver that transitions from drift-based behavior to standard parking as the maximum throttle decays at N = 14 episodes. The top row shows roll-outs after N = 30 , where R-OMBRL successfully completes the task while SOMBRL fails to adapt. The bottom row shows the mean return and error bands along trajectories τN on the real system over episodes, averaged over 6 random seeds. Restricting the data buffer enables adaptation to changing dynamics and improves performance compared to the stationary baseline. 
+
+B. Future Works 
+
+An important direction concerns selecting the reset period or window size adaptively based on the observed data could further improve performance, as [15] do in the Bayesian optimization setting. In our experimental evaluation, we fo-cus on parameter decay, which captures gradual performance degradation in many practical scenarios and satisfies the variation-budget assumptions. Our methods could be applied more broadly, evaluating them under alternative patterns such as abrupt shifts or cyclic variations. Finally, extending the framework to non-episodic settings with continuously evolving dynamics remains an important open problem. IX. ACKNOWLEDGEMENTS B. Lee was supported by a postdoctoral fellowship and C. Li by a doctoral fellowship from ETH AI Center. B. Sukhija was supported by ELSA (European Lighthouse on Secure and Safe AI) funded by the European Union under grant agreement No. 101070617. This project has received funding from the Swiss National Science Foundation under NCCR Automation, grant agreement 51NF40 180545. Numerical simulations were performed on the ETH Z¨ urich Euler cluster. Parts of this text were revised with the assistance of a large language model to aid or polish writing and to improve grammar and clarity; the authors remain responsible for all content. REFERENCES [1] J. Hwangbo, J. Lee, A. Dosovitskiy, D. Bellicoso, V. Tsounis, V. Koltun, and M. Hutter, “Learning agile and dynamic motor skills for legged robots,” Science robotics , 2019. [2] A. Spiridonov, F. Buehler, M. Berclaz, V. Schelbert, J. Geurts, E. Kras-nova, E. Steinke, J. Toma, J. Wuethrich, R. Polat, W. Zimmermann, P. Arm, N. Rudin, H. Kolvenbach, and M. Hutter, “Spacehopper: A small-scale legged robot for exploring low-gravity celestial bodies,” in 2024 IEEE International Conference on Robotics and Automation (ICRA) , 2024, pp. 3464–3470. [3] K. Zakka, B. Tabanpour, Q. Liao, M. Haiderbhai, S. Holt, J. Y. Luo, A. Allshire, E. Frey, K. Sreenath, L. A. Kahrs et al. , “Mujoco playground,” arXiv preprint arXiv:2502.08844 , 2025. [4] D. Hafner, J. Pasukonis, J. Ba, and T. Lillicrap, “Mastering diverse control tasks through world models,” Nature , 2025. [5] H. Zheng, B. Sukhija, C. Li, K. Iten, A. Krause, and R. K. Katzschmann, “Learning soft robotic dynamics with active explo-ration,” arXiv preprint arXiv:2510.27428 , 2025. [6] T. M. Moerland, J. Broekens, A. Plaat, and C. M. Jonker, “Model-based reinforcement learning: A survey,” Foundations and Trends in Machine Learning , 2023. [7] B. Hoffman, J. Cheng, C. Li, and S. Coros, “Learning more with less: Sample efficient model-based rl for loco-manipulation,” 2025. [Online]. Available: https://arxiv.org/abs/2501.10499 [8] S. Kakade, A. Krishnamurthy, K. Lowrey, M. Ohnishi, and W. Sun, “Information theoretic regret bounds for online nonlinear control,” 
+
+NeurIPS , 2020. [9] S. Curi, F. Berkenkamp, and A. Krause, “Efficient model-based reinforcement learning through optimistic policy search and planning,” 
+
+NeurIPS , 2020. [10] B. Sukhija, L. Treven, C. Sferrazza, F. D¨ orfler, P. Abbeel, and A. Krause, “SOMBRL: Scalable and optimistic model-based RL,” Conference on Neural Information Processing Systems (NeurIPS) , 2025. [Online]. Available: https://openreview.net/forum? id=eGfi5k7RP6 [11] Y. As, B. Sukhija, L. Treven, C. Sferrazza, S. Coros, and A. Krause, “Actsafe: Active exploration with safety constraints for reinforcement learning,” ICLR , 2025. [12] P. Wu, A. Escontrela, D. Hafner, P. Abbeel, and K. Goldberg, “Day-dreamer: World models for physical robot learning,” in CORL . PMLR, 2023. [13] N. Hansen, Y. Lin, H. Su, X. Wang, V. Kumar, and A. Rajeswaran, “Modem: Accelerating visual model-based reinforcement learning with demonstrations,” arXiv preprint arXiv:2212.05698 , 2022. [14] I. Bogunovic, J. Scarlett, and V. Cevher, “Time-Varying Gaussian Process Bandit Optimization,” Jan. 2016, arXiv:1601.06650 [stat]. [Online]. Available: http://arxiv.org/abs/1601.06650 [15] P. Brunzema, A. v. Rohr, F. Solowjow, and S. Trimpe, “Event-Triggered Time-Varying Bayesian Optimization,” Transactions on Machine Learning Research , 2025. [Online]. Available: https: //openreview.net/forum?id=WEYMCLu8u7 [16] X. Zhou and N. Shroff, “No-regret algorithms for time-varying bayesian optimization,” in CISS , 2021, pp. 1–6. [17] R. Ortner, P. Gajane, and P. Auer, “Variational Regret Bounds for Reinforcement Learning,” in Proceedings of The 35th Uncertainty in Artificial Intelligence Conference . PMLR, Aug. 2020, pp. 81–90. [Online]. Available: https://proceedings.mlr.press/v115/ortner20a.html [18] C.-Y. Wei and H. Luo, “Non-stationary Reinforcement Learning without Prior Knowledge: an Optimal Black-box Approach,” in 
+
+Proceedings of Thirty Fourth Conference on Learning Theory .PMLR, Jul. 2021, pp. 4300–4354. [Online]. Available: https: //proceedings.mlr.press/v134/wei21b.html [19] W. C. Cheung, D. Simchi-Levi, and R. Zhu, “Reinforcement learning for non-stationary markov decision processes: The blessing of (more) optimism,” in ICML . PMLR, 2020, pp. 1843–1854. [20] P. Auer, T. Jaksch, and R. Ortner, “Near-optimal regret bounds for reinforcement learning,” NeurIPS , vol. 21, 2008. [21] N. Srinivas, A. Krause, S. M. Kakade, and M. Seeger, “Gaussian Process Optimization in the Bandit Setting: No Regret and Experimental Design,” IEEE Transactions on Information Theory ,vol. 58, no. 5, pp. 3250–3265, May 2012, arXiv:0912.3995 [cs]. [Online]. Available: http://arxiv.org/abs/0912.3995 [22] S. R. Chowdhury and A. Gopalan, “On Kernelized Multi-armed Bandits,” ICML , 2017. [Online]. Available: https://proceedings.mlr. press/v70/chowdhury17a.html [23] J. Rothfuss, B. Sukhija, T. Birchler, P. Kassraie, and A. Krause, “Hallucinated adversarial control for conservative offline policy evaluation,” in UAI , 2023, pp. 1774–1784. [Online]. Available: https://proceedings.mlr.press/v216/rothfuss23a.html [24] S. Kakade and J. Langford, “Approximately Optimal Approximate Re-inforcement Learning,” in Proceedings of the Nineteenth International Conference on Machine Learning , ser. ICML ’02. San Francisco, CA, USA: Morgan Kaufmann Publishers Inc., Jul. 2002, pp. 267–274. [25] G. Brockman, V. Cheung, L. Pettersson, J. Schneider, J. Schulman, J. Tang, and W. Zaremba, “OpenAI Gym,” 2016. [Online]. Available: https://arxiv.org/abs/1606.01540 [26] L. Besson and E. Kaufmann, “What doubling tricks can and can’t do for multi-armed bandits,” arXiv preprint arXiv:1803.06971 , 2018. [27] K. Chua, R. Calandra, R. McAllister, and S. Levine, “Deep rein-forcement learning in a handful of trials using probabilistic dynamics models,” NeurIPS , 2018. [28] B. Lakshminarayanan, A. Pritzel, and C. Blundell, “Simple and scalable predictive uncertainty estimation using deep ensembles,” 
+
+NIPS , 2017. [Online]. Available: https://arxiv.org/abs/1612.01474 [29] M. Janner, J. Fu, M. Zhang, and S. Levine, “When to trust your model: Model-based policy optimization,” Conference on Neural Information Processing Systems (NeurIPS) , 2019. [Online]. Available: https://arxiv.org/abs/1906.08253 [30] B. Sukhija, S. Coros, A. Krause, P. Abbeel, and C. Sferrazza, “MaxinfoRL: Boosting exploration in reinforcement learning through information gain maximization,” in The Thirteenth International Conference on Learning Representations , 2025. [Online]. Available: https://openreview.net/forum?id=R4q3cY3kQf [31] K. Iten, L. Treven, B. Sukhija, F. Dorfler, and A. Krause, “Sample-efficient and scalable exploration in continuous-time RL,” in The Fourteenth International Conference on Learning Representations , 2026. [Online]. Available: https://openreview.net/ forum?id=PJdMrK79Mo [32] E. Todorov, T. Erez, and Y. Tassa, “MuJoCo: A physics engine for model-based control,” International Conference on Intelligent Robots and Systems (IROS) , 2012. [Online]. Available: https://ieeexplore.ieee.org/document/6386109 [33] P. Wawrzy´ nski, “A cat-like robot real-time learning to run,” 
+
+International Conference on Adaptive and Natural Computing Algorithms (ICANNGA) , 2009. [Online]. Available: https://doi.org/10. 1007/978-3-642-04921-7 39 [34] T. Erez, Y. Tassa, and E. Todorov, “Infinite-horizon model predictive control for periodic tasks with contacts,” Robotics: Science and systems (RSS) , 2012. [35] T. Haarnoja, A. Zhou, P. Abbeel, and S. Levine, “Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor,” in International conference on machine learning . Pmlr, 2018, pp. 1861–1870. [Online]. Available: https: //proceedings.mlr.press/v80/haarnoja18b [36] J. Rothfuss*, B. Sukhija*, L. Treven*, F. D¨ orfler, S. Coros, and A. Krause, “Bridging the sim-to-real gap with bayesian inference,” 
+
+IEEE Int. Conf. on Intelligent Robots and Systems (IROS) , 2024. [37] H. K. Khalil, Nonlinear control . New York: Pearson New York, 2015, vol. 406. [Online]. Available: https://elibrary.pearson.de/book/ 99.150005/9781292060699 [38] B. Sukhija, L. Treven, C. Sancaktar, S. Blaes, S. Coros, and A. Krause, “Optimistic active exploration of dynamical systems,” NeurIPS , 2024. Model-Based Reinforcement Learning for Control under Time-Varying Dynamics 
+
+# Supplementary Material 
+
+## Klemens Iten, Bruce Lee, Chenhao Li, Lenart Treven, Andreas Krause, Bhavya Sukhija 
+
+X. P ROOFS 
+
+A. Assumptions 
+
+In the following, we restate the assumptions from Section III formally. 
+
+Assumption 1 (Continuity of f ∗ 
+
+> n
+
+and πn). The dynamics model f ∗ 
+
+> n
+
+and all policies π ∈ Π are continuous. This is a fairly common assumption in nonlinear control [37]. 
+
+Assumption 2 (Bounded reward) . The scalar reward is bounded, i.e. r : X × U → [0 , R max ].
+
+Assumption 3 (Process noise distribution) . The process noise is i.i.d. Gaussian with variance σ2, i.e., wt
+
+> i.i.d
+
+∼ N (0, σ 2I).
+
+Assumption 4 (Episodic stationarity of dynamics) . There is a sequence of dynamics (f ∗ 
+
+> n
+
+)n≥1 with f ∗ 
+
+> n
+
+: Rdx × Rdu → Rdx
+
+such that within each episode n,
+
+xn,t +1 = f ∗ 
+
+> n
+
+(xn,t , un,t ) + wn,t , t = 0 , . . . , T − 1,
+
+and f ∗ 
+
+> n
+
+may change only across episode boundaries (i.e., does not vary with t inside an episode). 
+
+Assumption 5 (Reproducing kernel Hilbert space) . We assume that the functions f ∗ 
+
+> n,j
+
+, j ∈ { 1, . . . , d x} lie in a RKHS with kernel k and have a bounded norm B, that is 
+
+f ∗ 
+
+> n
+
+∈ H dx 
+
+> k,B
+
+, with Hdx 
+
+> k,B
+
+= {f | ∥ fj ∥Hk ≤ B, j = 1 , . . . , d x}.
+
+Moreover, we assume that k(z, z) ≤ σmax for all x ∈ X .
+
+Assumption 6 (Bounded temporal variation budget) . For each coordinate j ∈ { 1, . . . , d x}, the sequence (f ∗ 
+
+> n,j
+
+)n≥1 satisfies  
+
+> N−1
+
+X
+
+> n=1
+
+f ∗ 
+
+> n+1 ,j
+
+− f ∗ 
+
+> n,j Hk
+
+≤ PN,j .
+
+Equivalently, in vector-valued form,  
+
+> N−1
+
+X
+
+> n=1
+
+f ∗ 
+
+> n+1
+
+− f ∗ 
+
+> nHdx k
+
+≤ PN , where ∥f ∥Hdx k,B 
+
+> def
+
+=
+
+> dx
+
+X
+
+> j=1
+
+∥fj ∥Hk , PN
+
+> def
+
+=
+
+> dx
+
+X
+
+> j=1
+
+PN,j .
+
+B. Proofs Proof of Lemma 2. We give the proof for |J(πn, f ∗ 
+
+> n
+
+) − J(πn, μm:n−1)| ≤ λn,m Σm:n−1(πn, μm:n−1) + Bn,m . The same argument holds for the second inequality. Let Jt+1 (π, f , x) denote the cost-to-go from state x at step t + 1 onwards under the dynamics f and policy π:
+
+Jt+1 (π, f , x) def 
+
+= Eπ,fw0: T −1
+
+" T −1X
+
+> k=t+1
+
+r(xk, π(xk)) 
+
+#
+
+.
+
+Following the policy difference Lemma [24], [38]: 
+
+J(πn, μm:n−1) − J(πn, f ∗ 
+
+> n
+
+)= Eπn,μm:n−1 
+
+> w0: T−1
+
+"T −1X
+
+> t=0
+
+Jt+1 (πn, f ∗ 
+
+> n
+
+, μm:n−1(xt, πn(xt)) + wt) − Jt+1 (πn, f ∗ 
+
+> n
+
+, f ∗ 
+
+> n
+
+(xt, πn(xt)) + wt)
+
+#
+
+.Therefore, 
+
+|J(πn,μm:n−1) − J(πn, f ∗ 
+
+> n
+
+)|
+
+= Eπn,μm:n−1 
+
+> w0: T−1
+
+"T −1X
+
+> t=0
+
+Jt+1 (πn, f ∗ 
+
+> n
+
+, μm:n−1(xt, πn(xt)) + wt) − Jt+1 (πn, f ∗ 
+
+> n
+
+, f ∗ 
+
+> n
+
+(xt, πn(xt)) + wt)
+
+#
+
+≤ 
+
+> T−1
+
+X
+
+> t=0
+
+Eπn,μm:n−1 
+
+> w0: t−1
+
+[|Ewt [Jt+1 (πn, f ∗ 
+
+> n
+
+, μm:n−1(xt, πn(xt)) + wt) − Jt+1 (πn, f ∗ 
+
+> n
+
+, f ∗ 
+
+> n
+
+(xt, πn(xt)) + wt)|xt]|] .
+
+Next, we bound the last term in the outer expectation: 
+
+Ewt
+
+Jt+1 (πn, f ∗ 
+
+> n
+
+, μm:n−1(xt, πn(xt)) + wt) − Jt+1 (πn, f ∗ 
+
+> n
+
+, f ∗ 
+
+> n
+
+(xt, πn(xt)) + wt)|xt
+
+
+
+≤
+
+q
+
+max Ewt [J2
+
+> t+1
+
+(πn, f ∗ 
+
+> n
+
+, μm:n−1(xt, πn(xt)) + wt)|xt], Ewt [J2
+
+> t+1
+
+(πn, f ∗ 
+
+> n
+
+, f ∗ 
+
+> n
+
+(xt, π(xt)) + wt)|xt]
+
+× min 
+
+ ∥f ∗ 
+
+> n
+
+(xt, πn(xt)) − μm:n−1(xt, πn(xt)) ∥2
+
+σ , 1
+
+
+
+(Lemma C.2 of [8]) 
+
+≤ Rmax Tσ ×
+
+βn(δ, n − m) ∥σn(xt, πn(xt)) ∥2 + ξn−mdxX
+
+> j=1
+> n−1
+
+X
+
+> s=m
+
+∥f ∗ 
+
+> s+1 ,j
+
+− f ∗ 
+
+> s,j
+
+∥Hk
+
+ .
+
+(by Assumption 2 and the success event of Lemma 1) Therefore, we have 
+
+|J(πn, μm:n−1) − J(πn, f ∗ 
+
+> n
+
+)|≤ 
+
+> T−1
+
+X
+
+> t=0
+
+Eπn,μm:n−1
+
+> w0: t−1
+
+ Rmax Tσ
+
+βn(δ, n − m) σn(xt, πn(xt)) 2 + ξn−mdxX
+
+> j=1
+> n−1
+
+X
+
+> s=m
+
+∥f ∗ 
+
+> s+1 ,j
+
+− f ∗ 
+
+> s,j
+
+∥Hk
+
+
+
+= λn,m · Σm:n−1(πn, μm:n−1) + Bn,m .
+
+Lemma 3 (Episodic regret bound) . Assume the dynamics satisfy the regularity assumptions of Section III, i.e., let Assumption 1 to 6 hold. Let (μm:n−1, σ m:n−1) be the GP model fit with either resetting or forgetting. Define the quantities 
+
+˜λn,m 
+
+> def
+
+= max {Rmax , σ max }Tσ βn(δ, n − m) and ˜Bn,m 
+
+> def
+
+= ξn−m
+
+max {Rmax , σ max }T 2
+
+σ
+
+> n−1
+
+X
+
+> s=m
+
+f ∗ 
+
+> s+1
+
+− f ∗ 
+
+> sHk
+
+.
+
+Conditioned on the success event of Lemma 1, it holds for every episode n that 
+
+J(π∗
+
+> n
+
+, f ∗ 
+
+> n
+
+) − J(πn, f ∗ 
+
+> n
+
+) ≤ (˜λ2 
+
+> n,m
+
++ 2 ˜λn,m )Σ m:n−1(πn, f ∗ 
+
+> n
+
+) + ( ˜λn,m + 2) ˜Bn,m .
+
+Proof. We follow Lemma A.2 of [10] with the additive term from Lemma 1. 
+
+J(π∗
+
+> n
+
+, f ∗ 
+
+> n
+
+)−J(πn, f ∗ 
+
+> n
+
+)
+
+≤ J(π∗
+
+> n
+
+, μm:n−1) + λn,m Σm:n−1(π∗
+
+> n
+
+, μm:n−1) + Bn,m − J(πn, f ∗ 
+
+> n
+
+) (by Lemma 2) 
+
+≤ J(πn, μm:n−1) + λn,m Σm:n−1(πn, μm:n−1) + Bn,m − J(πn, f ∗ 
+
+> n
+
+) (by definition of π∗
+
+> n
+
+)
+
+= J(πn, μm:n−1) − J(πn, f ∗ 
+
+> n
+
+) + λn,m Σm:n−1(πn, μm:n−1) + Bn,m 
+
+≤ λn,m Σm:n−1(πn, f ∗ 
+
+> n
+
+) + λn,m Σm:n−1(πn, μm:n−1) + 2 Bn,m (by Lemma 2) 
+
+= 2 λn,m Σm:n−1(πn, f ∗ 
+
+> n
+
+) + λn,m (Σ m:n−1(πn, μm:n−1) − Σm:n−1(πn, f ∗ 
+
+> n
+
+)) + 2 Bn,m 
+
+(add and subtract λn,m Σm:n−1(πn, f ∗ 
+
+> n
+
+))
+
+≤ (˜λ2 
+
+> n,m
+
++ 2 ˜λn,m )Σ m:n−1(πn, f ∗ 
+
+> n
+
+) + ( ˜λn,m + 2) ˜Bn,m .
+
+In the last line, we used the fact that ∥σm:n−1(·, ·)∥ is bounded by σmax and positive, and thus behaves like a reward. In fact, it is an intrinsic reward [10], which is why Lemma 2 also applies. Thus, the epistemic uncertainty scaling λn,m and drift accumulation Bn,m from (11,12) are modified to become ˜λn,m and ˜Bn,m which include the term max {Rmax , σ max }.Proof of Theorem 1. We now prove our main regret result in terms of the total variation PN , the maximum information gain over p episodes γp and the horizon N . The derivation is analogous for the resetting and sliding window case with only 
+
+βn(δ, ·) behaving differently w.r.t. n as defined in Lemma 1. At episode n, let m(n) denote the first episode whose data is retained in the model buffer used to construct the statistical model at episode n. Thus, the model is fit on data from episodes m(n), m (n) + 1 , . . . , n − 1.We denote by p the maximal buffer length, i.e., 
+
+n − m(n) ≤ p for all n ∈ { 1, . . . , N }.
+
+In the resetting scheme, m(n) = n0(n) and p = H. In the sliding-window scheme, m(n) = n − w and p = w. Hence, in both cases the model is fit on at most p episodes of data. For notational simplicity, we suppress the dependence of m on n
+
+whenever this is clear from context. Let rn
+
+> def
+
+= J(π∗
+
+> n
+
+, f ∗ 
+
+> n
+
+) − J(πn, f ∗ 
+
+> n
+
+) denote the (episodic) dynamic regret. The success event of Lemma 1 holds with probability at least 1 − δ. Conditioned on this success event it holds by Lemma 3 that for all n ≥ 1,
+
+rn ≤ (˜λ2 
+
+> n,m
+
++ 2 ˜λn,m ) Σ m:n−1(πn, f ∗ 
+
+> n
+
+) + ( ˜λn,m + 2) ˜Bn,m .
+
+The cumulative regret is then 
+
+RN
+
+> def
+
+=
+
+> N
+
+X
+
+> n=1
+
+rn
+
+≤
+
+> N
+
+X
+
+> n=1
+
+ ˜λ2 
+
+> n,m
+
++ 2 ˜λn,m 
+
+ Σm:n−1(πn, f ∗ 
+
+> n
+
+) + 
+
+> N
+
+X
+
+> n=1
+
+ ˜λn,m + 2  ˜Bn,m . (17) Note that for all buffer-update schemes considered in this work, the statistical model at episode n is fit on at most p
+
+episodes of data. Moreover, both βn(δ, n − m) and ξn−m from Lemma 1 are nondecreasing in the buffer length n − m.Therefore, there exists a uniform upper bound on the optimism coefficient such that 
+
+˜λn,m ≤ max {Rmax , σ max }Tσ βN (δ, p ) def 
+
+= ¯λN,p , ξn−m ≤ ξp.
+
+For the resetting scheme, one may take βN (δ, p ) = βN (δ, H ) with p = H, while for the sliding-window scheme one takes 
+
+βN (δ, p ) = βN (δ, w ) with p = w. The only difference between the two cases is thus the precise form of the confidence parameter βN (δ, p ) from Lemma 1; the remainder of the argument is identical. Therefore, substituting the definition of ˜Bn,m from Lemma 3 into (17), it holds that 
+
+RN ≤ (¯λ2 
+
+> N,p
+
++ 2 ¯λN,p )
+
+> N
+
+X
+
+> n=1
+
+Σm:n−1(πn, f ∗ 
+
+> n
+
+)+ ( ¯λN,p + 2) max {Rmax , σ max }T 2
+
+σ ξpNX
+
+> n=1
+> n−1
+
+X
+
+> s=m
+
+f ∗ 
+
+> s+1
+
+− f ∗ 
+
+> sHdx k
+
+. (18) We first bound the last term involving the double sum. Fix some s ∈ { 1, . . . , N − 1}. The increment ∥f ∗ 
+
+> s+1
+
+− f ∗ 
+
+> s
+
+∥Hdx k
+
+appears in the inner sum for exactly those episodes n such that s ∈ { m(n), . . . , n − 1}, that is, for those episodes whose model buffer contains episode s. Since every buffer-update scheme considered in this work retains at most p episodes, there are at most p such episodes. Therefore each drift increment is counted at most p times, and hence 
+
+> N
+
+X
+
+> n=1
+> n−1
+
+X
+
+> s=m
+
+∥f ∗ 
+
+> s+1
+
+− f ∗ 
+
+> s
+
+∥Hdx k
+
+≤ p 
+
+> N−1
+
+X
+
+> s=1
+
+∥f ∗ 
+
+> s+1
+
+− f ∗ 
+
+> s
+
+∥Hdx k
+
+≤ pP N . (by Assumption 6) Next, we bound the first term involving the cumulative epistemic uncertainty Σm(n): n−1(·, ·). We decompose the sum over the N/p groups of size p. For group q ∈ { 0, . . . , N/p − 1}, the episodes are n = qp + 1 , . . . , (q + 1) p. Writing 
+
+n = qp + h + 1 , h = 0 , . . . , p − 1,and defining m(q, h ) def 
+
+= m(qp + h + 1) , we obtain 
+
+> N
+
+X
+
+> n=1
+
+Σm(n): n−1(πn, f ∗ 
+
+> n
+
+) = 
+
+> N/p−1
+
+X
+
+> q=0
+> p−1
+
+X
+
+> h=0
+
+Σm(q,h ): qp +h
+
+ πqp +h+1 , f ∗
+
+> qp +h+1
+
+
+
+≤
+
+> N/p−1
+
+X
+
+> q=0
+
+√p
+
+> p−1
+
+X
+
+> h=0
+
+Σ2
+
+> m(q,h ): qp +h
+
+ πqp +h+1 , f ∗
+
+> qp +h+1
+
+!1/2
+
+, (19) where the last step follows from the Cauchy-Schwarz inequality. It remains to bound the squared uncertainty terms inside each group. Recall the definiton of Σm:ℓ(·, ·) from (9). Applying Cauchy-Schwarz again in the time index t gives 
+
+Σm:ℓ(π, f ) = Eπ,fw0: T −1
+
+"T −1X
+
+> t=0
+
+∥σm:ℓ(xt, π(xt)) ∥2
+
+#
+
+≤ T Eπ,fw0: T −1
+
+"T −1X
+
+> t=0
+
+∥σm:ℓ(xt, π(xt)) ∥22
+
+#! 1/2
+
+Therefore, 
+
+Σ2
+
+> m:ℓ
+
+(π, f ) ≤ T Eπ,fw0: T −1
+
+"T −1X
+
+> t=0
+
+∥σm:ℓ(xt, π(xt)) ∥22
+
+#
+
+.
+
+Summing over h = 0 , . . . , p − 1 within one group, 
+
+> p−1
+
+X
+
+> h=0
+
+Σ2
+
+> m(q,h ): qp +h
+
+ πqp +h+1 , f ∗
+
+> qp +h+1
+
+ ≤ T
+
+> p−1
+
+X
+
+> h=0
+
+Eπqp +h+1 ,f ∗ 
+
+> qp +h+1
+> w0: T−1
+
+"T −1X
+
+> t=0
+
+σm(q,h ): qp +h
+
+ xt, πqp +h+1 (xt) 22
+
+#
+
+.
+
+Now, we use the GP information-gain bound on the cumulative posterior variance over one such group. By Lemmas 14–17 of [9], applied componentwise to the dx output dimensions, there exists a constant Cσ > 0 such that for any indices 
+
+m ≤ ℓ ≤ m + p − 1 and any sequence of query points zℓ,t ,
+
+> m+p−1
+
+X 
+
+> ℓ=mT−1
+
+X
+
+> t=0
+
+σm:ℓ−1(zℓ,t ) 22 ≤ Cσ T γ p,
+
+where γp denotes the maximum information gain associated with a data buffer of length p as defined in (6). We use this bound in our groupwise form: there exists a constant Cσ > 0 such that for every group q,
+
+> p−1
+
+X
+
+> h=0
+
+Eπqp +h+1 ,f ∗ 
+
+> qp +h+1
+> w0: T−1
+
+"T −1X
+
+> t=0
+
+σm(q,h ): qp +h
+
+ xt, πqp +h+1 (xt) 22
+
+#
+
+≤ Cσ T γ p.
+
+Even though the model buffer m(q, h ) : qp + h may change with every episode h within a group q, each term above is the posterior variance of a GP fit on at most p episodes of data, and the cumulative posterior variance over any group of p consecutive prediction episodes is controlled by the maximum information gain associated with a buffer of length p.Therefore, 
+
+> p−1
+
+X
+
+> h=0
+
+Σ2
+
+> m(q,h ): qp +h
+
+ πqp +h+1 , f ∗
+
+> qp +h+1
+
+ ≤ Cσ T γ p.
+
+Combining this bound with the groupwise decomposition (19) above yields 
+
+> N
+
+X
+
+> n=1
+
+Σm(n): n−1(πn, f ∗ 
+
+> n
+
+) ≤
+
+> N/p−1
+
+X
+
+> q=0
+
+√p
+
+q
+
+Cσ T 2γp
+
+= Np
+
+q
+
+p C σ T 2 γp
+
+= N
+
+s
+
+Cσ T 2 γp
+
+p .Substituting this bound into the cumulative regret decomposition (18) yields 
+
+RN ≤ (¯λ2 
+
+> N,p
+
++ 2 ¯λN,p ) N
+
+s
+
+Cσ T 2 γp
+
+p + ( ¯λN,p + 2) max {Rmax , σ max }T 2
+
+σ ξp pP N .
+
+We now specialize this generic bound to the two buffer-update schemes considered in this work. For the resetting scheme, we have p = H, ¯λN,p = ˜λn,H = O(√γH ), and ξp = ξH = O(√Hγ H ). Hence, 
+
+RN = O N
+
+r γ3
+
+> H
+
+H + γH H3/2PN
+
+!
+
+.
+
+For the sliding-window scheme, we have p = w, ¯λN,p = ¯λN,w , and ξp = ξw = O(√wγ w), with 
+
+¯λN,w = max {Rmax , σ max }Tσ
+
+
+
+B + σ
+
+q
+
+2 γw + 1 + dx log( N T /δ )
+
+,
+
+= O(pγw + log( N T /δ )) .
+
+Therefore, 
+
+RN = O
+
+N
+
+s
+
+γw
+
+ γw + log( N T /δ )2
+
+w + γww3/2PN
+
+ = ˜O N
+
+r γ3
+
+> w
+
+w + γww3/2PN
+
+!
+
+.
+
+Thus, in both cases, 
+
+RN = ˜O
+
+N
+
+s
+
+γ3
+
+> p
+
+p + γpp3/2PN
+
+ ,
+
+where p = H for resetting and p = w for the sliding-window scheme. The only difference between the two cases is the additional logarithmic factor in the confidence parameter βn(δ, ·) for the sliding-window scheme. XI. A DDITIONAL EXPERIMENTAL DETAILS 
+
+A. Implementation Details 
+
+Our code is publicly available. 4 For experiments that do not explicitly use Gaussian Processes, we model the forward dynamics using an ensemble of 5 neural networks. Epistemic uncertainty is estimated via the disagreement among ensemble members [28]. The policy is optimized using Soft Actor-Critic (SAC) [35]. The full set of hyperparameters for the statistical model and SAC are listed in Table I. For the ensemble-based experiments, we consider environments from the Gym and MuJoCo benchmark suites [25], [32], which we adapt to the non-stationary setting by introducing time-varying actuator limits, as described in Appendix XI-B. In Fig. 2 and 3, we additionally auto-tune the intrinsic reward weight λn,m from (11) following thr auto-tuning approach from [30], who show that this approach performs robustly across a range of off-policy RL methods.                                                                                                                                                         
+
+> TABLE I HYPERPARAMETERS FOR ENSEMBLE -BASED EXPERIMENTS WITH SAC IN SECTION VII. Environment Action Repeat Policy / Critic Arch. Model Arch. H/w[episodes] Learning Rate Batch Size Pendulum 1(256,256) 5×(256,256) 20 3×10 −4256 InvertedDoublePendulum 1(256,256) 5×(256,256) 150 3×10 −4256 HalfCheetah 2(256,256) 5×(256,256) 200 3×10 −4256 Hopper 2(256,256) 5×(256,256) 200 3×10 −4256 Walker2d 2(256,256) 5×(256,256) 1200 3×10 −4256 Ant 2(256,256) 5×(256,256) 250 3×10 −4256 Humanoid 2(512,512) 5×(512,512) 1000 3×10 −4256 HumanoidStandup 2(256,256) 5×(256,256) 250 3×10 −4256
+> Hdenotes the reset period for R-OMBRL and wthe window size for SW-OMBRL. The window is implemented via a replay buffer of fixed size in transitions, corresponding approximately to wrecent episodes.
+> 4Repository link: https://github.com/lasgroup/ombrl TABLE II PARAMETERS FOR THE EXPONENTIAL NON -STATIONARITY SCHEDULE USED IN THE EXPERIMENTS .Fig. 2 Fig. 3 Environment a(slow decay) a(medium decay) a(fast decay) aθmax θmin nstart
+> Pendulum 0.025 0.05 0.1 –5.0 1.0 5HalfCheetah 0.002 0.005 0.007 –1.0 0.2 400 Hopper 0.002 0.005 0.007 –1.0 0.3 300 InvertedDoublePendulum –––0.02 1.0 0.25 200 Ant –––0.007 1.0 0.3 400 Walker2d –––0.0005 1.0 0.3 1500 HumanoidStandup –––0.02 1.0 0.3 300 Humanoid –––3×10 −61.0 0.3 2000
+
+B. Non-Stationarity Implementation 
+
+We induce time-varying dynamics by modifying the actuator strength of each environment through an episode-dependent schedule. In all experiments, we use an exponential decay of a control-related parameter, such as the maximum torque or actuator gain. Concretely, at episode n, the parameter is updated according to 
+
+θn = exp( −a max(0 , n − nstart )) ( θmax − θmin ) + θmin , (20) where a ≥ 0 is the decay rate and nstart denotes the episode at which the decay begins. The parameter θn is applied directly to the environment at the beginning of each episode by modifying the actuator limits or scaling the underlying dynamics parameters. For example, in the Pendulum environment, we adjust the maximum torque, while in MuJoCo environments, we scale actuator gear ratios, effectively changing the available control authority. Table II summarizes the parameters used for each environment. 
+
+C. Effect of Soft Resets 
+
+Beyond replay-buffer adaptation, R-OMBRL and SW-OMBRL also incorporate soft resets of the dynamics model and the policy. Concretely, the model parameters ϕ and the policy parameters θ are periodically perturbed toward their initialization, as described in (15), controlled by the perturbation rates α1 for the dynamics model and α2 for the policy. These parameters govern the trade-off between retaining previously learned structure and enabling rapid adaptation to the current dynamics. Fig. 5 studies this trade-off for R-OMBRL under non-stationary dynamics. Overall, the results show that this perturbation rate has a strong effect on performance. In particular, aggressive perturbations degrade performance noticeably, especially in the transient phase after a replay-buffer reset. This suggests that even under changing dynamics, the policy benefits from preserving useful structure instead of being repeatedly pushed too far toward reinitialization. We find that varying the model perturbation rate leads to comparatively smaller changes in performance than the policy perturbation rate, since model errors affect control only indirectly, whereas overly strong policy perturbations immediately impair action selection. Across environments, moderate perturbation rates provide the best trade-off between stability and plasticity, with α1 = α2 = 0 .2 yielding robust performance and therefore used in the main experiments. XII. H ARDWARE DETAILS 
+
+We follow the experimental setup of [36] and use the same training configuration for both SOMBRL and R-OMBRL. The only difference between the methods lies in the replay buffer: SOMBRL uses a growing buffer, while R-OMBRL periodically resets the buffer. We do not employ soft resets in these experiments, i.e., α1 = α2 = 0 .To induce non-stationarity, we modify the maximum throttle parameter. After episode N = 14 , the maximum throttle is decayed exponentially to 25% of its initial value over the course of three episodes. This results in a rapid transition from a dynamic slide-parking task to a standard parking task. To isolate the core behhavior of replay-buffer adaptation, we use a reset period of H = 15 .We provide additional qualitative results in the accompanying videos. 5 The stationary baseline is evaluated under fixed dynamics with both high and low maximum throttle. For the non-stationary setting, we visualize the behavior of SOMBRL and R-OMBRL under the same rapidly decaying throttle schedule. For SOMBRL, we show (i) the policy trained under high throttle before the change, (ii) the behavior immediately after the dynamics change, where the policy still attempts to drift, (iii) a representative failure case, and (iv) the best-performing policy across all seeds. For R-OMBRL, we show (i) the policy before the change, (ii) the behavior shortly after the dynamics change and a recent reset, (iii) a near-converged policy exhibiting stable parking without drifting, and (iv) the best-performing policy across seeds.  
+
+> 5Video link: https://polybox.ethz.ch/index.php/s/2FToMjCmTWX4j5w
+
+0.00.51.01.5 ×10 4
+
+slow decay 
+
+Pendulum 
+
+0.00.51.0 ×10 5
+
+slow decay 
+
+HalfCheetah 
+
+01
+
+×10 4
+
+slow decay 
+
+Hopper 
+
+0.00.51.01.5 ×10 4
+
+medium decay 0.00.51.0 ×10 5
+
+medium decay 01
+
+×10 4
+
+medium decay 0 1
+
+×10 4
+
+0.00.51.01.5 ×10 4
+
+fast decay 0.0 0.5 1.0
+
+×10 6
+
+0.00.51.0 ×10 5
+
+fast decay 0.0 0.5 1.0
+
+×10 6
+
+01
+
+×10 4
+
+fast decay 
+
+> Cumulative regret  𝑅 𝑁
+
+Environment steps SOMBRL R-OMBRL ( 𝛼 = 0) R-OMBRL ( 𝛼 = 0.2) R-OMBRL ( 𝛼 = 1.0) Fig. 5. Ablation of the soft reset parameter α1 = α2 = α from (15) for R-OMBRL under non-stationary dynamics. We vary the strength of the parameter perturbations applied to the dynamics model and policy after replay-buffer resets. Moderate perturbations yield the best trade-off between stability and plasticity, while aggressive policy perturbations are particularly detrimental.

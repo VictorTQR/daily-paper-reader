@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07791v1/fig-001.webp",
+      "caption": "Table 1: Performance comparison across mathematical reasoning and multi-hop QA benchmarks. Bold indicates the best performance, while underlined denotes the second best. The Avg Rank column represents the average ranking across all tasks (lower is better).",
+      "page": 7,
+      "index": 1,
+      "width": 937,
+      "height": 210
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07791v1/fig-002.webp",
+      "caption": "Figure 5: Comparison on constrained geometric sequence optimization. (Left) The baseline uses a monolithic tool causing O(n2) brute-force timeouts. (Right) Our method employs a modular tool chain to prune the search space, significantly improving efficiency and reusability.",
+      "page": 8,
+      "index": 2,
+      "width": 844,
+      "height": 398
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07791v1/fig-003.webp",
+      "caption": "Figure 6: Structural Growth of Tool Subgraphs from Single-Path Reuse to Multi-Branch Convergence.",
+      "page": 8,
+      "index": 3,
+      "width": 459,
+      "height": 423
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07791v1/fig-004.webp",
+      "caption": "Figure 2: Overview of the proposed framework. The architecture consists of three components: (1) AgentEnvironment Interaction (Bottom): decomposes tasks and generates structured trajectories via planning, retrieval, and execution. (2) Anchor-Action Step Grouping (Top-Left): leverages tool-based anchors to enable fine-grained, step-level advantage estimation. (3) Self-Evolving Tool-based Memory (Top-Right): A graph-structured memory TG that dynamically retrieves, clusters, and updates MCP tools based on trajectory dependencies.",
+      "page": 4,
+      "index": 4,
+      "width": 950,
+      "height": 483
+    }
+  ]
+}

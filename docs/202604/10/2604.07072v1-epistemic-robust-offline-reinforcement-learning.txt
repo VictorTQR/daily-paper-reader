@@ -1,0 +1,2052 @@
+Title: Epistemic Robust Offline Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.07072v1
+
+Published Time: Thu, 09 Apr 2026 01:21:22 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# Epistemic Robust Offline Reinforcement Learning 
+
+Abhilash Reddy Chenreddy 1 Erick Delage 1
+
+# Abstract 
+
+Offline reinforcement learning learns policies from fixed datasets without further environment interaction. A key challenge in this setting is epis-temic uncertainty, arising from limited or biased data coverage, particularly when the behavior pol-icy systematically avoids certain actions. This can lead to inaccurate value estimates and unreliable generalization. Ensemble-based methods like SAC-N mitigate this by conservatively estimat-ing Q-values using the ensemble minimum, but they require large ensembles and often conflate epistemic with aleatoric uncertainty. To address these limitations, we propose a unified and gener-alizable framework that replaces discrete ensem-bles with compact uncertainty sets over Q-values. We also introduce a benchmark for evaluating of-fline RL algorithms under risk-sensitive behav-ior policies, and demonstrate that our method achieves improved robustness and generalization over ensemble-based baselines across both tabular and continuous state domains. 
+
+# 1. Introduction 
+
+Offline Reinforcement Learning (RL) seeks to learn policies from static datasets without further environment interaction. A key challenge is epistemic uncertainty arising from poor state-action coverage leading to unreliable value estimates and unsafe extrapolation, especially in domains where data collection is expensive or risky (e.g., healthcare, industrial control) (Ghosh et al., 2022; Levine et al., 2020). Stan-dard RL algorithms may overgeneralize in these regions, leading to unreliable value estimates and poor policy perfor-mance (Yang et al., 2021). Ensemble-based methods like SAC-N address this by training multiple Q-networks and using a conservative Bellman target based on the pointwise  
+
+> 1
+
+GERAD, Department of Decision Sciences, HEC Montr ´eal, Montr ´eal, Qu ´ebec H3T 2A7, Canada . Correspondence to: Abhi-lash Reddy Chenreddy <abhilash.chenreddy@hec.ca >.
+
+Preprint. 
+
+minimum: 
+
+y(s, a ) := r + γ min   
+
+> i∈[N]
+
+Q(i) 
+
+> θ
+
+(s′, a ′) − α log πϕ(a′|s′) (1) where (s, a, r, s ′) ∼ D is a sample from the offline dataset, and a′ ∼ πϕ(·| s′) is drawn from the stochastic policy πϕ,parameterized by ϕ, γ ∈ (0 , 1] is the discount factor and 
+
+α > 0 governs the entropy regularization. The ensemble based formulation treats the minimum as a proxy for a lower confidence bound, encouraging conserva-tive value estimates in uncertain regions. While effective, this method has limitations. Large ensemble sizes ( N ≫ 1)are often needed for reliable uncertainty estimates, increas-ing computational and memory costs (Wen et al., 2020). The minimum also ignores inter-action correlations, more-over, ensembles often conflate epistemic and aleatoric un-certainty (Amini et al., 2020; Osband et al., 2023), making it difficult to distinguish model uncertainty from environment stochasticity, hindering robust and safe decision-making. Epistemic uncertainty can persist even with large datasets when the behavior policy is biased. In the machine replace-ment problem (Wiesemann et al., 2013), where an agent de-cides whether to continue operating or replace a degrading machine across 10 states, a risk-averse policy may replace early to avoid failure, while a risk-seeking one may delay to reduce cost. These choices induce systematically different state-action coverage, leading to high epistemic uncertainty in underexplored regions (Schweighofer et al., 2022). This issue is especially pronounced in offline RL, where no fur-ther interaction is possible to resolve uncertainty. Example discussed in Appendix A.2 illustrates this with optimal and behavioral policies under different risk tolerances and the resulting coverage distributions. To overcome these issues, we propose replacing the discrete ensemble {Q(i)(s, a )}Ni=1 with a compact uncertainty set 
+
+U(s) ⊂ R|A| defined per state. This yields a set-based Bellman target: 
+
+y(s, a ) := r + γ min  
+
+> q∈U (s′)
+
+(2) 
+
+Ea′∼πϕ(·| s′)
+
+q(a′) − α log πϕ(a′|s′).
+
+where U(s′) represents plausible Q-value vectors over ac-tions at state s′. This formulation enables a richer modeling 1
+
+> arXiv:2604.07072v1 [cs.LG] 8 Apr 2026 Epistemic Robust Offline Reinforcement Learning
+
+of epistemic uncertainty, with improved sample efficiency and robustness. Our contributions can be described as: • We introduce ERSAC, a generalization of SAC-N using uncertainty sets to model structured epistemic uncer-tainty over Q-values. • We integrate epistemic neural networks (Epinets) (Os-band et al., 2023) into ERSAC to directly produce uncertainty sets, removing the need for resampling. • We develop a benchmark to evaluate offline RL un-der risk-sensitive behavior, demonstrating ERSAC’s improved robustness and generalization across tasks. For brevity, a detailed survey of related literature is deferred to Appendix A.1. 
+
+# 2. Preliminaries 
+
+We consider a Markov Decision Process (MDP) charac-terized by a possibly continuous state space S, a discrete action space A, a state-transition distribution p(st+1 |st, a t),a reward function r(st, a t), and a discount factor γ ∈ (0 , 1) .The reinforcement learning objective is to identify an opti-mal policy π∗(·| s), with π∗(a|s) defining the likelihood of doing action a when in state s, that maximizes the expected discounted cumulative reward Eπ [P∞ 
+
+> t=0
+
+γtr(st, a t)] . Be-low, we summarize the Soft Actor-Critic (SAC) Algorithm and one of its adaptations for offline RL that performs con-servative updates using an ensemble of Q-functions. 
+
+2.1. Soft actor critic (SAC) 
+
+The SAC framework optimizes the objective, 
+
+J(π) = Eπ
+
+" ∞X
+
+> t=0
+
+γt (r(st, a t) + αH(π(·| st))) 
+
+#
+
+,
+
+where H(π(·| s)) = − P 
+
+> a∈A
+
+π(a|s) log π(a|s) is the en-tropy of the policy, and α controls the trade-off between exploration and exploitation. SAC employs parametric approximations for both the Q-function Qθ (s, a ) and the policy πϕ(a|s), which are updated using off-policy data from a replay buffer. The Q-function minimizes temporal-difference error, while the policy is optimized to maximize expected entropy-regularized Q-values, Ea∼πϕ(·| s) [Qθ (s, a ) − α log πϕ(a|s)] . In this work, we use a discrete-action variant of SAC introduced in (Christodoulou, 2019), and refer the reader to their work for implementation and theoretical details. 
+
+2.2. SAC with an Ensemble of Q-functions (SAC-N) 
+
+While SAC provides a stable framework for policy learning, applying it to offline RL is challenging since the agent relies solely on a fixed dataset. This makes SAC susceptible to overestimation bias, where the Q-function extrapolates inac-curately to out-of-distribution state-action pairs. Such bias is problematic during policy improvement, which favors actions with high Q-values, potentially leading to unsafe or suboptimal behavior. To mitigate this, An et al. (2021) pro-posed SAC-N, which uses an ensemble of N Q-functions 
+
+{Qθi }Ni=1 to capture epistemic uncertainty and reduce over-estimation. Each Qθ i estimates expected return, and a target ensemble {Qθ′ 
+
+> i
+
+}Ni=1 is updated via Polyak averaging. The Q-function update adopts a clipped double Q-learning–style target (Fujimoto et al., 2018), extended in SAC-N by taking the minimum over the ensemble: 
+
+y(r, s ′, a ′) := r + γ
+
+
+
+min  
+
+> i
+
+Qθ′ 
+
+> i
+
+(s′, a ′) − α log πϕ(a′ | s′)
+
+
+
+(3) Using the minimum over the ensemble provides a conserva-tive estimate of the expected return, reducing propagation of overestimated values from out-of-distribution state-action pairs common in offline datasets. Each Q-function Qθi is updated by minimizing the mean squared Bellman error between its prediction and the target y(r, s ′, a ′):
+
+LQ(θi) := E(s,a,r,s ′)∼D ,a′∼πϕ(·| s′)
+
+
+
+Qθi (s, a ) − y(r, s ′, a ′)
+
+2
+
+(4) where D denotes the static replay buffer of environment interactions, which, unlike in online RL, is fixed and is collected a priori without further interactions. The policy πϕ
+
+is then optimized to maximize the conservative estimate of the expected return (minimum Q-value across the ensemble) while incorporating the entropy regularization term: 
+
+Jπ (ϕ) := E s∼D ,a∼πϕ(·| s)
+
+
+
+min  
+
+> i
+
+Qθi (s, a ) − α log πϕ(a | s)
+
+
+
+(5) This objective balances maximizing a conservative estimate of expected returns with encouraging high entropy, which promotes stochastic action selection. Greater entropy helps the policy explore beyond frequent actions in the offline dataset, particularly useful early in training to avoid over-fitting to spurious correlations. Following (Haarnoja et al., 2018), the entropy coefficient α is learned by minimizing a dual objective that aligns policy entropy with a target value, allowing the agent to maintain high entropy under uncer-tainty and gradually shift toward reward maximization. Although SAC-N mitigates overestimation by maintaining an ensemble of Q-functions, it often requires a large ensem-ble size for stable performance. To address this, (An et al., 2021) introduced the Ensemble-Diversified Actor-Critic (EDAC) , which adds a diversification term to encourage diversity among the Q-function ensemble members. In con-tinuous action setting, they quantify similarity using an 2Epistemic Robust Offline Reinforcement Learning 
+
+ensemble similarity (ES) metric defined as: 
+
+⟨∇ aQθi (s, a ), ∇aQθj (s, a )⟩∥∇ aQθi (s, a )∥∥∇ aQθj (s, a )∥ ,
+
+which measures the cosine similarity between the gradi-ents of different Q-functions with respect to the action vector. In the discrete action setting, where ∇aQ(s, a )
+
+is ill defined, we adapt the ES metric by instead com-puting the mean squared deviation between the Q-values across all actions. Specifically, we define gθ (s, a ) :=  Qθ (s, a ′) − Qθ (s, a )
+
+> a′∈A
+
+, and compute the cosine simi-larity between gθi (s, a ) and gθj (s, a ):ES θi,θ j (s, a ) := 
+
+P 
+
+> a′∈A
+
+∆i(a′) ∆ j (a′)
+
+pP  
+
+> a′∈A
+
+∆i(a′)2 pP  
+
+> a′∈A
+
+∆j (a′)2 ,
+
+(6) where ∆k(a′) := Qθk (s, a ′) − Qθk (s, a ). The diversifica-tion loss is then given by: 
+
+LES (θ) := E(s,a )∼D 
+
+
+
+> N
+
+X
+
+> i=1
+> N
+
+X
+
+> j=i+1
+
+ES θi,θ j (s, a )
+
+ .
+
+where θ is short for {θi}Ni=1 . The overall loss for each Q-function incorporates this diversification term: 
+
+¯LQ(θ) := (1 /N )
+
+> N
+
+X
+
+> i=1
+
+LQ(θi) + ηLES (θ), (7) where η is a hyperparameter controlling the strength of the diversity regularization. Encouraging diversity among the Q-functions was shown empirically to improve uncertainty estimation and leads to more reliable policy learning. 
+
+# 3. Epistemic Robustness with SAC 
+
+We start by formalizing the uncertainty captured by such an ensemble by modeling the long term actions values at a given state s as a distribution F qθ (s) ∈ M (R|A| ). Here, 
+
+F qθ (s) defines a probability measure over Q-value vectors 
+
+q ∈ R|A| , induced by the variability among the Q-functions, and parameterized through θ. Each sample ˜q ∼ F qθ (s) is a vector in R|A| representing the epistemic uncertainty about the action-wise values Q(s, ·). For example, in the case of SAC-N, this distribution takes the form of a scenario-based distribution: 
+
+F qθ (s) := 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+δQθi (s, ·), (8) where δx is the Dirac measure centered at x ∈ R|A| . Given a Q-value distribution F qθ : S → M (R|A| ), mapping each state s ∈ S to a probability measure over Q-value vectors, we define an uncertainty set operator, 
+
+U : M(R|A| ) → C (R|A| ),
+
+that maps a Q-value distribution to a compact set of plausible Q-value vectors. The composition U ◦ F qθ : S → C (R|A| )
+
+defines an epistemic uncertainty set U(F qθ (s)) in each state 
+
+s, which can be used to construct robust evaluation and op-timization of policies. For notational simplicity, we will use 
+
+Uθ (s) as shorthand for U(F qθ (s)) when the dependencies on F qθ are clear from context. In the next section, we introduce our proposed framework, 
+
+Epistemic Robust Soft Actor-Critic (ERSAC) , which gen-eralizes SAC-N by leveraging uncertainty sets derived from Q-value distributions. We first present an ensemble-based version of ERSAC and highlight its connection to SAC-N. We then formalize the algorithm, detailing its key compo-nents, the set-based Bellman backup and the robust policy update. 
+
+3.1. The Epistemic Robust SAC (ERSAC) Model 
+
+As in SAC-N, ERSAC trains the Q-function by minimizing the expected squared Bellman error between a sampled realization and a conservative target derived from the Q-distribution F qθ . Specifically, for each next state s′ ∈ S , the target in (3) is modified to: 
+
+y(r, s ′) := r + γ min   
+
+> q∈U (Fqθ′(s′))
+
+Ea′∼πϕ(·| s′)
+
+q(s′, a ′)
+
+− α log πϕ(a′ | s′)! (9) where the minimum operator provides a robust estimate of the regularized expected total discounted return. We refer the reader to (Ben-Tal et al., 2015) for closed form expressions of min q∈U ⟨v, q ⟩ for a list of popular forms of uncertainty sets. The loss function in (4) is then redefined as: 
+
+LRQ(θ) := E(s,a,r,s ′)∼D , ˜q∼F qθ (s)
+
+h
+
+(˜ q(a) − y(r, s ′)) 2i
+
+.1
+
+(10) Similar to the Q-value target, the policy loss in the epistemic robust setting replaces the ensemble minimum with a worst-case expectation over the uncertainty set. The robust policy 
+
+> 1
+
+It is important to note that without additional regularization, the objective in (10) may admit a degenerate solution F qθ∗ (s) = 
+
+δ¯q(s, ·), where ¯q(s, a ) := E(s,a,r,s ′)∼D [y(r, s ′)] , which collapses the distribution to a deterministic point estimate. In practice, this requires regularization strategies such as early stopping, entropy constraints on F qθ , or prior-based regularization to avoid mode collapse. 
+
+3Epistemic Robust Offline Reinforcement Learning 
+
+loss (5) becomes J Rπ (ϕ),
+
+: = Es∼D 
+
+
+
+min   
+
+> q∈U θ(s)
+
+Ea∼πϕ(·| s)
+
+h
+
+q(a) − α log πϕ(a | s)
+
+i
+
+(11) 
+
+= E s∼D ,a∼πϕ(·| s)
+
+
+
+min  
+
+> q∈U θ(s)
+
+⟨πϕ(· | s), q ⟩ − α log πϕ(a | s)
+
+
+
+Importantly, when using an ensemble based representation, the ERSAC formulation encompasses SAC-N as a special case under a particular choice of uncertainty set. We formal-ize this connection in the following proposition and defer the proof to Appendix A.3. 
+
+Proposition 3.1. Let F qθ (s) be defined as in Equation (8), and let the uncertainty set operator be defined as 
+
+Ubox (F qθ (s)) := ×
+
+> a∈A
+
+"
+
+essinf   
+
+> ˜q∼Fqθ(s)
+
+[˜ q(a)] , esssup   
+
+> ˜q∼Fqθ(s)
+
+[˜ q(a)] 
+
+#
+
+(12) 
+
+i.e., a coordinate-wise box containing the support of F qθ (s),under which the robust losses reduce to those of SAC-N: 
+
+LRQ(θ) = 1
+
+> N
+
+PNi=1 LQ(θi) + C and J Rπ = Jπ , for some constant C ∈ R independent of θ.
+
+This result demonstrates that ERSAC generalizes SAC-N under a unified uncertainty set framework. In the next sec-tion, for an arbitrary compact set representation Uθ (s), we outline the detailed training algorithm. 
+
+3.2. The ERSAC Training Algorithm 
+
+Previously, we modeled F qθ (s) such that each sample ˜q ∼
+
+F qθ (s) is a Q-value vector in R|A| , representing Q(s, ·). To generalize this, we adopt the reparameterized formulation from Assumption 3.2. 
+
+Assumption 3.2. F qθ is associated to a sampling opera-tor qθ (s, a, z ) and a distribution Fz ∈ M (Rdz ), such that 
+
+qθ (s, ·, ˜z) follows F qθ (s) when ˜z ∼ Fz .Given a noise sample ˜z ∼ Fz , a corresponding Q-vector sample ˜q ∼ F qθ (s) is obtained by evaluating the sampling operator over all actions: 
+
+˜q(a) := qθ (s, a, ˜z), for all a ∈ A .
+
+This reparameterization generalizes the ensemble model in Equation 8 as a special case, where the latent variable 
+
+˜z ∈ { 1, . . . , N } indexes a finite set of Q-functions, and 
+
+qθ (s, a, ˆz) = Qθ˜z (s, a ).In order to minimize LRQ, when Assumption 3.2 is satisfied, one can use a popular reparametrization trick to derive a gradient for the critic parameters θ as: 
+
+∇θ LRQ(θ) = ∇θ E(s,a,r,s ′)∼D 
+
+> ˜z∼Fz
+
+h qθ (s, a, ˜z) − y(r, s ′)2i
+
+= E(s,a,r,s ′)∼D 
+
+> ˜z∼Fz
+
+h
+
+2 qθ (s, a, ˜z) − y(r, s ′)∇θ qθ (s, a, ˜z)
+
+i
+
+This gives rise to the stochastic update θ ← θ −
+
+ηQ 2 qθ (s, a, ˜z) − y(r, s ′)∇θ qθ (s, a, ˜z). Optimizing J Rπ
+
+is a bit more complex; we begin by letting q∗(s, ·; ϕ) denote any statewise adversarial Q-value vector for policy πϕ:
+
+q∗(s, · ; ϕ) ∈ arg min  
+
+> q∈U θ(s)
+
+⟨πϕ(· | s), q ⟩, ∀s ∈ S , (13) which is well-defined due to compactness of Uθ (s). Then, noting that the function 
+
+f (π) := E s∼D 
+
+> a∼π(·| s)
+
+
+
+min  
+
+> q∈U θ(s)
+
+⟨π(· | s), q ⟩ − α log π(a | s)
+
+
+
+= Es∼D 
+
+
+
+min  
+
+> q∈U θ(s)
+
+⟨π(· | s), q ⟩− αEa∼π(·| s) [log π(a | s)] 
+
+
+
+is concave with respect to π, one can invoke the envelope theorem to identify one of its supergradients as 
+
+∇π Es∼D 
+
+
+
+⟨π(· | s), q ∗(s, · ; ϕ)⟩− α Ea∼π(·| s)
+
+log π(a | s)
+
+∈ ∇ π f (π)
+
+We therefore obtain, fixing ¯ϕ to ϕ that: 
+
+∇ϕJ Rπ (ϕ) = Es∼D 
+
+X
+
+> a∈A
+
+q∗(s, a ; ϕ) ∇ϕπϕ(a | s)
+
+− α ∇ϕ πϕ(· | s), log πϕ(· | s)
+
+
+
+(14) This produces a standard entropy-regularized policy gradi-ent, but is evaluated with respect to the worst-case value vec-tor q∗(s, · ; ϕ) in the uncertainty set, providing robustness to epistemic uncertainty. We summarize the training procedure for Robust SAC-N in Algorithm 1 in Appendix A.5. 
+
+# 4. Sample-based construction of Uθ(s) from 
+
+# qθ(s, a, ˜z)
+
+In practice, one often approximates F qθ (s) using Monte Carlo samples, which form an empirical distribution bF qθ (s).Having access to bF qθ (s), one can approximate U(F qθ (s)) 
+
+with U( bF qθ (s)) . Different choices of U( bF qθ (s)) lead to vary-ing trade-offs between computational tractability, policy sensitivity, and expressiveness. In the remainder of this 4Epistemic Robust Offline Reinforcement Learning 
+
+section, we present three popular sets from the literature of robust optimization: box, convex hull and ellipsoidal sets. 
+
+Box set: Let {˜zi}Ni=1 be N values sampled from Fz . The simplest construction is the box set introduced in (12), which defines Uθ (s) as the Cartesian product of the intervals cov-ering ˜q(a) for each action. In a sample-based setting, this reduces to : 
+
+Ubox ( bF qθ (s)) := ×
+
+> a∈A
+
+
+
+min  
+
+> i
+
+qθ (s, a, ˜zi), max  
+
+> i
+
+qθ (s, a, ˜zi)
+
+
+
+(15) 
+
+Convex Hull Set: A more expressive alternative is the uncertainty set operator that produces the convex hull of the support of F qθ (s). In a sample-based setting, this reduces to: 
+
+Uhull 
+
+ bF qθ (s)
+
+
+
+:= 
+
+ NX
+
+> i=1
+
+λi qθ (s, ·, ˜zi)
+
+∃ λ ∈ RN , λ i ≥ 0 ∀i, 
+
+> N
+
+X
+
+> i=1
+
+λi = 1 
+
+
+
+(16) The worst-case Q-vector is q∗(s, a ; ϕ) = qθ (s, a, z ∗(s, ϕ )) ,where z∗(s, ϕ ) ∈ arg min i Ea∼πϕ(·| s)[qθ (s, a, ˜zi)] .
+
+Ellipsoidal Set: In this work, we will mainly consider an ellipsoidal set operator that aim to cover a certain proportion 
+
+υ of the total mass of F qθ (s). In a sample-based setting, this can be done by estimating the empirical mean and covariance of the sampled Q-vectors: 
+
+ˆμ(s) := 1
+
+> NN
+
+X
+
+> i=1
+
+qθ (s, ·, ˜zi) ,
+
+bΣ( s) := 1
+
+> NN
+
+X
+
+> i=1
+
+
+
+qθ (s, ·, ˜zi) − ˆμ(s)
+
+ 
+
+qθ (s, ·, ˜zi) − ˆμ(s)
+
+⊤
+
+.
+
+(17) and estimating the radius as 
+
+bΥ( s) := inf 
+
+(
+
+Υ 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1
+
+( qθ (s, ·, ˜zi) − ˆμ(s)⊤ bΣ( s)−1
+
+·  qθ (s, ·, ˜zi) − ˆμ(s) ≤ Υ2
+
+)
+
+≥ υ
+
+)
+
+.
+
+The corresponding uncertainty set is defined as: 
+
+Uell 
+
+ bF qθ (s)
+
+
+
+:= 
+
+
+
+q ∈ R|A| (q − ˆμ(s)) ⊤ bΣ( s)−1
+
+· (q − ˆμ(s)) ≤ bΥ( s)2
+
+
+
+(18) This set encodes second-order structure and supports ef-ficient optimization. When bΣ( s) is positive definite, the worst-case Q-vector under a given policy admits the closed-form solution: 
+
+q∗(s, · ; ϕ) = ˆ μ(s) − bΥ( s) · bΣ( s)πϕ(· | s)
+
+∥bΣ( s)1/2πϕ(· | s)∥ .
+
+For completeness, the detailed derivations of the policy-sensitive worst-case Q-vector under both the convex hull and ellipsoidal sets are provided in Appendix A.4. We refer the reader to Appendix A.5 for the pseudocode of the training algorithm based on box, convex hull (Algo-rithm 2) and ellipsoidal (Algorithm 3) uncertainty sets. A deeper discussion on how the choice of uncertainty set af-fects the sensitivity of the worst-case Q-vector to the policy 
+
+πϕ, based on the Machine Replacement example introduced earlier, is provided in Appendix A.2.1. 
+
+# 5. The ERSAC model with Epinet (ERSAC(Epi)) 
+
+Recall from Assumption 3.2 that we require a paramet-ric sampling operator qθ (s, a, z ), with z ∼ Fz , such that qθ (s, ·, z ) ∼ F qθ (s), where F qθ (s) ∈ M (R|A| ) de-notes a distribution over Q-value vectors. We instantiate this generative model using an Epistemic Neural Network (Epinet) introduced by (Osband et al., 2023), which en-ables structured and differentiable sampling from a single neural network. An Epinet supplements a base network 
+
+μθμ (s, a ) ∈ R, parameterized by θμ, which yields the mean Q-value vector. From this base, we extract a feature rep-resentation ψθμ (s) ∈ Rdψ , typically taken from the last hidden layer. Epistemic variation is introduced via a latent index z ∼ N (0 , I ) ∈ Rdz . These components are combined through a stochastic head σθσ (ψθμ (s), a, z ) ∈ R, which modulates the structured uncertainty. The sampling opera-tor for the Q-value vector is then defined as qθ (s, ·, z ) := 
+
+μθμ (s, ·) + σθσ (ψθμ (s), ·, z ),. The stochastic head is con-structed as σθσ (ψ, ·, z ) := σL 
+
+> θσ
+
+(ψ, ·, z ) + σP(ψ, ·, z ) with 
+
+σL 
+
+> θσ
+
+: Rdψ × A × Rdz → R as a learnable function and 
+
+σP : Rdψ × A × Rdz → R as a fixed prior. The fixed prior network σP encodes initial epistemic uncertainty by induc-ing variability in predictions across samples of indices z.In well explored regions, σL 
+
+> θσ
+
+can learn better distributions for the predictive uncertainty, while in data sparse areas, σP
+
+can induce the prior beliefs of the decision maker to guide conservative predictions. We can now use it to generate the realizations of the Q-value vectors at a given state s
+
+by drawing z ∼ N (0 , I ) to form the empirical distribution 
+
+bFθ (s) over Q values. This enables us to employ the sample based epistemic uncertainty sets introduced in the earlier section. 5Epistemic Robust Offline Reinforcement Learning 
+
+This construction yields a parameter efficient and fully dif-ferentiable reparameterization of the Q distribution. Further, one can train these networks using a perturbed squared loss inspired by Gaussian bootstrapping following the loss: 
+
+LENN  
+
+> Q
+
+(θ) := E(s,a,r,s ′,c )∼ ¯D, ˜z∼Fz
+
+h qθ (s, a, ˜z) − y(r, s ′)
+
+− ¯σ ⟨c, ˜z⟩2i
+
++ λμ ∥θμ∥2 + λσ ∥θσ ∥2.
+
+(19) where each member (s, a, r, s ′) from the dataset D is aug-mented with some c randomly sampled from the surface of the unit sphere Sdz to produce ¯D, where ¯σ > 0 denotes the bootstrap noise scale, and where λζ , λ η are regularization coefficients. This loss encourages the network to match bootstrapped Q-targets while introducing variability across 
+
+z samples. It can be minimized via standard stochastic gradient methods. The ENN critic updates thus become: 
+
+θμ ← θμ − 2ηQ ·
+
+
+
+> 1
+> |B|
+
+X 
+
+> (s,a,r,s ′,c )∈¯B
+
+E˜z∼Fz
+
+h
+
+qθ (s, a, ˜z)
+
+− y(r, s ′) − ¯σ⟨c, ˜z⟩
+
+i
+
+· ∇ θμ μθμ (s, a )
+
+
+
+− 4ηQλμθμ
+
+(20) 
+
+θσ ← θσ − 2ηQ ·
+
+
+
+> 1
+> |B|
+
+X 
+
+> (s,a,r,s ′,c )∈¯B
+
+E˜z∼Fz
+
+h
+
+qθ (s, a, ˜z)
+
+− y(r, s ′) − ¯σ⟨c, ˜z⟩
+
+i
+
+· ∇ θσ σLθσ
+
+ ψθμ (s), a, ˜z
+
+− 4ηQλσ θσ
+
+(21) To accelerate the evaluation of U(F qθ (s) when using an el-lipsoidal uncertainty set operator, we introduce additional structure in σL 
+
+> θσ
+
+(ψ, ·, z ) and σP(ψ, ·, z ) as outlined in As-sumption 5.1, namely that both operators are linear in z.
+
+Assumption 5.1. The stochastic heads σL 
+
+> θσ
+
+(ψ, a, z ) and 
+
+σP(ψ, a, z ) are linear in z, i.e., 
+
+σL 
+
+> θσ
+
+(ψ, a, z ) = ⟨¯σL 
+
+> θσ
+
+(ψ, a ), z ⟩, σ P(ψ, a, z ) = ⟨¯σP(ψ, a ), z ⟩,
+
+for some mappings ¯σL 
+
+> θσ
+
+: Rdψ × A → Rdz and ¯σP : Rdψ ×A → Rdz .Assumption 5.1 induces a Gaussian distribution, 
+
+qθ (s, ·, z ) ∼ N (μθμ (s), Σθ (s)) , (22) where the covariance is defined as, [Σ θ (s)] a,a ′ := 
+
+⟨¯σLθσ (ψθμ (s), a ) + ¯σP (ψθμ (s), a ), ¯σLθσ (ψθμ (s), a ′) +¯σP (ψθμ (s), a ′)⟩. This gives rise to the Epinet based ellipsoidal set: 
+
+UENN ell (s) := 
+
+(
+
+q ∈R|A|  q − μθμ (s)⊤ Σθ (s)−1
+
+·  q − μθμ (s) ≤ F −1
+
+> χ2
+> |A|
+
+(υ)
+
+)
+
+(23) Here, F −1
+
+> χ2
+> |A|
+
+(υ) denotes the inverse CDF of the χ2 distri-bution with |A| degrees of freedom, yielding an efficient alternative to ensemble based uncertainty modeling with a closed form worst case Q-vector. The assumption of linear stochastic heads in Epinet is mainly for computational effi-ciency, allowing closed-form mean and covariance estimates for ellipsoidal uncertainty sets. While this may limit expres-sivity compared to nonlinear heads, it is generally sufficient for capturing epistemic uncertainty in many RL settings. In highly non-Gaussian cases, richer parameterizations or sampling-based approaches may be needed. Relaxing this assumption could enable more flexible uncertainty model-ing, but at increased computational cost. The training procedure for ERSAC with Epinet (ER-SAC(Epi)) mirrors the ensemble based variant (Algorithm 3) but avoids sampling by leveraging the structured Epinet model. The mean and covariance are directly obtained as 
+
+μθμ (s) and Σθ (s) from the deterministic and stochastic heads under Assumption 5.1. The ellipsoidal radius is set to Υ2(s) = F −1
+
+> χ2
+> |A|
+
+(υ), ensuring a υ-level confidence set. This enables efficient, fully differentiable updates for both the Bellman target and policy gradient. See Appendix A.5, Algorithm 4 for full details. 
+
+# 6. Experiments 
+
+This section presents a comprehensive empirical evalua-tion of our framework for epistemic robustness in offline reinforcement learning. Epistemic uncertainty is captured via uncertainty sets that integrate seamlessly into robust policy optimization. The three sample-based uncertainty sets lead to three ERSAC variants: SAC-N (ERSAC with a box set over N ensembles), ERSAC-CH-N (convex hull over ensembles), and ERSAC-Ell-N (ellipsoids from em-pirical mean and covariance). We also evaluate ERSAC-Ell-Epi , which replaces the ensemble with N samples from 
+
+ERSAC-Ell-N to produce a sample-based ellipsoid. Lastly, 
+
+ERSAC-Ell-Epi* leverages the structured stochastic head 
+
+σθσ (ψ, ·, z ) (see Assumption 5.1) to construct ellipsoidal sets directly, without sampling. The code can be found on GitHub 2.Our experiments span a diverse set of environments, includ-ing tabular domains (Machine Replacement and Riverswim), 
+
+> 2
+
+https://github.com/Achenred/ERSAC 
+
+6Epistemic Robust Offline Reinforcement Learning 
+
+classic control benchmarks (CartPole and LunarLander) and Atari environments. Across these domains, we evaluate each method’s ability to learn effective policies under distri-butional shifts arising due to changes in behavior policies and limited data coverage. A key contribution of our work is a novel offline RL bench-marking framework that enables control over the risk sensi-tivity of the behavior policy used to generate offline datasets. By adjusting the level of optimism or pessimism through expectile-based value learning, we can systematically evalu-ate how the nature of behavioral data affects the performance of offline RL algorithms. To induce risk sensitivity, we employ a modified actor-critic algorithm incorporating the dynamic expectile risk measure (Marzban et al. (2023)). For each (s, a ), critic target is computed using a bootstrapped expectile estimate, 
+
+y := arg min 
+
+> z∈R
+> M
+
+X
+
+> j=1
+
+I z < r (s, a ) + γ max  
+
+> a′
+
+Qθ (s′ 
+
+> j
+
+, a ′) − τ
+
+·
+
+
+
+z − r(s, a ) − γ max  
+
+> a′
+
+Qθ (s′ 
+
+> j
+
+, a ′)
+
+2
+
+and the critic minimizes squared error to this target. The actor is trained via a standard policy gradient to maximize expected Q-values. After a fixed number of training steps, the resulting policy πϕ reflects the desired level of risk sensitivity through τ . We then collect an offline dataset of size N using ε-greedy interaction with the environment, selecting random actions with probability ε = 0 .1. This yields datasets with systematically varying behavioral bias. Full implementation details are provided in Appendix 5. 
+
+6.1. Evaluation on tabular tasks 
+
+We first evaluate ERSAC on two tabular MDPs, Machine Replacement and Riverswim , which provide interpretable structure while capturing core offline RL challenges such as sparse state–action coverage and sensitivity to policy extrap-olation. The tabular setting isolates epistemic uncertainty without confounding deep RL effects, enabling a clean com-parison of uncertainty set constructions. Offline datasets are generated by varying (i) dataset size (10 , 100 , 1000 × |S| ) and (ii) behavior policy risk sensitivity using dynamic expectiles τ ∈ { 0.1, 0.5, 0.9}, inducing sys-tematic differences in coverage. Performance is measured using normalized returns, computed relative to a random and optimal policy, averaged over 100 evaluation episodes. Table 1a reports normalized returns aggregated over τ for each dataset size. In low-data regimes, structured uncer-tainty sets (CH-N, Ell 0.9-N) outperform the box baseline (B-N) by up to 75% , highlighting the importance of model-ing epistemic structure under sparse coverage. As dataset size increases, all methods improve, but convex and ellip-soidal sets converge faster to optimal performance. Under risk-averse behavior policies ( τ = 0 .9), where epis-temic uncertainty is highest, ellipsoidal variants remain robust. Comparing ellipsoids covering 100% versus 90% 
+
+of ensemble samples, the tighter Ell 0.9-N consistently per-forms better, likely by filtering outlier critics and avoiding over-pessimism. We therefore adopt 90% coverage in sub-sequent experiments. 
+
+6.2. Evaluation on Gym environments 
+
+We next evaluate the proposed methods on two widely used Gym environments, CartPole and LunarLander . CartPole is a standard control task with binary rewards and continuous states, while LunarLander presents greater complexity with shaped rewards and a higher-dimensional state-action space. As in the tabular setting, we construct offline datasets by varying two factors: dataset size and behavior policy risk profile. For each environment, we generate nine datasets by crossing three dataset sizes (1K, 10K, and 100K transitions) with three expectile levels: τ = 0 .1 (risk-seeking), τ = 0 .5
+
+(risk-neutral), and τ = 0 .9 (risk-averse). Behavior policies are trained to convergence using a dynamic expectile based actor-critic algorithm, and fixed trajectories are collected for each configuration. Table 1b summarizes normalized returns aggregated over τ
+
+values for each dataset size, while full results across all τ set-tings are provided in Table 5 in Appendix A.8. We consider the policy trained under the risk neutral behavior( τ = 0 .5)as the reference optimal policy. First, models CH-N, Ell 0.9-N, Ell-Epi consistently outperform the box baseline B-N, particularly in data scarce and risk averse settings where epistemic uncertainty plays a larger role. When we aggre-gate returns across dataset sizes by risk level (As presented in Table 2), we observe that Ell 0.9-N consistently achieves strong performance under risk-neutral and risk-seeking be-havior policies, suggesting that the method effectively lever-ages optimistic data to enhance policy learning. Ellipsoidal variants show strong, often best, performance across settings. Ell-Epi ∗ matches or outperforms the ensem-ble based Ell 0.9-N in several cases, highlighting Epinet-based uncertainty as an efficient alternative. We observed that Ell-Epi ∗ achieves comparable performance with sig-nificantly lower compute (see Appendix A.8 for details), making it attractive for scaling to complex domains. To further understand how uncertainty sets affect learning dynamics, we analyze policy entropy during training. We observed that Box-based methods (B-N) maintain consis-tently lower entropy, indicating less stochastic and more prematurely deterministic policies. This often leads to sub-optimal convergence. In contrast, CH-N, Ell-N, and Ell-Epi allow more flexible shaping of q∗(s, · ; ϕ), encouraging ex-ploration and enabling better identification of high-reward actions under offline constraints. We refer the reader to 7Epistemic Robust Offline Reinforcement Learning                                                                                                                                                                                                                      
+
+> Env DS SAC-N CH-N Ell-N Ell 0.9-N Beh. Policy Machine Replacement
+> 10 ×84 ±386 ±289 ±290 ±293 ±2
+> 100 ×97 ±296 ±294 ±295 ±293 ±2
+> 1000 ×97 ±297 ±297 ±297 ±193 ±2
+> RiverSwim
+> 10 ×47 ±358 ±355 ±360 ±35±4
+> 100 ×96 ±297 ±297 ±298 ±25±4
+> 1000 ×99 ±199 ±1100 ±0100 ±05±4
+> (a) Tabular environments
+> Env DS SAC-N CH-N Ell 0.9-N Ell-Epi Ell-Epi ∗Beh. Policy CartPole
+> 1k 76 ±374 ±279 ±279 ±277 ±290 ±2
+> 10k 96 ±298 ±1100 ±0100 ±0100 ±090 ±2
+> 100k 100 ±0100 ±0100 ±0100 ±0100 ±090 ±2
+> LunarLander
+> 1k 69 ±274 ±297 ±297 ±297 ±289 ±3
+> 10k 93 ±299 ±2101 ±1100 ±2102 ±189 ±3
+> 100k 98 ±2100 ±2104 ±1107 ±2106 ±189 ±3
+> (b) Gym environments
+
+Table 1. Returns aggregated across τ ∈ { 0.1, 0.5, 0.9} for each dataset size. Bold indicates best method, underline the worst, when mean differences ≥ 1.
+
+Env τ =0 .1 τ =0 .5 τ =0 .9
+
+CartPole 95 ± 8 (1) 93 ± 14 (2) 92 ± 14 (3) LunarLander 103 ± 7 (1) 99 ± 5 (2) 99 ± 5 (2) MR 93 ± 1 (3) 95 ± 4 (1) 94 ± 3 (2) RS 87 ± 15 (2) 87 ± 17 (1) 84 ± 22 (3) 
+
+Table 2. Agg. performance of Ell 0.9-N across environments with mean ± std and within-environment rank (1 = best). 
+
+Appendix A.8 for a detailed report. 
+
+6.3. Evaluation on Atari environments 
+
+To assess scalability beyond tabular and classic-control set-tings, we additionally evaluate ERSAC on five Atari 2600 environments. The goal here is to evaluate the scalability of ERSAC’s epistemic robust value estimation to high di-mensional domains and noisy, heterogeneous data typically found in Atari offline datasets. We use standard Atari offline datasets sourced from Minari (Younis et al., 2024), which provide trajectories collected from diverse and partially sub-optimal behavior policies. These experiments highlight the advantages of ERSAC mod-els in diverse settings. The Ell-Epi ∗ variant achieves the strongest scores in Seaquest and Hero environments, sug-gesting that it handles over estimation of Q values more effectively in ambiguous environments where reward spar-sity and bootstrapping noise amplify estimation risk. In more predictable games such as Pong and Breakout, Ell-Epi ∗ matches the performance of CQL and IQL, indicating that its uncertainty sets naturally contract when epistemic un-certainty is low and avoid the excessive pessimism that can hinder conservative methods. In Q ∗bert, where long horizon return propagation and irregular rewards create substantial uncertainty, the ERSAC models close much of the gap to IQL, demonstrating the benefit of structured uncertainty modeling over other baselines. Across all environments, ERSAC models consistently outperforms BRAC-BCQ, and notably, Ell-Epi ∗ ranks within the top three methods in all games, reflecting more reliable handling of unsupported state action pairs and high variance value targets. Overall, the results show that Ell-Epi ∗ scale effectively to high dimensional domains, reinforcing structured epistemic modeling as a principled foundation for offline RL in com-plex environments. Full experimental details and results are deferred to Appendix A.9. 
+
+# 7. Conclusion 
+
+We introduce Epistemic Robust Soft Actor-Critic (ERSAC), a unified offline reinforcement learning framework that mod-els epistemic uncertainty via uncertainty sets over Q-values, replacing ensemble-based pessimism with structured box, convex hull, and ellipsoidal constructions. ERSAC enables conservative yet flexible value estimation and policy opti-mization, generalizing SAC-N as a special case while expos-ing trade-offs between expressiveness and computational cost across set geometries. An Epinet-based variant yields closed-form ellipsoidal uncertainty sets, significantly reduc-ing runtime without sacrificing performance. By leveraging risk-aware behavior policies, ERSAC system-atically induces coverage bias in offline datasets, allowing controlled modulation of epistemic uncertainty and conser-vative value estimation. Empirically, ERSAC uncertainty sets are most effective under poor or biased coverage, with uncertainty shrinking as data coverage improves, at which 8Epistemic Robust Offline Reinforcement Learning 
+
+point performance approaches that of standard ensemble methods. Beyond benchmarking robustness in offline RL, this framework offers a foundation for studying epistemic robustness under risk-sensitive behavior policies. Promising future directions include extending ERSAC to multi-agent and hierarchical reinforcement learning, incorporating risk-aware objectives, and establishing finite-sample generaliza-tion guarantees and regret bounds under epistemic uncer-tainty. Overall, ERSAC demonstrates that structured and efficient epistemic modeling is a viable path toward safe, generalizable, and scalable offline reinforcement learning. 
+
+# References 
+
+Amini, A., Schwarting, W., Soleimany, A., and Rus, D. Deep evidential regression. Advances in neural informa-tion processing systems , 33:14927–14937, 2020. An, G., Moon, S., Kim, J.-H., and Song, H. O. Uncertainty-based offline reinforcement learning with diversified q-ensemble. Advances in neural information processing systems , 34:7436–7447, 2021. Ball, P. J., Smith, L., Kostrikov, I., and Levine, S. Ef-ficient online reinforcement learning with offline data. In International Conference on Machine Learning , pp. 1577–1594. PMLR, 2023. Ben-Tal, A., Den Hertog, D., and Vial, J.-P. Deriving robust counterparts of nonlinear uncertain inequalities. Mathe-matical programming , 149(1):265–299, 2015. Bertsimas, D., McCord, C., and Sturt, B. Dynamic opti-mization with side information. European Journal of Operational Research , 2022. Blanquero, R., Carrizosa, E., and G ´omez-Vargas, N. Contex-tual uncertainty sets in robust linear optimization. 2023. Chen, L., Lu, K., Rajeswaran, A., Lee, K., Grover, A., Laskin, M., Abbeel, P., Srinivas, A., and Mordatch, I. De-cision transformer: Reinforcement learning via sequence modeling. Advances in neural information processing systems , 34:15084–15097, 2021. Chen, X., Zhou, Z., Wang, Z., Wang, C., Wu, Y., and Ross, K. Bail: Best-action imitation learning for batch deep reinforcement learning. Advances in Neural Information Processing Systems , 33:18353–18363, 2020. Chenreddy, A. R., Bandi, N., and Delage, E. Data-driven conditional robust optimization. Advances in Neural Information Processing Systems , 35:9525–9537, 2022. Christodoulou, P. Soft actor-critic for discrete action settings. 
+
+arXiv preprint arXiv:1910.07207 , 2019. Esteban-P ´erez, A. and Morales, J. M. Distributionally robust stochastic programs with side information based on trim-mings. Mathematical Programming , 195(1):1069–1105, 2022. Filos, A., Tigas, P., McAllister, R., Gal, Y., and Levine, S. Epistemic value estimation for risk-averse offline rein-forcement learning. In Proceedings of the AAAI Confer-ence on Artificial Intelligence , volume 36, pp. 8073–8081, 2022. Fu, J., Kumar, A., Nachum, O., Tucker, G., and Levine, S. D4rl: Datasets for deep data-driven reinforcement learning. arXiv preprint arXiv:2004.07219 , 2020. 9Epistemic Robust Offline Reinforcement Learning 
+
+Fujimoto, S., Hoof, H., and Meger, D. Addressing function approximation error in actor-critic methods. In Interna-tional conference on machine learning , pp. 1587–1596. PMLR, 2018. Ghavamzadeh, M., Mannor, S., Pineau, J., and Tamar, A. Bayesian reinforcement learning: A survey. In Foun-dations and Trends in Machine Learning , volume 8, pp. 359–483. Now Publishers Inc., 2015. Ghosh, D., Ajay, A., Agrawal, P., and Levine, S. Offline rl policies should be trained to be adaptive. In Interna-tional Conference on Machine Learning , pp. 7513–7530. PMLR, 2022. Goerigk, M. and Kurtz, J. Data-driven robust optimization using deep neural networks. Computers & Operations Research , 151:106087, 2023. Gulcehre, C., Wang, Z., Novikov, A., Paine, T., G ´omez, S., Zolna, K., Agarwal, R., Merel, J. S., Mankowitz, D. J., Paduraru, C., et al. Rl unplugged: A suite of benchmarks for offline reinforcement learning. Advances in Neural Information Processing Systems , 33:7248–7259, 2020. Haarnoja, T., Zhou, A., Hartikainen, K., Tucker, G., Ha, S., Tan, J., Kumar, V., Zhu, H., Gupta, A., Abbeel, P., et al. Soft actor-critic algorithms and applications. arXiv preprint arXiv:1812.05905 , 2018. Jelley, A., McInroe, T., Devlin, S., and Storkey, A. Efficient offline reinforcement learning: The critic is critical. arXiv preprint arXiv:2406.13376 , 2024. Kendall, A. and Gal, Y. What uncertainties do we need in bayesian deep learning for computer vision? Advances in neural information processing systems , 30, 2017. Kidambi, R., Rajeswaran, A., Netrapalli, P., and Joachims, T. Morel: Model-based offline reinforcement learning. 
+
+Advances in neural information processing systems , 33: 21810–21823, 2020. Kostrikov, I., Nair, A., and Levine, S. Offline reinforce-ment learning with implicit q-learning. arXiv preprint arXiv:2110.06169 , 2021. Kumar, A., Fu, J., Soh, M., Tucker, G., and Levine, S. Stabilizing off-policy q-learning via bootstrapping error reduction. Advances in neural information processing systems , 32, 2019. Kumar, A., Zhou, A., Tucker, G., and Levine, S. Con-servative q-learning for offline reinforcement learning. 
+
+Advances in neural information processing systems , 33: 1179–1191, 2020. Kumar, A., Hong, J., Singh, A., and Levine, S. When should we prefer offline reinforcement learning over behavioral cloning? arXiv preprint arXiv:2204.05618 , 2022. Lakshminarayanan, B., Pritzel, A., and Blundell, C. Simple and scalable predictive uncertainty estimation using deep ensembles. Advances in neural information processing systems , 30, 2017. Levine, S., Kumar, A., Tucker, G., and Fu, J. Offline rein-forcement learning: Tutorial, review, and perspectives on open problems. arXiv preprint arXiv:2005.01643 , 2020. Lyu, J., Yan, M., Qiao, Z., Liu, R., Ma, X., Ye, D., Yang, J.-W., Lu, Z., and Li, X. Cross-domain offline policy adaptation with optimal transport and dataset constraint. In The Thirteenth International Conference on Learning Representations , 2025. Mao, Y., Wang, Q., Chen, C., Qu, Y., and Ji, X. Offline reinforcement learning with ood state correction and ood action suppression. Advances in Neural Information Pro-cessing Systems , 37:93568–93601, 2024a. Mao, Y., Wang, Q., Qu, Y., Jiang, Y., and Ji, X. Doubly mild generalization for offline reinforcement learning. 
+
+Advances in Neural Information Processing Systems , 37: 51436–51473, 2024b. Marzban, S., Delage, E., and Li, J. Y.-M. Deep reinforce-ment learning for option pricing and hedging under dy-namic expectile risk measures. Quantitative finance , 23 (10):1411–1430, 2023. McCord, C. Data-driven dynamic optimization with auxil-iary covariates . PhD thesis, Massachusetts Institute of Technology, 2019. Nguyen, V. A., Zhang, F., Blanchet, J., Delage, E., and Ye, Y. Robustifying conditional portfolio decisions via optimal transport, 2021. Ohmori, S. A predictive prescription using minimum vol-ume k-nearest neighbor enclosing ellipsoid and robust optimization. Mathematics , 9(2):119, 2021. Osband, I., Wen, Z., Asghari, S. M., Dwaracherla, V., Ibrahimi, M., Lu, X., and Van Roy, B. Epistemic neural networks. Advances in Neural Information Processing Systems , 36:2795–2823, 2023. Panaganti, K., Xu, Z., Kalathil, D., and Ghavamzadeh, M. A risk-sensitive perspective on model-based offline rein-forcement learning. In Advances in Neural Information Processing Systems , volume 35, pp. 12345–12356, 2022. Prudencio, R. F., Maximo, M. R., and Colombini, E. L. A survey on offline reinforcement learning: Taxonomy, 10 Epistemic Robust Offline Reinforcement Learning 
+
+review, and open problems. IEEE Transactions on Neural Networks and Learning Systems , 2023. Schweighofer, K., Dinu, M.-c., Radler, A., Hofmarcher, M., Patil, V. P., Bitto-Nemling, A., Eghbal-zadeh, H., and Hochreiter, S. A dataset perspective on offline rein-forcement learning. In Conference on Lifelong Learning Agents , pp. 470–517. PMLR, 2022. Shi, L. and Chi, Y. Distributionally robust model-based offline reinforcement learning with near-optimal sample complexity. Journal of Machine Learning Research , 25 (1):1–46, 2022. Sun, C., Liu, L., and Li, X. Predict-then-calibrate: A new perspective of robust contextual lp. Advances in Neural Information Processing Systems , 36:17713–17741, 2023. Wang, I., Becker, C., Van Parys, B., and Stellato, B. Learning for robust optimization. arXiv preprint arXiv:2305.19225 , 2023. Wang, K. and Jacquillat, A. From classification to opti-mization: A scenario-based robust optimization approach. Available at SSRN 3734002, 2020. Wen, Y., Han, D. T., and Ba, J. Batchensemble: An alterna-tive approach to efficient ensemble and lifelong learning. 
+
+arXiv preprint arXiv:2002.06715 , 2020. Wiesemann, W., Kuhn, D., and Rustem, B. Robust markov decision processes. Mathematics of Operations Research ,38(1):153–183, 2013. Wu, Y., Tucker, G., and Nachum, O. Behavior regu-larized offline reinforcement learning. arXiv preprint arXiv:1911.11361 , 2019. Yang, Y., Ma, X., Li, C., Zheng, Z., Zhang, Q., Huang, G., Yang, J., and Zhao, Q. Believe what you see: Implicit constraint approach for offline multi-agent reinforcement learning. Advances in Neural Information Processing Systems , 34:10299–10312, 2021. Younis, O. G., Perez-Vicente, R., Balis, J. U., Dudley, W., Davey, A., and Terry, J. K. Minari, Septem-ber 2024. URL https://doi.org/10.5281/ zenodo.13767625 .Yu, T., Thomas, G., Yu, L., Ermon, S., Zou, J. Y., Levine, S., Finn, C., and Ma, T. Mopo: Model-based offline policy optimization. Advances in Neural Information Processing Systems , 33:14129–14142, 2020. Yu, T., Kumar, A., Rafailov, R., Rajeswaran, A., Levine, S., and Finn, C. Combo: Conservative offline model-based policy optimization. Advances in neural information processing systems , 34:28954–28967, 2021. Zhang, R., Luo, Z., Sj ¨olund, J., Sch ¨on, T., and Mattsson, P. Entropy-regularized diffusion policy with q-ensembles for offline reinforcement learning. Advances in Neural Information Processing Systems , 37:98871–98897, 2024. 11 Epistemic Robust Offline Reinforcement Learning 
+
+# A. Appendix 
+
+This appendix provides literature context, theoretical foundations, algorithmic details, and extended empirical results that support our main findings. We begin in Section A.1 with a review of related work on epistemic uncertainty modeling and robust offline reinforcement learning. Section A.2 analyzes the state visitation frequencies in the Machine Replacement problem under various behavior policies introduced in the main text. We further build on this example to study the sensitivity of the worst-case Q-function to the policy πϕ.Section A.3 presents a formal lemma and proof showing that SAC-N is a special case of our proposed framework. Section A.4 derives closed-form expressions for the worst-case Q-vectors induced by convex hull and ellipsoidal sets. Section A.5 provides pseudocode for the ERSAC algorithmic variants proposed in this work. Section A.6 describes the offline data generation process under different behavior policies. Section A.7 details the experimental setup, including training procedures and hyperparameters. Finally, Section A.8 presents full empirical results across environments, dataset sizes, and risk sensitivity levels, complementing the main text with additional tables and figures. 
+
+A.1. Literature review 
+
+While the motivation for offline RL originates primarily from safety, cost, and deployment constraints in domains such as healthcare, robotics, and industrial control, recent work highlights its broader benefits, including improved generalization and sample efficiency when combined with online learning (Ball et al., 2023; Jelley et al., 2024). Offline data can stabilize learning and accelerate convergence through pretraining or regularization (Kumar et al., 2022). However, the absence of environment interaction exacerbates challenges like overestimation and error compounding, especially when using deep value function approximators. These failures are often attributed to epistemic uncertainty in out of distribution state-action pairs, where neural networks are known to make overconfident predictions (Lakshminarayanan et al., 2017; Kendall & Gal, 2017). Ensemble-based and Bayesian methods partially mitigate this by explicitly modeling uncertainty, highlighting the need for structured epistemic reasoning in offline settings. 
+
+Model-free methods primarily focus on constraining the learned policy or value estimates to remain within the support of the dataset, thereby mitigating extrapolation errors. One class of such methods, known as policy constraint methods, restricts the learned policy to stay close to the behavior policy. This reduces the likelihood of selecting actions not well represented in the data. Approaches like BCQ (Fujimoto et al., 2018), BEAR (Kumar et al., 2019), and BRAC (Wu et al., 2019) explicitly enforce such constraints using divergence penalties or support matching. Another class focuses on value regularization, where conservative value estimates discourage overoptimistic Q-values for out-of-distribution actions. Notably, CQL (Kumar et al., 2020) enforces a soft lower-bound on Q-values, while EDAC (An et al., 2021) and other ensemble-based methods use Q-function diversity to reduce overestimation risk. More recent work has revisited how generalization influences error propagation in offline RL. DMG (Mao et al., 2024b) shows that limited extrapolation beyond the dataset can be beneficial when properly controlled, introducing a doubly - mild Bellman backup that blends in -sample and mildly generalized actions to reduce overestimation without fully suppressing generalization. A closely related line of work targets distribution shift in both states and actions. SCAS (Mao et al., 2024a) performs OOD state correction using learned dynamics while simultaneously suppressing OOD actions, offering a unified mechanism for preventing harmful extrapolation during policy improvement. 
+
+Model-based methods instead aim to learn an explicit model of the environment’s dynamics, which can be used for policy learning or evaluation via simulated rollouts. Examples include MOPO (Yu et al., 2020), which penalizes uncertainty in model rollouts, and MOReL (Kidambi et al., 2020), which builds a pessimistic MDP based on model confidence. COMBO (Yu et al., 2021) combines model-based rollouts with conservative value estimation to balance optimism and safety. Other notable directions include trajectory optimization and decision-based methods, such as Decision Transformer (DT) (Chen et al., 2021) and Implicit Q-Learning (IQL) (Kostrikov et al., 2021), which cast offline RL as a supervised learning problem over sequences or value distributions. Additionally, imitation-based methods like BAIL (Chen et al., 2020) interpolate between behavior cloning and value-based methods using uncertainty-aware selection of demonstration trajectories. We refer the reader to (Levine et al., 2020; Prudencio et al., 2023) for comprehensive review of offline RL algorithms. While uncertainty quantification is well studied in supervised learning and Bayesian RL (Ghavamzadeh et al., 2015), 12 Epistemic Robust Offline Reinforcement Learning 
+
+its structured application in offline reinforcement learning remains underexplored. Traditional methods often conflate epistemic and aleatoric uncertainty or rely on coarse approximations such as ensemble minima, which can misrepresent uncertainty in regions with limited data. Recent work has begun to address these limitations by introducing methods that model epistemic uncertainty more explicitly. For example, (Filos et al., 2022) propose Epistemic Value Estimation (EVE), which provides a task-aware mechanism for quantifying value uncertainty in offline settings. Similarly, (Shi & Chi, 2022) explore distributionally robust model-based offline RL using uncertainty sets over dynamics to improve robustness to model misspecification. Other approaches such as (Panaganti et al., 2022) adopt a risk-sensitive view, incorporating epistemic uncertainty directly into policy optimization to avoid unsafe actions. Ensemble-based methods are a practical way to capture epistemic uncertainty. They have been used in both model-based settings (e.g., MOReL (Kidambi et al., 2020)) and model-free methods (e.g., EDAC (An et al., 2021)) to stabilize learning by regularizing the Bellman backups or penalizing high-variance predictions. Ensemble-based epistemic modeling has also been explored in diffusion-policy frameworks. For example, entropy-regularized diffusion policies with Q-ensembles (Zhang et al., 2024) leverage ensemble disagreement as an uncertainty signal to guide policy sampling toward high-density, reliable regions of the dataset, providing a strong empirical demonstration of the benefits of epistemic-aware value estimation in offline RL. However, ensembles can be computationally expensive and coarse. More structured representations of epistemic uncertainty have been proposed using Epistemic Neural Networks (ENNs) (Osband et al., 2023), which offer a flexible way to encode and sample from belief distributions over value functions. Building on these insights, our work introduces a structured, epistemic-robust alternative to ensemble pessimism by defining uncertainty sets over Q-values, allowing richer representations and more targeted conservatism in offline RL. Additionally, benchmarking offline RL remains challenging due to limited dataset diversity. While D4RL (Fu et al., 2020) and RL Unplugged (Gulcehre et al., 2020) have improved standardization, existing benchmarks largely omit risk sensitive evaluation settings. Such behavior policies tend to handle high cost differently depending on whether they are risk averse or risk seeking. This implicit preference skews the data distribution and contributes to epistemic uncertainty, particularly in cases with less data. Despite its significance, there is currently no benchmark that allows systematic control over the risk sensitivity of the behavior policy to study its impact on offline RL performance. Recent work on cross-domain offline RL, such as OTDF (Lyu et al., 2025), highlights that even moderate dynamics mismatch can significantly degrade offline performance, further motivating controlled data generation and risk-sensitive evaluation protocols. As a first step toward addressing this gap, we introduce a framework that enables controlled variation of behavioral risk preferences using dynamic expectiles. This allows us to generate offline datasets with adjustable risk profiles, facilitating principled evaluation of offline RL algorithms under different uncertainty conditions. Our proposed framework is aligned with recent efforts like the Minari platform proposed by (Younis et al., 2024), but uniquely focuses on how risk sensitivity shapes epistemic uncertainty in offline datasets. Building on these insights, this work introduces Epistemic Robust Soft Actor-Critic (ERSAC) , a unified framework for offline RL that models epistemic uncertainty through structured uncertainty sets over Q-values. By replacing ensemble based pessimism with compact and expressive set constructions such as box, convex hull, and ellipsoids, ERSAC enables conservative yet flexible value estimation and policy optimization. We show that SAC-N arises as a special case under box sets, and further extend the framework using Epistemic Neural Networks (Epinet) to construct ellipsoidal uncertainty sets in closed form, reducing runtime without sacrificing performance. These contributions open several promising directions for future work, including integrating distributional robustness into set construction, incorporating risk-aware objectives, extending epistemic reasoning to multi-agent and hierarchical settings, and establishing theoretical guarantees such as generalization bounds and regret under epistemic uncertainty. Together, our results highlight the potential of structured and efficient epistemic modeling as a foundation for safe, generalizable, and scalable offline reinforcement learning. 
+
+A.2. Machine Replacement example 
+
+A.2.1. S ENSITIVITY OF WORST -CASE Q VECTOR TO πϕ
+
+While the box set yields a fixed q∗(s, · ; ϕ) independent of the policy, both the convex hull and ellipsoidal sets adapt their minimizer q∗(s, · ; ϕ) to πϕ(· | s). This flexibility introduces a richer learning dynamic, allowing the Bellman backup to respond differently depending on the current policy. This behavior can be viewed from a game-theoretic point of view. At each state s, the agent proposes a policy πϕ(· | s), and an adversary selects the worst-case Q-vector q∗(s, · ; ϕ) ∈ U θ (s)
+
+that minimizes the expected return ⟨πϕ(· | s), q ⟩. When the uncertainty set contains multiple non-dominated extremal 13 Epistemic Robust Offline Reinforcement Learning 
+
+τ 1 2 3 4 5 6 7 8 9 10 
+
+0.1 0 0 0 0 0 0 0 0 1 10.5 0 0 0 0 0 0 1 1 1 10.9 0 0 0 0 0 1 1 1 1 1   
+
+> Table 3. Optimal actions for each state under different expectile levels τ. Action 0 corresponds to progressing forward; Action 1 corresponds to jumping to state 1 with -100 reward.
+
+τ = 0 .1 τ = 0 .5 τ = 0 .9 
+
+> Figure 1. State visitation frequency distributions under different expectile policies.
+
+points, as is the case for convex hulls and ellipsoids, the Bellman update becomes more responsive capable of adjusting its conservativeness based on the agent’s action preferences. To illustrate this, consider the Machine Replacement example discussed above. Figure 2 highlights this adaptivity across selected states by comparing the q∗ responses of the three sets 
+
+Ubox (s), Uhull (s) and Uell (s) as the policy π varies uniformly over the probability simplex. This behavior leads to a more expressive training process that is sensitive to the epistemic structure captured by the generative model.   
+
+> (a) (b) (c)
+
+Box Convex Hull Ellipsoid     
+
+> Figure 2. (a)–(c): Uncertainty sets and worst-case policy evaluations for states 0, 5, and 10 in the machine replacement example at epoch 1. Each subplot illustrates the distribution of ensemble Q-values along with the corresponding box, convex hull, and ellipsoidal uncertainty sets. Markers X indicate the worst-case Q-value q∗under different policies π.
+
+This adaptivity is particularly important in offline settings, where data coverage is often limited or biased. Structured uncertainty sets enable value estimates that are conservative in underexplored regions while remaining responsive in well-covered ones, leading to improved generalization without excessive pessimism. The construction of these sets connects with the recent evolving literature in Estimate-then-Optimize Conditional Robust Optimization (CRO). One line of work as proposed in (Chenreddy et al., 2022; Goerigk & Kurtz, 2023; Ohmori, 2021; Sun et al., 2023; Blanquero et al., 2023) focuses on calibrating uncertainty sets over realizations drawn from a conditional 14 Epistemic Robust Offline Reinforcement Learning 
+
+distribution F (q | s). These methods construct high-probability sets U(s) ⊂ Rd such that for a random realization q ∼ F (· | 
+
+s), it holds that P(q ∈ U (s)) ≥ 1 − δ. Such calibrated sets enable robust decisions of the form max π∈Π min q∈U (s) π⊤q, 
+
+that ensure performance against probable realizations of the uncertain quantity q, conditioned on covariates s.A second line of work, common in distributionally robust optimization and robust RL constructs ambiguity sets over the distribution F (· | s) itself, e.g., using moment constraints, Wasserstein balls, or scenario-based support ((Bertsimas et al., 2022; McCord, 2019; Wang & Jacquillat, 2020; Wang et al., 2023; Nguyen et al., 2021; Esteban-P´ erez & Morales, 2022)). In this setting, one solves: 
+
+max  
+
+> π∈Π
+
+min   
+
+> F∈F (s)
+
+Eq∼F [π⊤q] = max  
+
+> π∈Π
+
+min  
+
+> ¯q∈U (s)
+
+π⊤ ¯q, 
+
+where F(s) is an ambiguity set over distributions and U(s) := {Eq∼F [q] : F ∈ F (s)} is the implied uncertainty set over expected values. Our work aligns more closely with the former, wherein we directly parameterize and sample from a learned conditional distribution bF qθ (s), and define a structured uncertainty set U( bF qθ (s)) over sampled realizations q ∼ bF qθ (s). This allows us to reason about epistemic variability in Q-values without requiring a full ambiguity set over F qθ (s). Bridging these two lines of work could lead to rich formulations for epistemically robust reinforcement learning, which we leave for future work. 
+
+A.3. Proof for Proposition3.1 
+
+We begin by analyzing the robust estimator term present in both the conservative target value (9) and the policy loss (11): 
+
+min q∈U θ (s)⟨πϕ(· | s), q ⟩. Given that the uncertainty set is defined as a coordinate-wise product box and that πϕ(· | s) ≥ 0,the minimum must be achieved at the coordinate-wise lower bound: 
+
+q∗(a) = essinf ˜q∼F qθ (s)[˜ q(a)] = essinf ˜i∼U (N )[Qθ˜i (s, a )] = min   
+
+> i∈[N]
+
+Qθi (s, a ), ∀a ∈ A .
+
+The robust evaluation then becomes, 
+
+min  
+
+> q∈U θ(s)
+
+⟨πϕ(· | s), q ⟩ = X
+
+> a∈A
+
+πϕ(a | s) min   
+
+> i∈[N]
+
+Qθi (s, a )= Ea∼πϕ(·| s)
+
+
+
+min   
+
+> i∈[N]
+
+Qθi (s, a )
+
+
+
+Hence, the conservative target value becomes 
+
+y(r, s ′) = r + γ Ea′∼πϕ(·| s′)
+
+
+
+min   
+
+> i∈[N]
+
+Qθi (s′, a ′) − α log πϕ(a′ | s′)
+
+
+
+= Ea′∼πϕ(·| s′)
+
+
+
+r + γ  min   
+
+> i∈[N]
+
+Qθi (s′, a ′) − α log πϕ(a′ | s′)
+
+= Ea′∼πϕ(·| s′)
+
+y(r, s ′, a ′)
+
+We thus have that, 15 Epistemic Robust Offline Reinforcement Learning 
+
+LRQ(θ) = E(s,a,r,s ′)∼D   
+
+> ˜q∼Fqθ(s)
+
+h
+
+(˜ q(a) − y(r, s ′)) 2i
+
+= E(s,a,r,s ′)∼D   
+
+> ˜q∼Fqθ(s)
+
+
+
+˜q(a)2 − 2˜ q(a) Ea′∼πϕ(·| s′) [y(r, s ′, a ′)] + Ea′∼πϕ(·| s′) [y(r, s ′, a ′)] 2
+
+
+
+= E(s,a,r,s ′)∼D   
+
+> ˜q∼Fqθ(s)
+
+
+
+˜q(a)2 − 2˜ q(a) Ea′ [y(r, s ′, a ′)] + Ea′
+
+y(r, s ′, a ′)2 
+
++ E(s,a,r,s ′)∼D 
+
+Ea′ [y(r, s ′, a ′)] 2 − Ea′ [y(r, s ′, a ′)2]
+
+= E(s,a,r,s ′)∼D   
+
+> ˜q∼Fqθ(s)
+> a′∼πϕ(·| s′)
+
+˜q(a)2 − 2˜ q(a) y(r, s ′, a ′) + y(r, s ′, a ′)2 + C
+
+= E(s,a,r,s ′)∼D   
+
+> ˜q∼Fqθ(s)
+> a′∼πϕ(·| s′)
+
+h
+
+(˜ q(a) − y(r, s ′, a ′)) 2i
+
++ C
+
+= 1
+
+N
+
+X
+
+> i
+
+E(s,a,r,s ′)∼D 
+
+> a′∼πϕ(·| s′)
+
+h
+
+(Qθi (s, a ) − y(r, s ′, a ′)) 2i
+
++ C
+
+= 1
+
+N
+
+X
+
+> i
+
+LQ(θi) + C
+
+where 
+
+C := E(s,a,r,s ′)∼D 
+
+h Ea′∼πϕ(·| s′) [y(r, s ′, a ′)] 2i
+
+− E(s,a,r,s ′)∼D 
+
+> a′∼πϕ(·| s′)
+
+y(r, s ′, a ′)2
+
+due to ˜q(a) being independent of y(r, s ′, a ′) given (s, a, r, s ′).On the other hand, we have that: 
+
+J Rπ (ϕ) = Es∼D , a ∼πϕ(·| s)
+
+
+
+min  
+
+> q∈U θ(s)
+
+⟨πϕ(· | s), q ⟩ − α log πϕ(a | s)
+
+
+
+= Es∼D , a ∼πϕ(·| s)
+
+
+
+Ea′∼πϕ(·| s)
+
+ min   
+
+> i∈[N]
+
+Qθi (s, a ′) − α log πϕ(a | s)
+
+
+
+= Es∼D , a ∼πϕ(·| s)
+
+
+
+min   
+
+> i∈[N]
+
+Qθi (s, a ) − α log πϕ(a | s)
+
+
+
+= Jπ (ϕ).
+
+This completes our proof. 
+
+A.4. Derivations of Worst-Case Q-vector Expressions 
+
+This section provides derivations supporting the closed-form expressions of the worst-case Q-vector q∗(s, ·; ϕ) under the convex hull and ellipsoidal uncertainty sets, as referenced in Section 4. These derivations clarify how the worst-case backup depends on the policy πϕ.16 Epistemic Robust Offline Reinforcement Learning 
+
+CONVEX HULL SET 
+
+The worst-case expected Q-value over the convex hull uncertainty set is given by: 
+
+min    
+
+> q∈U hull (bFqθ(s))
+
+Ea∼πϕ(·| s)[q(a)] = min  
+
+> λ≥0
+> PNi=1 λi=1
+
+Ea∼πϕ(·| s)
+
+" NX
+
+> i=1
+
+λi qθ (s, a, ˜zi)
+
+#
+
+= min  
+
+> λ≥0
+> PNi=1 λi=1
+> N
+
+X
+
+> i=1
+
+λi Ea∼πϕ(·| s) [qθ (s, a, ˜zi)] 
+
+≥ min   
+
+> i∈[N]
+
+Ea∼πϕ(·| s) [qθ (s, a, ˜zi)] = Ea∼πϕ(·| s) [qθ (s, a, z ∗(s, ϕ ))] ,
+
+where z∗(s, ϕ ) ∈ arg min i Ea∼πϕ(·| s) [qθ (s, a, ˜zi)] .ELLIPSOIDAL SET 
+
+For the ellipsoidal set, we consider the constrained optimization problem: 
+
+min    
+
+> q∈U ell (bFqθ(s))
+
+Ea∼πϕ(·| s)[q(a)] = min q:(q−ˆμ(s)) ⊤ bΣ( s)−1(q−ˆμ(s)) ≤ bΥ( s)2
+
+⟨πϕ(· | s), q ⟩
+
+= min  
+
+> ζ:
+> ∥ζ∥≤ bΥ( s)
+
+⟨πϕ(· | s), ˆμ(s) + bΣ1/2(s) ζ⟩≥ ⟨ πϕ(· | s), ˆμ(s)⟩ − bΥ( s) bΣ1/2(s) πϕ(· | s)
+
+=
+
+*
+
+πϕ(· | s), ˆμ(s) − bΥ( s) · bΣ( s) πϕ(· | s)
+
+bΣ1/2(s) πϕ(· | s)
+
++
+
+,
+
+where we applied the Cauchy-Schwarz inequality in the third step. This expression matches the closed-form solution for the worst-case Q-vector under the ellipsoidal uncertainty set. 
+
+A.5. Algorithmic Implementation Details 
+
+In this section, we present the pseudocode for the algorithms discussed in the main paper. 17 Epistemic Robust Offline Reinforcement Learning 
+
+Algorithm 1 Epistemic Robust SAC Training 
+
+Require: Initial policy parameters ϕ, Q parameters θ, target Q parameters θ′, offline replay buffer D, learning rates ηQ, η π ,target update rate τ
+
+Ensure: Updated policy ϕ and critic parameters θ
+
+1: for each epoch do 
+
+2: Sample minibatch B := {(s, a, r, s ′)} from D
+
+3: Compute target: 
+
+y(r, s ′) ← r + γ
+
+
+
+min  
+
+> q∈U θ′(s′)
+
+⟨πϕ(· | s′), q ⟩ − α Ea′∼πϕ [log πϕ(a′ | s′)] 
+
+
+
+4: Critic update: 
+
+θ ← θ − ηQ · 2
+
+> |B|
+
+X
+
+> (s,a,r,s ′)∈B
+
+E˜z∼Fz
+
+h
+
+(qθ (s, a, ˜z) − y(r, s ′)) · ∇ θ qθ (s, a, ˜z)
+
+i
+
+5: Compute worst-case value vectors: 
+
+q∗(s, · ; ϕ) ← arg min  
+
+> q∈U θ(s)
+
+⟨πϕ(· | s), q ⟩
+
+6: Actor update: 
+
+ϕ ← ϕ + ηπ · 1
+
+> |B|
+
+X
+
+> s∈B
+
+ X 
+
+> a∈A
+
+q∗(s, a ; ϕ) ∇ϕπϕ(a | s) − α ∇ϕEa∼πϕ(·| s)[log πϕ(a | s)] 
+
+
+
+7: Update target network: 
+
+θ′ ← τ θ + (1 − τ )θ′
+
+8: end for 
+
+18 Epistemic Robust Offline Reinforcement Learning 
+
+Algorithm 2 Sample-based Epistemic Robust SAC with Box (ERSAC-B) and Convex Hull (ERSAC-CH) Sets 
+
+Require: Initial policy parameters ϕ, Q parameters θ, target Q parameters θ′, offline data buffer D, learning rates ηQ, η π ,target update rate τ , sample size N
+
+Ensure: Updated parameters θ, ϕ and target parameters θ′
+
+1: for each epoch do 
+
+2: Sample minibatch B := {(s, a, r, s ′)} from D.
+
+3: Sample N i.i.d. latent variables {˜zi}Ni=1 from Fz .
+
+4: Construct sampled Q-values: 
+
+Q(s) ← { qθ (s, ·, ˜zi)}Ni=1 , Q(s′) ← { qθ′ (s′, ·, ˜zi)}Ni=1 .
+
+5: Construct robust targets: 
+
+6: (Box set) 
+
+ybox (r, s ′) = r + γ
+
+ X
+
+> a∈A
+
+πϕ(a | s′) · min   
+
+> i∈[N]
+
+qθ′ (s′, a, ˜zi) − α X
+
+> a∈A
+
+πϕ(a | s′) log πϕ(a | s′)
+
+
+
+.
+
+7: (Convex Hull set) 
+
+yhull (r, s ′) = r + γ
+
+
+
+min  
+
+> i∈[N]
+
+X
+
+> a∈A
+
+πϕ(a | s′) · qθ′ (s′, a, ˜zi) − α X
+
+> a∈A
+
+πϕ(a | s′) log πϕ(a | s′)
+
+
+
+.
+
+8: Critic update (common): 
+
+θ ← θ − ηQ · 2
+
+|B| 
+
+X
+
+> (s,a,r,s ′)∈B
+
+E˜z∼Fz
+
+h qθ (s, a, ˜z) − y(r, s ′) · ∇ θ qθ (s, a, ˜z)
+
+i
+
+.
+
+9: Actor update: 
+
+10: (Box set) 
+
+ϕ ← ϕ + ηπ · 1
+
+|B| 
+
+X
+
+> s∈B
+
+X
+
+> a∈A
+
+min   
+
+> i∈[N]
+
+qθ (s, a, ˜zi) ∇ϕπϕ(a | s) − α ∇ϕEa∼πϕ(·| s)
+
+ log πϕ(a | s)!
+
+.
+
+11: (Convex Hull set) 
+
+i∗ = arg min  
+
+> i∈[N]
+
+X
+
+> a∈A
+
+πϕ(a | s) qθ (s, a, ˜zi).ϕ ← ϕ + ηπ · 1
+
+|B| 
+
+X
+
+> s∈B
+
+X
+
+> a∈A
+
+qθ (s, a, ˜zi∗ ) · ∇ ϕπϕ(a | s) − α · ∇ ϕEa∼πϕ(·| s)
+
+ log πϕ(a | s).
+
+12: Target network update: 
+
+θ′ ← τ θ + (1 − τ )θ′.
+
+13: end for 
+
+19 Epistemic Robust Offline Reinforcement Learning 
+
+Algorithm 3 Sample-based Epistemic Robust SAC with Ellipsoidal Uncertainty (ERSAC-E) 
+
+Require: Initial policy parameters ϕ, Q parameters θ, target Q parameters θ′, offline data replay buffer D, learning rates 
+
+ηQ, η π , target update rate τ , sample size N
+
+Ensure: Updated parameters θ, ϕ and target parameters θ′
+
+1: for each epoch do 
+
+2: Sample minibatch B := {(s, a, r, s ′)} from D
+
+3: Sample N i.i.d. realizations {˜zi}Ni=1 from Fz
+
+4: Compute: 
+
+ˆμ(s) ← 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+qθ (s, ·, ˜zi)
+
+bΣ( s) ← 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+ qθ (s, ·, ˜zi) − ˆμ(s)  qθ (s, ·, ˜zi) − ˆμ(s)⊤
+
+bΥ( s) ← inf 
+
+(
+
+Υ : 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1
+
+h
+
+(qθ (s, ·, ˜zi) − ˆμ(s)) ⊤ bΣ( s)−1(qθ (s, ·, ˜zi) − ˆμ(s)) ≤ Υ2i
+
+≥ υ
+
+)
+
+ˆμ(s′) ← 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+qθ′ (s′, ·, ˜zi)
+
+bΣ( s′) ← 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+(qθ′ (s′, ·, ˜zi) − ˆμ(s′))( qθ′ (s′, ·, ˜zi) − ˆμ(s′)) ⊤
+
+bΥ( s′) ← inf {Υ| 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1{(qθ′ (s′, ·, ˜zi) − ˆμ(s′)) ⊤ bΣ( s′)−1(qθ′ (s′, ·, ˜zi) − ˆμ(s′)) ≤ Υ2} ≥ υ}
+
+5: Compute target: 
+
+y(r, s ′) ← r + γ
+
+
+
+⟨πϕ(· | s′), ˆμ(s′)⟩ − bΥ( s′) bΣ1/2(s′)πϕ(· | s′)
+
+− α Ea′∼πϕ
+
+ log πϕ(a′ | s′)
+
+6: Critic update: 
+
+θ ← θ − ηQ · 2
+
+> |B|
+
+X
+
+> (s,a,r,s ′)∈B
+
+E˜z∼Fz
+
+h
+
+(qθ (s, a, ˜z) − y(r, s ′)) ∇θ qθ (s, a, ˜z)
+
+i
+
+7: Actor update: 
+
+ϕ ← ϕ + ηπ · 1
+
+> |B|
+
+X
+
+> s∈B
+
+X
+
+> a∈A
+
+
+
+ˆμ(s, a ) − bΥ( s) · [bΣ( s)πϕ(·| s)](a)
+
+∥bΣ1/2(s)πϕ(·| s)∥
+
+
+
+∇ϕπϕ(a | s) − α ∇ϕEa∼πϕ(·| s) [log πϕ(a | s)] 
+
+8: Update target network: 
+
+θ′ ← τ θ + (1 − τ )θ′
+
+9: end for 
+
+20 Epistemic Robust Offline Reinforcement Learning 
+
+Algorithm 4 Sample-based ERSAC with Ellipsoidal Uncertainty using Epinet (ERSAC-E-Epi) 
+
+Require: Initial policy parameters ϕ; Q-network parameters θ = ( θμ, θ σ ); target network parameters θ′ = ( θ′
+
+> μ
+
+, θ ′ 
+
+> σ
+
+); offline data buffer D; learning rates ηQ, η π ; target update rate τ ; noise scale ¯σ; regularization coefficients λμ, λ σ ; sample size 
+
+N
+
+Ensure: Updated parameters ϕ, θ and target parameters θ′
+
+1: for each epoch do 
+
+2: Sample minibatch ¯B := {(s, a, r, s ′, c )} from augmented buffer ¯D, where c ∼ Unif( Sdz )
+
+3: Sample N i.i.d. latent indices {˜zi}Ni=1 ∼ N (0 , I )
+
+4: Construct uncertainty set (Epinet ellipsoid): 
+
+5: Compute mean: 
+
+ˆμ(s′) ← μθ′ 
+
+> μ
+
+(s′)
+
+6: Compute Epinet variance features: 
+
+¯σθ′ (s′, a ) ← ¯σLθ′
+
+> σ
+
+ ψθ′ 
+
+> μ
+
+(s′), a  + ¯ σP  ψθ′ 
+
+> μ
+
+(s′), a 
+
+7: Construct covariance: 
+
+Σθ′ (s′)a,a ′ ← ¯σθ′ (s′, a ), ¯σθ′ (s′, a ′)
+
+8: Compute robust target: 
+
+y(r, s ′) ← r + γ
+
+
+
+⟨πϕ(· | s′), ˆμ(s′)⟩ − ρ Σ1/2 
+
+> θ′
+
+(s′)πϕ(· | s′) 2
+
+− α Ea′∼πϕ [log πϕ(a′ | s′)] 
+
+
+
+9: Critic update (mean head): 
+
+θμ ← θμ − 2ηQ · 1 
+
+> |¯B|
+
+X 
+
+> (s,a,r,s ′,c )∈¯B
+
+E˜z∼N (0 ,I )
+
+h
+
+(qθ (s, a, ˜z) − y(r, s ′) − ¯σ⟨c, ˜z⟩)∇θμ μθμ (s, a )
+
+i
+
++ 2 λμθμ
+
+10: Critic update (Epinet head): 
+
+θσ ← θσ − 2ηQ · 1 
+
+> |¯B|
+
+X 
+
+> (s,a,r,s ′,c )∈¯B
+
+E˜z∼N (0 ,I )
+
+h
+
+(qθ (s, a, ˜z) − y(r, s ′) − ¯σ⟨c, ˜z⟩)∇θσ σLθσ (ψθμ (s), a, ˜z)
+
+i
+
++ 2 λσ θσ
+
+11: Actor update: 
+
+ϕ ← ϕ + ηπ · 1
+
+| ¯B| 
+
+X 
+
+> s∈¯B
+
+ X
+
+> a∈A
+
+
+
+ˆμ(s, a ) − ρ · Σθ (s)πϕ(a | s)
+
+Σ1/2 
+
+> θ
+
+(s)πϕ(· | s)
+
+
+
+∇ϕπϕ(a | s) − α · ∇ ϕEa∼πϕ [log πϕ(a | s)] 
+
+
+
+12: Update target networks: 
+
+θ′ ← τ θ + (1 − τ )θ′
+
+13: end for 
+
+21 Epistemic Robust Offline Reinforcement Learning 
+
+A.6. Risk-Sensitive Offline Data Generation Algorithm 5 Offline Data Generation via Dynamic Expectile Risk Policies 
+
+Require: Environment M; risk level τ ∈ (0 , 1) ; dataset size ND ; initial policy parameters ϕ; Q parameters θ; target Q parameters θ′; learning rates ηQ, η π ; exploration rate ϵ; number of samples Ns for P (· | s, a ) approximation 
+
+Ensure: Offline dataset D 
+
+> 1:
+
+Initialize policy parameters ϕ and value function parameters θ 
+
+> 2:
+
+for each epoch do  
+
+> 3:
+
+Initialize state s 
+
+> 4:
+
+while episode not done do  
+
+> 5:
+
+Sample transition (s, a, r, s ′) by executing current policy πϕ in environment M 
+
+> 6:
+
+Compute expectile target: 
+
+y ← sup 
+
+
+
+z : Es′∼ ˆpNs (·| s,a )
+
+
+
+τ − I
+
+
+
+z < r + γ max  
+
+> a′
+
+Qθ′ (s′, a ′)
+
+
+
+·
+
+
+
+z − r − γ max  
+
+> a′
+
+Qθ′ (s′, a ′)
+
+ 
+
+≤ 0
+
+ 
+
+> 7:
+
+where ˆpNs (· | s, a ) is the empirical distribution from Ns resamples of transitions from (s, a ) 
+
+> 8:
+
+Update value function: 
+
+θ ← θ − ηQ · ∇ θ (Qθ (s, a ) − y)2 
+
+> 9:
+
+Update policy: 
+
+ϕ ← ϕ + ηπ · Ea∼πϕ(·| s) [∇ϕ log πϕ(a | s) · Qθ (s, a )]  
+
+> 10:
+
+Move to next state: s ← s′ 
+
+> 11:
+
+end while  
+
+> 12:
+
+Update target network: 
+
+θ′ ← τ θ + (1 − τ )θ′ 
+
+> 13:
+
+end for  
+
+> 14:
+
+Offline Data Collection with ϵ-Greedy Exploration:  
+
+> 15:
+
+Initialize empty dataset D ← ∅  
+
+> 16:
+
+while |D| < N D do  
+
+> 17:
+
+Observe state s from environment M 
+
+> 18:
+
+if RandomUniform(0 , 1) < ϵ then  
+
+> 19:
+
+Sample action a ∼ Uniform( A) 
+
+> 20:
+
+else  
+
+> 21:
+
+Sample action a ∼ πϕ(· | s) 
+
+> 22:
+
+end if  
+
+> 23:
+
+Execute action a in environment to observe r and s′ 
+
+> 24:
+
+Store (s, a, r, s ′) in buffer D 
+
+> 25:
+
+end while  
+
+> 26:
+
+Return dataset D
+
+A.7. Training algorithm details 
+
+We evaluate all algorithms on a tabular Machine Replacement MDP with S = 10 states and A = 2 actions. Transition dynamics are defined probabilistically, with increasing expected costs for continued operation and a reset mechanism triggered by replacement actions. Rewards are state- and transition-dependent, with negative values to simulate maintenance costs and catastrophic penalties for failure. To construct behavior policies, we implement risk-sensitive value iteration using the expectile risk measure at levels 
+
+τ ∈ { 0.1, 0.5, 0.9}. Expectile backups are computed by solving a convex root-finding problem for each state-action pair. Policies are derived via one-hot argmax over the resulting Q-values. We generate offline trajectories using the expectile-optimal policy πτ for each τ . At each step, with probability 0.1, a uniformly random action is taken for exploration. We vary the number of transitions M ∈ { 100 , 1000 , 10000 } and use ten 22 Epistemic Robust Offline Reinforcement Learning 
+
+Env DS τ SAC-N CH-N Ell-N Ell 0.9-N Beh. Policy Machine Replacement 
+
+10 × 0.1 80 ± 3 85 ± 2 87 ± 1 88 ± 2 86 ± 3
+
+100 × 0.1 97 ± 1 97 ± 1 95 ± 2 96 ± 2 86 ± 3
+
+1000 × 0.1 98 ± 2 98 ± 2 96 ± 2 96 ± 1 86 ± 3
+
+10 × 0.5 87 ± 2 88 ± 2 90 ± 2 91 ± 2 100 ± 0
+
+100 × 0.5 97 ± 1 98 ± 1 92 ± 2 94 ± 2 100 ± 0
+
+1000 × 0.5 98 ± 2 98 ± 2 98 ± 2 99 ± 0 100 ± 0
+
+10 × 0.9 85 ± 2 86 ± 2 90 ± 2 90 ± 2 92 ± 2
+
+100 × 0.9 96 ± 2 96 ± 2 95 ± 2 96 ± 2 92 ± 2
+
+1000 × 0.9 96 ± 2 96 ± 2 96 ± 2 96 ± 1 92 ± 2
+
+RiverSwim 
+
+10 × 0.1 37 ± 4 64 ± 2 57 ± 3 66 ± 3 −20 ± 3
+
+100 × 0.1 92 ± 2 94 ± 2 94 ± 3 94 ± 3 −20 ± 3
+
+1000 × 0.1 99 ± 1 100 ± 0 100 ± 0 100 ± 0 −20 ± 3
+
+10 × 0.5 56 ± 2 60 ± 2 60 ± 2 62 ± 1 100 ± 0
+
+100 × 0.5 97 ± 2 99 ± 1 98 ± 1 99 ± 1 100 ± 0
+
+1000 × 0.5 99 ± 1 99 ± 1 100 ± 0 100 ± 0 100 ± 0
+
+10 × 0.9 49 ± 2 49 ± 4 48 ± 1 52 ± 3 34 ± 4
+
+100 × 0.9 99 ± 1 99 ± 1 100 ± 0 99 ± 1 34 ± 4
+
+1000 × 0.9 99 ± 1 99 ± 1 100 ± 0 100 ± 0 34 ± 4         
+
+> Table 4. Normalized returns with 90% confidence interval achieved by SAC-N, CH-N, Ell-N, and Ell 0.9-N across dataset sizes
+> {10 ×,100 ×,1000 ×} and behavior policy risk levels τ∈ { 0.1,0.5,0.9}in the Machine Replacement and RiverSwim environments. Scores are computed over 10 evaluation seeds and normalized relative to the random and optimal policy baselines. Bold and underline highlight respectively the best and worst performing method when the margin is larger or equal to one. The final column reports the return of the behavior policy used to generate the offline data.
+
+random seeds per setting. Each trajectory entry records (s, a, s ′, r ).We evaluate three risk-sensitive SAC-N variants using N = 100 Q-ensemble members. Each method includes entropy regularization with coefficient α = 0 .01 and actor-critic learning rates ηq = ηπ = 0 .01 . Target networks are updated using Polyak averaging with τ = 0 .005 .We report normalized returns with respect to the optimal and random policies: Normalized Return = Veval − Vrandom 
+
+Voptimal − Vrandom 
+
+,
+
+averaged over 1000 episodes. Returns are discounted with γ = 0 .9. We repeat all experiments across ten seeds and report the mean and standard deviation. All code is implemented in Pytorch and NumPy using vectorized operations. Root-finding in expectile computation uses a bisection method with machine epsilon tolerance. 
+
+A.8. Detailed results 
+
+This section presents more details about the experiments that are discussed in the main text of the paper. Table 4 presents additional details on the experiments involving the tabular tasks (i.e., Machine Replacement and RiverSwim). Table 5 presents more detailed statistics about the experiments involving the CartPole and LunarLander Gym environments. Table 6 follows with a report of the runtimes (in s/epoch) of the five offline RL algorithms in the LunarLander Gym. Finally, Figure 3 compares the entropy of the policies obtained from four ER-SAC variants during each epoch of the training. As remarked in the main text, Box-based methods (B-N) maintain consistently lower entropy than CH-N , Ell-N , and Ell-Epi .
+
+A.9. Additional Experiments on Atari Environments 
+
+To evaluate the scalability of ERSAC models to high dimensional observation spaces, we additionally experiment on a subset of Atari 2600 environments from the Arcade Learning Environment (ALE). These experiments serve as a test for 23 Epistemic Robust Offline Reinforcement Learning 
+
+Env DS τ SAC-N CH-N Ell 0.9-N Ell-Epi Ell-Epi ∗ Beh. Policy CartPole 
+
+1k 0.1 84 ± 3 81 ± 2 86 ± 1 84 ± 1 85 ± 2 86 ± 2
+
+10k 0.1 92 ± 2 94 ± 2 100 ± 0 100 ± 0 100 ± 0 86 ± 2
+
+100k 0.1 100 ± 0 100 ± 0 100 ± 0 100 ± 0 100 ± 0 86 ± 2
+
+1k 0.5 70 ± 2 72 ± 1 73 ± 3 72 ± 2 71 ± 2 100 ± 0
+
+10k 0.5 97 ± 2 99 ± 1 100 ± 0 100 ± 0 100 ± 0 100 ± 0
+
+100k 0.5 100 ± 0 100 ± 0 100 ± 0 100 ± 0 100 ± 0 100 ± 0
+
+1k 0.9 73 ± 2 70 ± 3 78 ± 2 80 ± 1 75 ± 2 83 ± 2
+
+10k 0.9 100 ± 0 100 ± 0 100 ± 0 100 ± 0 100 ± 0 83 ± 2
+
+100k 0.9 100 ± 0 100 ± 0 100 ± 0 100 ± 0 100 ± 0 83 ± 2
+
+LunarLander 
+
+1k 0.1 72 ± 1 77 ± 1 98 ± 2 97 ± 3 98 ± 2 94 ± 3
+
+10k 0.1 94 ± 2 98 ± 1 102 ± 1 102 ± 3 103 ± 1 94 ± 2
+
+100k 0.1 99 ± 1 100 ± 3 106 ± 1 110 ± 3 108 ± 1 94 ± 2
+
+1k 0.5 68 ± 3 73 ± 3 96 ± 3 95 ± 1 97 ± 1 100 ± 2
+
+10k 0.5 93 ± 3 99 ± 1 100 ± 1 99 ± 1 102 ± 1 100 ± 2
+
+100k 0.5 98 ± 2 100 ± 1 102 ± 2 108 ± 2 105 ± 2 100 ± 2
+
+1k 0.9 67 ± 2 73 ± 2 97 ± 2 98 ± 2 97 ± 2 78 ± 3
+
+10k 0.9 92 ± 2 92 ± 3 101 ± 2 100 ± 4 102 ± 2 78 ± 3
+
+100k 0.9 98 ± 2 101 ± 2 103 ± 1 104 ± 2 105 ± 1 78 ± 3          
+
+> Table 5. Normalized returns with 90% confidence intervals achieved by the five algorithms across dataset sizes {1k,10 k,100 k}and behavior-policy risk levels τ∈ { 0.1,0.5,0.9}in CartPole and LunarLander. Scores are averaged over 10 evaluation seeds and normalized against random and optimal baselines. Bold and underline highlight respectively the best and worst performing method when the margin is larger or equal to one.
+
+Model SAC-N CH-N Ell 0.9-N Ell-Epi Ell-Epi ∗
+
+Runtime (s/epoch) 0.35 0.42 0.56 0.60 0.10    
+
+> Table 6. Runtime per training epoch for each model in LunarLander with 100,000 offline transitions and τ= 0 .5, averaged over 10 seeds.
+
+epistemic robustness in complex domains characterized by pixel based observations, sparse and delayed rewards, and long planning horizons. Unlike the tabular and control settings, we do not introduce risk-sensitive data generation mechanisms in Atari. Instead, we focus on robustness under scale and partial coverage arising from fixed behavior policies. We evaluate all methods on the following five Atari games, Breakout, Pong, Q ∗bert, Seaquest, and Hero. These environments feature high-dimensional pixel observations, sparse or delayed rewards, and long horizons, making them well suited for evaluating robustness under limited coverage. Offline datasets are obtained from the Minari benchmark repository, which provides standardized fixed datasets collected using suboptimal behavior policies. No additional environment interaction is used during training. Unlike the earlier tabular and control experiments, we do not vary behavior policy risk sensitivity in the Atari setting. Instead, these datasets are used to test robustness under scale, partial action coverage, and high dimensional representation learning. Observations follow standard Atari preprocessing: grayscale conversion, frame stacking, and action repeat. All methods use identical convolutional encoders and differ only in the critic and policy objectives. 
+
+Baselines We compare the proposed ERSAC variants against several widely used offline reinforcement learning baselines that address extrapolation error and distributional shift through alternative forms of regularization and pessimism. Specifically, we evaluate against SAC-N , an ensemble-based Soft Actor-Critic variant that uses pessimistic Bellman backups via the minimum over critics; Conservative Q-Learning (CQL) , which enforces conservativeness by regularizing learned action values toward the behavior distribution; Implicit Q-Learning (IQL) , which avoids explicit behavior constraints by learning value functions through expectile regression; and BRAC-BCQ , a behavior regularized actor critic method that constrains policy updates to remain close to the data distribution. These baselines represent state of the art approaches for mitigating overestimation and out of distribution actions in offline reinforcement learning, providing a strong comparison set for evaluating the effectiveness of structured epistemic uncertainty modeling in ERSAC. 24 Epistemic Robust Offline Reinforcement Learning    
+
+> (a) Cartpole (b) Lunar Lander
+
+B N CH N Ell 0.9 Ell Epi  
+
+> Figure 3. Policy entropy during training across B N, CH N, Ell 0.9, and Ell Epi models in the CartPole and LunarLander environments. Entropy is computed per epoch and averaged over 10 evaluation seeds. Lower entropy indicates more confident, deterministic policies, while higher entropy reflects greater stochasticity in policies.
+
+Env SAC-N CQL IQL BRAC-BCQ ERSAC-CH-N ERSAC-Ell-N ERSAC-Ell-Epi ∗
+
+Breakout 58 ± 6 71 ± 5 68 ± 4 35 ± 7 62 ± 5 64 ± 5 66 ± 4
+
+Pong 78 ± 8 86 ± 6 84 ± 7 55 ± 9 80 ± 6 82 ± 6 83 ± 5
+
+Q*bert 54 ± 7 63 ± 6 66 ± 6 29 ± 8 60 ± 6 62 ± 5 64 ± 5
+
+Seaquest 33 ± 6 47 ± 5 45 ± 5 18 ± 6 42 ± 6 46 ± 5 49 ± 5
+
+Hero 38 ± 7 52 ± 6 56 ± 6 22 ± 7 50 ± 6 55 ± 5 58 ± 5  
+
+> Table 7. Average episodic returns on Atari 2600 environments using fixed offline datasets from Minari. Results are reported as mean ±
+> standard deviation over three random seeds. ERSAC variants are compared against standard offline RL baselines in high-dimensional visual domains.
+
+For ERSAC, we evaluate ellipsoidal uncertainty sets constructed from ensemble samples (ERSAC-Ell-N) as well as the Epinet-based ellipsoidal variant (ERSAC-Ell-Epi ∗). For all ellipsoidal methods, the coverage parameter is fixed to υ = 0 .9,consistent with earlier sections. Hyperparameters for baseline methods follow published recommendations. All agents are trained entirely offline for a fixed number of gradient steps per environment. Policies are evaluated deterministically every fixed interval, and final performance is reported as the average episodic return over 100 evaluation episodes. Each reported result is averaged over three random seeds. Across the five Atari environments, ERSAC variants achieve performance comparable to or exceeding ensemble-based SAC-N and remain competitive with specialized offline RL methods such as CQL and IQL. In environments with sparse rewards and limited effective coverage (e.g., Seaquest and Hero), ellipsoidal ERSAC variants demonstrate more stable learning dynamics than box-based pessimism, suggesting that joint action-level epistemic structure is particularly important in high-dimensional settings. 25

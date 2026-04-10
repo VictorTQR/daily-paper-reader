@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07681v1/fig-001.webp",
+      "caption": "Fig. 1. Schematic of the scalable multi-agent orchestration architecture, with a central planner agent, dynamically allocated number of executor agents, a data analyst agent and MCP servers.",
+      "page": 5,
+      "index": 1,
+      "width": 652,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07681v1/fig-002.webp",
+      "caption": "Fig. 2. Representative outputs from an agentic workflow used for high-throughput screening of 1,152 MOFs for atmospheric water harvesting. The figure illustrates the end-to-end interaction, including the human query, the planner agent’s task decomposition, the executor agent’s tool invocation and corresponding outputs, and the data analyst agent’s post-processing steps and final response. For clarity, both the user query and agent outputs are abbreviated using [...].",
+      "page": 6,
+      "index": 2,
+      "width": 652,
+      "height": 371
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07681v1/fig-003.webp",
+      "caption": "Fig. 3. Distribution of working capacities of water for the screened 2,304 Metal-Organic Frameworks (MOFs), calculated between 1920 Pa (adsorption) and 320 Pa (desorption) at 298 K, from the 256 nodes weak-scaling run. The violin plot illustrates the probability density of the dataset, while the overlaid strip plot represents individual MOF candidates. The red-dashed line marks the 80th percentile (top 20% cutoff).",
+      "page": 7,
+      "index": 3,
+      "width": 582,
+      "height": 408
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07681v1/fig-004.webp",
+      "caption": "Fig. 4. Scaling performance of the multi-agent orchestration workflow. (a) Weak scaling with a constant workload of 9 MOFs per node across 1 to 256 nodes. (b) Strong scaling with a fixed workload of 5,591 MOFs (11,182 simulations) across 8 to 256 compute nodes.",
+      "page": 9,
+      "index": 4,
+      "width": 725,
+      "height": 315
+    }
+  ]
+}

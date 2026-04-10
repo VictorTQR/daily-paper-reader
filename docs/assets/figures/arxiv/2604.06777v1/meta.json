@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.06777v1/fig-001.webp",
+      "caption": "Figure 1: Left: Overview of the agentic “thinking with images” framework where the MLLM agent executes visual actions guided by textual reasoning. Right: Training curves of the semantic score demonstrating that MAPO significantly outperforms other RL methods.",
+      "page": 2,
+      "index": 1,
+      "width": 922,
+      "height": 262
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06777v1/fig-002.webp",
+      "caption": "Figure 4: Reward Curves of MAPO and GRPO. Unlike GRPO, which degrades in later stages, MAPO maintains stable learning, validating its scalability for multimodal agents large-scale training .",
+      "page": 10,
+      "index": 2,
+      "width": 490,
+      "height": 369
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06777v1/fig-003.webp",
+      "caption": "Table 1: Main Results on real-world fine-grained visual reasoning benchmarks. The top two outcomes are bolded and underlined, respectively. Here, ∗ denotes results reported in the original paper, and † denotes results reproduced by ourselves through available model weights.",
+      "page": 8,
+      "index": 3,
+      "width": 940,
+      "height": 432
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06777v1/fig-004.webp",
+      "caption": "Figure 3: Visualization of Multimodal Reasoning Trajectories. We visualize the intermediate reasoning steps of MAPO (left) and GRPO (right) for the same query. While GRPO fails to execute the visual action implied by its text, MAPO successfully aligns the visual execution of MLLM agent with its textual reasoning, effectively bridging the reasoning-action gap.",
+      "page": 9,
+      "index": 4,
+      "width": 922,
+      "height": 441
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06777v1/fig-005.webp",
+      "caption": "Figure 2: Overview of MAPO. Our method bridges the reasoning-action gap by using a CLIP model to measure the semantic alignment between self-generated labels and observations. These signals are integrated into the advantage estimation to enforce process consistency.",
+      "page": 5,
+      "index": 5,
+      "width": 908,
+      "height": 216
+    }
+  ]
+}

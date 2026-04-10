@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07487v1/fig-001.webp",
+      "caption": "Figure 2: During inference, a new task qnew is sampled from Dtest and is passed into πC θ to generate cnew ∼ πC θ (qnew). The auxiliary context cnew is appended to qnew and the execution agent πE starts with qnew ⊕ cnew.",
+      "page": 6,
+      "index": 1,
+      "width": 706,
+      "height": 194
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07487v1/fig-002.webp",
+      "caption": "Table 1: AppWorld experiments results. Task Goal Completion (TGC) and Scenario Goal Completion (SGC) on the TEST-N split are reported. Results are averaged over three runs (standard deviation in parentheses) except the Pass@3 metric.",
+      "page": 8,
+      "index": 2,
+      "width": 826,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07487v1/fig-003.webp",
+      "caption": "Table 5: AppWorld experiments results. Task Goal Completion (TGC) and Scenario Goal Completion (SGC) on the TEST-N split are reported. Results are averaged over three runs (standard deviation in parentheses) except the Pass@3 metric.",
+      "page": 17,
+      "index": 3,
+      "width": 826,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07487v1/fig-004.webp",
+      "caption": "Table 2: WebShop-40k experiments results. Averaged reward on the test dataset is reported. Results are averaged over three runs with standard deviation shown in parentheses.",
+      "page": 9,
+      "index": 4,
+      "width": 826,
+      "height": 223
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07487v1/fig-005.webp",
+      "caption": "Figure 1: CLEAR training framework design. First, we execute each task qi ∼ Dtrain for m times and collect groups of replay Γi for qi. We employ reflection agents πR to generate instance-level instruction ci for each qi, collected into DSFT. Then, we initialize CAM from an open-source LLM and perform SFT on DSFT. Finally, we further perform RL on the trained CAM, which leverages the reward signal from πE for policy update of CAM.",
+      "page": 5,
+      "index": 5,
+      "width": 748,
+      "height": 423
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07487v1/fig-006.webp",
+      "caption": "Table 3: Ablation study on AppWorld TEST-N split. For the CAM, we use the following variant: (1) a Qwen/Qwen3-32B model without SFT and RL as in experiment 1. (2) a Qwen332B model after SFT on DSFT no CL (no RL) as in experiment 2. (3) a Qwen3-32B model after SFT with CL (no RL) as in experiment 3. (4) full CLEAR framework as in experiment 4. Results are averaged over three runs (standard deviation in parentheses) except the Pass@3 metric.",
+      "page": 16,
+      "index": 6,
+      "width": 826,
+      "height": 286
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08103v1/fig-001.webp",
+      "caption": "FIG. 4. Reputation concern governs the cooperation regime. (a) Bar chart of the fraction of cooperation ρC versus θ under three exploration biases η ∈ {−1, 0, 1} at b = 1.6. ρC increases with θ, while the differences among η shrink at large θ. (b) Fraction of cooperation ρC as a function of b for θ ∈ {0, 0.2, 0.4, 0.6, 0.8, 1} at η = 1. Reputation entering fitness (θ > 0) markedly elevates ρC. Intermediate θ yields a saturation state near ρC ≈ 0.6. (c) Heat map of ρC in the (b, θ) plane at η = 1. The lower region (I) corresponds to low cooperation, the middle region (II) shows a saturation state with ρC ≈ 0.6, and the upper region (III) exhibits high cooperation with ρC > 0.6. Dashed curves indicate the boundaries between these regimes. The fixed parameters are δ = 3, ϵ0 = 0.02.",
+      "page": 6,
+      "index": 1,
+      "width": 1047,
+      "height": 287
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08103v1/fig-002.webp",
+      "caption": "FIG. 3. Microscopic evidence for how the joint mechanism stabilizes cooperation. (a) Steady-state Q-value gaps ∆Q̄ as a function of δ under the exploration bias (η = 1). Here, ∆Q̄C > 0 indicates that agents who previously cooperated value continuing to cooperate more than switching to defection, while ∆Q̄D > 0 indicates that agents who previously defected value switching to cooperation more than persisting in defection. (b) Fractions of the four behavioral–reputational types (LC/HC for low-/high-reputation cooperators; LD/HD for low-/high-reputation defectors) versus δ under η = 1. (c) Distribution of the number of cooperative neighbors nC ∈ {0, 1, 2, 3, 4} for cooperation survival events (a D→C switch followed by at least two further consecutive cooperative actions) under four representative mechanisms. The fixed parameters are b = 1.6, θ = 0.6, ϵ0 = 0.02.",
+      "page": 6,
+      "index": 2,
+      "width": 1091,
+      "height": 403
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08103v1/fig-003.webp",
+      "caption": "TABLE II. Notation for exploration and reputation mechanisms",
+      "page": 7,
+      "index": 3,
+      "width": 496,
+      "height": 506
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08103v1/fig-004.webp",
+      "caption": "FIG. 5. Spatiotemporal evolution of strategy and reputation for different reputation concern. Snapshots of strategy (top row in each block; C in blue and D in red) and reputation (bottom row in each block; color scale) at θ ∈ {0.1, 0.6, 0.9}. Columns show increasing MCS from left to right, and the right panels show a local view taken from the marked area in the final snapshot. (a) θ = 0.1 yields dominant defection with small cooperative clusters and generally low reputation. (b) θ = 0.6 yields stable coexistence in which high-reputation cooperators and low-reputation defectors occupy interwoven neighboring sites, producing a checkerboard-like pattern in strategy and a corresponding local ordering in reputation. (c) θ = 0.9 yields near full cooperation with sparse defectors and high reputation for most agents. The fixed parameters are δ = 3, η = 1, b = 1.5 and ϵ0 = 0.02.",
+      "page": 8,
+      "index": 4,
+      "width": 1006,
+      "height": 1016
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08103v1/fig-005.webp",
+      "caption": "TABLE I. Model parameters and their descriptions",
+      "page": 4,
+      "index": 5,
+      "width": 492,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08103v1/fig-006.webp",
+      "caption": "FIG. 1. Adaptive exploration and asymmetric reputation updating independently and directionally reshape the evolution of cooperation. (a) Time evolution of the ρC for different η under symmetric reputation updating (δ = 1). When η > 0, cooperation is promoted, conversely, when η < 0, cooperation is inhibited. (b) Time evolution of the ρC for different δ under fixed exploration (η = 0, i.e., εi(t) = ε0). When δ > 1, cooperation is promoted, whereas δ < 1 leads to a decline in cooperation levels. The fixed parameters are b = 1.6, θ = 0.6, ϵ0 = 0.02.",
+      "page": 5,
+      "index": 6,
+      "width": 993,
+      "height": 435
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08103v1/fig-007.webp",
+      "caption": "FIG. 2. Synergistic effect between adaptive exploration and asymmetric reputation. (a) Heat map of the fraction of cooperation ρC for the nine combinations of exploration mechanism (columns, controlled by η) and reputation update rule (rows, controlled by δ), where each cell reports the corresponding ρC. (b) Fraction of cooperation ρC as a function of η for different δ values, showing that the cooperative advantage of η > 0 becomes stronger as δ increases (i.e., asymmetric reputation updating amplifies the effect of reputation-directed exploration). (c) Fraction of cooperation ρC as a function of δ for different η values, showing that increasing δ promotes cooperation, but as δ continues to increase, the marginal gain in the frequency of cooperation decreases. The fixed parameters are b = 1.6, θ = 0.6, ϵ0 = 0.02.",
+      "page": 5,
+      "index": 7,
+      "width": 1047,
+      "height": 307
+    }
+  ]
+}
