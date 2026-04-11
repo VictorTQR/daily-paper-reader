@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.03523v1/fig-001.webp",
+      "caption": "Figure 1: Our Proposed Agent Framework. The agent learns internal representations via encoders, the QMoPSSM, and a decoder. Imagined future states and preferences guide both policy learning and value estimation.",
+      "page": 2,
+      "index": 1,
+      "width": 566,
+      "height": 510
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03523v1/fig-002.webp",
+      "caption": "Table 1: We report the evaluation success rate of the last 100 episodes of MYOE (ours) as compared to other model/RL baselines. Cyan cells represent the best performing agents within the corresponding task. Note that “Drm” is short for “DreamerV3.”",
+      "page": 7,
+      "index": 2,
+      "width": 764,
+      "height": 754
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03523v1/fig-003.webp",
+      "caption": "Figure 2: QMoP-SSM Learning Architecture. QMoP separates latent learning into two interconnected parallel processes: “representation” and “preference” learning. While the model predicts future latent given previous actions, future preference state trajectories are guided by provided and learned goals.",
+      "page": 3,
+      "index": 3,
+      "width": 660,
+      "height": 401
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03523v1/fig-004.webp",
+      "caption": "Table 2: We report the evaluation success rate of the last 100 episodes of MYOE (ours) in comparison to other baselines. Cyan cells represent the best performance agents within the corresponding task.",
+      "page": 8,
+      "index": 4,
+      "width": 764,
+      "height": 754
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03523v1/fig-005.webp",
+      "caption": "Figure 4: Our proposed MYOE solving the “reach” task when integrated into the “7bot” robot (top) and our agent model solving the “block picking” task when integrated into the PX100 robot (bottom).",
+      "page": 9,
+      "index": 5,
+      "width": 756,
+      "height": 409
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03523v1/fig-006.webp",
+      "caption": "Figure 3: Cumulative reward (y-axis) across 1 million interaction/training steps (x-axis) for different agents.",
+      "page": 5,
+      "index": 6,
+      "width": 864,
+      "height": 319
+    }
+  ]
+}

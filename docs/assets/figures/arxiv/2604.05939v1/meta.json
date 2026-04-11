@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-001.webp",
+      "caption": "Table 3: Main experimental results on CVABench. We compare the CVA architecture against baselines. The table reports domain-specific metrics (Linguistic Fidelity and Task Performance) and an aggregated Value Alignment score (Overall Val., measured by variance deviation Var%, where a value closer to 0 indicates better alignment). Bold indicates the best result, and blue denotes the second-best.",
+      "page": 6,
+      "index": 1,
+      "width": 856,
+      "height": 468
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-002.webp",
+      "caption": "Figure 11: Each subplot visualizes the most representative vocabulary for a specific value dimension. Word sizes reflect the aggregated attention magnitude derived from the validation set. This comparison highlights distinct semantic clusters—such as \"creativity\" for Achievement versus \"confused\" for Conformity—demonstrating the model’s capability to capture value-specific context.",
+      "page": 21,
+      "index": 2,
+      "width": 941,
+      "height": 321
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-003.webp",
+      "caption": "Figure 1: Overview of the proposed framework. The agent analyzes the historical Context to explicitly model dynamic Value Preferences and Activations. These activated values serve as internal criteria to verify and select the candidate action (e.g., going to the gym) that best aligns with the agent’s current psychological state.",
+      "page": 2,
+      "index": 3,
+      "width": 832,
+      "height": 312
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-004.webp",
+      "caption": "Figure 4: Sentiment accuracy trend with different inference intensity, we display the results of top 1/2/4 accuracy on four discrete inference intensity.",
+      "page": 7,
+      "index": 4,
+      "width": 446,
+      "height": 271
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-005.webp",
+      "caption": "Figure 5: Visualization of the learned embeddings from the Value-Guided Verifier. The spatial arrangement demonstrates the emergence of the theoretical circular structure characteristic of the Schwartz Value System.",
+      "page": 8,
+      "index": 5,
+      "width": 877,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-006.webp",
+      "caption": "Figure 6: Semantic landscape of the \"Universalism\" value. The size of each term is proportional to its unnormalized Word-Value Relevance Score S(w, v), calculated via TF-IDF weighted cross-attention. Larger terms represent the core concepts that trigger the strongest absolute activation in the model for the Universalism dimension.",
+      "page": 8,
+      "index": 6,
+      "width": 407,
+      "height": 304
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-007.webp",
+      "caption": "Figure 2: This figure illustrate the overall model structure of our innovative value verifier and the reasoning architecture of the value-driven CVA agent.",
+      "page": 4,
+      "index": 7,
+      "width": 873,
+      "height": 390
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-008.webp",
+      "caption": "Figure 7: Probability of biased decision-making across varying Hedonism scores. With Self-Direction fixed at 0.9, the agent exhibits significant behavioral rigidity, choosing the “gym” option with near-absolute probability for Hedonism ≤ 0.5, and maintaining a high bias (0.93) even at 0.6.",
+      "page": 12,
+      "index": 8,
+      "width": 446,
+      "height": 329
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05939v1/fig-009.webp",
+      "caption": "Figure 8: Violin plots of population preference distributions across 10 Schwartz value dimensions. This visualization presents the simulation results of the baseline methods (role-play and value_infer) on CVABench, grouped by psychological measurement dimensions. The y-axis represents the normalized value preference score within the range [−1, 1], and the black dashed line tracks the mean score across settings.",
+      "page": 16,
+      "index": 9,
+      "width": 929,
+      "height": 1250
+    }
+  ]
+}

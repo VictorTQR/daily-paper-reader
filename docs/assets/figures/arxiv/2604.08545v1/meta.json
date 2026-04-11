@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-001.webp",
+      "caption": "Figure 9: Strategic text search for factual knowledge. While the monument is visually identifiable, the queried measurement (cella width) cannot be inferred from the image. Metis recognizes this epistemic gap and invokes text search to retrieve the precise factual information from external sources.",
+      "page": 21,
+      "index": 1,
+      "width": 826,
+      "height": 625
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-002.webp",
+      "caption": "Figure 1: Comparison of tool-use efficiency and task performance. Existing methods rely heavily on tool calls, reflecting limited efficiency awareness. In contrast, our method uses tools far more selectively while achieving the best overall performance, showing that strong accuracy and high efficiency can be attained simultaneously.",
+      "page": 2,
+      "index": 2,
+      "width": 816,
+      "height": 244
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-003.webp",
+      "caption": "Figure 2: Comparison between coupled-reward optimization and HDPO. Existing methods entangle accuracy and efficiency into a single reward signal, while HDPO decouples them into separate branches and combines them only at the final loss, enabling more strategic tool use.",
+      "page": 3,
+      "index": 3,
+      "width": 826,
+      "height": 609
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-004.webp",
+      "caption": "Figure 6: System prompt used for metis. The prompt defines the available tools, their invocation formats, and decision guidelines, encouraging the model to answer directly whenever possible and to invoke external tools only when they provide genuinely useful information.",
+      "page": 18,
+      "index": 4,
+      "width": 829,
+      "height": 893
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-005.webp",
+      "caption": "Figure 7: Direct reasoning from visual inspection. The on-screen text is clearly legible from the raw image. Metis correctly extracts the answer without invoking code execution or search tools, avoiding unnecessary computational overhead.",
+      "page": 19,
+      "index": 5,
+      "width": 826,
+      "height": 619
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-006.webp",
+      "caption": "Figure 5: Targeted code execution for fine-grained visual analysis. The question requires comparing curves in a specific subplot region that is difficult to resolve at the original image scale. Metis invokes code to crop and enlarge the relevant area, enabling precise identification of the curve behavior near the queried time step.",
+      "page": 12,
+      "index": 6,
+      "width": 826,
+      "height": 791
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-007.webp",
+      "caption": "Figure 8: Strategic image search for visual identification. The artwork cannot be reliably identified from visual features alone. Metis invokes image search to match the visual content against external references, then retrieves the completion year from the search results.",
+      "page": 20,
+      "index": 7,
+      "width": 826,
+      "height": 625
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08545v1/fig-008.webp",
+      "caption": "Figure 3: Overview of Metis. A strategic multimodal reasoning agent that selectively invokes code execution, text search, and image search tools during multi-turn reasoning. Rather than invoking tools by default, Metis adaptively determines when tool interactions provide genuinely useful evidence, and otherwise reasons directly from the available context to obtain the final answer.",
+      "page": 5,
+      "index": 8,
+      "width": 813,
+      "height": 504
+    }
+  ]
+}

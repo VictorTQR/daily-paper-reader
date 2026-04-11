@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-001.webp",
+      "caption": "Table 1 Task categories in WildClawBench. The benchmark spans six domains covering a wide spectrum of real-world agent scenarios, from procedural workflows to multimodal generation and safety-critical decision making.",
+      "page": 6,
+      "index": 1,
+      "width": 744,
+      "height": 186
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-002.webp",
+      "caption": "Figure 2 Case study on Slack message analysis. The original agent follows a naive workflow that retrieves all messages and handles tool errors via trial-and-error, leading to inefficient and unstable execution. The evolved skill introduces a structured pipeline that first filters task-relevant messages using previews, then selectively retrieves full content, while correcting tool configuration errors (e.g., API port). This results in more efficient, reliable, and accurate task completion.",
+      "page": 11,
+      "index": 2,
+      "width": 977,
+      "height": 473
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-003.webp",
+      "caption": "Figure 3 Case study on ICCV 2025 oral paper analysis. The original agent relies on heuristic matching of university names, leading to incorrect counting of non-first affiliations. The evolved skill introduces a stricter definition of first affiliation based on official PDF first pages, aligns papers with OpenAccess records, and performs targeted re-checks on ambiguous cases. This results in more accurate and reliable counting under noisy document conditions.",
+      "page": 11,
+      "index": 3,
+      "width": 977,
+      "height": 460
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-004.webp",
+      "caption": "Figure 1 Overview of SkillClaw. SkillClaw enables collective skill evolution in a multi-user agent ecosystem through a closed-loop pipeline. Independent agents interact with their environments and produce structured session trajectories that preserve full action–feedback causal chains. These trajectories are aggregated across users and grouped by referenced skills, forming a shared evidence base that exposes consistent success patterns and recurring failure modes. An agentic evolver analyzes each skill-specific group and performs evidence-driven updates via refinement or creation, while preserving validated behaviors from successful executions. The updated skill repository is then synchronized back to all agents, allowing improvements discovered in one user’s interaction to benefit others and continuously accumulate over time.",
+      "page": 2,
+      "index": 4,
+      "width": 968,
+      "height": 556
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-005.webp",
+      "caption": "Table 3 User-side daytime results (best-skill deployment view). Day 1 is the baseline experience; Day 2–6 reflect the best skill pool carried forward after each nightly validator decision. Absolute and relative gains are computed w.r.t. Day 1.",
+      "page": 7,
+      "index": 5,
+      "width": 986,
+      "height": 198
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-006.webp",
+      "caption": "Table 7 Safety & Alignment: nightly skill evolution and validator decisions. Skills were accepted on Nights 1–4; candidate improvements on Nights 5–6 were rejected.",
+      "page": 10,
+      "index": 6,
+      "width": 982,
+      "height": 436
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-007.webp",
+      "caption": "Table 6 Creative Synthesis: nightly skill evolution and validator decisions. The only accepted skill was validate-tmp-workspace-inputs (Night 1).",
+      "page": 10,
+      "index": 7,
+      "width": 976,
+      "height": 435
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-008.webp",
+      "caption": "Table 4 Social Interaction: nightly skill evolution and validator decisions. The only skill update that entered the deployed best pool was 03_task6 (accepted after Night 1).",
+      "page": 8,
+      "index": 8,
+      "width": 982,
+      "height": 415
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-009.webp",
+      "caption": "Figure 4 Case study on SAM3 inference under incomplete execution environments. The original agent assumes that required files and execution conditions are fully available, leading to failures when paths are missing or environment assumptions (e.g., CUDA support) are violated. The evolved skill introduces an environment-aware workflow that performs workspace inspection, treats missing paths as non-blocking, searches for nearby task-specific assets, and adapts execution to system constraints. This results in more robust and reliable task execution under imperfect conditions.",
+      "page": 12,
+      "index": 9,
+      "width": 982,
+      "height": 485
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-010.webp",
+      "caption": "Figure 5 Case study on multi-criteria product selection. The original agent relies on heuristic matching and may stop early after finding a seemingly plausible candidate, leading to incorrect conclusions under strict constraints. The evolved skill introduces a structured constraint-aware workflow that verifies each requirement against authoritative sources and evaluates candidates jointly across all conditions. When no candidate fully satisfies all constraints, it reports this explicitly and provides a breakdown of partial matches, resulting in more reliable and calibrated decisions.",
+      "page": 12,
+      "index": 10,
+      "width": 982,
+      "height": 475
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08377v1/fig-011.webp",
+      "caption": "Table 5 Search & Retrieval: nightly skill evolution and validator decisions. Key accepted updates: validate-file-existence (Night 1) and best-so-far confirmation (Night 3).",
+      "page": 9,
+      "index": 11,
+      "width": 982,
+      "height": 400
+    }
+  ]
+}

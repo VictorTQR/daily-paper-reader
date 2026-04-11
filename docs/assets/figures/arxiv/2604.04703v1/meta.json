@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04703v1/fig-001.webp",
+      "caption": "Figure 5: Two execution paths for whisper handling. For to-other whispers, the system uses the whisper to guide LLM bundle-pair selection, then grounds the selected bundle names to executable behavior bundles; for talk actions, the whisper also conditions dialogue generation. For to-self whispers, the system bypasses LLM bundle selection and directly matches the whisper against the to-self bundle pool with threshold-based fallback. Across the system, the three candidate pools contain 378 executable behavior bundles.",
+      "page": 6,
+      "index": 1,
+      "width": 500,
+      "height": 659
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04703v1/fig-002.webp",
+      "caption": "Figure 4: Ground pipeline for translating open-ended model output into executable game behavior. The system routes the input to the appropriate candidate pool or pool pair, prunes emotionally contradictory bundles, retrieves the nearest executable bundle or bundle pair by embedding similarity, and executes either the matched result or a safe fallback depending on thresholded confidence.",
+      "page": 5,
+      "index": 2,
+      "width": 452,
+      "height": 557
+    }
+  ]
+}

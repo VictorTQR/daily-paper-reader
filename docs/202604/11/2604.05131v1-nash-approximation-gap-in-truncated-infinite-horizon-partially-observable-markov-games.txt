@@ -1,0 +1,1183 @@
+Title: Nash Approximation Gap in Truncated Infinite-horizon Partially Observable Markov Games
+
+URL Source: https://arxiv.org/pdf/2604.05131v1
+
+Published Time: Wed, 08 Apr 2026 00:09:52 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Nash Approximation Gap in Truncated Infinite-horizon Partially Observable Markov Games 
+
+Lan Sang and Chinmay Maheshwari 
+
+Abstract — Partially Observable Markov Games (POMGs) provide a general framework for modeling multi-agent sequen-tial decision-making under asymmetric information. A common approach is to reformulate a POMG as a fully observable Markov game over belief states, where the state is the con-ditional distribution of the system state and agents’ private information given common information, and actions correspond to mappings (prescriptions) from private information to actions. However, this reformulation is intractable in infinite-horizon settings, as both the belief state and action spaces grow with the accumulation of information over time. We propose a finite-memory truncation framework that approximates infinite-horizon POMGs by a finite-state, finite-action Markov game, where agents condition decisions only on finite windows of common and private information. Under suitable filter stability (forgetting) conditions, we show that any Nash equilibrium of the truncated game is an ε-Nash equilibrium of the original POMG, where ε → 0 as the truncation length increases. 
+
+I. I NTRODUCTION 
+
+Partially Observable Markov Games (POMGs) model se-quential decision-making with strategic interactions under asymmetric information, where each agent has access to only partial and possibly private observations of the underlying state. A central difficulty in such games is that agents must form decisions based on their information histories, which differ across players and evolve over time. This leads to heterogeneous beliefs about the underlying state, making the computation of equilibria challenging [1]–[4]. A major conceptual advance in addressing asymmetric information in dynamic games is the common-information framework of [2], which reformulates a POMG as a fully observable Markov game over belief states. In this represen-tation, the state is the conditional distribution of the system state and all agents’ private information given the common information, and actions correspond to prescriptions , i.e., mappings from private information to actions. While this reduction provides a powerful structural characterization of equilibria, it introduces two key challenges. First, the result-ing belief state space is typically uncountable. Second, the action space—consisting of prescription functions—grows over time as private information accumulates. Together, these aspects render equilibrium computation challenging, specially in infinite horizon games. This motivates the central question in this paper:  
+
+> L. Sang is with Applied Mathematics and Statistics at Johns Hopkins University, Baltimore, MD, USA
+
+lsang3@jh.edu                 
+
+> C. Maheshwari is with the Department of Electrical and Com-puter Engineering, Johns Hopkins University, Baltimore, MD, USA
+
+chinmay maheshwari@jhu.edu 
+
+Can one construct a finite-state, finite-action Markov game approximation of an infinite-horizon POMG, and quantify the approximation error in terms of Nash approximation gap? In this work, we answer this question affirmatively. We introduce a truncated POMG framework , which induces a finite-state, finite-action Markov game by restricting policies to depend only on finite windows of common and private information. In particular, the state is given by a finite window of common information, and actions correspond to prescriptions that map finite windows of private information to actions. Moreover, we identify suitable forgetting condi-tions (Assumptions 3–4) under which we show that any Nash equilibrium of the truncated game is an approximate Nash equilibrium of the original POMG, with an approximation gap that decays with the truncation length (Theorem 1). Our analysis proceeds in two steps. First, we show that the gap between the optimal response of any player under the truncated policy class and the original policy class decays as the truncation length increases (Lemma 3). Second, we show that the gap between the value achieved in the truncated game and the original game also vanishes with increasing truncation length (Lemma 4). 
+
+A. Related Works 
+
+Our work builds on and extends recent approaches for handling asymmetric information in POMGs, particularly those based on information compression and finite-memory representations. A closely related line of work is [1], which studies compression of common information in finite-horizon POMGs. While their framework provides a principled way to reduce the effective state space, it does not address com-pression of private information. This distinction is critical in infinite-horizon settings, where both common and private information grow over time and must be controlled to obtain a finite-state, finite-action representation. Moreover, their ap-proximation guarantees rely on the notion of γ-observability [5], which enforces that observations remain sufficiently informative about the underlying state. In contrast, our ap-proach is based on forgetting conditions (Assumptions 3–4), which ensure stability of the filtering process by requiring that the influence of past information decays over time. As discussed in [6], these assumptions capture fundamentally different mechanisms for filter stability. Another closely related work is [7], which proposes a gen-eral compression framework for both common and private information in POMGs. However, their approximation error scales with the time horizon, which limits the applicability 
+
+> arXiv:2604.05131v1 [cs.MA] 6 Apr 2026
+
+of their results in infinite-horizon settings considered in this paper. Our approach is also inspired by a growing body of work on finite-memory truncation in single-agent partially observ-able systems [8]–[10]. These works show that restricting policies to depend on finite windows of past observations can yield near-optimal performance while significantly improv-ing tractability. This line of work is closely connected to the filtering literature for hidden Markov models, where stability and forgetting properties ensure that recent observations suffice to approximate the belief state [11], [12]. Building on these ideas, recent works [5], [6], [10] establish that truncated representations can support efficient planning and learning. However, extending these ideas to multi-agent settings introduces additional challenges due to asymmetric informa-tion. In POMGs, agents must form beliefs not only over the underlying state but also over the private information of other agents, which grows over time. As a result, truncation must simultaneously control both common and private information across agents, which is not addressed in existing single-agent frameworks. Finally, our work contributes to the broader literature on information compression and approximation in partially observable systems [1], [7], [13]–[16]. Within this literature, our main contribution is to provide a finite-state, finite-action Markov game approximation for infinite-horizon POMGs, together with explicit approximation guarantees that decay with the truncation length. II. P RELIMINARIES 
+
+A. Partially Observable Markov Game 
+
+Consider an infinite-horizon discounted Partially Observ-able Markov Game (POMG) G1, denoted by the tuple G1 =
+
+⟨I , S, A, T , r, O, E, ρ 0⟩. Here, I is the finite set of players; S
+
+is the finite set of states; A = ×i∈I Ai is the finite set of joint actions available to all players; Ai is the finite set of actions of player i; ri : S × A → R is the one-stage utility function of player i ∈ I, such that max i∈I ,s ∈S ,a ∈A |ri(s, a )| ≤
+
+¯r for some ¯r > 0; T = (T (s′|s, a )) s,s ′∈S ,a ∈A is the transition kernel such that T (s′|s, a ) denotes the probability of transitioning to state s′ given the current state set to be 
+
+s and the joint action to be a; O := ×i∈I Oi denote the finite set of joint observation space of all players where Oi
+
+is the observation space of player i; E = ( E(o|s)) o∈O ,s ∈S is the emission kernel where E(o|s) denotes the probability of observing o ∈ O given that the current state is s ∈ S ; and 
+
+ρ0 ∈ ∆( S) is the initial distribution of states. The interaction between players proceeds in discrete stages indexed by t ∈ N. The initial state s0 ∼ ρ0. At any time t ∈
+
+N, let st be the state and ot = ( oi,t ) be the joint observation. Due to partial observability, the state st is not accessible to the players. Instead, each player i takes an action ai,t using the information locally available to it by time t, denoted by Ii,t ⊆ H t, where Ht = {o0, a 0, o 1, a 1, ..., a t−1, o t} is the entire history of information. The heterogneity in the information available to each player makes it an asymmetric information game .Based the the resulting joint action at = ( ai,t )i∈I , the state transitions to the new state st+1 ∼ T (·| st, a t). Addi-tionally, at time t, each player i receives a reward ri(st, a t).The information set Ii,t is comprised of a tuple (ct, pi,t ),where ct ⊆ H t is the common information available to all players and pi,t ⊆ H t denotes the private information available to player i at time t. Let Ct and Pi,t denote the set of all possible common information and private information available to player i at time t, respectively. Furthermore, we define C := S 
+
+> t≥0
+
+Ct, Pi := S 
+
+> t≥0
+
+Pi,t , and P := Q 
+
+> i∈I
+
+Pi.At every time step t ∈ N and every i ∈ I , the action 
+
+ai,t is sampled using a stationary strategy πi : C × P i →
+
+∆( Ai). Let π := ( πi)i∈I denote the joint strategy profile. Let Π = ×i∈I Πi be the set of joint strategy, where Πi is the set of strategy of player i ∈ I . In what follows, we make the following standard assumption about the evolution of common information and private information [1], [2]. 
+
+Assumption 1 (Structure of History Updates): The evolu-tion of information states is governed by time-homogeneous update kernels. Specifically: 1) Common History Update: The common history evolves recursively as ct+1 = ( ct, c +
+
+> t+1
+
+), where c+ 
+
+> t+1
+
+⊆Ht+1 denotes the increment in common information and is drawn from a time-homogeneous kernel: 
+
+c+ 
+
+> t+1
+
+∼ ζ(pt, a t, o t+1 ), ∀ t ∈ N. (1) 2) Private History Update: Similarly, for each agent i ∈I, the private history evolves as pi,t +1 = ( pi,t , p +
+
+> i,t +1
+
+),where p+ 
+
+> i,t +1
+
+⊆ H t+1 denotes the increment in private information of player i and is drawn from a time-homogeneous kernel: 
+
+p+ 
+
+> i,t +1
+
+∼ ξi(pi,t , a i,t , o i,t +1 ). (2) Assumption 1-(1) posits that the increment in common information is based on current private information of play-ers, current joint action and joint observation. Meanwhile, Assumption 1-(2) posits that the increment in private in-formation with time is based only on local action and observation of players. 
+
+Remark 1: Assumption 1 is different from [2, Assumption 1] for three reasons. First, in (1)-(2), we consider stochastic update unlike [2] who consider deterministic update. Second, as we are working in infinite horizon game, we restrict the the increment updates in (1)-(2) to be governed by time-homogeneous stochastic kernels instead of deterministic maps for both the common and private histories. Finally, as per (2), we allow private information to be non-decreasing with time, which is a realistic assumption for many real world implementation where private information is not for-gotten. Such representation of private information update will enable us to study finite-memory policies (to be discussed in next section). Given a joint strategy π ∈ Π, player i aims to maximize the expected infinite-horizon discounted value defined by 
+
+Vi(π) := Eπ
+
+" ∞X
+
+> t=0
+
+δtri(st, a t)
+
+#
+
+, (3) where δ ∈ [0 , 1) is the discount factor, s0 ∼ ρ0 and for every 
+
+t ∈ N, ai,t ∼ πi(ct, pi,t ) and st+1 ∼ T (·| st, a t).Nash equilibrium is a natural solution concept used to study the interaction between agents with heterogeneous preferences. 
+
+Definition 1: For any ϵ ≥ 0, a joint strategy π⋆ =(π⋆i )i∈I ∈ Π is an ϵ-Nash equilibrium if, for every i ∈ I ,πi ∈ Πi, V i(π⋆i , π ⋆
+
+> −i
+
+) ≥ Vi(πi, π ⋆
+
+> −i
+
+) − ϵ. 
+
+One of the main challenges with the setup of POMG de-fined here is that of asymmetric information among players. This makes it challenging to computationally characterize Nash equilibrium [2]. To overcome this challenge, [2] gave a construction of symmetric information game, which is described next. 
+
+B. Reformulating POMG with Symmetric Information 
+
+We reformulate the original game G1 as an equivalent game G2 played by virtual players who make their strategies condition only on the common history. In G1, player i uses a stationary strategy πi : C × P i → ∆( Ai). Following [2], in G2, we separate this decision into two steps: 1) Virtual player i selects a prescription based on the common history ct. Formally, let the prescription space be Γi := {γi : Pi → A i}.2) The prescription is then applied to the realized private information: ai,t = γi,t (pi,t ).A behavioral strategy of virtual player i, denoted by χi ∈Xi, maps each common history c ∈ C to a distribution over deterministic prescriptions, i.e., χi(· | c) ∈ ∆(Γ i). At time 
+
+t, the virtual player samples γi,t ∼ χi(· | ct).We define the joint prescription at time t as γt := (γi,t )i∈I , and the prescription history up to time t as 
+
+γ1: t := (γ1, . . . , γ t). The hidden state, observation, and history update processes then evolve exactly as in G1.For any player i, define the discounted value in G2 by 1
+
+Vi(χ) := Eχ
+
+" ∞X
+
+> k=0
+
+δ k ri(sk, a k)
+
+#
+
+, (4) where s0 ∼ ρ0 and for every k ∈ N, ai,k = γi,k (pi,k ), γ i,k ∼
+
+χi(·| ck) and sk+1 ∼ T (·| sk, a k).Next, we introduce a structural result that establishes equivalence between G1 and G2.
+
+Proposition 1 (Correspondence between G1 and G2): 
+
+Suppose that Assumption 1 holds. Then, (1) For any strategy χ ∈ X (in G2), there exists a strategy 
+
+πχ ∈ Π (in G1) such that the state and action trajec-tory distribution generated by χ and πχ is the same. Moreover, if χ is a Nash equilibrium in G2 then πχ is a Nash equilibrium for G1.(2) For any strategy π ∈ Π (in G1), there exists a strategy 
+
+χπ ∈ X (in G2) such that the state and action trajec-tory distribution generated by π and χπ is the same. Furthermore, if π is a Nash equilibrium in G1 then χπ
+
+is a Nash equilibrium for G2.
+
+> 1For the sake of concise notation, we are using the same notation of value function in (3) and (4), even though the policies are different in two games.
+
+Proposition 1 shows that we can study any of the game G1
+
+or G2 and then using the correspondence given here provide guarantees about other game. In what follows, we focus attention on study G2 as it ensures symmetric information game. 
+
+C. Belief State Representation of POMG 
+
+In this section, we introduce the concept of belief state that acts as a sufficient statistic for converting POMG into a Markov game. We define two useful notions of belief-state which are posterior over the underlying state and private information given the history. First we define, public belief state , which is the posterior over the current state and private information given the common information. More formally, the public belief state at time t,2 denoted by βt, is defined as 
+
+βt(s, p | ct) := Pχ st = s, pt = p | ct
+
+. (5) Next, we define player specific private belief state which for any player i ∈ I is defined to be the posterior over the current state and private information of other players given the common information and its own private information. More formally, the private belief state of player i, at time t,denoted by φi,t , is defined as 
+
+φi,t (s, p−i | ct, pi,t ) := Pχ(st = s, p−i,t = p−i | ct, pi,t ) .
+
+(6) Next, we introduce another structural assumption, which is same as [2, Assumption 2], which together with Assumption 1 would enable construction of a Markov state for POMG (to be discussed next). 
+
+Assumption 2 (Strategy Independence of Beliefs): 
+
+Consider any two joint strategies χ, ˜χ ∈ X . Let ct be a realization of common information at time t that has non-zero probability under both χ and ˜χ. Then, for all 
+
+(s, p) ∈ S × P t,
+
+Pχ(st = s, pt = p | ct = ct) = P˜χ(st = s, pt = p | ct = ct).
+
+(7) Assumption 2 posits that the common information based posterior distribution on state and private information is strategy-independent. 
+
+Example 1: Consider a POMG where the system state admits the decomposition s = ( s0, (si)i∈I ), with s0 being a global state and si a local state private to player i ∈ I .Given the current state s and the joint action a, the global and local states transitions to (¯ s0, (¯ si)i∈I ) ∼ T (·| s, a ). The emission kernel is such that at any time t, the observation made player i is oi,t = ( s0 
+
+> t
+
+, s i,t , a t−1). Consequently, the common and private information available to players is such that c+ 
+
+> t
+
+:= ( s0 
+
+> t
+
+, a t−1) and p+ 
+
+> i,t
+
+:= ( si,t ). Similar to [2], it can be shown that this example satisfies Assumption 1-2. Next, we introduce the following structural result that provides the evolution of the belief states. 
+
+Lemma 1 (Fixed Bayesian filtering maps): Suppose As-sumptions 1-2 hold. Let χ ∈ X be any arbitrary strategy. At 
+
+> 2Note that under Assumption 2 the belief states are independent of the strategy.
+
+any time t, let ct be a realization of common information, 
+
+pt be a realization of private information, γt be a realization of prescription, c+ 
+
+> t+1
+
+be a relization of common informa-tion increment, p+ 
+
+> t+1
+
+be a relaization of private information increment, βt be a relization of belief state, and {φi,t }i∈I 
+
+be a realization of private belief state for players. Then, the evolution of belief states β, {φi}i∈I is described as follows 
+
+βt+1 = F(βt, c +
+
+> t+1
+
+), (8) 
+
+φi,t +1 = Fi(φi,t , c +
+
+> t+1
+
+, p +
+
+> i,t +1
+
+), (9) where F and {F i}i∈I (termed as Bayesian filtering maps )are fixed mappings (formally defined in the proof). Using Lemma 1, it can be shown that the evolution of public belief state is a controlled Markov process. 
+
+Lemma 2 (Markov Property of Belief in G2): The public belief βt evolves as a Markov process driven by the joint prescription γt. Specifically, the update dynamics satisfy: 
+
+P(βt+1 | ct, β 1: t, γ 1: t) = P(βt+1 | βt, γ t) . (10) While the public belief state yields a valid Markov rep-resentation of the original POMG, the state space of the Markov game is uncountable even when state, action and observation spaces are finite. Furthermore, the unbounded growth of the history spaces (ct, pt) renders exact com-putation intractable over an infinite horizon. To overcome this challenge, we introduce a finite memory truncation that approximates the full history using only the most recent ℓ
+
+increments. III. A PPROXIMATING NASH EQUILIBRIUM USING 
+
+TRUCATED GAME 
+
+In this section, we introduce the framework of trucated game that will be used to study the impact of finite memory based policies. Before introducing it, we discuss a new form of Markov state for POMG which is different from the belief based representation discussed in previous section. 
+
+A. Finite-Memory based Representation of Belief Updates 
+
+Here, we introduce a finite-memory window based repre-sentation of Markov state for G2.
+
+Definition 2 (Truncated common and private information): 
+
+Fix a truncation length ℓ ∈ N. At any time t, we denote the 
+
+truncated common information by ˜ct = Gℓ(ct), where 
+
+Gℓ(ct) := 
+
+(
+
+(c+
+
+> t−ℓ+1
+
+, . . . , c + 
+
+> t
+
+) if t ≥ ℓ;(c+1 , . . . , c + 
+
+> t
+
+) otherwise . (11) We denote the set of truncated common information by ˜C.Similarly, we define the truncated private history by 
+
+epi,t = Giℓ(pi,t ), where 
+
+Giℓ(pi,t ) := 
+
+(
+
+(p+
+
+> i,t −ℓ+1
+
+, . . . , p +
+
+> i,t
+
+) if t ≥ ℓ;(p+
+
+> i, 1
+
+, . . . , p +
+
+> i,t
+
+) otherwise . (12) We denote the set of truncated common information by ˜Pi.Under Assumption 1, the common history evolves recur-sively as ct+1 = ( ct, c +
+
+> t+1
+
+). Therefore, the truncated common information ˜ct updates as ˜ct+1 = Gℓ
+
+ [˜ ct, c +
+
+> t+1
+
+], where 
+
+[˜ ct, c +
+
+> t+1
+
+] denotes appending the new increment to ˜ct.To account for the influence of the common history before the window, we introduce an auxiliary probability measure at the window start, following finite window belief-MDP reduction in [8]. At any time t, given a realization of ct−ℓ,
+
+define μt as follows 
+
+μt := 
+
+(
+
+βt−ℓ( · | ct−ℓ ), if t ≥ ℓ;
+
+ρ0, if t < ℓ. (13) The pair (μt, ˜ct) can be used as an exact coordinate representation of the current belief, since βt is obtained by composing ℓ Bayesian updates starting from μt along the window ˜ct. Given μt and finite window of common information increment ˜ct = ( c+
+
+> t−ℓ+1
+
+, . . . , c + 
+
+> t
+
+), the current public belief can be obtained through Lemma 1. That is, 
+
+βt = F(βt−1, c + 
+
+> t
+
+) = F F(βt−2, c +
+
+> t−1
+
+), c +
+
+> t
+
+
+
+= · · · = F(ℓ)(βt−ℓ, ˜ct) = F(ℓ)(μt, ˜ct). (14) Equation (14) shows that the public belief βt depends on 
+
+(μt, ˜ct). Hence, any strategy or value function expressed in terms of the belief state βt can be equivalently expressed using the fully observed coordinates (μt, ˜ct).Analogously, for each player i, we introduce a private predictor νi,t ∈ ∆( S × P −i) at the start of the window: 
+
+νi,t := 
+
+(φi,t −ℓ(· | ct−ℓ, pi,t −ℓ), t ≥ ℓ, φi, 0(· | c0, pi, 0), t < ℓ, (15) where φi, 0 denotes the initial private belief induced by the prior ρ0. By Lemma 1, the exact private belief can then be compactly expressed via the ℓ-step filtering map as 
+
+φi,t (· | ct, pi,t ) = F(ℓ)
+
+> i
+
+ νi,t , ˜ct, ˜pi,t 
+
+. (16) 
+
+B. Constructing Truncated Game 
+
+In this subsection, we introduce the notion of ℓ−length truncated game, denoted by Gℓ, that would be crucial for subsequent exposition. The truncated game is a finite state, finite action Markov game. The state space of this game is ˜C = ( C+)ℓ. The action space of player i is defined as 
+
+Γℓi := γℓi : ePi → Ai . For any truncated private history profile ˜p = (˜ pi)i∈I ∈ eP := Q 
+
+> i∈I
+
+ePi and any joint prescription γℓ = ( γℓi )i∈I ∈ Γℓ := Q 
+
+> i∈I
+
+Γℓi , we define the induced joint action by the componentwise evaluation 
+
+γℓ(˜ p) :=  γi(˜ pi) 
+
+> i∈I
+
+∈ A . The strategy for player i in 
+
+Gℓ, denoted by χℓi ∈ X ℓi with χℓi : ˜C → ∆(Γ ℓi ), maps the current window state to a distribution over finite-memory prescriptions. To define the state transition and stage reward function, we consider an arbitrary distribution ¯μ ∈ ∆( S × P ). Assuming 
+
+¯μ as the prior distribution, we define posterior belief on state and private information after observing ˜c ∈ ˜C as follows 
+
+βℓ(· | ˜c) := F(ℓ)(¯ μ, ˜c). (17) Because the prescription γℓ acts only on the truncated private history profile ˜p = Gℓ(p), the induced truncated belief on S × eP is defined as the pushforward of βℓ(· | ˜c) through the mapping S × P ∋ (s, p) 7 → ϕ(s, p) :=  s, Gℓ(p) ∈ S × ˜P.Define ˜βℓ(· | ˜c) := ϕ#βℓ(· | ˜c), which evaluates explicitly to: ˜βℓ(s, ˜p | ˜c) = X 
+
+> p:Gℓ(p)=˜ p
+
+βℓ(s, p | ˜c). (18) Based on the truncated belief ˜βℓ(· | ˜c), we define the stage reward in Gℓ:
+
+rℓi (˜ c, γ ℓ) := X
+
+> s∈S
+
+X 
+
+> ˜p∈eP
+
+˜βℓ(s, ˜p | ˜c) ri
+
+ s, γ ℓ(˜ p), (19) Next, we define W γℓ 
+
+> σ
+
+: S × eP → ∆( C+) as 
+
+W γℓ 
+
+> σ
+
+(c+ | s, ˜p) := X
+
+> s′∈S , o ∈O
+
+T  s′ | s, γ ℓ(˜ p) E(o | s′)
+
+· ζ c+ | ˜p, γ ℓ(˜ p), o  .
+
+(20) Using this notation, the distribution of common information increment can be obtained as follows 
+
+σℓ(c+ | ˜c, γ ℓ) = X  
+
+> s∈S ,˜p∈eP
+
+W γℓ 
+
+> σ
+
+(c+ | s, ˜p) ˜βℓ(s, ˜p | ˜c).
+
+(21) Finally, the next window state ˜c′ updates deterministically via the mapping ψ˜c(c+) := Gℓ
+
+ [˜ c, c +]. Therefore, the transition kernel of the truncated game Gℓ is defined as the pushforward of the increment distribution σℓ(· | ˜c, γ ℓ)
+
+through ψ˜c. Define eT (· | ˜c, γ ℓ) := ( ψ˜c)#σℓ(· | ˜c, γ ℓ), which evaluates explicitly to: 
+
+eT (˜ c′ | ˜c, γ ℓ) = X 
+
+> c+:Gℓ([˜ c, c +])=˜ c′
+
+σℓ(c+ | ˜c, γ ℓ). (22) For any player i and any truncated superstate ˜c, define the value in Gℓ by 
+
+eVi(χℓ) := Eχℓ
+
+" ∞X
+
+> k=0
+
+δ k rℓi (˜ ck, γ ℓk)
+
+#
+
+. (23) where Eχℓ
+
+denotes the expectation with respect to the information induced by χℓ and the truncated game dynamics. 
+
+C. Nash Approximation Gap due to Truncation 
+
+As we used an arbitrary ¯μ to characterize the Markov game Gℓ, this would inevitably result in error between the trajectories generated under Gℓ and G2. Therefore, in this subsection, we quantify the error resulting due to this truncation. To study the error quantification, we introduce following assumptions: 
+
+Assumption 3 (Uniform filter stability): There exists anonincreasing function f : N → R+ with f (ℓ) → 0
+
+as ℓ → ∞ such that for any ℓ ∈ N, for any reachable window realization ˜c ∈ ˜C, and for any pair of predictors 
+
+μ, μ ′ ∈ ∆( S × P ),
+
+F(ℓ)(μ, ˜c) − F (ℓ)(μ′, ˜c) TV 
+
+≤ f (ℓ) ∥μ − μ′∥TV . (24) This assumption characterizes the “forgetting property” of the filtering process: it guarantees that the influence of the initial predictor μ on the posterior belief decays uniformly as the observation window expands. In other words, the public belief asymptotically becomes independent of the initial belief on the past. Next, we introduce similar assumption that ensures that the private belief asymptotically becomes independent of initial belief on the past: 
+
+Assumption 4 (Uniform private filter stability): For each virtual player i ∈ I , there exists a nonincreasing function 
+
+fi : N → R+ satisfying lim ℓ→∞ fi(ℓ) = 0, such that for any truncation length ℓ ∈ N, any reachable truncated history (˜ c, epi) ∈ ˜C × ePi, and any two predictor distributions 
+
+ν, ν ′ ∈ ∆( S × P −i), the truncated private filter F(ℓ) 
+
+> i
+
+satisfies 
+
+F(ℓ) 
+
+> i
+
+(ν, ˜c, epi) − F (ℓ) 
+
+> i
+
+(ν′, ˜c, epi) TV ≤ fi(ℓ). (25) 
+
+Remark 2: Consider the setting given in Example 1. If the Dobrushin coefficient of the transition kernel T , defined as follows 
+
+δ(T ) := inf 
+
+> s,s ′,a
+
+X
+
+> s′′ ∈S
+
+min  T (s′′ | s, a ), T (s′′ | s′, a ), (26) is less than 1 then Assumptions 3-4 are satisfied. Next, we leverage Assumptions 3-4 to obtain a relation between Nash equilibrium of Gℓ and G2 in terms of the truncation length ℓ. Towards that goal, we first introduce the notion of lifted strategy to relate strategy profile in truncated game with that of G2.
+
+Definition 3 (Lifted Strategy): For any truncated strategy profile χℓ ∈ X ℓ, define its lifted strategy profile L(χℓ) ∈ X 
+
+as follows 
+
+ L(χℓ)(c) := χℓ Gℓ(c) ∀c ∈ C .
+
+Moreover, for any opponent strategy profile χ−i ∈ X −i,let X FMRS  
+
+> i
+
+:= { L(χℓi ) : χℓi ∈ X ℓi } ⊆ X i denote the 
+
+finite-memory restricted strategy set , which is set of all lifted strategies from truncated game. We are now ready to state the main result, which shows that lifting a Markov Nash equilibrium of Gℓ yields an ϵ-Nash equilibrium of the original prescription game G2.
+
+Theorem 1 ( ϵ-Nash equilibrium approximation): 
+
+Suppose that Assumptions 1-4 hold. Let χ∗,ℓ ∈ X ℓ
+
+be a Markov Nash equilibrium of the truncated game Gℓ.Define the lifted strategy profile in G2 by χ∗ := L(χ∗,ℓ ).
+
+Then χ∗ is an ϵ(ℓ)-Nash equilibrium of G2, i.e., for all players i, and all unilateral deviations χi ∈ X i,
+
+Vi(χi, χ ∗−i) ≤ Vi(χ∗) + ϵ(ℓ), (27) where ϵ(ℓ) := 2 ξ(ℓ) + κ(ℓ) with ξ(ℓ) := 2f (ℓ) ¯ r 
+
+> (1 −δ)2
+
+and κ(ℓ) := max i∈I 4fi(ℓ)¯ r 
+
+> (1 −δ)2
+
+.The proof of Theorem 1 relies on two intermediate results stated below. The first result quantifies the gap between player i’s optimal value function (in G2), evaluated over Xi
+
+and over the finite-memory restricted set X FMRS  
+
+> i
+
+, for any fixed opponent strategy χ−i ∈ X −i; this gap vanishes as the truncation length increases. 
+
+Lemma 3: Suppose that Assumptions 1, 2, and 4 hold. For any i ∈ I , χ −i ∈ X −i, we have 
+
+sup 
+
+> χi∈X i
+
+Vi(χi, χ −i) − sup  
+
+> χi∈X FMRS
+> i
+
+Vi(χi, χ −i) ≤ κi(ℓ),where κi(ℓ) = 4fi(ℓ)¯ r 
+
+> (1 −δ)2
+
+.
+
+The second result quantifies the gap between the value function of any player in Gℓ and G2 (corresponding to lifted strategy), which vanishes as the truncation length increase. 
+
+Lemma 4: Suppose that Assumptions 1-3 hold. Fix any player i and any strategy profile χℓ ∈ X ℓ in the truncated game Gℓ. Then, 
+
+Vi(L(χℓ)) − eVi(χℓ) ≤ ξi(ℓ), (28) where ξ(ℓ) := 2f (ℓ) ¯ r 
+
+> (1 −δ)2
+
+.
+
+D. Proofs. a) Proof of Theorem 1: Fix arbitrary player i ∈ I and an arbitrary χi ∈ X i. We note that 
+
+Vi(χi, χ ∗−i) ≤ sup 
+
+> χi∈X i
+
+Vi(χi, χ ∗−i)
+
+≤ sup  
+
+> ˆχi∈X FMRS
+> i
+
+Vi( ˆ χi, χ ∗−i) + κi(ℓ),
+
+where second inequality is due Lemma 3. Thus, there exists a ˆχi ∈ X FMRS  
+
+> i
+
+such that 
+
+Vi(χi, χ ∗−i) ≤ Vi( ˆ χi, χ ∗−i) + κi(ℓ). (29) Next, we note that, using definition of X FMRS  
+
+> i
+
+, there exists ˆχℓi ∈ X ℓi such that ˆχi = L( ˆ χℓi ). Thus, L( ˆ χℓi , χ ∗,ℓ  
+
+> −i
+
+) = ( ˆ χi, χ ∗−i). Consequently, we note that 
+
+Vi( ˆ χi, χ ∗−i) = Vi(L( ˆ χℓi , χ ∗,ℓ  
+
+> −i
+
+)) 
+
+≤ eVi( ˆ χℓi , χ ∗,ℓ  
+
+> −i
+
+) + ξ(ℓ) ≤ eVi(χ∗,ℓ ) + ξ(ℓ), (30) where the first inequality is due to Lemma 4 and the second inequality is due to the fact that χ∗,ℓ is a Nash equilibrium in Gℓ. Furthermore, from the statement of Theorem 1, we know that L(χ∗,ℓ ) = χ∗. Thus, using Lemma 4, we obtain 
+
+eVi(χ∗,ℓ ) ≤ Vi(L(χ∗,ℓ )) + ξ(ℓ) = Vi(χ∗) + ξ(ℓ) (31) Combining (29)–(31) we obtain 
+
+Vi(χi, χ ∗−i) ≤ Vi(χ∗) + 2 ξ(ℓ) + κi(ℓ).
+
+This completes the proof. 
+
+b) Proof of Lemma 3: Fix any arbitrary time t ≥ 0,any opponent strategy profile χ−i ∈ X −i, and any common history realization ct ∈ C t that is reachable under (χ′
+
+> i
+
+, χ −i)
+
+for any χ′ 
+
+> i
+
+∈ X i. Let χ⋆i ∈ X i denote an optimal response to 
+
+χ−i.Recall from (16) that the exact private posterior admits the 
+
+ℓ-step representation φi,t (· | ct, pi,t ) = F(ℓ) 
+
+> i
+
+(νi,t , ˜ct, ˜pi,t ),initialized by the history dependent predictor νi,t (defined in (15)). We now introduce an arbitrary reference predictor 
+
+¯νi ∈ ∆( S × P −i) and define the corresponding reference truncated posterior as: 
+
+φ ℓi,t (· | ˜ct, ˜pi,t ) := F(ℓ)
+
+> i
+
+ ¯νi, ˜ct, ˜pi,t 
+
+. (32) Then, Assumption 4 implies: 
+
+φi,t (· | ct, pi,t ) − φ ℓi,t (· | ˜ct, ˜pi,t ) TV ≤ fi(ℓ). (33) For any time t ≥ 0, any y ∈ S × P −i, and any action ai ∈Ai, we first define the expected future return conditioned on the full state realization as: 
+
+Jt(y, a i) := Eχ⋆i ,χ −i
+
+" ∞X
+
+> k=t
+
+δk−t ri(sk, a k) (st, p−i,t ) = y, ai,t = ai
+
+#
+
+.
+
+(34) Subsequently, we define the exact and the truncated reference Q-values by explicitly taking the expectation of Jt(y, a i)
+
+over their respective private posteriors: 
+
+Qt(ct, pi,t , a i) = Eyt∼φi,t (·| ct,pi,t )[Jt(yt, a i)] , (35) 
+
+Qℓt (˜ ct, ˜pi,t , a i) = Eyt∼φℓi,t (·| ˜ct,˜pi,t )[Jt(yt, a i)] . (36) Using the uniform bound ∥Jt(·, a i)∥∞ ≤ ¯r 
+
+> 1−δ
+
+and (33), for any fixed action ai ∈ A i, the approximation error of the Q-value is bounded by: 
+
+Qt(ct, pi,t , a i) − Q ℓt (˜ ct, ˜pi,t , a i)
+
+≤ 2∥Jt(·, a i)∥∞ φi,t (· | ct, pi,t ) − φ ℓi,t (· | ˜ct, ˜pi,t ) TV 
+
+≤ 2 ¯r
+
+1 − δ fi(ℓ). (37) Let a⋆(ct, pi,t ) ∈ arg max ai Qt(ct, pi,t , a i) and let 
+
+ˆa(˜ ct, ˜pi,t ) ∈ arg max ai Q ℓt (˜ ct, ˜pi,t , a i). Next, we note that 
+
+max 
+
+> ai
+
+Qt(ct, pi,t , a i) = Qt
+
+ ct, pi,t , a ⋆(ct, pi,t )
+
+≤
+
+> (37)
+
+Q ℓt
+
+ ˜ct, ˜pi,t , a ⋆(ct, pi,t ) + 2¯ r
+
+1 − δ fi(ℓ)
+
+≤ Q ℓt
+
+ ˜ct, ˜pi,t , ˆa(˜ ct, ˜pi,t ) + 2¯ r
+
+1 − δ fi(ℓ)
+
+≤
+
+> (37)
+
+Qt
+
+ ct, pi,t , ˆa(˜ ct, ˜pi,t ) + 4¯ r
+
+1 − δ fi(ℓ), (38) where the second inequality is due to the property of 
+
+ˆa(˜ ct, ˜pi,t ).Finally, define ˆγi ∈ Γℓi such that ˆγi(˜ pi,t ) := ˆ a(˜ ct, ˜pi,t )
+
+for all ˜pi,t ∈ ˜Pi. We then construct the truncated behavioral strategy ˆχℓi : ˜C → ∆(Γ ℓi ) in Gℓ by setting ˆχℓi (· | ˜ct) := 1ˆγi ,where 1 denotes the Dirac measure. Let ˆχi := L( ˆ χℓi ) ∈ X ℓi
+
+denote its lifted strategy. For each t ≥ 0, define a hybrid strategy χ(t) 
+
+> i
+
+such that player i follows ˆχi for the first t stages 0, 1, . . . , t − 1,and then follows χ⋆i from stage t onward. In particular, 
+
+χ(0)  
+
+> i
+
+= χ⋆i , and when t → ∞ , the strategy χ(t) 
+
+> i
+
+converges to 
+
+ˆχi. Therefore, the state transitions and reward distributions perfectly coincide for all steps k < t under the two profiles. By isolating the discounted reward from step t onward, and conditioning on the realized history (ct, pi,t ), the law of total expectation yields the following future return: 
+
+Eχ(t) 
+
+> i,χ −i
+
+" ∞X
+
+> k=t
+
+δk−tri(sk, a k) ct, pi,t 
+
+#
+
+= Eai∼χ⋆i [Qt(ct, pi,t , a i)] ≤ max 
+
+> ai∈A i
+
+Qt(ct, pi,t , a i),
+
+(39) and 
+
+Eχ(t+1)  
+
+> i,χ −i
+
+" ∞X
+
+> k=t
+
+δk−tri(sk, a k) ct, pi,t 
+
+#
+
+= Qt
+
+ ct, pi,t , ˆa(˜ ct, ˜pi,t ).
+
+(40) Since χ(t) 
+
+> i
+
+and χ(t+1)  
+
+> i
+
+coincide over the first t stages, the cumulative discounted rewards collected before time t
+
+are identical under the two profiles and therefore cancel in the difference. Moreover, the two profiles induce the same distribution of (ct, pi,t ) under the fixed initial distribution ρ0.Applying (39) and (40), we obtain the single stage deviation gap: 
+
+Vi(χ(t) 
+
+> i
+
+, χ −i) − Vi(χ(t+1)  
+
+> i
+
+, χ −i)= δt Eχ(t) 
+
+> i,χ −i
+
+"
+
+Eχ(t) 
+
+> i,χ −i
+
+" ∞X
+
+> k=t
+
+δk−tri(sk, s k) ct, pi,t 
+
+#
+
+− δtEχ(t+1)  
+
+> i,χ −i
+
+" ∞X
+
+> k=t
+
+δk−tri(sk, a k) ct, pi,t 
+
+## 
+
+≤ δt Eχ(t) 
+
+> i,χ −i
+
+"
+
+Eχ(t) 
+
+> i,χ −i
+
+"
+
+max 
+
+> ai∈A i
+
+Qt(ct, pi,t , a i)
+
+− Qt
+
+ ct, pi,t , ˆa(˜ ct, ˜pi,t ) ## 
+
+.
+
+(41) Applying the uniform bound established in (38) to the term inside the expectation yields 
+
+Vi(χ(t) 
+
+> i
+
+, χ −i) − Vi(χ(t+1)  
+
+> i
+
+, χ −i) ≤ δt · 4¯ r
+
+1 − δ fi(ℓ).
+
+Then telescoping over t = 0 , 1, . . . , T − 1 gives 
+
+Vi(χ(0)  
+
+> i
+
+, χ −i) − Vi(χ(T ) 
+
+> i
+
+, χ −i)= 
+
+> T−1
+
+X
+
+> t=0
+
+
+
+Vi(χ(t) 
+
+> i
+
+, χ −i) − Vi(χ(t+1)  
+
+> i
+
+, χ −i)
+
+
+
+. (42) and hence 
+
+Vi(χ⋆i , χ −i) − Vi(χ(T ) 
+
+> i
+
+, χ −i) ≤ 
+
+> T−1
+
+X
+
+> t=0
+
+δt · 4¯ r
+
+1 − δ fi(ℓ).
+
+By taking the limit as T → ∞ , which implies χ(T ) 
+
+> i
+
+→ ˆχi,and applying the geometric series limit P∞ 
+
+> t=0
+
+δt = (1 −δ)−1,we obtain 
+
+Vi(χ⋆i , χ −i) ≤ Vi( ˆ χi, χ −i) + 4¯ r
+
+(1 − δ)2 fi(ℓ). (43) Since the lifted strategy ˆχi = L( ˆ χℓi ) ∈ X FMRS  
+
+> i
+
+, and χ⋆i is an optimal response in strategy space Xi, we obtain: 
+
+sup 
+
+> χi∈X i
+
+Vi(χi, χ −i)− sup  
+
+> χi∈X FMRS
+> i
+
+Vi(χi, χ −i) ≤ 4¯ r
+
+(1 − δ)2 fi(ℓ).
+
+This completes the proof. 
+
+c) Proof of Lemma 4: Fix any arbitrary time t ≥ 0,any reachable common history realization ct ∈ C under 
+
+χℓ, and let ˜ct = Gℓ(ct) be its corresponding window state. By the definition of the truncated belief in (17), applying the uniform forgetting property from Assumption 3 directly yields the approximation bound: 
+
+βt(· | ct) − βℓt (· | ˜ct) TV ≤ f (ℓ) μt − ¯μ TV ≤ f (ℓ),
+
+(44) where the final inequality follows since the total variation distance between any two probability measures is trivially bounded by 1.Since the induced beliefs are defined as pushforwards through the mapping ϕ (i.e., ˜βt = ϕ#βt and ˜βℓt = ϕ#βℓt ), the nonexpansiveness of the TV distance (Lemma 5) yields 
+
+∥ ˜βt(· | ct)− ˜βℓt (· | ˜ct)∥TV ≤ ∥ βt(· | ct)−βℓt (· | ˜ct)∥TV ≤ f (ℓ).
+
+(45) Recall the truncated stage reward definition in (19) 
+
+rℓi (˜ ct, γ ℓ) = X
+
+> s∈S
+
+X 
+
+> ˜p∈eP
+
+˜βℓt (s, ˜p | ˜ct) ri
+
+ s, γ ℓ(˜ p),
+
+Define the corresponding conditional expected reward in G2
+
+at ct under the same prescription: 
+
+ri(ct, γ ℓ) := X
+
+> s∈S
+
+X 
+
+> ˜p∈eP
+
+˜βt(s, ˜p | ct) ri
+
+ s, γ ℓ(˜ p),
+
+where ˜βt(· | ct) denotes the induced belief on (st, ˜pt) under 
+
+ct. Using |ri| ≤ ¯r and the TV inequality |Eμ[g] − Eν [g]| ≤ 
+
+2∥g∥∞∥μ − ν∥TV , together with (45), we obtain 
+
+rℓi (˜ ct, γ ℓ) − ri(ct, γ ℓ) ≤ 2¯ r ˜βℓt (· | ˜ct) − ˜βt(· | ct) TV 
+
+≤ 2f (ℓ)¯ r. 
+
+(46) Similarly, because both the exact and truncated increment laws are generated by applying the identical Markov kernel 
+
+W γℓ 
+
+> σ
+
+(defined in (20)) to their respective induced beliefs, they can be compactly expressed as operator applications: σ(· | 
+
+ct, γ ℓ) = W γℓ 
+
+> σ
+
+˜βt(· | ct) and σℓ(· | ˜ct, γ ℓ) = W γℓ 
+
+> σ
+
+˜βℓt (· | ˜ct).Consequently, applying the nonexpansiveness of the TV distance immediately yields the error bound: 
+
+σℓ(· | ˜ct, γ ℓ) − σ(· | ct, γ ℓ) TV 
+
+= W γℓ 
+
+> σ
+
+˜βℓt (· | ˜ct) − W γℓ 
+
+> σ
+
+˜βt(· | ct) TV 
+
+≤ ˜β(˜ ct) − β(ct) TV ≤ f (ℓ).
+
+(47) Recall from (22) that the induced transition kernel is the pushforward eT (· | ˜ct, γ ℓ) = (ψ˜ct )#σℓ(· | ˜ct, γ ℓ).Analogously, the exact transition kernel mapped to the window space shares the identical pushforward structure: 
+
+T (· | ct, γ ℓ) := ( ψ˜ct )#σ(· | ct, γ ℓ).Since both transition kernels are pushforwards through the same deterministic map ψ˜ct , applying the nonexpansiveness of the TV distance along with the increment bound (47) yields: 
+
+eT (· | ˜ct, γ ℓ) − T (· | ct, γ ℓ) TV 
+
+≤ σℓ(· | ˜ct, γ ℓ) − σ(· | ct, γ ℓ) TV ≤ f (ℓ). (48) To establish the connection between the transition kernels and the values, we introduce the state values in G2 and Gℓ.For any time t ≥ 0, any common history c ∈ C t, and its corresponding truncated window ˜c = Gℓ(c), we define: 
+
+Vi,t (c; χ) := Eχ
+
+" ∞X
+
+> k=0
+
+δkri(st+k, a t+k) ct = c
+
+#
+
+, (49) eVi,t (˜ c; χℓ) := Eχℓ
+
+" ∞X
+
+> k=0
+
+δkrℓi (˜ ct+k, γ ℓt+k) ˜ct = ˜ c
+
+#
+
+. (50) Define the worst-case value gap ∆( ℓ) := sup t sup c∈C t
+
+eVi,t (˜ c; χℓ) − Vi,t (c; χ) . Since the original values Vi(χ) and eVi(χℓ) are essentially the state value from t = 0 , taking the supremum over all possible histories guarantees that eVi(χℓ) − Vi(χ) ≤ ∆( ℓ).
+
+Using the Bellman equations in G2 and Gℓ and the lift 
+
+χ(ct) = χℓ(˜ ct), for any fixed (ct, ˜ct) and any realized prescription Γt = γℓ,
+
+Vi,t (ct; χ) = E γℓ∼χ(ct)
+
+ri(ct, γ ℓ) + δV i,t (ct+1 ; χ) ,
+
+eVi,t (˜ ct; χℓ) = E γℓ∼χℓ(˜ ct)
+
+h
+
+rℓi (˜ ct, γ ℓ) + δ eVi,t (˜ ct+1 ; χℓ)
+
+i
+
+.
+
+Then the worst-case value gap can be written as: 
+
+eVi,t (˜ ct; χℓ) − Vi,t (ct; χ) ≤ rℓi (˜ ct, γ ℓ) − ri(ct, γ ℓ)
+
+| {z }
+
+> Term A
+
++δ X
+
+> ˜c′
+
+T (˜ c′ | ct, γ ℓ)  eVi(˜ c′; χℓ) − Vi(ct+1 ; χ)| {z }
+
+> Term B
+
++δ X
+
+> ˜c′
+
+  ˜T (˜ c′ | ˜ct, γ ℓ) − T (˜ c′ | ct, γ ℓ) eVi(˜ c′; χℓ)
+
+| {z }
+
+> Term C
+
+.
+
+(51) Term A is bounded by (46) so that A ≤ 2f (ℓ)¯ r. For term 
+
+B, since P 
+
+> ˜c′
+
+T (˜ c′ | ct, γ ℓ) = 1 and by definition of ∆( ℓ),
+
+B ≤ X
+
+> ˜c′
+
+T (˜ c′ | ct, γ ℓ) eVi(˜ c′; χℓ) − Vi(ct+1 ; χ) ≤ ∆( ℓ).
+
+For term C, using |ri| ≤ ¯r implies ∥ eVi(·; χℓ)∥∞ ≤ ¯r/ (1 −δ).Applying the TV inequality and (48) yields 
+
+C ≤ 2 eVi(·; χℓ) ∞
+
+˜T (· | ˜ct, γ ℓ) − T (· | ct, γ ℓ) TV 
+
+≤ 2¯ r
+
+1 − δ f (ℓ).
+
+Plugging the three bounds into (51) and taking supremum over ct yields ∆( ℓ) ≤ 2f (ℓ)¯ r + δ ∆( ℓ) + δ · 2¯ r 
+
+> 1−δ
+
+f (ℓ).
+
+Rearranging, (1 − δ)∆( ℓ) ≤ 2f (ℓ)¯ r + 2δ¯r 
+
+> 1−δ
+
+f (ℓ), and hence 
+
+eVi(χℓ) − Vi(χ) ≤ ∆( ℓ) ≤ 2f (ℓ)¯ r
+
+1 − δ + 2δf (ℓ)¯ r
+
+(1 − δ)2 = 2f (ℓ)¯ r
+
+(1 − δ)2 .
+
+IV. C ONCLUSION 
+
+We develop a finite-state, finite-action Markov game ap-proximation of a POMG via truncation of agents’ informa-tion histories. Under suitable filter stability conditions, we establish that any equilibrium of the truncated game induces an ε-Nash equilibrium of the original POMG, with ε → 0
+
+as the truncation length increases. This framework opens the door to tractable planning and learning algorithms in infinite-horizon games, including extensions with heterogeneous memory lengths across agents, capturing realistic settings where agents operate with differing informational capacities. APPENDIX 
+
+Lemma 5 (TV distance nonexpansiveness [17, p. 31]): 
+
+Let X , Y be measurable spaces, and let W (· | x) ∈ ∆( Y),
+
+x ∈ X . For any p ∈ ∆( X ), define the output distribution 
+
+W p ∈ ∆( Y) by 
+
+(W p )( y) := 
+
+Z
+
+> X
+
+W (y | x) p(x)dx, y ∈ Y .
+
+Then for any p, q ∈ ∆( X ),
+
+∥W p − W q ∥TV ≤ ∥ p − q∥TV .
+
+REFERENCES [1] X. Liu and K. Zhang, “Partially observable multi-agent rl with (quasi-) efficiency: The blessing of information sharing,” in International Conference on Machine Learning . PMLR, 2023, pp. 22 370–22 419. [2] A. Nayyar, A. Gupta, C. Langbort, and T. Bas ¸ar, “Common informa-tion based markov perfect equilibria for stochastic games with asym-metric information: Finite games,” IEEE Transactions on Automatic Control , vol. 59, no. 3, pp. 555–570, 2013. [3] A. Gupta, A. Nayyar, C. Langbort, and T. Basar, “Common informa-tion based markov perfect equilibria for linear-gaussian games with asymmetric information,” SIAM Journal on Control and Optimization ,vol. 52, no. 5, pp. 3228–3260, 2014. [4] Y. Ouyang, H. Tavafoghi, and D. Teneketzis, “Dynamic games with asymmetric information: Common information based perfect bayesian equilibria and sequential decomposition,” IEEE Transactions on Au-tomatic Control , vol. 62, no. 1, pp. 222–237, 2016. [5] N. Golowich, A. Moitra, and D. Rohatgi, “Planning and learning in partially observable systems via filter stability,” in Proceedings of the 55th Annual ACM Symposium on Theory of Computing , 2023, pp. 349–362. [6] C. McDonald and S. Y¨ uksel, “Exponential filter stability via do-brushin’s coefficient,” 2020. [7] H. Kao and V. Subramanian, “Common information based approx-imate state representations in multi-agent reinforcement learning,” in International Conference on Artificial Intelligence and Statistics .PMLR, 2022, pp. 6947–6967. [8] A. D. Kara and S. Y¨ uksel, “Convergence of finite memory q learning for pomdps and near optimality of learned policies under filter stability,” Mathematics of Operations Research , vol. 48, no. 4, pp. 2066–2093, 2023. [9] A. Kara and S. Yuksel, “Near optimality of finite memory feedback policies in partially observed markov decision processes,” Journal of Machine Learning Research , vol. 23, no. 11, pp. 1–46, 2022. [10] A. Anjarlekar, R. Etesami, and R. Srikant, “Scalable policy-based rl algorithms for pomdps,” arXiv preprint arXiv:2510.06540 , 2025. [11] F. Le Gland and N. Oudjane, “Stability and uniform approximation of nonlinear filters using the hilbert metric and application to particle filters,” The Annals of Applied Probability , vol. 14, no. 1, pp. 144–187, 2004. [12] R. Douc, G. Fort, E. Moulines, and P. Priouret, “Forgetting the initial distribution for hidden markov models,” Stochastic processes and their applications , vol. 119, no. 4, pp. 1235–1256, 2009. [13] J. Subramanian, A. Sinha, R. Seraj, and A. Mahajan, “Approximate information state for approximate planning and reinforcement learning in partially observed systems,” Journal of Machine Learning Research ,vol. 23, no. 12, pp. 1–83, 2022. [14] X. Liu and K. Zhang, “Partially observable multiagent reinforcement learning with information sharing,” SIAM Journal on Control and Optimization , vol. 64, no. 2, pp. 673–697, 2026. [15] W. Mao, K. Zhang, E. Miehling, and T. Bas ¸ar, “Information state em-bedding in partially observable cooperative multi-agent reinforcement learning,” in 2020 59th IEEE Conference on Decision and Control (CDC) . IEEE, 2020, pp. 6124–6131. [16] A. Altabaa and Z. Yang, “On the role of information structure in reinforcement learning for partially-observable sequential teams and games,” Advances in Neural Information Processing Systems , vol. 37, pp. 6648–6710, 2024. [17] A. Makur, “Information contraction and decomposition,” Ph.D. disser-tation, Massachusetts Institute of Technology, 2019.

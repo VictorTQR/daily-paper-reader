@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-001.webp",
+      "caption": "Figure 3: Comparison of a vanilla LLM judge against the hybrid grading pipeline across five models. The vanilla judge receives the full conversation transcript and complete grader source code; only server-side audit logs and post-execution environment snapshots are withheld.",
+      "page": 10,
+      "index": 1,
+      "width": 817,
+      "height": 271
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-002.webp",
+      "caption": "Table 1: Comparison of agent evaluation benchmarks across six dimensions: Multimodal (visual input and artifact generation), Multi-turn (simulated user interaction), Auditable (trajectory-level grading), Safety (embedded constraint checking), Perturbation (controlled error injection), and Sandboxed (isolated execution environment). ✓ = full support; ❖ = partial; ✗ = absent.",
+      "page": 3,
+      "index": 2,
+      "width": 818,
+      "height": 297
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-003.webp",
+      "caption": "Table 9: Video-to-floor-plan reconstruction rubric evaluation. The LLM judge examines the rendered floor plan image—not the agent’s source code—to score object coverage (8/9 found) and spatial accuracy (4/10 correct) independently. Criteria marked with † can be visually verified in the generated artifact (right).",
+      "page": 18,
+      "index": 3,
+      "width": 829,
+      "height": 850
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-004.webp",
+      "caption": "Figure 1: Claw-Eval architecture. The framework operates across three temporal phases (Setup, Execution, Judge) and three spatial layers (Host Machine, Isolation Environment, Mock Services). During execution, the agent works within the isolation environment, interacting with workspace files, mock services, and system-layer tools. A temporal firewall separates execution from grading: the grader consumes three independent evidence channels (execution traces, environment snapshots, and server-side audit logs) that are never exposed to the agent during execution.",
+      "page": 4,
+      "index": 4,
+      "width": 785,
+      "height": 493
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-005.webp",
+      "caption": "Table 10: LVB machine operation localization and dog frame crop rubric evaluation. The temporal rubric uses IoU between predicted and ground-truth intervals (visualized above), yielding continuous partial credit. The visual rubric examines the cropped image (right) for subject visibility and centering.",
+      "page": 19,
+      "index": 5,
+      "width": 829,
+      "height": 683
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-006.webp",
+      "caption": "Table 8: Statistical analysis SPSS multi-turn evaluation. Claude Opus 4.6 simulates an impatient professor who progressively reveals information, pushes back on generic advice, and naturally exposes misconceptions—the high-level traits and information structure are specified in the persona prompt, while the concrete conversational behaviors (natural phrasing, when to push back, how to expose misconceptions without self-awareness) emerge from the LLM’s interpretation. The 4-component rubric separately evaluates information gathering (0.55), diagnostic reasoning (0.88), numerical accuracy (0.72), and content quality (0.88).",
+      "page": 17,
+      "index": 6,
+      "width": 829,
+      "height": 554
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-007.webp",
+      "caption": "Table 3: Benchmark composition. 300 tasks span three groups testing complementary capabilities: practical workflow execution (General), visual perception and generation (Multimodal), and proactive information acquisition (Multi-turn Dialogue), across 9 fine-grained categories.",
+      "page": 5,
+      "index": 7,
+      "width": 732,
+      "height": 322
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-008.webp",
+      "caption": "Table 2: Agent capability layers. The system layer provides 11 built-in tools covering the core action space of real-world agent tasks; the service layer exposes task-specific mock APIs that simulate production services.",
+      "page": 5,
+      "index": 8,
+      "width": 732,
+      "height": 215
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06132v1/fig-009.webp",
+      "caption": "Table 7: Email triage rubric evaluation. Four scoring components—safety gate (deterministic dispatch check), classification accuracy (LLM judge extracts per-email labels), tool usage and coverage (dispatch audit)—combine to produce 0.84 completion. The right column shows the full 3-turn agent trace and its output.",
+      "page": 16,
+      "index": 9,
+      "width": 829,
+      "height": 579
+    }
+  ]
+}

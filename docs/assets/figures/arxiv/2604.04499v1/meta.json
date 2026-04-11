@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-001.webp",
+      "caption": "Fig. 1: Illustration of inter-agent constraint components via confidence ball separation in the PCC-DCS method.",
+      "page": 6,
+      "index": 1,
+      "width": 529,
+      "height": 296
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-002.webp",
+      "caption": "Fig. 8: Scalability comparison. Computational times of Centralized CS and FCC-, PCC- and MC-DCS for an increasing number of agents N .",
+      "page": 15,
+      "index": 2,
+      "width": 526,
+      "height": 353
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-003.webp",
+      "caption": "Fig. 6: Large-scale 2D task with 128 agents via PCC-DCS. The two subfigures correspond to time instants k = 10, 20, 30.",
+      "page": 15,
+      "index": 3,
+      "width": 1050,
+      "height": 279
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-004.webp",
+      "caption": "Fig. 7: Large-scale 2D task with 1024 agents via MC-DCS. Snapshot at time instant k = 20.",
+      "page": 15,
+      "index": 4,
+      "width": 529,
+      "height": 290
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-005.webp",
+      "caption": "TABLE I: Overview of Variable and Constraint Dimensions of Different Approaches",
+      "page": 7,
+      "index": 5,
+      "width": 1066,
+      "height": 252
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-006.webp",
+      "caption": "TABLE II: Compact Notation for Convergence Analysis",
+      "page": 10,
+      "index": 6,
+      "width": 518,
+      "height": 304
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-007.webp",
+      "caption": "Fig. 4: Multi-drone 3D task with FCC-DCS. The three subfigures show the 99.7% confidence ellipsoids of the initial and target distributions of the agents (faded colors) and of their current distributions (solid colors). The dark gray shapes are obstacles.",
+      "page": 14,
+      "index": 7,
+      "width": 1064,
+      "height": 227
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-008.webp",
+      "caption": "Fig. 5: Multi-agent 2D task with 32 agents via FCC-DCS. The three subfigures correspond to time instants k = 10, 20, 30.",
+      "page": 14,
+      "index": 8,
+      "width": 1048,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04499v1/fig-009.webp",
+      "caption": "Fig. 2: Two-agent illustrative 2D task. The top, middle and bottom rows correspond to FCC-, PCC- and MC-DCS, respectively. The samples illustrate 100 realizations of the distributions of the agents. The left column shows their full distribution trajectories, while the remaining subfigures on the right, show with solid ellipses the 99.7% confidence regions of their distributions at k = 10, 15, 20. The dashed/dotted ellipses show their initial/target distributions. The black shapes are obstacles to be avoided.",
+      "page": 13,
+      "index": 9,
+      "width": 1057,
+      "height": 528
+    }
+  ]
+}

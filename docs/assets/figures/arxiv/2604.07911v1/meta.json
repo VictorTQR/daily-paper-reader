@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-001.webp",
+      "caption": "Table 5: DACS advantage as a function of decisions per agent D, holding N fixed. Accuracy delta and context efficiency ratio grow as D increases for the baseline; DACS accuracy is stable.",
+      "page": 11,
+      "index": 1,
+      "width": 732,
+      "height": 205
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-002.webp",
+      "caption": "Table 6: All 8 scenarios across three phases. DACS accuracy is consistently high (90.0–98.4%); baseline collapses under agent count and decision density pressure.",
+      "page": 11,
+      "index": 2,
+      "width": 602,
+      "height": 242
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-003.webp",
+      "caption": "Figure 3: Phase 3 (decision density scaling) results for s7 (N = 5, D = 8) and s8 (N = 3, D = 15). Error bars: ±1 SE (10 trials each). (a) Steering accuracy. (b) Wrong-agent contamination. (c) Average context tokens at steering time.",
+      "page": 10,
+      "index": 3,
+      "width": 826,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-004.webp",
+      "caption": "Table 2: Phase 1 results: steering accuracy, contamination, and context size across N ∈ {3, 5, 10}. Values are mean ± SE over 10 trials. ∆: DACS minus baseline. Ctx ratio: baseline mean / DACS mean.",
+      "page": 8,
+      "index": 4,
+      "width": 710,
+      "height": 210
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-005.webp",
+      "caption": "Figure 1: DACS vs. flat-context baseline across N ∈ {3, 5, 10} (Phase 1). Error bars: ±1 SE (10 trials each). (a) Steering accuracy. (b) Wrong-agent contamination. (c) Average context tokens at steering time.",
+      "page": 8,
+      "index": 5,
+      "width": 826,
+      "height": 277
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-006.webp",
+      "caption": "Table 1: Comparison of context management mechanisms.",
+      "page": 4,
+      "index": 6,
+      "width": 814,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-007.webp",
+      "caption": "Table 7: Phase 4 results: real-agent N -scaling validation. Agents are autonomous LLMs (Claude Haiku 4.5) generating free-form steering questions. Two independent judges shown. Phase 1 rows reproduce Table 2 values for cross-paradigm comparison. Welch’s t-test significance on per-trial Haiku-judge accuracy.",
+      "page": 12,
+      "index": 7,
+      "width": 714,
+      "height": 238
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-008.webp",
+      "caption": "Figure 4: Phase 4 real-agent vs. Phase 1 synthetic results at matched N ∈ {3, 5}. (a) M1 steering accuracy (Haiku judge) for DACS and baseline across both paradigms. (b) M3 average context tokens at steering time. Error bars: ±1 SE (10 trials per condition). DACS advantage direction and growth with N are consistent across paradigms; absolute accuracy is lower under real agents due to the harder free-form question regime.",
+      "page": 12,
+      "index": 8,
+      "width": 706,
+      "height": 325
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-009.webp",
+      "caption": "Table 3: Phase 2 results across homogeneous, crossfire, and cascade scenarios. Each cell: mean ± SE over 10 trials.",
+      "page": 9,
+      "index": 9,
+      "width": 822,
+      "height": 211
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07911v1/fig-010.webp",
+      "caption": "Figure 2: Phase 2 (agent diversity) results across s4 homogeneous, s5 crossfire, and s6 cascade. Error bars: ±1 SE (10 trials each). (a) Steering accuracy. (b) Wrong-agent contamination. (c) Average context tokens at steering time.",
+      "page": 9,
+      "index": 10,
+      "width": 826,
+      "height": 273
+    }
+  ]
+}

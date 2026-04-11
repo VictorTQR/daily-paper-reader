@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-001.webp",
+      "caption": "Table 1: Comparison of Paper Circle against prior literature systems. Green indicates supported, orange indicates partial support, and red indicates unsupported.",
+      "page": 2,
+      "index": 1,
+      "width": 475,
+      "height": 593
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-002.webp",
+      "caption": "Table 3: Combined benchmark results for agent-based models and retrieval baselines. Best results are shown in bold. All the results are calculated using semantic benchmarks. Only the last (blue) is evaluated on 500 RAbench queries, which shows syntetically written query is easier to retrieve compared to the random template following.",
+      "page": 7,
+      "index": 2,
+      "width": 950,
+      "height": 417
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-003.webp",
+      "caption": "Figure 7: Paper analysis and database management for fast inference.",
+      "page": 14,
+      "index": 3,
+      "width": 950,
+      "height": 527
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-004.webp",
+      "caption": "Table 8: Paper review score prediction on ICLR 2024. We compare four LLMs on predicting human review scores across rating, soundness, presentation, and contribution. We report error metrics (MSE/MAE/RMSE), correlation (Pearson/Spearman), and thresholded accuracy (within ±0.5, ±1.0, ±1.5 of the human score). N denotes the number of papers evaluated for each model after preprocessing.",
+      "page": 13,
+      "index": 4,
+      "width": 848,
+      "height": 304
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-005.webp",
+      "caption": "Figure 5: The main outputs of the analysis agent for a representative paper. (A) Interactive concept graph constructed from the paper, where nodes correspond to extracted concepts and edges denote semantic relationships. (B) Automatically generated concept explanations, each linked to the originating paper sections and pages. (C) Graph-aware question answering interface, providing answers grounded in extracted content along with supporting figures and references. (D) Structured Markdown exports summarizing all extracted concepts and methods for downstream use. (E) Flowchart view illustrating the high-level organization and relationships among concepts, methods, and experimental components of the paper.",
+      "page": 8,
+      "index": 5,
+      "width": 950,
+      "height": 615
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-006.webp",
+      "caption": "Figure 2: The main iterative diagram for the paper discovery framework. The system maintains an explicit, evolving discovery state (papers, links, statistics, and summaries) that is iteratively updated through agentic steps. Starting from an empty draft, the orchestrator agent alternates between noising and denoising operations over multiple steps, progressively refining the draft into a final result. When necessary, a web search agent is invoked for clarification or recent information.",
+      "page": 4,
+      "index": 6,
+      "width": 459,
+      "height": 285
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-007.webp",
+      "caption": "Figure 3: A paper analysis orchestrator agents for concepts, methods, experiments, and cross-entity linkages. The pipeline consists of four main stages: ingestion, which parses PDFs into structured elements (sections, figures, tables, equations); semantic chunking, which produces structure-aware text units; graph construction, which builds a typed knowledge graph of concepts, methods, experiments, and their relations with full traceability to source text; and a Q&A layer that enables graph-aware retrieval, verification, and export.",
+      "page": 4,
+      "index": 7,
+      "width": 458,
+      "height": 321
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-008.webp",
+      "caption": "Figure 6: Paper review results analysis. This study was conducted on 50 randomly selected ICLR 2024 reviews.",
+      "page": 9,
+      "index": 8,
+      "width": 950,
+      "height": 238
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06170v1/fig-009.webp",
+      "caption": "Figure 4: Multi-agent paper analysis and review architecture. Given a paper specified by a PDF or URL, an orchestrator agent coordinates PDF processing and maintains shared paper metadata and agent context. Specialized agents operate in parallel to perform deep technical analysis, contribution extraction, critical review, literature linking, reproducibility checking, summarization, and knowledge graph construction. External tools such as arXiv search, Semantic Scholar, and targeted text localization are invoked as needed. The orchestrator aggregates agent outputs into a unified, structured final report, enabling comprehensive, reviewer-style analysis with modular extensibility.",
+      "page": 5,
+      "index": 9,
+      "width": 461,
+      "height": 319
+    }
+  ]
+}

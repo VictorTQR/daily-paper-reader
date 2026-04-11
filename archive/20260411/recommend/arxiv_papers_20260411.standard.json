@@ -1,0 +1,2805 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-11T19:24:43.364808+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 94,
+    "deep_cap": 6,
+    "deep_selected": 58,
+    "quick_candidates": 44,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2604.02869v1",
+      "source": "arxiv",
+      "title": "Multi-Turn Reinforcement Learning for Tool-Calling Agents with Iterative Reward Calibration",
+      "abstract": "Training tool-calling agents with reinforcement learning on multi-turn tasks remains challenging due to sparse outcome rewards and difficult credit assignment across conversation turns. We present the first application of MT-GRPO (Multi-Turn Group Relative Policy Optimization) combined with GTPO (Generalized Token-level Policy Optimization) for training a tool-calling agent on realistic customer service tasks with an LLM-based user simulator. Through systematic analysis of training rollouts, we discover that naively designed dense per-turn rewards degrade performance by up to 14 percentage points due to misalignment between reward discriminativeness and advantage direction. We introduce Iterative Reward Calibration, a methodology for designing per-turn rewards using empirical discriminative analysis of rollout data, and show that our GTPO hybrid advantage formulation eliminates the advantage misalignment problem. Applied to the Tau-Bench airline benchmark, our approach improves Qwen3.5-4B from 63.8 percent to 66.7 percent (+2.9pp) and Qwen3-30B-A3B from 58.0 percent to 69.5 percent (+11.5pp) -- with the trained 4B model exceeding GPT-4.1 (49.4 percent) and GPT-4o (42.8 percent) despite being 50 times smaller, and the 30.5B MoE model approaching Claude Sonnet 4.5 (70.0 percent). To our knowledge, these are the first published RL training results on Tau-Bench. We release our code, reward calibration analysis, and training recipes.",
+      "authors": [
+        "Wachiravit Modecrua",
+        "Krittanon Kaewtawee",
+        "Krittin Pachtrachai",
+        "Touchapon Kraisingkorn"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-03T08:36:03+00:00",
+      "link": "https://arxiv.org/pdf/2604.02869v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "RL for tool-calling agents with LLM-based user simulator",
+      "llm_evidence_cn": "基于LLM用户模拟器的工具调用智能体强化学习",
+      "llm_evidence": "基于LLM用户模拟器的工具调用智能体强化学习",
+      "canonical_evidence": "基于LLM用户模拟器的工具调用智能体强化学习",
+      "llm_tldr_en": "Introduces MT-GRPO and Iterative Reward Calibration for training multi-turn tool-calling LLM agents.",
+      "llm_tldr_cn": "引入MT-GRPO和迭代奖励校准，用于训练多轮对话中的工具调用LLM智能体。",
+      "llm_tldr": "引入MT-GRPO和迭代奖励校准，用于训练多轮对话中的工具调用LLM智能体。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.03785v1",
+      "source": "arxiv",
+      "title": "Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays in Cooperative Multi-Agent Reinforcement Learning",
+      "abstract": "Communication is essential for coordination in \\emph{cooperative} multi-agent reinforcement learning under partial observability, yet \\emph{cross-timestep} delays cause messages to arrive multiple timesteps after generation, inducing temporal misalignment and making information stale when consumed.   We formalize this setting as a delayed-communication partially observable Markov game (DeComm-POMG) and decompose a message's effect into \\emph{communication gain} and \\emph{delay cost}, yielding the Communication Gain and Delay Cost (CGDC) metric.   We further establish a value-loss bound showing that the degradation induced by delayed messages is upper-bounded by a discounted accumulation of an information gap between the action distributions induced by timely versus delayed messages.   Guided by CGDC, we propose \\textbf{CDCMA}, an actor--critic framework that requests messages only when predicted CGDC is positive, predicts future observations to reduce misalignment at consumption, and fuses delayed messages via CGDC-guided attention.   Experiments on no-teammate-vision variants of Cooperative Navigation and Predator Prey, and on SMAC maps across multiple delay levels show consistent improvements in performance, robustness, and generalization, with ablations validating each component.",
+      "authors": [
+        "Zihong Gao",
+        "Hongjian Liang",
+        "Lei Hao",
+        "Liangjun Ke"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-04-04T16:14:41+00:00",
+      "link": "https://arxiv.org/pdf/2604.03785v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "cooperative multi-agent reinforcement learning under communication delays",
+      "llm_evidence_cn": "通信延迟下的协作多智能体强化学习",
+      "llm_evidence": "通信延迟下的协作多智能体强化学习",
+      "canonical_evidence": "通信延迟下的协作多智能体强化学习",
+      "llm_tldr_en": "Formalizes delayed communication in MARL and introduces a metric to decompose communication gain and delay cost.",
+      "llm_tldr_cn": "形式化了多智能体强化学习中的延迟通信问题，并提出了衡量通信增益与延迟成本的新指标。",
+      "llm_tldr": "形式化了多智能体强化学习中的延迟通信问题，并提出了衡量通信增益与延迟成本的新指标。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Multi-agent reinforcement learning and coordination",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05297v1",
+      "source": "arxiv",
+      "title": "Breakthrough the Suboptimal Stable Point in Value-Factorization-Based Multi-Agent Reinforcement Learning",
+      "abstract": "Value factorization, a popular paradigm in MARL, faces significant theoretical and algorithmic bottlenecks: its tendency to converge to suboptimal solutions remains poorly understood and unsolved. Theoretically, existing analyses fail to explain this due to their primary focus on the optimal case. To bridge this gap, we introduce a novel theoretical concept: the stable point, which characterizes the potential convergence of value factorization in general cases. Through an analysis of stable point distributions in existing methods, we reveal that non-optimal stable points are the primary cause of poor performance. However, algorithmically, making the optimal action the unique stable point is nearly infeasible. In contrast, iteratively filtering suboptimal actions by rendering them unstable emerges as a more practical approach for global optimality. Inspired by this, we propose a novel Multi-Round Value Factorization (MRVF) framework. Specifically, by measuring a non-negative payoff increment relative to the previously selected action, MRVF transforms inferior actions into unstable points, thereby driving each iteration toward a stable point with a superior action. Experiments on challenging benchmarks, including predator-prey tasks and StarCraft II Multi-Agent Challenge (SMAC), validate our analysis of stable points and demonstrate the superiority of MRVF over state-of-the-art methods.",
+      "authors": [
+        "Lesong Tao",
+        "Yifei Wang",
+        "Haodong Jing",
+        "Jingwen Fu",
+        "Miao Kang",
+        "Shitao Chen",
+        "Nanning Zheng"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-07T01:05:13+00:00",
+      "link": "https://arxiv.org/pdf/2604.05297v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "theoretical analysis of value factorization in MARL",
+      "llm_evidence_cn": "多智能体强化学习中价值分解的理论分析",
+      "llm_evidence": "多智能体强化学习中价值分解的理论分析",
+      "canonical_evidence": "多智能体强化学习中价值分解的理论分析",
+      "llm_tldr_en": "Analyzes suboptimal stable points in value-factorization-based MARL to improve convergence performance.",
+      "llm_tldr_cn": "分析多智能体强化学习价值分解中的次优稳定点，以提升算法的收敛性能。",
+      "llm_tldr": "分析多智能体强化学习价值分解中的次优稳定点，以提升算法的收敛性能。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05808v1",
+      "source": "arxiv",
+      "title": "Hierarchical Reinforcement Learning with Augmented Step-Level Transitions for LLM Agents",
+      "abstract": "Large language model (LLM) agents have demonstrated strong capabilities in complex interactive decision-making tasks. However, existing LLM agents typically rely on increasingly long interaction histories, resulting in high computational cost and limited scalability. In this paper, we propose STEP-HRL, a hierarchical reinforcement learning (HRL) framework that enables step-level learning by conditioning only on single-step transitions rather than full interaction histories. STEP-HRL structures tasks hierarchically, using completed subtasks to represent global progress of overall task. By introducing a local progress module, it also iteratively and selectively summarizes interaction history within each subtask to produce a compact summary of local progress. Together, these components yield augmented step-level transitions for both high-level and low-level policies. Experimental results on ScienceWorld and ALFWorld benchmarks consistently demonstrate that STEP-HRL substantially outperforms baselines in terms of performance and generalization while reducing token usage. Our code is available at https://github.com/TonyStark042/STEP-HRL.",
+      "authors": [
+        "Shuai Zhen",
+        "Yanhua Yu",
+        "Ruopei Guo",
+        "Nan Cheng",
+        "Yang Deng"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-07T12:44:33+00:00",
+      "link": "https://arxiv.org/pdf/2604.05808v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "hierarchical reinforcement learning for LLM agents",
+      "llm_evidence_cn": "针对LLM智能体的分层强化学习",
+      "llm_evidence": "针对LLM智能体的分层强化学习",
+      "canonical_evidence": "针对LLM智能体的分层强化学习",
+      "llm_tldr_en": "STEP-HRL applies hierarchical RL to LLM agents to improve scalability and reduce computational costs.",
+      "llm_tldr_cn": "STEP-HRL将分层强化学习应用于LLM智能体，以提高可扩展性并降低计算成本。",
+      "llm_tldr": "STEP-HRL将分层强化学习应用于LLM智能体，以提高可扩展性并降低计算成本。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05943v1",
+      "source": "arxiv",
+      "title": "MARL-GPT: Foundation Model for Multi-Agent Reinforcement Learning",
+      "abstract": "Recent advances in multi-agent reinforcement learning (MARL) have demonstrated success in numerous challenging domains and environments, but typically require specialized models for each task. In this work, we propose a coherent methodology that makes it possible for a single GPT-based model to learn and perform well across diverse MARL environments and tasks, including StarCraft Multi-Agent Challenge, Google Research Football and POGEMA. Our method, MARL-GPT, applies offline reinforcement learning to train at scale on the expert trajectories (400M for SMACv2, 100M for GRF, and 1B for POGEMA) combined with a single transformer-based observation encoder that requires no task-specific tuning. Experiments show that MARL-GPT achieves competitive performance compared to specialized baselines in all tested environments. Thus, our findings suggest that it is, indeed, possible to build a multi-task transformer-based model for a wide variety of (significantly different) multi-agent problems paving the way to the fundamental MARL model (akin to ChatGPT, Llama, Mistral etc. in natural language modeling).",
+      "authors": [
+        "Maria Nesterova",
+        "Mikhail Kolosov",
+        "Anton Andreychuk",
+        "Egor Cherepanov",
+        "Oleg Bulichev",
+        "Alexey Kovalev",
+        "Konstantin Yakovlev",
+        "Aleksandr Panov",
+        "Alexey Skrynnik"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-07T14:40:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.05943v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Foundation model for multi-agent reinforcement learning",
+      "llm_evidence_cn": "多智能体强化学习的基础模型",
+      "llm_evidence": "多智能体强化学习的基础模型",
+      "canonical_evidence": "多智能体强化学习的基础模型",
+      "llm_tldr_en": "MARL-GPT uses a transformer-based model to achieve competitive performance across diverse MARL tasks.",
+      "llm_tldr_cn": "MARL-GPT利用Transformer模型在多种多智能体强化学习任务中取得竞争性表现。",
+      "llm_tldr": "MARL-GPT利用Transformer模型在多种多智能体强化学习任务中取得竞争性表现。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07165v1",
+      "source": "arxiv",
+      "title": "Reason in Chains, Learn in Trees: Self-Rectification and Grafting for Multi-turn Agent Policy Optimization",
+      "abstract": "Reinforcement learning for Large Language Model agents is often hindered by sparse rewards in multi-step reasoning tasks. Existing approaches like Group Relative Policy Optimization treat sampled trajectories as independent chains, assigning uniform credit to all steps in each chain and ignoring the existence of critical steps that may disproportionally impact reasoning outcome. In this paper, we propose T-STAR(Tree-structured Self-Taught Agent Rectification), a framework that recovers the latent correlated reward structure across seemingly independent trajectories. Specifically, we consolidate trajectories into a unified Cognitive Tree by identifying and merging functionally similar steps/nodes. It enables an Introspective Valuation mechanism that back-propagates trajectory-level rewards through the tree to obtain a new notion of variance-reduced relative advantage at step-level. Using the Cognitive Tree, we also develop In-Context Thought Grafting to synthesize corrective reasoning by contrasting successful and failed branches at critical divergence points/steps. Our proposed Surgical Policy Optimization then capitalizes on the rich policy gradient information concentrated at these critical points/steps through a Bradley-Terry type of surgical loss. Extensive experiments across embodied, interactive, reasoning, and planning benchmarks demonstrate that T-STAR achieves consistent improvements over strong baselines, with gains most pronounced on tasks requiring extended reasoning chains.",
+      "authors": [
+        "Yu Li",
+        "Sizhe Tang",
+        "Tian Lan"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-08T14:55:29+00:00",
+      "link": "https://arxiv.org/pdf/2604.07165v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "RL for LLM agent policy optimization",
+      "llm_evidence_cn": "LLM智能体策略优化的强化学习",
+      "llm_evidence": "LLM智能体策略优化的强化学习",
+      "canonical_evidence": "LLM智能体策略优化的强化学习",
+      "llm_tldr_en": "T-STAR uses tree-structured self-rectification to optimize LLM agent policies in multi-step reasoning tasks.",
+      "llm_tldr_cn": "T-STAR框架通过树状结构自校正，解决了LLM智能体在多步推理任务中奖励稀疏的优化难题。",
+      "llm_tldr": "T-STAR框架通过树状结构自校正，解决了LLM智能体在多步推理任务中奖励稀疏的优化难题。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08224v1",
+      "source": "arxiv",
+      "title": "Externalization in LLM Agents: A Unified Review of Memory, Skills, Protocols and Harness Engineering",
+      "abstract": "Large language model (LLM) agents are increasingly built less by changing model weights than by reorganizing the runtime around them. Capabilities that earlier systems expected the model to recover internally are now externalized into memory stores, reusable skills, interaction protocols, and the surrounding harness that makes these modules reliable in practice. This paper reviews that shift through the lens of externalization. Drawing on the idea of cognitive artifacts, we argue that agent infrastructure matters not merely because it adds auxiliary components, but because it transforms hard cognitive burdens into forms that the model can solve more reliably. Under this view, memory externalizes state across time, skills externalize procedural expertise, protocols externalize interaction structure, and harness engineering serves as the unification layer that coordinates them into governed execution. We trace a historical progression from weights to context to harness, analyze memory, skills, and protocols as three distinct but coupled forms of externalization, and examine how they interact inside a larger agent system. We further discuss the trade-off between parametric and externalized capability, identify emerging directions such as self-evolving harnesses and shared agent infrastructure, and discuss open challenges in evaluation, governance, and the long-term co-evolution of models and external infrastructure. The result is a systems-level framework for explaining why practical agent progress increasingly depends not only on stronger models, but on better external cognitive infrastructure.",
+      "authors": [
+        "Chenyu Zhou",
+        "Huacan Chai",
+        "Wenteng Chen",
+        "Zihan Guo",
+        "Rong Shan",
+        "Yuanyi Song",
+        "Tianyi Xu",
+        "Yingxuan Yang",
+        "Aofan Yu",
+        "Weiming Zhang",
+        "Congming Zheng",
+        "Jiachen Zhu",
+        "Zeyu Zheng",
+        "Zhuosheng Zhang",
+        "Xingyu Lou",
+        "Changwang Zhang",
+        "Zhihui Fu",
+        "Jun Wang",
+        "Weiwen Liu",
+        "Jianghao Lin",
+        "Weinan Zhang"
+      ],
+      "primary_category": "cs.SE",
+      "categories": [
+        "cs.SE",
+        "cs.MA"
+      ],
+      "published": "2026-04-09T13:19:41+00:00",
+      "link": "https://arxiv.org/pdf/2604.08224v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Unified review of LLM agent infrastructure and frameworks",
+      "llm_evidence_cn": "LLM智能体基础设施与框架的统一综述",
+      "llm_evidence": "LLM智能体基础设施与框架的统一综述",
+      "canonical_evidence": "LLM智能体基础设施与框架的统一综述",
+      "llm_tldr_en": "Reviews the shift toward externalizing memory and skills in LLM agent system design and engineering.",
+      "llm_tldr_cn": "综述了LLM智能体系统设计中将记忆和技能外部化的趋势及工程架构。",
+      "llm_tldr": "综述了LLM智能体系统设计中将记忆和技能外部化的趋势及工程架构。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.02507v1",
+      "source": "arxiv",
+      "title": "Reinforcement Learning from Human Feedback: A Statistical Perspective",
+      "abstract": "Reinforcement learning from human feedback (RLHF) has emerged as a central framework for aligning large language models (LLMs) with human preferences. Despite its practical success, RLHF raises fundamental statistical questions because it relies on noisy, subjective, and often heterogeneous feedback to learn reward models and optimize policies. This survey provides a statistical perspective on RLHF, focusing primarily on the LLM alignment setting. We introduce the main components of RLHF, including supervised fine-tuning, reward modeling, and policy optimization, and relate them to familiar statistical ideas such as Bradley-Terry-Luce (BTL) model, latent utility estimation, active learning, experimental design, and uncertainty quantification. We review methods for learning reward functions from pairwise preference data and for optimizing policies through both two-stage RLHF pipelines and emerging one-stage approaches such as direct preference optimization. We further discuss recent extensions including reinforcement learning from AI feedback, inference-time algorithms, and reinforcement learning from verifiable rewards, as well as benchmark datasets, evaluation protocols, and open-source frameworks that support RLHF research. We conclude by highlighting open challenges in RLHF. An accompanying GitHub demo https://github.com/Pangpang-Liu/RLHF_demo illustrates key components of the RLHF pipeline.",
+      "authors": [
+        "Pangpang Liu",
+        "Chengchun Shi",
+        "Will Wei Sun"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-04-02T21:04:17+00:00",
+      "link": "https://arxiv.org/pdf/2604.02507v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "RLHF for aligning LLMs with human preferences",
+      "llm_evidence_cn": "RLHF用于大语言模型与人类偏好对齐",
+      "llm_evidence": "RLHF用于大语言模型与人类偏好对齐",
+      "canonical_evidence": "RLHF用于大语言模型与人类偏好对齐",
+      "llm_tldr_en": "A statistical survey of RLHF for LLM alignment, covering reward modeling and policy optimization.",
+      "llm_tldr_cn": "从统计学视角综述了用于大语言模型对齐的RLHF技术，涵盖奖励建模与策略优化。",
+      "llm_tldr": "从统计学视角综述了用于大语言模型对齐的RLHF技术，涵盖奖励建模与策略优化。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.02621v1",
+      "source": "arxiv",
+      "title": "Reinforcement Learning-based Knowledge Distillation with LLM-as-a-Judge",
+      "abstract": "Reinforcement Learning (RL) has been shown to substantially improve the reasoning capability of small and large language models (LLMs), but existing approaches typically rely on verifiable rewards, hence ground truth labels. We propose an RL framework that uses rewards from an LLM that acts as a judge evaluating model outputs over large amounts of unlabeled data, enabling label-free knowledge distillation and replacing the need of ground truth supervision. Notably, the judge operates with a single-token output, making reward computation efficient. When combined with verifiable rewards, our approach yields substantial performance gains across math reasoning benchmarks. These results suggest that LLM-based evaluators can produce effective training signals for RL fine-tuning.",
+      "authors": [
+        "Yiyang Shen",
+        "Lifu Tu",
+        "Weiran Wang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-04-03T01:23:04+00:00",
+      "link": "https://arxiv.org/pdf/2604.02621v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "RL framework using LLM as a judge for distillation",
+      "llm_evidence_cn": "使用LLM作为裁判进行蒸馏的强化学习框架",
+      "llm_evidence": "使用LLM作为裁判进行蒸馏的强化学习框架",
+      "canonical_evidence": "使用LLM作为裁判进行蒸馏的强化学习框架",
+      "llm_tldr_en": "Uses RL and LLM-based evaluation to improve reasoning capabilities without ground truth labels.",
+      "llm_tldr_cn": "利用强化学习和基于LLM的评估，在无标注数据下提升模型的推理能力。",
+      "llm_tldr": "利用强化学习和基于LLM的评估，在无标注数据下提升模型的推理能力。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.02674v1",
+      "source": "arxiv",
+      "title": "Do Agent Societies Develop Intellectual Elites? The Hidden Power Laws of Collective Cognition in LLM Multi-Agent Systems",
+      "abstract": "Large Language Model (LLM) multi-agent systems are increasingly deployed as interacting agent societies, yet scaling these systems often yields diminishing or unstable returns, the causes of which remain poorly understood. We present the first large-scale empirical study of coordination dynamics in LLM-based multi-agent systems, introducing an atomic event-level formulation that reconstructs reasoning as cascades of coordination. Analyzing over 1.5 Million interactions across tasks, topologies, and scales, we uncover three coupled laws: coordination follows heavy-tailed cascades, concentrates via preferential attachment into intellectual elites, and produces increasingly frequent extreme events as system size grows. We show that these effects are coupled through a single structural mechanism: an integration bottleneck, in which coordination expansion scales with system size while consolidation does not, producing large but weakly integrated reasoning processes. To test this mechanism, we introduce Deficit-Triggered Integration (DTI), which selectively increases integration under imbalance. DTI improves performance precisely where coordination fails, without suppressing large-scale reasoning. Together, our results establish quantitative laws of collective cognition and identify coordination structure as a fundamental, previously unmeasured axis for understanding and improving scalable multi-agent intelligence.",
+      "authors": [
+        "Kavana Venkatesh",
+        "Jiaming Cui"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI"
+      ],
+      "published": "2026-04-03T03:08:07+00:00",
+      "link": "https://arxiv.org/pdf/2604.02674v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "coordination dynamics in LLM multi-agent systems",
+      "llm_evidence_cn": "大语言模型多智能体系统中的协作动态",
+      "llm_evidence": "大语言模型多智能体系统中的协作动态",
+      "canonical_evidence": "大语言模型多智能体系统中的协作动态",
+      "llm_tldr_en": "Empirically studies coordination laws and collective cognition in large-scale LLM agent societies.",
+      "llm_tldr_cn": "对大规模大语言模型智能体社会中的协作规律和集体认知进行了实证研究。",
+      "llm_tldr": "对大规模大语言模型智能体社会中的协作规律和集体认知进行了实证研究。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Multi-agent reinforcement learning and coordination",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.02791v1",
+      "source": "arxiv",
+      "title": "Fully Byzantine-Resilient Distributed Multi-Agent Q-Learning",
+      "abstract": "We study Byzantine-resilient distributed multi-agent reinforcement learning (MARL), where agents must collaboratively learn optimal value functions over a compromised communication network. Existing resilient MARL approaches typically guarantee almost sure convergence only to near-optimal value functions, or require restrictive assumptions to ensure convergence to optimal solution. As a result, agents may fail to learn the optimal policies under these methods. To address this, we propose a novel distributed Q-learning algorithm, under which all agents' value functions converge almost surely to the optimal value functions despite Byzantine edge attacks. The key idea is a redundancy-based filtering mechanism that leverages two-hop neighbor information to validate incoming messages, while preserving bidirectional information flow. We then introduce a new topological condition for the convergence of our algorithm, present a systematic method to construct such networks, and prove that this condition can be verified in polynomial time. We validate our results through simulations, showing that our method converges to the optimal solutions, whereas prior methods fail under Byzantine edge attacks.",
+      "authors": [
+        "Haejoon Lee",
+        "Dimitra Panagou"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "eess.SY"
+      ],
+      "published": "2026-04-03T06:57:45+00:00",
+      "link": "https://arxiv.org/pdf/2604.02791v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Byzantine-resilient distributed MARL",
+      "llm_evidence_cn": "拜占庭容错的分布式多智能体强化学习",
+      "llm_evidence": "拜占庭容错的分布式多智能体强化学习",
+      "canonical_evidence": "拜占庭容错的分布式多智能体强化学习",
+      "llm_tldr_en": "A novel distributed Q-learning algorithm ensuring convergence to optimal policies under Byzantine attacks.",
+      "llm_tldr_cn": "提出一种新型分布式Q学习算法，确保多智能体系统在拜占庭攻击下仍能收敛至最优策略。",
+      "llm_tldr": "提出一种新型分布式Q学习算法，确保多智能体系统在拜占庭攻击下仍能收敛至最优策略。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.02988v1",
+      "source": "arxiv",
+      "title": "Self-Optimizing Multi-Agent Systems for Deep Research",
+      "abstract": "Given a user's complex information need, a multi-agent Deep Research system iteratively plans, retrieves, and synthesizes evidence across hundreds of documents to produce a high-quality answer. In one possible architecture, an orchestrator agent coordinates the process, while parallel worker agents execute tasks. Current Deep Research systems, however, often rely on hand-engineered prompts and static architectures, making improvement brittle, expensive, and time-consuming. We therefore explore various multi-agent optimization methods to show that enabling agents to self-play and explore different prompt combinations can produce high-quality Deep Research systems that match or outperform expert-crafted prompts.",
+      "authors": [
+        "Arthur Câmara",
+        "Vincent Slot",
+        "Jakub Zavrel"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.AI"
+      ],
+      "published": "2026-04-03T11:48:38+00:00",
+      "link": "https://arxiv.org/pdf/2604.02988v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "self-optimizing multi-agent research system",
+      "llm_evidence_cn": "自优化多智能体深度研究系统",
+      "llm_evidence": "自优化多智能体深度研究系统",
+      "canonical_evidence": "自优化多智能体深度研究系统",
+      "llm_tldr_en": "Explores multi-agent optimization and self-play to improve automated deep research and evidence synthesis.",
+      "llm_tldr_cn": "探索多智能体优化与自我博弈，以提升自动化深度研究和证据合成的质量。",
+      "llm_tldr": "探索多智能体优化与自我博弈，以提升自动化深度研究和证据合成的质量。",
+      "llm_tags": [
+        "query:rl-agt:composite"
+      ],
+      "matched_query_tag": "query:rl-agt:composite",
+      "matched_query_text": "Papers central to 强化学习和智能体相关的论文查找, especially work that connects or combines: retrieval augmented generation; Fundamental theories and algorithms of reinforcement learning; Multi-agent reinforcement learning and coordination; Large language model based autonomous agents; Design and frameworks for intelligent agent systems; Recent advances in reinforcement learning and autonomous agents; State of the art multi agent reinforcement learning techniques; Integration of large language models with reinforcement learning agents.",
+      "matched_requirement_id": "req-composite-rl-agt",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.03098v1",
+      "source": "arxiv",
+      "title": "Co-Evolution of Policy and Internal Reward for Language Agents",
+      "abstract": "Large language model (LLM) agents learn by interacting with environments, but long-horizon training remains fundamentally bottlenecked by sparse and delayed rewards. Existing methods typically address this challenge through post-hoc credit assignment or external reward models, which provide limited guidance at inference time and often separate reward improvement from policy improvement. We propose Self-Guide, a self-generated internal reward for language agents that supports both inference-time guidance and training-time supervision. Specifically, the agent uses Self-Guide as a short self-guidance signal to steer the next action during inference, and converts the same signal into step-level internal reward for denser policy optimization during training. This creates a co-evolving loop: better policy produces better guidance, and better guidance further improves policy as internal reward. Across three agent benchmarks, inference-time self-guidance already yields clear gains, while jointly evolving policy and internal reward with GRPO brings further improvements (8\\%) over baselines trained solely with environment reward. Overall, our results suggest that language agents can improve not only by collecting more experience, but also by learning to generate and refine their own internal reward during acting and learning.",
+      "authors": [
+        "Xinyu Wang",
+        "Hanwei Wu",
+        "Jingwei Song",
+        "Shuyuan Zhang",
+        "Jiayi Zhang",
+        "Fanqi Kong",
+        "Tung Sum Thomas Kwok",
+        "Xiao-Wen Chang",
+        "Yuyu Luo",
+        "Chenglin Wu",
+        "Bang Liu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-04-03T15:21:11+00:00",
+      "link": "https://arxiv.org/pdf/2604.03098v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "self-generated internal reward for language agents",
+      "llm_evidence_cn": "语言智能体的自生成内部奖励",
+      "llm_evidence": "语言智能体的自生成内部奖励",
+      "canonical_evidence": "语言智能体的自生成内部奖励",
+      "llm_tldr_en": "Proposes Self-Guide, a mechanism for co-evolving policy and internal rewards to improve LLM agent training.",
+      "llm_tldr_cn": "提出Self-Guide机制，通过协同演化策略和内部奖励来优化大模型智能体的训练与推理。",
+      "llm_tldr": "提出Self-Guide机制，通过协同演化策略和内部奖励来优化大模型智能体的训练与推理。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.03430v1",
+      "source": "arxiv",
+      "title": "Scaling Multi-agent Systems: A Smart Middleware for Improving Agent Interactions",
+      "abstract": "As Large Language Model (LLM) based Multi-Agent Systems (MAS) evolve from experimental pilots to complex, persistent ecosystems, the limitations of direct agent-to-agent communication have become increasingly apparent. Current architectures suffer from fragmented context, stochastic hallucinations, rigid security boundaries, and inefficient topology management. This paper introduces Cognitive Fabric Nodes (CFN), a novel middleware layer that creates an omnipresent \"Cognitive Fabric\" between agents. Unlike traditional message queues or service meshes, CFNs are not merely pass-through mechanisms; they are active, intelligent intermediaries.   Central to this architecture is the elevation of Memory from simple storage to an active functional substrate that informs four other critical capabilities: Topology Selection, Semantic Grounding, Security Policy Enforcement, and Prompt Transformation. We propose that each of these functions be governed by learning modules utilizing Reinforcement Learning (RL) and optimization algorithms to improve system performance dynamically. By intercepting, analyzing, and rewriting inter-agent communication, the Cognitive Fabric ensures that individual agents remain lightweight while the ecosystem achieves coherence, safety, and semantic alignment.   We evaluate the effectiveness of the CFN on the HotPotQA and MuSiQue datasets in a multi-agent environment and demonstrate that the CFN improves performance by more than 10\\% on both datasets over direct agent to agent communication.",
+      "authors": [
+        "Charles Fleming",
+        "Ramana Kompella",
+        "Peter Bosch",
+        "Vijoy Pandey"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.NI"
+      ],
+      "published": "2026-04-03T19:58:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.03430v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Middleware for LLM-based multi-agent systems",
+      "llm_evidence_cn": "基于LLM的多智能体系统中间件",
+      "llm_evidence": "基于LLM的多智能体系统中间件",
+      "canonical_evidence": "基于LLM的多智能体系统中间件",
+      "llm_tldr_en": "Introduces Cognitive Fabric Nodes to improve communication and memory in scaling multi-agent systems.",
+      "llm_tldr_cn": "引入认知织网节点，以改善大规模多智能体系统中的通信和记忆管理。",
+      "llm_tldr": "引入认知织网节点，以改善大规模多智能体系统中的通信和记忆管理。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.03641v1",
+      "source": "arxiv",
+      "title": "Delayed Homomorphic Reinforcement Learning for Environments with Delayed Feedback",
+      "abstract": "Reinforcement learning in real-world systems is often accompanied by delayed feedback, which breaks the Markov assumption and impedes both learning and control. Canonical state augmentation approaches cause the state-space explosion, which introduces a severe sample-complexity burden. Despite recent progress, the state-of-the-art augmentation-based baselines remain incomplete: they either predominantly reduce the burden on the critic or adopt non-unified treatments for the actor and critic. To provide a structured and sample-efficient solution, we propose delayed homomorphic reinforcement learning (DHRL), a framework grounded in MDP homomorphisms that collapses belief-equivalent augmented states and enables efficient policy learning on the resulting abstract MDP without loss of optimality. We provide theoretical analyses of state-space compression bounds and sample complexity, and introduce a practical algorithm. Experiments on continuous control tasks in MuJoCo benchmark confirm that our algorithm outperforms strong augmentation-based baselines, particularly under long delays.",
+      "authors": [
+        "Jongsoo Lee",
+        "Jangwon Kim",
+        "Soohee Han"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-04T08:38:52+00:00",
+      "link": "https://arxiv.org/pdf/2604.03641v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Fundamental RL algorithms for delayed feedback environments",
+      "llm_evidence_cn": "针对延迟反馈环境的基础强化学习算法",
+      "llm_evidence": "针对延迟反馈环境的基础强化学习算法",
+      "canonical_evidence": "针对延迟反馈环境的基础强化学习算法",
+      "llm_tldr_en": "Proposes DHRL framework using MDP homomorphisms to handle delayed feedback in RL efficiently.",
+      "llm_tldr_cn": "提出DHRL框架，利用MDP同态性高效处理强化学习中的延迟反馈问题。",
+      "llm_tldr": "提出DHRL框架，利用MDP同态性高效处理强化学习中的延迟反馈问题。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.03675v1",
+      "source": "arxiv",
+      "title": "PRAISE: Prefix-Based Rollout Reuse in Agentic Search Training",
+      "abstract": "In agentic search, large language models (LLMs) are trained to perform multi-turn retrieval and reasoning for complex tasks such as multi-hop question answering (QA). However, current search-based Reinforcement Learning (RL) methods suffer from two core limitations: expensive long-horizon rollouts are under-utilized during training, and supervision is typically available only at the final answer, resulting in severe reward sparsity. We present Prefix-based Rollout reuse for Agentic search with Intermediate Step rEwards (PRAISE), a framework for improving both data efficiency and credit assignment in agentic search training. Given a complete search trajectory, PRAISE extracts prefix states at different search turns, elicits intermediate answers from them, and uses these prefixes both to construct additional training trajectories and to derive step-level rewards from performance differences across prefixes. Our method uses a single shared model for both search policy learning and prefix answer evaluation, enabling joint optimization without extra human annotations or a separate reward model. Experiments on multi-hop QA benchmarks show that PRAISE consistently improves performance over strong baselines.",
+      "authors": [
+        "Erhan Zhang",
+        "Yiqun Chen",
+        "Zechun Niu",
+        "Wei Yang",
+        "Xiaochi Wei",
+        "Yan Gao",
+        "Yi Wu",
+        "Yao Hu",
+        "Jiaxin Mao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-04T10:23:46+00:00",
+      "link": "https://arxiv.org/pdf/2604.03675v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "RL methods for agentic search training with LLMs",
+      "llm_evidence_cn": "用于LLM智能体搜索训练的强化学习方法",
+      "llm_evidence": "用于LLM智能体搜索训练的强化学习方法",
+      "canonical_evidence": "用于LLM智能体搜索训练的强化学习方法",
+      "llm_tldr_en": "Improves data efficiency and credit assignment in agentic search training using prefix-based rollout reuse.",
+      "llm_tldr_cn": "利用基于前缀的展开重用技术，提高智能体搜索训练中的数据效率和信用分配。",
+      "llm_tldr": "利用基于前缀的展开重用技术，提高智能体搜索训练中的数据效率和信用分配。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.03891v1",
+      "source": "arxiv",
+      "title": "Provable Multi-Task Reinforcement Learning: A Representation Learning Framework with Low Rank Rewards",
+      "abstract": "Multi-task representation learning (MTRL) is an approach that learns shared latent representations across related tasks, facilitating collaborative learning that improves the overall learning efficiency. This paper studies MTRL for multi-task reinforcement learning (RL), where multiple tasks have the same state-action space and transition probabilities, but different rewards. We consider T linear Markov Decision Processes (MDPs) where the reward functions and transition dynamics admit linear feature embeddings of dimension d. The relatedness among the tasks is captured by a low-rank structure on the reward matrices. Learning shared representations across multiple RL tasks is challenging due to the complex and policy-dependent nature of data that leads to a temporal progression of error. Our approach adopts a reward-free reinforcement learning framework to first learn a data-collection policy. This policy then informs an exploration strategy for estimating the unknown reward matrices. Importantly, the data collected under this well-designed policy enable accurate estimation, which ultimately supports the learning of an near-optimal policy. Unlike existing approaches that rely on restrictive assumptions such as Gaussian features, incoherence conditions, or access to optimal solutions, we propose a low-rank matrix estimation method that operates under more general feature distributions encountered in RL settings. Theoretical analysis establishes that accurate low-rank matrix recovery is achievable under these relaxed assumptions, and we characterize the relationship between representation error and sample complexity. Leveraging the learned representation, we construct near-optimal policies and prove a regret bound. Experimental results demonstrate that our method effectively learns robust shared representations and task dynamics from finite data.",
+      "authors": [
+        "Yaoze Guo",
+        "Shana Moothedath"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-04T23:08:35+00:00",
+      "link": "https://arxiv.org/pdf/2604.03891v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Multi-task representation learning in linear MDPs",
+      "llm_evidence_cn": "线性MDP中的多任务表示学习",
+      "llm_evidence": "线性MDP中的多任务表示学习",
+      "canonical_evidence": "线性MDP中的多任务表示学习",
+      "llm_tldr_en": "Proposes a low-rank reward framework to improve efficiency in multi-task reinforcement learning.",
+      "llm_tldr_cn": "提出一种低秩奖励框架，旨在提高多任务强化学习的效率。",
+      "llm_tldr": "提出一种低秩奖励框架，旨在提高多任务强化学习的效率。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.03998v1",
+      "source": "arxiv",
+      "title": "VA-FastNavi-MARL: Real-Time Robot Control with Multimedia-Driven Meta-Reinforcement Learning",
+      "abstract": "Interpreting dynamic, heterogeneous multimedia commands with real-time responsiveness is critical for Human-Robot Interaction. We present VA-FastNavi-MARL, a framework that aligns asynchronous audio-visual inputs into a unified latent representation. By treating diverse instructions as a distribution of navigable goals via Meta-Reinforcement Learning, our method enables rapid adaptation to unseen directives with negligible inference overhead. Unlike approaches bottlenecked by heavy sensory processing, our modality-agnostic stream ensures seamless, low-latency control. Validation on a multi-arm workspace confirms that VA-FastNavi-MARL significantly outperforms baselines in sample efficiency and maintains robust, real-time execution even under noisy multimedia streams.",
+      "authors": [
+        "Yang Zhang",
+        "Shengxi Jing",
+        "Fengxiang Wang",
+        "Yuan Feng",
+        "Hong Wang"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-04-05T07:05:49+00:00",
+      "link": "https://arxiv.org/pdf/2604.03998v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Meta-Reinforcement Learning for real-time robot control",
+      "llm_evidence_cn": "用于实时机器人控制的元强化学习",
+      "llm_evidence": "用于实时机器人控制的元强化学习",
+      "canonical_evidence": "用于实时机器人控制的元强化学习",
+      "llm_tldr_en": "A meta-RL framework for real-time robot control using multimedia commands and unified latent representations.",
+      "llm_tldr_cn": "一种利用多媒体指令和统一潜表征进行实时机器人控制的元强化学习框架。",
+      "llm_tldr": "一种利用多媒体指令和统一潜表征进行实时机器人控制的元强化学习框架。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Recent advances in reinforcement learning and autonomous agents",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04394v1",
+      "source": "arxiv",
+      "title": "Finite-Time Analysis of Q-Value Iteration for General-Sum Stackelberg Games",
+      "abstract": "Reinforcement learning has been successful both empirically and theoretically in single-agent settings, but extending these results to multi-agent reinforcement learning in general-sum Markov games remains challenging. This paper studies the convergence of Stackelberg Q-value iteration in two-player general-sum Markov games from a control-theoretic perspective. We introduce a relaxed policy condition tailored to the Stackelberg setting and model the learning dynamics as a switching system. By constructing upper and lower comparison systems, we establish finite-time error bounds for the Q-functions and characterize their convergence properties. Our results provide a novel control-theoretic perspective on Stackelberg learning. Moreover, to the best of the authors' knowledge, this paper offers the first finite-time convergence guarantees for Q-value iteration in general-sum Markov games under Stackelberg interactions.",
+      "authors": [
+        "Narim Jeong",
+        "Donghwan Lee"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-04-06T03:48:42+00:00",
+      "link": "https://arxiv.org/pdf/2604.04394v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "finite-time analysis of MARL algorithms",
+      "llm_evidence_cn": "多智能体强化学习算法的有限时间分析",
+      "llm_evidence": "多智能体强化学习算法的有限时间分析",
+      "canonical_evidence": "多智能体强化学习算法的有限时间分析",
+      "llm_tldr_en": "Provides finite-time error bounds for Stackelberg Q-value iteration in general-sum multi-agent games.",
+      "llm_tldr_cn": "从控制论视角为双人博弈中的Stackelberg Q值迭代算法提供了有限时间误差界限分析。",
+      "llm_tldr": "从控制论视角为双人博弈中的Stackelberg Q值迭代算法提供了有限时间误差界限分析。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04442v1",
+      "source": "arxiv",
+      "title": "Explainable Autonomous Cyber Defense using Adversarial Multi-Agent Reinforcement Learning",
+      "abstract": "Autonomous agents are increasingly deployed in both offensive and defensive cyber operations, creating high-speed, closed-loop interactions in critical infrastructure environments. Advanced Persistent Threat (APT) actors exploit \"Living off the Land\" techniques and targeted telemetry perturbations to induce ambiguity in monitoring systems, causing automated defenses to overreact or misclassify benign behavior as malicious activity. Existing monolithic and multi-agent defense pipelines largely operate on correlation-based signals, lack structural constraints on response actions, and are vulnerable to reasoning drift under ambiguous or adversarial inputs. We present the Causal Multi-Agent Decision Framework (C-MADF), a structurally constrained architecture for autonomous cyber defense that integrates causal modeling with adversarial dual-policy control. C-MADF first learns a Structural Causal Model (SCM) from historical telemetry and compiles it into an investigation-level Directed Acyclic Graph (DAG) that defines admissible response transitions. This roadmap is formalized as a Markov Decision Process (MDP) whose action space is explicitly restricted to causally consistent transitions. Decision-making within this constrained space is performed by a dual-agent reinforcement learning system in which a threat-optimizing Blue-Team policy is counterbalanced by a conservatively shaped Red-Team policy. Inter-policy disagreement is quantified through a Policy Divergence Score and exposed via a human-in-the-loop interface equipped with an Explainability-Transparency Score that serves as an escalation signal under uncertainty. On the real-world CICIoT2023 dataset, C-MADF reduces the false-positive rate from 11.2%, 9.7%, and 8.4% in three cutting-edge literature baselines to 1.8%, while achieving 0.997 precision, 0.961 recall, and 0.979 F1-score.",
+      "authors": [
+        "Yiyao Zhang",
+        "Diksha Goel",
+        "Hussain Ahmad"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG",
+        "cs.MA"
+      ],
+      "published": "2026-04-06T05:40:43+00:00",
+      "link": "https://arxiv.org/pdf/2604.04442v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "adversarial multi-agent reinforcement learning",
+      "llm_evidence_cn": "对抗性多智能体强化学习",
+      "llm_evidence": "对抗性多智能体强化学习",
+      "canonical_evidence": "对抗性多智能体强化学习",
+      "llm_tldr_en": "C-MADF uses causal multi-agent RL to improve explainability and robustness in autonomous cyber defense.",
+      "llm_tldr_cn": "C-MADF利用因果多智能体强化学习，提升了自主网络防御系统的可解释性与抗漂移能力。",
+      "llm_tldr": "C-MADF利用因果多智能体强化学习，提升了自主网络防御系统的可解释性与抗漂移能力。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Multi-agent reinforcement learning and coordination",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04499v1",
+      "source": "arxiv",
+      "title": "Distributed Covariance Steering via Non-Convex ADMM for Large-Scale Multi-Agent Systems",
+      "abstract": "This paper studies the problem of steering large-scale multi-agent stochastic linear systems between Gaussian distributions under probabilistic collision avoidance constraints. We introduce a family of \\textit{distributed covariance steering (DCS)} methods based on the Alternating Direction Method of Multipliers (ADMM), each offering different trade-offs between conservatism and computational efficiency. The first method, Full-Covariance-Consensus (FCC)-DCS, enforces consensus over both the means and covariances of neighboring agents, yielding the least conservative safe solutions. The second approach, Partial-Covariance-Consensus (PCC)-DCS, leverages the insight that safety can be maintained by exchanging only partial covariance information, reducing computational demands. The third method, Mean-Consensus (MC)-DCS, provides the most scalable alternative by requiring consensus only on mean states. Furthermore, we establish novel convergence guarantees for distributed ADMM with iteratively linearized non-convex constraints, covering a broad class of consensus optimization problems. This analysis proves convergence to stationary points for PCC-DCS and MC-DCS, while the convergence of FCC-DCS follows from standard ADMM theory. Simulations in 2D and 3D multi-agent environments verify safety, illustrate the trade-offs between methods, and demonstrate scalability to thousands of agents.",
+      "authors": [
+        "Augustinos D. Saravanos",
+        "Isin M. Balci",
+        "Arshiya Taj Abdul",
+        "Efstathios Bakolas",
+        "Evangelos A. Theodorou"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "math.OC"
+      ],
+      "published": "2026-04-06T07:51:17+00:00",
+      "link": "https://arxiv.org/pdf/2604.04499v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Distributed coordination for large-scale multi-agent systems",
+      "llm_evidence_cn": "大规模多智能体系统的分布式协作",
+      "llm_evidence": "大规模多智能体系统的分布式协作",
+      "canonical_evidence": "大规模多智能体系统的分布式协作",
+      "llm_tldr_en": "Develops distributed covariance steering for coordination and collision avoidance in large multi-agent systems.",
+      "llm_tldr_cn": "为大规模多智能体系统开发了分布式协方差控制方法，以实现协作与避障。",
+      "llm_tldr": "为大规模多智能体系统开发了分布式协方差控制方法，以实现协作与避障。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Multi-agent reinforcement learning and coordination",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04503v1",
+      "source": "arxiv",
+      "title": "Memory Intelligence Agent",
+      "abstract": "Deep research agents (DRAs) integrate LLM reasoning with external tools. Memory systems enable DRAs to leverage historical experiences, which are essential for efficient reasoning and autonomous evolution. Existing methods rely on retrieving similar trajectories from memory to aid reasoning, while suffering from key limitations of ineffective memory evolution and increasing storage and retrieval costs. To address these problems, we propose a novel Memory Intelligence Agent (MIA) framework, consisting of a Manager-Planner-Executor architecture. Memory Manager is a non-parametric memory system that can store compressed historical search trajectories. Planner is a parametric memory agent that can produce search plans for questions. Executor is another agent that can search and analyze information guided by the search plan. To build the MIA framework, we first adopt an alternating reinforcement learning paradigm to enhance cooperation between the Planner and the Executor. Furthermore, we enable the Planner to continuously evolve during test-time learning, with updates performed on-the-fly alongside inference without interrupting the reasoning process. Additionally, we establish a bidirectional conversion loop between parametric and non-parametric memories to achieve efficient memory evolution. Finally, we incorporate a reflection and an unsupervised judgment mechanisms to boost reasoning and self-evolution in the open world. Extensive experiments across eleven benchmarks demonstrate the superiority of MIA.",
+      "authors": [
+        "Jingyang Qiao",
+        "Weicheng Meng",
+        "Yu Cheng",
+        "Zhihang Lin",
+        "Zhizhong Zhang",
+        "Xin Tan",
+        "Jingyu Gong",
+        "Kun Shao",
+        "Yuan Xie"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-04-06T07:59:52+00:00",
+      "link": "https://arxiv.org/pdf/2604.04503v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Framework for deep research agents with memory",
+      "llm_evidence_cn": "带记忆能力的深度研究智能体框架",
+      "llm_evidence": "带记忆能力的深度研究智能体框架",
+      "canonical_evidence": "带记忆能力的深度研究智能体框架",
+      "llm_tldr_en": "A Manager-Planner-Executor framework for research agents using non-parametric memory systems.",
+      "llm_tldr_cn": "一种采用非参数化记忆系统的研究智能体框架，包含管理、规划与执行模块。",
+      "llm_tldr": "一种采用非参数化记忆系统的研究智能体框架，包含管理、规划与执行模块。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04651v1",
+      "source": "arxiv",
+      "title": "Search, Do not Guess: Teaching Small Language Models to Be Effective Search Agents",
+      "abstract": "Agents equipped with search tools have emerged as effective solutions for knowledge-intensive tasks. While Large Language Models (LLMs) exhibit strong reasoning capabilities, their high computational cost limits practical deployment for search agents. Consequently, recent work has focused on distilling agentic behaviors from LLMs into Small Language Models (SLMs). Through comprehensive evaluation on complex multi-hop reasoning tasks, we find that despite possessing less parametric knowledge, SLMs invoke search tools less frequently and are more prone to hallucinations. To address this issue, we propose \\policy, a lightweight fine-tuning approach that explicitly trains SLMs to reliably retrieve and generate answers grounded in retrieved evidence. Compared to agent distillation from LLMs, our approach improves performance by 17.3 scores on Bamboogle and 15.3 scores on HotpotQA, achieving LLM-level results across benchmarks. Our further analysis reveals that adaptive search strategies in SLMs often degrade performance, highlighting the necessity of consistent search behavior for reliable reasoning.",
+      "authors": [
+        "Yizhou Liu",
+        "Qi Sun",
+        "Yulin Chen",
+        "Siyue Zhang",
+        "Chen Zhao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-06T13:00:38+00:00",
+      "link": "https://arxiv.org/pdf/2604.04651v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "teaching small language models to be effective search agents",
+      "llm_evidence_cn": "训练小语言模型成为有效的搜索智能体",
+      "llm_evidence": "训练小语言模型成为有效的搜索智能体",
+      "canonical_evidence": "训练小语言模型成为有效的搜索智能体",
+      "llm_tldr_en": "Proposes a fine-tuning approach to help small language models reliably retrieve and generate grounded answers.",
+      "llm_tldr_cn": "提出一种轻量级微调方法，训练小语言模型在搜索任务中可靠地检索并生成有据可依的回答。",
+      "llm_tldr": "提出一种轻量级微调方法，训练小语言模型在搜索任务中可靠地检索并生成有据可依的回答。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04662v1",
+      "source": "arxiv",
+      "title": "Anticipatory Reinforcement Learning: From Generative Path-Laws to Distributional Value Functions",
+      "abstract": "This paper introduces Anticipatory Reinforcement Learning (ARL), a novel framework designed to bridge the gap between non-Markovian decision processes and classical reinforcement learning architectures, specifically under the constraint of a single observed trajectory. In environments characterised by jump-diffusions and structural breaks, traditional state-based methods often fail to capture the essential path-dependent geometry required for accurate foresight. We resolve this by lifting the state space into a signature-augmented manifold, where the history of the process is embedded as a dynamical coordinate. By utilising a self-consistent field approach, the agent maintains an anticipated proxy of the future path-law, allowing for a deterministic evaluation of expected returns. This transition from stochastic branching to a single-pass linear evaluation significantly reduces computational complexity and variance. We prove that this framework preserves fundamental contraction properties and ensures stable generalisation even in the presence of heavy-tailed noise. Our results demonstrate that by grounding reinforcement learning in the topological features of path-space, agents can achieve proactive risk management and superior policy stability in highly volatile, continuous-time environments.",
+      "authors": [
+        "Daniel Bloch"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-fin.MF",
+        "q-fin.PR",
+        "q-fin.ST"
+      ],
+      "published": "2026-04-06T13:15:44+00:00",
+      "link": "https://arxiv.org/pdf/2604.04662v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Novel RL framework for non-Markovian processes using signature-augmented manifolds",
+      "llm_evidence_cn": "针对非马尔可夫过程的新型强化学习框架，使用特征增强流形",
+      "llm_evidence": "针对非马尔可夫过程的新型强化学习框架，使用特征增强流形",
+      "canonical_evidence": "针对非马尔可夫过程的新型强化学习框架，使用特征增强流形",
+      "llm_tldr_en": "Introduces Anticipatory RL to handle path-dependent environments by embedding history into the state space.",
+      "llm_tldr_cn": "引入前瞻性强化学习框架，通过将历史信息嵌入状态空间来处理具有路径依赖性的非马尔可夫环境。",
+      "llm_tldr": "引入前瞻性强化学习框架，通过将历史信息嵌入状态空间来处理具有路径依赖性的非马尔可夫环境。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04664v1",
+      "source": "arxiv",
+      "title": "ROSClaw: A Hierarchical Semantic-Physical Framework for Heterogeneous Multi-Agent Collaboration",
+      "abstract": "The integration of large language models (LLMs) with embodied agents has improved high-level reasoning capabilities; however, a critical gap remains between semantic understanding and physical execution. While vision-language-action (VLA) and vision-language-navigation (VLN) systems enable robots to perform manipulation and navigation tasks from natural language instructions, they still struggle with long-horizon sequential and temporally structured tasks. Existing frameworks typically adopt modular pipelines for data collection, skill training, and policy deployment, resulting in high costs in experimental validation and policy optimization. To address these limitations, we propose ROSClaw, an agent framework for heterogeneous robots that integrates policy learning and task execution within a unified vision-language model (VLM) controller. The framework leverages e-URDF representations of heterogeneous robots as physical constraints to construct a sim-to-real topological mapping, enabling real-time access to the physical states of both simulated and real-world agents. We further incorporate a data collection and state accumulation mechanism that stores robot states, multimodal observations, and execution trajectories during real-world execution, enabling subsequent iterative policy optimization. During deployment, a unified agent maintains semantic continuity between reasoning and execution, and dynamically assigns task-specific control to different agents, thereby improving robustness in multi-policy execution. By establishing an autonomous closed-loop framework, ROSClaw minimizes the reliance on robot-specific development workflows. The framework supports hardware-level validation, automated generation of SDK-level control programs, and tool-based execution, enabling rapid cross-platform transfer and continual improvement of robotic skills. Ours project page: https://www.rosclaw.io/.",
+      "authors": [
+        "Rongfeng Zhao",
+        "Xuanhao Zhang",
+        "Zhaochen Guo",
+        "Xiang Shao",
+        "Zhongpan Zhu",
+        "Bin He",
+        "Jie Chen"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-04-06T13:16:24+00:00",
+      "link": "https://arxiv.org/pdf/2604.04664v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Hierarchical framework for heterogeneous multi-agent collaboration",
+      "llm_evidence_cn": "异构多智能体协作的分层框架",
+      "llm_evidence": "异构多智能体协作的分层框架",
+      "canonical_evidence": "异构多智能体协作的分层框架",
+      "llm_tldr_en": "Introduces ROSClaw, a framework bridging LLM reasoning and physical execution for multi-agent tasks.",
+      "llm_tldr_cn": "引入 ROSClaw 框架，旨在桥接大语言模型推理与多智能体任务中的物理执行。",
+      "llm_tldr": "引入 ROSClaw 框架，旨在桥接大语言模型推理与多智能体任务中的物理执行。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04804v1",
+      "source": "arxiv",
+      "title": "SkillX: Automatically Constructing Skill Knowledge Bases for Agents",
+      "abstract": "Learning from experience is critical for building capable large language model (LLM) agents, yet prevailing self-evolving paradigms remain inefficient: agents learn in isolation, repeatedly rediscover similar behaviors from limited experience, resulting in redundant exploration and poor generalization. To address this problem, we propose SkillX, a fully automated framework for constructing a \\textbf{plug-and-play skill knowledge base} that can be reused across agents and environments. SkillX operates through a fully automated pipeline built on three synergistic innovations: \\textit{(i) Multi-Level Skills Design}, which distills raw trajectories into three-tiered hierarchy of strategic plans, functional skills, and atomic skills; \\textit{(ii) Iterative Skills Refinement}, which automatically revises skills based on execution feedback to continuously improve library quality; and \\textit{(iii) Exploratory Skills Expansion}, which proactively generates and validates novel skills to expand coverage beyond seed training data. Using a strong backbone agent (GLM-4.6), we automatically build a reusable skill library and evaluate its transferability on challenging long-horizon, user-interactive benchmarks, including AppWorld, BFCL-v3, and $τ^2$-Bench. Experiments show that SkillKB consistently improves task success and execution efficiency when plugged into weaker base agents, highlighting the importance of structured, hierarchical experience representations for generalizable agent learning. Our code will be publicly available soon at https://github.com/zjunlp/SkillX.",
+      "authors": [
+        "Chenxi Wang",
+        "Zhuoyun Yu",
+        "Xin Xie",
+        "Wuguannan Yao",
+        "Runnan Fang",
+        "Shuofei Qiao",
+        "Kexin Cao",
+        "Guozhou Zheng",
+        "Xiang Qi",
+        "Peng Zhang",
+        "Shumin Deng"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.IR",
+        "cs.LG",
+        "cs.MA"
+      ],
+      "published": "2026-04-06T16:09:33+00:00",
+      "link": "https://arxiv.org/pdf/2604.04804v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Framework for LLM agents to build and reuse skill knowledge bases",
+      "llm_evidence_cn": "大语言模型智能体构建和复用技能知识库的框架",
+      "llm_evidence": "大语言模型智能体构建和复用技能知识库的框架",
+      "canonical_evidence": "大语言模型智能体构建和复用技能知识库的框架",
+      "llm_tldr_en": "SkillX automates skill knowledge base construction for LLM agents to improve efficiency and generalization.",
+      "llm_tldr_cn": "SkillX 为大语言模型智能体自动构建可复用的技能知识库，提升了智能体的学习效率和泛化能力。",
+      "llm_tldr": "SkillX 为大语言模型智能体自动构建可复用的技能知识库，提升了智能体的学习效率和泛化能力。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04808v1",
+      "source": "arxiv",
+      "title": "Selecting Decision-Relevant Concepts in Reinforcement Learning",
+      "abstract": "Training interpretable concept-based policies requires practitioners to manually select which human-understandable concepts an agent should reason with when making sequential decisions. This selection demands domain expertise, is time-consuming and costly, scales poorly with the number of candidates, and provides no performance guarantees. To overcome this limitation, we propose the first algorithms for principled automatic concept selection in sequential decision-making. Our key insight is that concept selection can be viewed through the lens of state abstraction: intuitively, a concept is decision-relevant if removing it would cause the agent to confuse states that require different actions. As a result, agents should rely on decision-relevant concepts; states with the same concept representation should share the same optimal action, which preserves the optimal decision structure of the original state space. This perspective leads to the Decision-Relevant Selection (DRS) algorithm, which selects a subset of concepts from a candidate set, along with performance bounds relating the selected concepts to the performance of the resulting policy. Empirically, DRS automatically recovers manually curated concept sets while matching or exceeding their performance, and improves the effectiveness of test-time concept interventions across reinforcement learning benchmarks and real-world healthcare environments.",
+      "authors": [
+        "Naveen Raman",
+        "Stephanie Milani",
+        "Fei Fang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-06T16:12:42+00:00",
+      "link": "https://arxiv.org/pdf/2604.04808v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "automatic concept selection in reinforcement learning",
+      "llm_evidence_cn": "强化学习中的自动概念选择",
+      "llm_evidence": "强化学习中的自动概念选择",
+      "canonical_evidence": "强化学习中的自动概念选择",
+      "llm_tldr_en": "Proposes algorithms for principled automatic concept selection to build interpretable RL policies.",
+      "llm_tldr_cn": "提出了一种原则性的自动概念选择算法，用于构建可解释的强化学习策略。",
+      "llm_tldr": "提出了一种原则性的自动概念选择算法，用于构建可解释的强化学习策略。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04853v1",
+      "source": "arxiv",
+      "title": "MemMachine: A Ground-Truth-Preserving Memory System for Personalized AI Agents",
+      "abstract": "Large Language Model (LLM) agents require persistent memory to maintain personalization, factual continuity, and long-horizon reasoning, yet standard context-window and retrieval-augmented generation (RAG) pipelines degrade over multi-session interactions. We present MemMachine, an open-source memory system that integrates short-term, long-term episodic, and profile memory within a ground-truth-preserving architecture that stores entire conversational episodes and reduces lossy LLM-based extraction. MemMachine uses contextualized retrieval that expands nucleus matches with surrounding context, improving recall when relevant evidence spans multiple dialogue turns. Across benchmarks, MemMachine achieves strong accuracy-efficiency tradeoffs: on LoCoMo it reaches 0.9169 using gpt4.1-mini; on LongMemEvalS (ICLR 2025), a six-dimension ablation yields 93.0 percent accuracy, with retrieval-stage optimizations -- retrieval depth tuning (+4.2 percent), context formatting (+2.0 percent), search prompt design (+1.8 percent), and query bias correction (+1.4 percent) -- outperforming ingestion-stage gains such as sentence chunking (+0.8 percent). GPT-5-mini exceeds GPT-5 by 2.6 percent when paired with optimized prompts, making it the most cost-efficient setup. Compared to Mem0, MemMachine uses roughly 80 percent fewer input tokens under matched conditions. A companion Retrieval Agent adaptively routes queries among direct retrieval, parallel decomposition, or iterative chain-of-query strategies, achieving 93.2 percent on HotpotQA-hard and 92.6 percent on WikiMultiHop under randomized-noise conditions. These results show that preserving episodic ground truth while layering adaptive retrieval yields robust, efficient long-term memory for personalized LLM agents.",
+      "authors": [
+        "Shu Wang",
+        "Edwin Yu",
+        "Oscar Love",
+        "Tom Zhang",
+        "Tom Wong",
+        "Steve Scargall",
+        "Charles Fan"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-06T16:57:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.04853v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Memory system improving RAG pipelines for agents",
+      "llm_evidence_cn": "改进智能体 RAG 流水的记忆系统",
+      "llm_evidence": "改进智能体 RAG 流水的记忆系统",
+      "canonical_evidence": "改进智能体 RAG 流水的记忆系统",
+      "llm_tldr_en": "A ground-truth-preserving memory system that enhances RAG and long-horizon reasoning for AI agents.",
+      "llm_tldr_cn": "一种保持真实性的记忆系统，增强了 AI 智能体的检索增强生成和长程推理能力。",
+      "llm_tldr": "一种保持真实性的记忆系统，增强了 AI 智能体的检索增强生成和长程推理能力。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "retrieval augmented generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.04872v1",
+      "source": "arxiv",
+      "title": "Synthetic Sandbox for Training Machine Learning Engineering Agents",
+      "abstract": "As large language model agents advance beyond software engineering (SWE) tasks toward machine learning engineering (MLE), verifying agent behavior becomes orders of magnitude more expensive: while SWE tasks can be verified via fast-executing unit tests, MLE verification requires running full ML pipelines -- data preprocessing, model training, and metric evaluation -- on large datasets at each rollout step, rendering trajectory-wise on-policy reinforcement learning (RL) prohibitively slow. Existing approaches retreat to supervised fine-tuning (SFT) or offline proxy rewards, sacrificing the exploration and generalization benefits of on-policy RL. We observe that sandbox data size is the primary source of this bottleneck. Based on this insight, we introduce SandMLE, a multi-agent framework that generates diverse, verifiable synthetic MLE environments from a small number of seed tasks, preserving the structural and technical complexity of real-world problems while constraining datasets to micro-scale (each task is paired with only 50-200 training samples). Through extensive experiments, we show that SandMLE reduces execution time by over 13 times, enabling large-scale, on-policy trajectory-wise RL for the first time in the MLE domain. On MLE-bench-lite, SandMLE yields significant gains over SFT baselines across Qwen3-8B, 14B, and 30B-A3B, with relative medal rate improvements ranging from 20.3% to 66.9%. Furthermore, the trained policy generalizes across unseen agentic scaffolds, achieving up to 32.4% better HumanRank score on MLE-Dojo.",
+      "authors": [
+        "Yuhang Zhou",
+        "Lizhu Zhang",
+        "Yifan Wu",
+        "Jiayi Liu",
+        "Xiangjun Fan",
+        "Zhuokai Zhao",
+        "Hong Yan"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-04-06T17:19:29+00:00",
+      "link": "https://arxiv.org/pdf/2604.04872v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "training machine learning engineering agents using on-policy RL",
+      "llm_evidence_cn": "使用在线强化学习训练机器学习工程智能体",
+      "llm_evidence": "使用在线强化学习训练机器学习工程智能体",
+      "canonical_evidence": "使用在线强化学习训练机器学习工程智能体",
+      "llm_tldr_en": "Proposes a synthetic sandbox to enable efficient on-policy RL training for MLE autonomous agents.",
+      "llm_tldr_cn": "提出一种合成沙盒，为机器学习工程智能体提供高效的在线强化学习训练。",
+      "llm_tldr": "提出一种合成沙盒，为机器学习工程智能体提供高效的在线强化学习训练。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05112v1",
+      "source": "arxiv",
+      "title": "Vintix II: Decision Pre-Trained Transformer is a Scalable In-Context Reinforcement Learner",
+      "abstract": "Recent progress in in-context reinforcement learning (ICRL) has demonstrated its potential for training generalist agents that can acquire new tasks directly at inference. Algorithm Distillation (AD) pioneered this paradigm and was subsequently scaled to multi-domain settings, although its ability to generalize to unseen tasks remained limited. The Decision Pre-Trained Transformer (DPT) was introduced as an alternative, showing stronger in-context reinforcement learning abilities in simplified domains, but its scalability had not been established. In this work, we extend DPT to diverse multi-domain environments, applying Flow Matching as a natural training choice that preserves its interpretation as Bayesian posterior sampling. As a result, we obtain an agent trained across hundreds of diverse tasks that achieves clear gains in generalization to the held-out test set. This agent improves upon prior AD scaling and demonstrates stronger performance in both online and offline inference, reinforcing ICRL as a viable alternative to expert distillation for training generalist agents.",
+      "authors": [
+        "Andrei Polubarov",
+        "Lyubaykin Nikita",
+        "Alexander Derevyagin",
+        "Artyom Grishin",
+        "Igor Saprygin",
+        "Aleksandr Serkov",
+        "Mark Averchenko",
+        "Daniil Tikhonov",
+        "Maksim Zhdanov",
+        "Alexander Nikulin",
+        "Ilya Zisman",
+        "Albina Klepach",
+        "Alexey Zemtsov",
+        "Vladislav Kurenkov"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.RO"
+      ],
+      "published": "2026-04-06T19:18:12+00:00",
+      "link": "https://arxiv.org/pdf/2604.05112v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "scalable in-context reinforcement learning algorithms",
+      "llm_evidence_cn": "可扩展的上下文强化学习算法",
+      "llm_evidence": "可扩展的上下文强化学习算法",
+      "canonical_evidence": "可扩展的上下文强化学习算法",
+      "llm_tldr_en": "Extends Decision Pre-Trained Transformer to multi-domain environments for scalable in-context reinforcement learning.",
+      "llm_tldr_cn": "将决策预训练Transformer扩展至多领域环境，实现了可扩展的上下文强化学习。",
+      "llm_tldr": "将决策预训练Transformer扩展至多领域环境，实现了可扩展的上下文强化学习。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05131v1",
+      "source": "arxiv",
+      "title": "Nash Approximation Gap in Truncated Infinite-horizon Partially Observable Markov Games",
+      "abstract": "Partially Observable Markov Games (POMGs) provide a general framework for modeling multi-agent sequential decision-making under asymmetric information. A common approach is to reformulate a POMG as a fully observable Markov game over belief states, where the state is the conditional distribution of the system state and agents' private information given common information, and actions correspond to mappings (prescriptions) from private information to actions. However, this reformulation is intractable in infinite-horizon settings, as both the belief state and action spaces grow with the accumulation of information over time. We propose a finite-memory truncation framework that approximates infinite-horizon POMGs by a finite-state, finite-action Markov game, where agents condition decisions only on finite windows of common and private information. Under suitable filter stability (forgetting) conditions, we show that any Nash equilibrium of the truncated game is an $\\varepsilon$-Nash equilibrium of the original POMG, where $\\varepsilon \\to 0$ as the truncation length increases.",
+      "authors": [
+        "Lan Sang",
+        "Chinmay Maheshwari"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "eess.SY"
+      ],
+      "published": "2026-04-06T19:50:58+00:00",
+      "link": "https://arxiv.org/pdf/2604.05131v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Nash approximation in partially observable Markov games",
+      "llm_evidence_cn": "部分可观测马尔可夫博弈中的纳什近似",
+      "llm_evidence": "部分可观测马尔可夫博弈中的纳什近似",
+      "canonical_evidence": "部分可观测马尔可夫博弈中的纳什近似",
+      "llm_tldr_en": "Analyzes Nash equilibrium approximation in infinite-horizon multi-agent sequential decision-making.",
+      "llm_tldr_cn": "分析了无限时界多智能体顺序决策中的纳什均衡近似问题。",
+      "llm_tldr": "分析了无限时界多智能体顺序决策中的纳什均衡近似问题。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Multi-agent reinforcement learning and coordination",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05134v1",
+      "source": "arxiv",
+      "title": "Reasoning Through Chess: How Reasoning Evolves from Data Through Fine-Tuning and Reinforcement Learning",
+      "abstract": "How can you get a language model to reason in a task it natively struggles with? We study how reasoning evolves in a language model -- from supervised fine-tuning (SFT) to reinforcement learning (RL) -- by analyzing how a set of theoretically-inspired datasets impacts language model performance in chess. We find that fine-tuning a model to directly predict the best move leads to effective RL and the strongest downstream performance -- however, the RL step elicits unfaithful reasoning (reasoning inconsistent with the chosen move). Alternatively, training on multi-move trajectories yields comparable downstream performance with faithful reasoning and more stable RL. We show that RL induces a substantial positive shift in the distribution of move quality and reduces hallucination rates as a side effect. Finally, we find several SFT-checkpoint metrics -- metrics spanning evaluation performance, hallucination rates, and reasoning quality -- to be predictive of post-RL model performance. We release checkpoints and final models as well as training data, evaluations, and code which allowed us to surpass leading open-source reasoning models in chess with a 7B-parameter model.",
+      "authors": [
+        "Lucas Dionisopoulos",
+        "Nicklas Majamaki",
+        "Prithviraj Ammanabrolu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-06T19:53:39+00:00",
+      "link": "https://arxiv.org/pdf/2604.05134v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "integration of LLMs with reinforcement learning for reasoning",
+      "llm_evidence_cn": "大语言模型与强化学习结合以提升推理能力",
+      "llm_evidence": "大语言模型与强化学习结合以提升推理能力",
+      "canonical_evidence": "大语言模型与强化学习结合以提升推理能力",
+      "llm_tldr_en": "Explores how RL and fine-tuning evolve reasoning capabilities in language models using chess as a benchmark.",
+      "llm_tldr_cn": "通过国际象棋任务研究了强化学习和微调如何促进大语言模型推理能力的演化。",
+      "llm_tldr": "通过国际象棋任务研究了强化学习和微调如何促进大语言模型推理能力的演化。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05533v1",
+      "source": "arxiv",
+      "title": "Experience Transfer for Multimodal LLM Agents in Minecraft Game",
+      "abstract": "Multimodal LLM agents operating in complex game environments must continually reuse past experience to solve new tasks efficiently. In this work, we propose Echo, a transfer-oriented memory framework that enables agents to derive actionable knowledge from prior interactions rather than treating memory as a passive repository of static records. To make transfer explicit, Echo decomposes reusable knowledge into five dimensions: structure, attribute, process, function, and interaction. This formulation allows the agent to identify recurring patterns shared across different tasks and infer what prior experience remains applicable in new situations. Building on this formulation, Echo leverages In-Context Analogy Learning (ICAL) to retrieve relevant experiences and adapt them to unseen tasks through contextual examples. Experiments in Minecraft show that, under a from-scratch learning setting, Echo achieves a 1.3x to 1.7x speed-up on object-unlocking tasks. Moreover, Echo exhibits a burst-like chain-unlocking phenomenon, rapidly unlocking multiple similar items within a short time interval after acquiring transferable experience. These results suggest that experience transfer is a promising direction for improving the efficiency and adaptability of multimodal LLM agents in complex interactive environments.",
+      "authors": [
+        "Chenghao Li",
+        "Jun Liu",
+        "Songbo Zhang",
+        "Huadong Jian",
+        "Hao Ni",
+        "Lik-Hang Lee",
+        "Sung-Ho Bae",
+        "Guoqing Wang",
+        "Yang Yang",
+        "Chaoning Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-07T07:32:20+00:00",
+      "link": "https://arxiv.org/pdf/2604.05533v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Multimodal LLM agents with transfer-oriented memory",
+      "llm_evidence_cn": "具有迁移导向记忆的多模态LLM智能体",
+      "llm_evidence": "具有迁移导向记忆的多模态LLM智能体",
+      "canonical_evidence": "具有迁移导向记忆的多模态LLM智能体",
+      "llm_tldr_en": "Proposes Echo, a memory framework for multimodal LLM agents to transfer experience across tasks in Minecraft.",
+      "llm_tldr_cn": "提出Echo记忆框架，使多模态LLM智能体能在Minecraft任务间迁移经验。",
+      "llm_tldr": "提出Echo记忆框架，使多模态LLM智能体能在Minecraft任务间迁移经验。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05719v1",
+      "source": "arxiv",
+      "title": "Hackers or Hallucinators? A Comprehensive Analysis of LLM-Based Automated Penetration Testing",
+      "abstract": "The rapid advancement of Large Language Models (LLMs) has created new opportunities for Automated Penetration Testing (AutoPT), spawning numerous frameworks aimed at achieving end-to-end autonomous attacks. However, despite the proliferation of related studies, existing research generally lacks systematic architectural analysis and large-scale empirical comparisons under a unified benchmark. Therefore, this paper presents the first Systematization of Knowledge (SoK) focusing on the architectural design and comprehensive empirical evaluation of current LLM-based AutoPT frameworks. At systematization level, we comprehensively review existing framework designs across six dimensions: agent architecture, agent plan, agent memory, agent execution, external knowledge, and benchmarks. At empirical level, we conduct large-scale experiments on 13 representative open-source AutoPT frameworks and 2 baseline frameworks utilizing a unified benchmark. The experiments consumed over 10 billion tokens in total and generated more than 1,500 execution logs, which were manually reviewed and analyzed over four months by a panel of more than 15 researchers with expertise in cybersecurity. By investigating the latest progress in this rapidly developing field, we provide researchers with a structured taxonomy to understand existing LLM-based AutoPT frameworks and a large-scale empirical benchmark, along with promising directions for future research.",
+      "authors": [
+        "Jiaren Peng",
+        "Zeqin Li",
+        "Chang You",
+        "Yan Wang",
+        "Hanlin Sun",
+        "Xuan Tian",
+        "Shuqiao Zhang",
+        "Junyi Liu",
+        "Jianguo Zhao",
+        "Renyang Liu",
+        "Haoran Ou",
+        "Yuqiang Sun",
+        "Jiancheng Zhang",
+        "Yutong Jiao",
+        "Kunshu Song",
+        "Chao Zhang",
+        "Fan Shi",
+        "Hongda Sun",
+        "Rui Yan",
+        "Cheng Huang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.AI",
+        "cs.SE"
+      ],
+      "published": "2026-04-07T11:19:16+00:00",
+      "link": "https://arxiv.org/pdf/2604.05719v1",
+      "tags": [
+        "keyword:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "architectural design of LLM-based autonomous agents",
+      "llm_evidence_cn": "基于大语言模型的自主智能体架构设计",
+      "llm_evidence": "基于大语言模型的自主智能体架构设计",
+      "canonical_evidence": "基于大语言模型的自主智能体架构设计",
+      "llm_tldr_en": "Systematizes knowledge on LLM-based automated penetration testing frameworks across agent architecture and planning.",
+      "llm_tldr_cn": "系统化梳理了基于大语言模型的自动化渗透测试框架的架构设计、规划与内存机制。",
+      "llm_tldr": "系统化梳理了基于大语言模型的自动化渗透测试框架的架构设计、规划与内存机制。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05846v1",
+      "source": "arxiv",
+      "title": "AgentGL: Towards Agentic Graph Learning with LLMs via Reinforcement Learning",
+      "abstract": "Large Language Models (LLMs) increasingly rely on agentic capabilities-iterative retrieval, tool use, and decision-making-to overcome the limits of static, parametric knowledge. Yet existing agentic frameworks treat external information as unstructured text and fail to leverage the topological dependencies inherent in real-world data. To bridge this gap, we introduce Agentic Graph Learning (AGL), a paradigm that reframes graph learning as an interleaved process of topology-aware navigation and LLM-based inference. Specifically, we propose AgentGL, the first reinforcement learning (RL)-driven framework for AGL. AgentGL equips an LLM agent with graph-native tools for multi-scale exploration, regulates tool usage via search-constrained thinking to balance accuracy and efficiency, and employs a graph-conditioned curriculum RL strategy to stabilize long-horizon policy learning without step-wise supervision. Across diverse Text-Attributed Graph (TAG) benchmarks and multiple LLM backbones, AgentGL substantially outperforms strong GraphLLMs and GraphRAG baselines, achieving absolute improvements of up to 17.5% in node classification and 28.4% in link prediction. These results demonstrate that AGL is a promising frontier for enabling LLMs to autonomously navigate and reason over complex relational environments. The code is publicly available at https://github.com/sunyuanfu/AgentGL.",
+      "authors": [
+        "Yuanfu Sun",
+        "Kang Li",
+        "Dongzhe Fan",
+        "Jiajin Liu",
+        "Qiaoyu Tan"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-04-07T13:11:17+00:00",
+      "link": "https://arxiv.org/pdf/2604.05846v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "RL-driven framework for LLM agents on graph learning",
+      "llm_evidence_cn": "基于强化学习的图学习LLM智能体框架",
+      "llm_evidence": "基于强化学习的图学习LLM智能体框架",
+      "canonical_evidence": "基于强化学习的图学习LLM智能体框架",
+      "llm_tldr_en": "Introduces AgentGL, an RL-driven framework enabling LLM agents to perform topology-aware graph navigation.",
+      "llm_tldr_cn": "引入AgentGL，一个驱动LLM智能体进行拓扑感知图导航的强化学习框架。",
+      "llm_tldr": "引入AgentGL，一个驱动LLM智能体进行拓扑感知图导航的强化学习框架。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05939v1",
+      "source": "arxiv",
+      "title": "Context-Value-Action Architecture for Value-Driven Large Language Model Agents",
+      "abstract": "Large Language Models (LLMs) have shown promise in simulating human behavior, yet existing agents often exhibit behavioral rigidity, a flaw frequently masked by the self-referential bias of current \"LLM-as-a-judge\" evaluations. By evaluating against empirical ground truth, we reveal a counter-intuitive phenomenon: increasing the intensity of prompt-driven reasoning does not enhance fidelity but rather exacerbates value polarization, collapsing population diversity. To address this, we propose the Context-Value-Action (CVA) architecture, grounded in the Stimulus-Organism-Response (S-O-R) model and Schwartz's Theory of Basic Human Values. Unlike methods relying on self-verification, CVA decouples action generation from cognitive reasoning via a novel Value Verifier trained on authentic human data to explicitly model dynamic value activation. Experiments on CVABench, which comprises over 1.1 million real-world interaction traces, demonstrate that CVA significantly outperforms baselines. Our approach effectively mitigates polarization while offering superior behavioral fidelity and interpretability.",
+      "authors": [
+        "TianZe Zhang",
+        "Sirui Sun",
+        "Yuhang Xie",
+        "Xin Zhang",
+        "Zhiqiang Wu",
+        "Guojie Song"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.HC"
+      ],
+      "published": "2026-04-07T14:34:20+00:00",
+      "link": "https://arxiv.org/pdf/2604.05939v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Architecture for value-driven LLM agents",
+      "llm_evidence_cn": "价值驱动的大语言模型智能体架构",
+      "llm_evidence": "价值驱动的大语言模型智能体架构",
+      "canonical_evidence": "价值驱动的大语言模型智能体架构",
+      "llm_tldr_en": "Proposes the CVA architecture to improve the behavioral fidelity and diversity of LLM-based agents.",
+      "llm_tldr_cn": "提出了 CVA 架构，以提高基于大语言模型的智能体的行为保真度和多样性。",
+      "llm_tldr": "提出了 CVA 架构，以提高基于大语言模型的智能体的行为保真度和多样性。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06132v1",
+      "source": "arxiv",
+      "title": "Claw-Eval: Toward Trustworthy Evaluation of Autonomous Agents",
+      "abstract": "Large language models are increasingly deployed as autonomous agents executing multi-step workflows in real-world software environments. However, existing agent benchmarks suffer from three critical limitations: (1) trajectory-opaque grading that checks only final outputs, (2) underspecified safety and robustness evaluation, and (3) narrow modality coverage and interaction paradigms. We introduce Claw-Eval, an end-to-end evaluation suite addressing all three gaps. It comprises 300 human-verified tasks spanning 9 categories across three groups (general service orchestration, multimodal perception and generation, and multi-turn professional dialogue). Every agent action is recorded through three independent evidence channels (execution traces, audit logs, and environment snapshots), enabling trajectory-aware grading over 2,159 fine-grained rubric items. The scoring protocol evaluates Completion, Safety, and Robustness, reporting Average Score, Pass@k, and Pass^k across three trials to distinguish genuine capability from lucky outcomes. Experiments on 14 frontier models reveal that: (1) trajectory-opaque evaluation is systematically unreliable, missing 44% of safety violations and 13% of robustness failures that our hybrid pipeline catches; (2) controlled error injection primarily degrades consistency rather than peak capability, with Pass^3 dropping up to 24% while Pass@3 remains stable; (3) multimodal performance varies sharply, with most models performing poorer on video than on document or image, and no single model dominating across all modalities. Beyond benchmarking, Claw-Eval highlights actionable directions for agent development, shedding light on what it takes to build agents that are not only capable but reliably deployable.",
+      "authors": [
+        "Bowen Ye",
+        "Rang Li",
+        "Qibin Yang",
+        "Yuanxin Liu",
+        "Linli Yao",
+        "Hanglong Lv",
+        "Zhihui Xie",
+        "Chenxin An",
+        "Lei Li",
+        "Lingpeng Kong",
+        "Qi Liu",
+        "Zhifang Sui",
+        "Tong Yang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-07T17:43:18+00:00",
+      "link": "https://arxiv.org/pdf/2604.06132v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "evaluation suite for autonomous agents in real-world software",
+      "llm_evidence_cn": "真实软件环境中自主智能体的评估套件",
+      "llm_evidence": "真实软件环境中自主智能体的评估套件",
+      "canonical_evidence": "真实软件环境中自主智能体的评估套件",
+      "llm_tldr_en": "Introduces Claw-Eval, an end-to-end suite for evaluating safety and robustness of LLM-based autonomous agents.",
+      "llm_tldr_cn": "推出Claw-Eval，一个用于评估LLM自主智能体安全性和鲁棒性的端到端评估套件。",
+      "llm_tldr": "推出Claw-Eval，一个用于评估LLM自主智能体安全性和鲁棒性的端到端评估套件。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06170v1",
+      "source": "arxiv",
+      "title": "Paper Circle: An Open-source Multi-agent Research Discovery and Analysis Framework",
+      "abstract": "The rapid growth of scientific literature has made it increasingly difficult for researchers to efficiently discover, evaluate, and synthesize relevant work. Recent advances in multi-agent large language models (LLMs) have demonstrated strong potential for understanding user intent and are being trained to utilize various tools. In this paper, we introduce Paper Circle, a multi-agent research discovery and analysis system designed to reduce the effort required to find, assess, organize, and understand academic literature. The system comprises two complementary pipelines: (1) a Discovery Pipeline that integrates offline and online retrieval from multiple sources, multi-criteria scoring, diversity-aware ranking, and structured outputs; and (2) an Analysis Pipeline that transforms individual papers into structured knowledge graphs with typed nodes such as concepts, methods, experiments, and figures, enabling graph-aware question answering and coverage verification. Both pipelines are implemented within a coder LLM-based multi-agent orchestration framework and produce fully reproducible, synchronized outputs including JSON, CSV, BibTeX, Markdown, and HTML at each agent step. This paper describes the system architecture, agent roles, retrieval and scoring methods, knowledge graph schema, and evaluation interfaces that together form the Paper Circle research workflow. We benchmark Paper Circle on both paper retrieval and paper review generation, reporting hit rate, MRR, and Recall at K. Results show consistent improvements with stronger agent models. We have publicly released the website at https://papercircle.vercel.app/ and the code at https://github.com/MAXNORM8650/papercircle.",
+      "authors": [
+        "Komal Kumar",
+        "Aman Chadha",
+        "Salman Khan",
+        "Fahad Shahbaz Khan",
+        "Hisham Cholakkal"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-04-07T17:59:58+00:00",
+      "link": "https://arxiv.org/pdf/2604.06170v1",
+      "tags": [
+        "keyword:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multi-agent LLM system for research discovery and analysis",
+      "llm_evidence_cn": "用于研究发现和分析的多智能体LLM系统",
+      "llm_evidence": "用于研究发现和分析的多智能体LLM系统",
+      "canonical_evidence": "用于研究发现和分析的多智能体LLM系统",
+      "llm_tldr_en": "Paper Circle is a multi-agent LLM framework that automates academic literature discovery and analysis.",
+      "llm_tldr_cn": "Paper Circle是一个利用多智能体LLM自动化学术文献发现与分析的框架。",
+      "llm_tldr": "Paper Circle是一个利用多智能体LLM自动化学术文献发现与分析的框架。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06268v1",
+      "source": "arxiv",
+      "title": "RAGEN-2: Reasoning Collapse in Agentic RL",
+      "abstract": "RL training of multi-turn LLM agents is inherently unstable, and reasoning quality directly determines task performance. Entropy is widely used to track reasoning stability. However, entropy only measures diversity within the same input, and cannot tell whether reasoning actually responds to different inputs. In RAGEN-2, we find that even with stable entropy, models can rely on fixed templates that look diverse but are input-agnostic. We call this template collapse, a failure mode invisible to entropy and all existing metrics. To diagnose this failure, we decompose reasoning quality into within-input diversity (Entropy) and cross-input distinguishability (Mutual Information, MI), and introduce a family of mutual information proxies for online diagnosis. Across diverse tasks, mutual information correlates with final performance much more strongly than entropy, making it a more reliable proxy for reasoning quality. We further explain template collapse with a signal-to-noise ratio (SNR) mechanism. Low reward variance weakens task gradients, letting regularization terms dominate and erase cross-input reasoning differences. To address this, we propose SNR-Aware Filtering to select high-signal prompts per iteration using reward variance as a lightweight proxy. Across planning, math reasoning, web navigation, and code execution, the method consistently improves both input dependence and task performance.",
+      "authors": [
+        "Zihan Wang",
+        "Chi Gui",
+        "Xing Jin",
+        "Qineng Wang",
+        "Licheng Liu",
+        "Kangrui Wang",
+        "Shiqi Chen",
+        "Linjie Li",
+        "Zhengyuan Yang",
+        "Pingyue Zhang",
+        "Yiping Lu",
+        "Jiajun Wu",
+        "Li Fei-Fei",
+        "Lijuan Wang",
+        "Yejin Choi",
+        "Manling Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-07T04:29:41+00:00",
+      "link": "https://arxiv.org/pdf/2604.06268v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "RL training of multi-turn LLM agents",
+      "llm_evidence_cn": "多轮大语言模型智能体的强化学习训练",
+      "llm_evidence": "多轮大语言模型智能体的强化学习训练",
+      "canonical_evidence": "多轮大语言模型智能体的强化学习训练",
+      "llm_tldr_en": "Diagnoses reasoning collapse in agentic RL by measuring within-input diversity and cross-input distinguishability.",
+      "llm_tldr_cn": "通过衡量输入内多样性和跨输入区分度，诊断智能体强化学习中的推理崩溃问题。",
+      "llm_tldr": "通过衡量输入内多样性和跨输入区分度，诊断智能体强化学习中的推理崩溃问题。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06610v1",
+      "source": "arxiv",
+      "title": "TwinLoop: Simulation-in-the-Loop Digital Twins for Online Multi-Agent Reinforcement Learning",
+      "abstract": "Decentralised online learning enables runtime adaptation in cyber-physical multi-agent systems, but when operating conditions change, learned policies often require substantial trial-and-error interaction before recovering performance. To address this, we propose TwinLoop, a simulation-in-the-loop digital twin framework for online multi-agent reinforcement learning. When a context shift occurs, the digital twin is triggered to reconstruct the current system state, initialise from the latest agent policies, and perform accelerated policy improvement with simulation what-if analysis before synchronising updated parameters back to the agents in the physical system. We evaluate TwinLoop in a vehicular edge computing task-offloading scenario with changing workload and infrastructure conditions. The results suggest that digital twins can improve post-shift adaptation efficiency and reduce reliance on costly online trial-and-error.",
+      "authors": [
+        "Nan Zhang",
+        "Zishuo Wang",
+        "Shuyu Huang",
+        "Georgios Diamantopoulos",
+        "Nikos Tziritas",
+        "Panagiotis Oikonomou",
+        "Georgios Theodoropoulos"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-08T02:43:04+00:00",
+      "link": "https://arxiv.org/pdf/2604.06610v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "online multi-agent reinforcement learning framework",
+      "llm_evidence_cn": "在线多智能体强化学习框架",
+      "llm_evidence": "在线多智能体强化学习框架",
+      "canonical_evidence": "在线多智能体强化学习框架",
+      "llm_tldr_en": "Proposes a digital twin framework for accelerated policy improvement in online multi-agent reinforcement learning.",
+      "llm_tldr_cn": "提出一种基于数字孪生的仿真框架，用于加速在线多智能体强化学习的策略改进。",
+      "llm_tldr": "提出一种基于数字孪生的仿真框架，用于加速在线多智能体强化学习的策略改进。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06691v1",
+      "source": "arxiv",
+      "title": "KD-MARL: Resource-Aware Knowledge Distillation in Multi-Agent Reinforcement Learning",
+      "abstract": "Real world deployment of multi agent reinforcement learning MARL systems is fundamentally constrained by limited compute memory and inference time. While expert policies achieve high performance they rely on costly decision cycles and large scale models that are impractical for edge devices or embedded platforms. Knowledge distillation KD offers a promising path toward resource aware execution but existing KD methods in MARL focus narrowly on action imitation often neglecting coordination structure and assuming uniform agent capabilities. We propose resource aware Knowledge Distillation for Multi Agent Reinforcement Learning KD MARL a two stage framework that transfers coordinated behavior from a centralized expert to lightweight decentralized student agents. The student policies are trained without a critic relying instead on distilled advantage signals and structured policy supervision to preserve coordination under heterogeneous and limited observations. Our approach transfers both action level behavior and structural coordination patterns from expert policies while supporting heterogeneous student architectures allowing each agent model capacity to match its observation complexity which is crucial for efficient execution under partial or limited observability and limited onboard resources. Extensive experiments on SMAC and MPE benchmarks demonstrate that KD MARL achieves high performance retention while substantially reducing computational cost. Across standard multi agent benchmarks KD MARL retains over 90 percent of expert performance while reducing computational cost by up to 28.6 times FLOPs. The proposed approach achieves expert level coordination and preserves it through structured distillation enabling practical MARL deployment across resource constrained onboard platforms.",
+      "authors": [
+        "Monirul Islam Pavel",
+        "Siyi Hu",
+        "Muhammad Anwar Masum",
+        "Mahardhika Pratama",
+        "Ryszard Kowalczyk",
+        "Zehong Jimmy Cao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-08T05:12:40+00:00",
+      "link": "https://arxiv.org/pdf/2604.06691v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "knowledge distillation in multi-agent reinforcement learning",
+      "llm_evidence_cn": "多智能体强化学习中的知识蒸馏技术",
+      "llm_evidence": "多智能体强化学习中的知识蒸馏技术",
+      "canonical_evidence": "多智能体强化学习中的知识蒸馏技术",
+      "llm_tldr_en": "Presents a resource-aware knowledge distillation framework to transfer coordination in MARL to edge devices.",
+      "llm_tldr_cn": "提出一种资源受限下的多智能体强化学习知识蒸馏框架，实现协调行为的轻量化部署。",
+      "llm_tldr": "提出一种资源受限下的多智能体强化学习知识蒸馏框架，实现协调行为的轻量化部署。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06777v1",
+      "source": "arxiv",
+      "title": "Walk the Talk: Bridging the Reasoning-Action Gap for Thinking with Images via Multimodal Agentic Policy Optimization",
+      "abstract": "Recent advancements in Multimodal Large Language Models (MLLMs) have incentivized models to ``think with images'' by actively invoking visual tools during multi-turn reasoning. The common Reinforcement Learning (RL) practice of relying on outcome-based rewards ignores the fact that textual plausibility often masks executive failure, meaning that models may exhibit intuitive textual reasoning while executing imprecise or irrelevant visual actions within their agentic reasoning trajectories. This reasoning-action discrepancy introduces noise that accumulates throughout the multi-turn reasoning process, severely degrading the model's multimodal reasoning capabilities and potentially leading to training collapse. In this paper, we introduce Multimodal Agentic Policy Optimization (MAPO), bridging the gap between textual reasoning and visual actions generated by models within their Multimodal Chain-of-Thought (MCoT). Specifically, MAPO mandates the model to generate explicit textual descriptions for the visual content obtained via tool usage. We then employ a novel advantage estimation that couples the semantic alignment between these descriptions and the actual observations with the task reward. Theoretical findings are provided to justify the rationale behind MAPO, which inherently reduces the variance of gradients, and extensive experiments demonstrate that our method achieves superior performance across multiple visual reasoning benchmarks.",
+      "authors": [
+        "Wenhao Yang",
+        "Yu Xia",
+        "Jinlong Huang",
+        "Shiyin Lu",
+        "Qing-Guo Chen",
+        "Zhao Xu",
+        "Weihua Luo",
+        "Kaifu Zhang",
+        "Yuchen Zhou",
+        "Xiaobo Xia",
+        "Yuanyu Wan",
+        "Lijun Zhang",
+        "Tat-Seng Chua"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-04-08T07:48:07+00:00",
+      "link": "https://arxiv.org/pdf/2604.06777v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Multimodal agentic policy optimization for LLMs",
+      "llm_evidence_cn": "LLM的多模态智能体策略优化",
+      "llm_evidence": "LLM的多模态智能体策略优化",
+      "canonical_evidence": "LLM的多模态智能体策略优化",
+      "llm_tldr_en": "Addresses the reasoning-action gap in multimodal LLM agents using agentic policy optimization.",
+      "llm_tldr_cn": "通过智能体策略优化解决多模态LLM智能体在推理与行动之间的脱节问题。",
+      "llm_tldr": "通过智能体策略优化解决多模态LLM智能体在推理与行动之间的脱节问题。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07003v1",
+      "source": "arxiv",
+      "title": "EmoMAS: Emotion-Aware Multi-Agent System for High-Stakes Edge-Deployable Negotiation with Bayesian Orchestration",
+      "abstract": "Large language models (LLMs) has been widely used for automated negotiation, but their high computational cost and privacy risks limit deployment in privacy-sensitive, on-device settings such as mobile assistants or rescue robots. Small language models (SLMs) offer a viable alternative, yet struggle with the complex emotional dynamics of high-stakes negotiation. We introduces EmoMAS, a Bayesian multi-agent framework that transforms emotional decision-making from reactive to strategic. EmoMAS leverages a Bayesian orchestrator to coordinate three specialized agents: game-theoretic, reinforcement learning, and psychological coherence models. The system fuses their real-time insights to optimize emotional state transitions while continuously updating agent reliability based on negotiation feedback. This mixture-of-agents architecture enables online strategy learning without pre-training. We further introduce four high-stakes, edge-deployable negotiation benchmarks across debt, healthcare, emergency response, and educational domains. Through extensive agent-to-agent simulations across all benchmarks, both SLMs and LLMs equipped with EmoMAS consistently surpass all baseline models in negotiation performance while balancing ethical behavior. These results show that strategic emotional intelligence is also the key driver of negotiation success. By treating emotional expression as a strategic variable within a Bayesian multi-agent optimization framework, EmoMAS establishes a new paradigm for effective, private, and adaptive negotiation AI suitable for high-stakes edge deployment.",
+      "authors": [
+        "Yunbo Long",
+        "Yunhan Liu",
+        "Liming Xu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-08T12:20:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.07003v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Bayesian multi-agent framework integrating LLMs and RL",
+      "llm_evidence_cn": "集成大语言模型与强化学习的贝叶斯多智能体框架",
+      "llm_evidence": "集成大语言模型与强化学习的贝叶斯多智能体框架",
+      "canonical_evidence": "集成大语言模型与强化学习的贝叶斯多智能体框架",
+      "llm_tldr_en": "A Bayesian framework coordinating LLM and RL agents for strategic emotion-aware negotiation on edge devices.",
+      "llm_tldr_cn": "一种协调大模型与强化学习智能体的贝叶斯框架，用于边缘设备上的情感感知谈判。",
+      "llm_tldr": "一种协调大模型与强化学习智能体的贝叶斯框架，用于边缘设备上的情感感知谈判。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07415v1",
+      "source": "arxiv",
+      "title": "SubSearch: Intermediate Rewards for Unsupervised Guided Reasoning in Complex Retrieval",
+      "abstract": "Large language models (LLMs) are probabilistic in nature and perform more reliably when augmented with external information. As complex queries often require multi-step reasoning over the retrieved information, with no clear or predetermined reasoning path, they remain challenging. Recent approaches train models using reinforcement learning on the model's outcome, showing promise in improving how models handle complex information. We introduce SubSearch, a specialized framework that shifts from outcome-only supervision to intermediate reward signals that incentivize planning high-quality reasoning. Unlike previous work on process reward modeling, which focuses on training a separate reward model with annotated trajectories by either human annotators or large LLM judges, SubSearch directly optimizes the generator using intrinsic process rewards, which we define as internally-derived rewards, eliminating the need for external supervision, and moving towards autonomous information-intensive reasoning. Experiments on seven benchmarks show that rewarding intermediate reasoning steps with intrinsic rewards leads to more robust reasoning traces in both QA and multi-hop QA datasets over using only outcome rewards. SubSearch can help in building reasoning traces that allow agents to better integrate search engines for complex query answering, while offering a data-efficient alternative to supervised process modeling.",
+      "authors": [
+        "Roxana Petcu",
+        "Evangelos Kanoulas",
+        "Maarten de Rijke"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-04-08T13:09:47+00:00",
+      "link": "https://arxiv.org/pdf/2604.07415v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "reinforcement learning for complex retrieval and reasoning",
+      "llm_evidence_cn": "针对复杂检索和推理的强化学习",
+      "llm_evidence": "针对复杂检索和推理的强化学习",
+      "canonical_evidence": "针对复杂检索和推理的强化学习",
+      "llm_tldr_en": "Introduces SubSearch, a framework using intermediate rewards to improve LLM reasoning in complex retrieval tasks.",
+      "llm_tldr_cn": "引入SubSearch框架，通过中间奖励信号优化大模型在复杂检索任务中的推理能力。",
+      "llm_tldr": "引入SubSearch框架，通过中间奖励信号优化大模型在复杂检索任务中的推理能力。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "retrieval augmented generation",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07645v1",
+      "source": "arxiv",
+      "title": "PRIME: Training Free Proactive Reasoning via Iterative Memory Evolution for User-Centric Agent",
+      "abstract": "The development of autonomous tool-use agents for complex, long-horizon tasks in collaboration with human users has become the frontier of agentic research. During multi-turn Human-AI interactions, the dynamic and uncertain nature of user demands poses a significant challenge; agents must not only invoke tools but also iteratively refine their understanding of user intent through effective communication. While recent advances in reinforcement learning offer a path to more capable tool-use agents, existing approaches require expensive training costs and struggle with turn-level credit assignment across extended interaction horizons. To this end, we introduce PRIME (Proactive Reasoning via Iterative Memory Evolution), a gradient-free learning framework that enables continuous agent evolvement through explicit experience accumulation rather than expensive parameter optimization. PRIME distills multi-turn interaction trajectories into structured, human-readable experiences organized across three semantic zones: successful strategies, failure patterns, and user preferences. These experiences evolve through meta-level operations and guide future agent behavior via retrieval-augmented generation. Our experiments across several diverse user-centric environments demonstrate that PRIME achieves competitive performance with gradient-based methods while offering cost-efficiency and interpretability. Together, PRIME presents a practical paradigm for building proactive, collaborative agents that learn from Human-AI interaction without the computational burden of gradient-based training.",
+      "authors": [
+        "Prince Zizhuang Wang",
+        "Shuli Jiang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-08T23:11:12+00:00",
+      "link": "https://arxiv.org/pdf/2604.07645v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Autonomous tool-use agents for long-horizon tasks",
+      "llm_evidence_cn": "用于长程任务的自主工具使用智能体",
+      "llm_evidence": "用于长程任务的自主工具使用智能体",
+      "canonical_evidence": "用于长程任务的自主工具使用智能体",
+      "llm_tldr_en": "PRIME enables proactive reasoning and memory evolution for LLM agents without expensive training.",
+      "llm_tldr_cn": "PRIME为大模型智能体实现了主动推理和记忆演化，无需昂贵的训练成本。",
+      "llm_tldr": "PRIME为大模型智能体实现了主动推理和记忆演化，无需昂贵的训练成本。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07681v1",
+      "source": "arxiv",
+      "title": "Multi-Agent Orchestration for High-Throughput Materials Screening on a Leadership-Class System",
+      "abstract": "The integration of Artificial Intelligence (AI) with High-Performance Computing (HPC) is transforming scientific workflows from human-directed pipelines into adaptive systems capable of autonomous decision-making. Large language models (LLMs) play a critical role in autonomous workflows; however, deploying LLM-based agents at scale remains a significant challenge. Single-agent architectures and sequential tool calls often become serialization bottlenecks when executing large-scale simulation campaigns, failing to utilize the massive parallelism of exascale resources. To address this, we present a scalable, hierarchical multi-agent framework for orchestrating high-throughput screening campaigns. Our planner-executor architecture employs a central planning agent to dynamically partition workloads and assign subtasks to a swarm of parallel executor agents. All executor agents interface with a shared Model Context Protocol (MCP) server that orchestrates tasks via the Parsl workflow engine. To demonstrate this framework, we employed the open-weight gpt-oss-120b model to orchestrate a high-throughput screening of the Computation-Ready Experimental (CoRE) Metal-Organic Framework (MOF) database for atmospheric water harvesting. The results demonstrate that the proposed agentic framework enables efficient and scalable execution on the Aurora supercomputer, with low orchestration overhead and high task completion rates. This work establishes a flexible paradigm for LLM-driven scientific automation on HPC systems, with broad applicability to materials discovery and beyond.",
+      "authors": [
+        "Thang Duc Pham",
+        "Harikrishna Tummalapalli",
+        "Fakhrul Hasan Bhuiyan",
+        "Álvaro Vázquez Mayagoitia",
+        "Christine Simpson",
+        "Riccardo Balin",
+        "Venkatram Vishwanath",
+        "Murat Keçeli"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-09T01:01:11+00:00",
+      "link": "https://arxiv.org/pdf/2604.07681v1",
+      "tags": [
+        "keyword:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Hierarchical multi-agent framework using LLMs for scientific workflows",
+      "llm_evidence_cn": "用于科学工作流的基于LLM的分层多智能体框架",
+      "llm_evidence": "用于科学工作流的基于LLM的分层多智能体框架",
+      "canonical_evidence": "用于科学工作流的基于LLM的分层多智能体框架",
+      "llm_tldr_en": "Develops a scalable LLM-based multi-agent orchestration framework for high-throughput materials screening.",
+      "llm_tldr_cn": "开发了一种基于LLM的可扩展分层多智能体框架，用于高通量材料筛选。",
+      "llm_tldr": "开发了一种基于LLM的可扩展分层多智能体框架，用于高通量材料筛选。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07791v1",
+      "source": "arxiv",
+      "title": "SEARL: Joint Optimization of Policy and Tool Graph Memory for Self-Evolving Agents",
+      "abstract": "Recent advances in Reinforcement Learning with Verifiable Rewards (RLVR) have demonstrated significant potential in single-turn reasoning tasks. With the paradigm shift toward self-evolving agentic learning, models are increasingly expected to learn from trajectories by synthesizing tools or accumulating explicit experiences. However, prevailing methods typically rely on large-scale LLMs or multi-agent frameworks, which hinder their deployment in resource-constrained environments. The inherent sparsity of outcome-based rewards also poses a substantial challenge, as agents typically receive feedback only upon completion of tasks. To address these limitations, we introduce a Tool-Memory based self-evolving agentic framework SEARL. Unlike approaches that directly utilize interaction experiences, our method constructs a structured experience memory that integrates planning with execution. This provides a novel state abstraction that facilitates generalization across analogous contexts, such as tool reuse. Consequently, agents extract explicit knowledge from historical data while leveraging inter-trajectory correlations to densify reward signals. We evaluate our framework on knowledge reasoning and mathematics tasks, demonstrating its effectiveness in achieving more practical and efficient learning.",
+      "authors": [
+        "Xinshun Feng",
+        "Xinhao Song",
+        "Lijun Li",
+        "Gongshen Liu",
+        "Jing Shao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-09T04:38:47+00:00",
+      "link": "https://arxiv.org/pdf/2604.07791v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "framework for self-evolving agents with tool-memory",
+      "llm_evidence_cn": "具有工具记忆的自我进化智能体框架",
+      "llm_evidence": "具有工具记忆的自我进化智能体框架",
+      "canonical_evidence": "具有工具记忆的自我进化智能体框架",
+      "llm_tldr_en": "Introduces SEARL, a framework that jointly optimizes policy and tool graph memory for self-evolving agents.",
+      "llm_tldr_cn": "引入SEARL框架，通过联合优化策略和工具图记忆，实现智能体的自我进化。",
+      "llm_tldr": "引入SEARL框架，通过联合优化策略和工具图记忆，实现智能体的自我进化。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07911v1",
+      "source": "arxiv",
+      "title": "Dynamic Attentional Context Scoping: Agent-Triggered Focus Sessions for Isolated Per-Agent Steering in Multi-Agent LLM Orchestration",
+      "abstract": "Multi-agent LLM orchestration systems suffer from context pollution: when N concurrent agents compete for the orchestrator's context window, each agent's task state, partial outputs, and pending questions contaminate the steering interactions of every other agent, degrading decision quality. We introduce Dynamic Attentional Context Scoping (DACS), a mechanism in which the orchestrator operates in two asymmetric modes. In Registry mode it holds only lightweight per-agent status summaries (<=200 tokens each), remaining responsive to all agents and the user. When an agent emits a SteeringRequest, the orchestrator enters Focus(a_i) mode, injecting the full context of agent a_i while compressing all other agents to their registry entries. Context isolation is agent-triggered, asymmetric, and deterministic: the context window contains exactly F(a_i) + R_{-i} during steering, eliminating cross-agent contamination without requiring context compression or retrieval. We evaluate DACS across four experimental phases totalling 200 trials: Phase 1 tests N in {3,5,10} (60 trials); Phase 2 tests agent heterogeneity and adversarial dependencies (60 trials); Phase 3 tests decision density up to D=15 (40 trials); Phase 4 uses autonomous LLM agents for free-form questions (40 trials, Claude Haiku 4.5). Across all 8 synthetic scenarios, DACS achieves 90.0--98.4% steering accuracy versus 21.0--60.0% for a flat-context baseline (p < 0.0001 throughout), with wrong-agent contamination falling from 28--57% to 0--14% and context efficiency ratios of up to 3.53x. The accuracy advantage grows with N and D; keyword matching is validated by LLM-as-judge across all phases (mean kappa=0.909). DACS outperforms the flat-context baseline by +17.2pp at N=3 (p=0.0023) and +20.4pp at N=5 (p=0.0008) in Phase 4, with the advantage growing with N confirmed by two independent judges.",
+      "authors": [
+        "Nickson Patel"
+      ],
+      "primary_category": "cs.MA",
+      "categories": [
+        "cs.MA",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-09T07:26:42+00:00",
+      "link": "https://arxiv.org/pdf/2604.07911v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Multi-agent LLM orchestration and context management",
+      "llm_evidence_cn": "多智能体LLM编排与上下文管理",
+      "llm_evidence": "多智能体LLM编排与上下文管理",
+      "canonical_evidence": "多智能体LLM编排与上下文管理",
+      "llm_tldr_en": "Introduces DACS to prevent context pollution in multi-agent LLM orchestration systems.",
+      "llm_tldr_cn": "引入DACS机制，解决多智能体LLM编排系统中的上下文污染问题。",
+      "llm_tldr": "引入DACS机制，解决多智能体LLM编排系统中的上下文污染问题。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Multi-agent reinforcement learning and coordination",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07988v1",
+      "source": "arxiv",
+      "title": "LogAct: Enabling Agentic Reliability via Shared Logs",
+      "abstract": "Agents are LLM-driven components that can mutate environments in powerful, arbitrary ways. Extracting guarantees for the execution of agents in production environments can be challenging due to asynchrony and failures. In this paper, we propose a new abstraction called LogAct, where each agent is a deconstructed state machine playing a shared log. In LogAct, agentic actions are visible in the shared log before they are executed; can be stopped prior to execution by pluggable, decoupled voters; and recovered consistently in the case of agent or environment failure. LogAct enables agentic introspection, allowing the agent to analyze its own execution history using LLM inference, which in turn enables semantic variants of recovery, health check, and optimization. In our evaluation, LogAct agents recover efficiently and correctly from failures; debug their own performance; optimize token usage in swarms; and stop all unwanted actions for a target model on a representative benchmark with just a 3% drop in benign utility.",
+      "authors": [
+        "Mahesh Balakrishnan",
+        "Ashwin Bharambe",
+        "Davide Testuggine",
+        "David Geraghty",
+        "David Mao",
+        "Vidhya Venkat",
+        "Ilya Mironov",
+        "Rithesh Baradi",
+        "Gayathri Aiyer",
+        "Victoria Dudin"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC",
+        "cs.AI"
+      ],
+      "published": "2026-04-09T08:58:23+00:00",
+      "link": "https://arxiv.org/pdf/2604.07988v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "framework for LLM-driven agent reliability and execution history",
+      "llm_evidence_cn": "LLM驱动的智能体可靠性与执行历史框架",
+      "llm_evidence": "LLM驱动的智能体可靠性与执行历史框架",
+      "canonical_evidence": "LLM驱动的智能体可靠性与执行历史框架",
+      "llm_tldr_en": "LogAct uses shared logs to ensure reliability and recovery for LLM-driven autonomous agents.",
+      "llm_tldr_cn": "LogAct通过共享日志确保LLM驱动智能体的可靠性、可恢复性与执行分析。",
+      "llm_tldr": "LogAct通过共享日志确保LLM驱动智能体的可靠性、可恢复性与执行分析。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08000v1",
+      "source": "arxiv",
+      "title": "PASK: Toward Intent-Aware Proactive Agents with Long-Term Memory",
+      "abstract": "Proactivity is a core expectation for AGI. Prior work remains largely confined to laboratory settings, leaving a clear gap in real-world proactive agent: depth, complexity, ambiguity, precision and real-time constraints. We study this setting, where useful intervention requires inferring latent needs from ongoing context and grounding actions in evolving user memory under latency and long-horizon constraints. We first propose DD-MM-PAS (Demand Detection, Memory Modeling, Proactive Agent System) as a general paradigm for streaming proactive AI agent. We instantiate this paradigm in Pask, with streaming IntentFlow model for DD, a hybrid memory (workspace, user, global) for long-term MM, PAS infra framework and introduce how these components form a closed loop. We also introduce LatentNeeds-Bench, a real-world benchmark built from user-consented data and refined through thousands of rounds of human editing. Experiments show that IntentFlow matches leading Gemini3-Flash models under latency constraints, while identifying deeper user intent.",
+      "authors": [
+        "Zhifei Xie",
+        "Zongzheng Hu",
+        "Fangda Ye",
+        "Xin Zhang",
+        "Haobo Chai",
+        "Zihang Liu",
+        "Pengcheng Wu",
+        "Guibin Zhang",
+        "Yue Liao",
+        "Xiaobin Hu",
+        "Deheng Ye",
+        "Chunyan Miao",
+        "Shuicheng Yan"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.CV",
+        "cs.HC",
+        "cs.MA"
+      ],
+      "published": "2026-04-09T09:06:13+00:00",
+      "link": "https://arxiv.org/pdf/2604.08000v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Framework for proactive AI agents with long-term memory",
+      "llm_evidence_cn": "具有长期记忆的主动AI智能体框架",
+      "llm_evidence": "具有长期记忆的主动AI智能体框架",
+      "canonical_evidence": "具有长期记忆的主动AI智能体框架",
+      "llm_tldr_en": "PASK provides a paradigm and infrastructure for proactive agents to infer user needs from context.",
+      "llm_tldr_cn": "PASK为主动智能体提供了一种范式和基础设施，用于从上下文中推断用户需求。",
+      "llm_tldr": "PASK为主动智能体提供了一种范式和基础设施，用于从上下文中推断用户需求。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08124v1",
+      "source": "arxiv",
+      "title": "Beyond Stochastic Exploration: What Makes Training Data Valuable for Agentic Search",
+      "abstract": "Reinforcement learning (RL) has become an effective approach for advancing the reasoning capabilities of large language models (LLMs) through the strategic integration of external search engines. However, current RL-based search agents often rely on a process of stochastic exploration guided by carefully crafted outcome rewards, leading to inefficient reasoning trajectories and unstable training. To address these issues, we propose a novel framework, Hierarchical Experience (HiExp), to enhance the performance and training stability of search agents. Specifically, we extract empirical knowledge through contrastive analysis and a multi-level clustering mechanism, transforming raw reasoning trajectories into hierarchical experience knowledge. By leveraging experience-aligned training, we effectively regularize stochastic exploration, evolving it into a strategic and experience-driven search process. Extensive evaluations on multiple complex agentic search and mathematical reasoning benchmarks demonstrate that our approach not only achieves substantial performance gains but also exhibits strong cross-task and cross-algorithm generalization.",
+      "authors": [
+        "Chuzhan Hao",
+        "Wenfeng Feng",
+        "Guochao Jiang",
+        "Guofeng Quan",
+        "Guohua Liu",
+        "Yuewei Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-09T11:44:44+00:00",
+      "link": "https://arxiv.org/pdf/2604.08124v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "RL-based search agents for LLM reasoning",
+      "llm_evidence_cn": "基于强化学习的LLM推理搜索智能体",
+      "llm_evidence": "基于强化学习的LLM推理搜索智能体",
+      "canonical_evidence": "基于强化学习的LLM推理搜索智能体",
+      "llm_tldr_en": "Proposes Hierarchical Experience to stabilize RL training for LLM-based search agents using contrastive analysis.",
+      "llm_tldr_cn": "提出分层经验框架，通过对比分析稳定基于强化学习的LLM搜索智能体训练。",
+      "llm_tldr": "提出分层经验框架，通过对比分析稳定基于强化学习的LLM搜索智能体训练。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08174v1",
+      "source": "arxiv",
+      "title": "Value-Guidance MeanFlow for Offline Multi-Agent Reinforcement Learning",
+      "abstract": "Offline multi-agent reinforcement learning (MARL) aims to learn the optimal joint policy from pre-collected datasets, requiring a trade-off between maximizing global returns and mitigating distribution shift from offline data. Recent studies use diffusion or flow generative models to capture complex joint policy behaviors among agents; however, they typically rely on multi-step iterative sampling, thereby reducing training and inference efficiency. Although further research improves sampling efficiency through methods like distillation, it remains sensitive to the behavior regularization coefficient. To address the above-mentioned issues, we propose Value Guidance Multi-agent MeanFlow Policy (VGM$^2$P), a simple yet effective flow-based policy learning framework that enables efficient action generation with coefficient-insensitive conditional behavior cloning. Specifically, VGM$^2$P uses global advantage values to guide agent collaboration, treating optimal policy learning as conditional behavior cloning. Additionally, to improve policy expressiveness and inference efficiency in multi-agent scenarios, it leverages classifier-free guidance MeanFlow for both policy training and execution. Experiments on tasks with both discrete and continuous action spaces demonstrate that, even when trained solely via conditional behavior cloning, VGM$^2$P efficiently achieves performance comparable to state-of-the-art methods.",
+      "authors": [
+        "Teng Pang",
+        "Zhiqiang Dong",
+        "Yan Zhang",
+        "Rongjian Xu",
+        "Guoqiang Wu",
+        "Yilong Yin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-09T12:31:43+00:00",
+      "link": "https://arxiv.org/pdf/2604.08174v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Offline multi-agent reinforcement learning with flow-based policy",
+      "llm_evidence_cn": "基于流策略的离线多智能体强化学习",
+      "llm_evidence": "基于流策略的离线多智能体强化学习",
+      "canonical_evidence": "基于流策略的离线多智能体强化学习",
+      "llm_tldr_en": "Proposes VGM2P to improve efficiency and stability in offline multi-agent reinforcement learning using flow models.",
+      "llm_tldr_cn": "提出VGM2P，利用流模型提升离线多智能体强化学习的效率与稳定性。",
+      "llm_tldr": "提出VGM2P，利用流模型提升离线多智能体强化学习的效率与稳定性。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08178v1",
+      "source": "arxiv",
+      "title": "Aligning Agents via Planning: A Benchmark for Trajectory-Level Reward Modeling",
+      "abstract": "In classical Reinforcement Learning from Human Feedback (RLHF), Reward Models (RMs) serve as the fundamental signal provider for model alignment. As Large Language Models evolve into agentic systems capable of autonomous tool invocation and complex reasoning, the paradigm of reward modeling faces unprecedented challenges--most notably, the lack of benchmarks specifically designed to assess RM capabilities within tool-integrated environments. To address this gap, we present Plan-RewardBench, a trajectory-level preference benchmark designed to evaluate how well judges distinguish preferred versus distractor agent trajectories in complex tool-using scenarios. Plan-RewardBench covers four representative task families -- (i) Safety Refusal, (ii) Tool-Irrelevance / Unavailability, (iii) Complex Planning, and (iv) Robust Error Recovery -- comprising validated positive trajectories and confusable hard negatives constructed via multi-model natural rollouts, rule-based perturbations, and minimal-edit LLM perturbations. We benchmark representative RMs (generative, discriminative, and LLM-as-Judge) under a unified pairwise protocol, reporting accuracy trends across varying trajectory lengths and task categories. Furthermore, we provide diagnostic analyses of prevalent failure modes. Our results reveal that all three evaluator families face substantial challenges, with performance degrading sharply on long-horizon trajectories, underscoring the necessity for specialized training in agentic, trajectory-level reward modeling. Ultimately, Plan-RewardBench aims to serve as both a practical evaluation suite and a reusable blueprint for constructing agentic planning preference data.",
+      "authors": [
+        "Jiaxuan Wang",
+        "Yulan Hu",
+        "Wenjin Yang",
+        "Zheng Pan",
+        "Xin Li",
+        "Lan-Zhe Guo"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-09T12:35:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.08178v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Trajectory-level reward modeling for agentic LLMs",
+      "llm_evidence_cn": "针对智能体化大语言模型的轨迹级奖励建模",
+      "llm_evidence": "针对智能体化大语言模型的轨迹级奖励建模",
+      "canonical_evidence": "针对智能体化大语言模型的轨迹级奖励建模",
+      "llm_tldr_en": "A benchmark for evaluating reward models in aligning autonomous LLM agents using tool-use trajectories.",
+      "llm_tldr_cn": "一个用于评估大语言模型智能体在工具使用场景下奖励建模与对齐能力的基准。",
+      "llm_tldr": "一个用于评估大语言模型智能体在工具使用场景下奖励建模与对齐能力的基准。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08355v1",
+      "source": "arxiv",
+      "title": "ASPECT:Analogical Semantic Policy Execution via Language Conditioned Transfer",
+      "abstract": "Reinforcement Learning (RL) agents often struggle to generalize knowledge to new tasks, even those structurally similar to ones they have mastered. Although recent approaches have attempted to mitigate this issue via zero-shot transfer, they are often constrained by predefined, discrete class systems, limiting their adaptability to novel or compositional task variations. We propose a significantly more generalized approach, replacing discrete latent variables with natural language conditioning via a text-conditioned Variational Autoencoder (VAE). Our core innovation utilizes a Large Language Model (LLM) as a dynamic \\textit{semantic operator} at test time. Rather than relying on rigid rules, our agent queries the LLM to semantically remap the description of the current observation to align with the source task. This source-aligned caption conditions the VAE to generate an imagined state compatible with the agent's original training, enabling direct policy reuse. By harnessing the flexible reasoning capabilities of LLMs, our approach achieves zero-shot transfer across a broad spectrum of complex and truly novel analogous tasks, moving beyond the limitations of fixed category mappings. Code and videos are available \\href{https://anonymous.4open.science/r/ASPECT-85C3/}{here}.",
+      "authors": [
+        "Ajsal Shereef Palattuparambil",
+        "Thommen George Karimpanal",
+        "Santu Rana"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-09T15:21:05+00:00",
+      "link": "https://arxiv.org/pdf/2604.08355v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "LLM as semantic operator for RL transfer",
+      "llm_evidence_cn": "大语言模型作为强化学习迁移的语义算子",
+      "llm_evidence": "大语言模型作为强化学习迁移的语义算子",
+      "canonical_evidence": "大语言模型作为强化学习迁移的语义算子",
+      "llm_tldr_en": "Uses LLMs to semantically remap policies, enabling RL agents to generalize to novel task variations.",
+      "llm_tldr_cn": "利用大语言模型进行策略的语义重映射，使强化学习智能体能够泛化到新的任务变体。",
+      "llm_tldr": "利用大语言模型进行策略的语义重映射，使强化学习智能体能够泛化到新的任务变体。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08369v1",
+      "source": "arxiv",
+      "title": "Don't Overthink It: Inter-Rollout Action Agreement as a Free Adaptive-Compute Signal for LLM Agents",
+      "abstract": "Inference-time compute scaling has emerged as a powerful technique for improving the reliability of large language model (LLM) agents, but existing methods apply compute uniformly: every decision step receives the same budget regardless of its difficulty. We introduce TrACE (Trajectorical Adaptive Compute via agrEement), a training-free controller that allocates LLM calls adaptively across agent timesteps by measuring inter-rollout action agreement. At each step, TrACE samples a small set of candidate next actions and measures how consistently the model commits to the same action. High agreement signals an easy decision; the controller commits immediately. Low agreement signals uncertainty; the controller samples additional rollouts up to a configurable cap before committing to the plurality action. No learned components, no external verifier, and no human labels are required. We evaluate TrACE against greedy decoding and fixed-budget self-consistency (SC-4, SC-8) on two benchmarks spanning single-step reasoning (GSM8K, n=50) and multi-step household navigation (MiniHouse, n=30), using a Qwen 2.5 3B Instruct model running on CPU. TrACE-4 matches SC-4 accuracy while using 33% fewer LLM calls on GSM8K and 39% fewer on MiniHouse. TrACE-8 matches SC-8 accuracy with 55% fewer calls on GSM8K and 65% fewer on MiniHouse. We further show that inter-rollout agreement is a reliable signal of step-level success, validating the core hypothesis that the model's own output consistency encodes difficulty information that can be exploited without training. TrACE is the first training-free, per-timestep adaptive-compute controller for LLM agents to be evaluated on multi-step sequential decision tasks.",
+      "authors": [
+        "Khushal Sethi"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.MA"
+      ],
+      "published": "2026-04-09T15:34:22+00:00",
+      "link": "https://arxiv.org/pdf/2604.08369v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "adaptive compute for LLM agents",
+      "llm_evidence_cn": "LLM智能体的自适应计算",
+      "llm_evidence": "LLM智能体的自适应计算",
+      "canonical_evidence": "LLM智能体的自适应计算",
+      "llm_tldr_en": "TrACE adaptively allocates inference compute for LLM agents based on action agreement to improve reliability.",
+      "llm_tldr_cn": "TrACE通过动作一致性衡量，为LLM智能体自适应分配推理计算资源，提升决策可靠性。",
+      "llm_tldr": "TrACE通过动作一致性衡量，为LLM智能体自适应分配推理计算资源，提升决策可靠性。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08377v1",
+      "source": "arxiv",
+      "title": "SkillClaw: Let Skills Evolve Collectively with Agentic Evolver",
+      "abstract": "Large language model (LLM) agents such as OpenClaw rely on reusable skills to perform complex tasks, yet these skills remain largely static after deployment. As a result, similar workflows, tool usage patterns, and failure modes are repeatedly rediscovered across users, preventing the system from improving with experience. While interactions from different users provide complementary signals about when a skill works or fails, existing systems lack a mechanism to convert such heterogeneous experiences into reliable skill updates. To address these issues, we present SkillClaw, a framework for collective skill evolution in multi-user agent ecosystems, which treats cross-user and over-time interactions as the primary signal for improving skills. SkillClaw continuously aggregates trajectories generated during use and processes them with an autonomous evolver, which identifies recurring behavioral patterns and translates them into updates to the skill set by refining existing skills or extending them with new capabilities. The resulting skills are maintained in a shared repository and synchronized across users, allowing improvements discovered in one context to propagate system-wide while requiring no additional effort from users. By integrating multi-user experience into ongoing skill updates, SkillClaw enables cross-user knowledge transfer and cumulative capability improvement, and experiments on WildClawBench show that limited interaction and feedback, it significantly improves the performance of Qwen3-Max in real-world agent scenarios.",
+      "authors": [
+        "Ziyu Ma",
+        "Shidong Yang",
+        "Yuxiang Ji",
+        "Xucong Wang",
+        "Yong Wang",
+        "Yiming Hu",
+        "Tongwen Huang",
+        "Xiangxiang Chu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-04-09T15:38:27+00:00",
+      "link": "https://arxiv.org/pdf/2604.08377v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "collective skill evolution for LLM agents",
+      "llm_evidence_cn": "LLM智能体的集体技能演化",
+      "llm_evidence": "LLM智能体的集体技能演化",
+      "canonical_evidence": "LLM智能体的集体技能演化",
+      "llm_tldr_en": "SkillClaw enables LLM agents to collectively evolve and update skills based on multi-user interaction data.",
+      "llm_tldr_cn": "SkillClaw框架通过跨用户交互信号，实现了多用户生态下LLM智能体技能的持续集体演化。",
+      "llm_tldr": "SkillClaw框架通过跨用户交互信号，实现了多用户生态下LLM智能体技能的持续集体演化。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08468v1",
+      "source": "arxiv",
+      "title": "TTVS: Boosting Self-Exploring Reinforcement Learning via Test-time Variational Synthesis",
+      "abstract": "Despite significant advances in Large Reasoning Models (LRMs) driven by reinforcement learning with verifiable rewards (RLVR), this paradigm is fundamentally limited in specialized or novel domains where such supervision is prohibitively expensive or unavailable, posing a key challenge for test-time adaptation. While existing test-time methods offer a potential solution, they are constrained by learning from static query sets, risking overfitting to textual patterns. To address this gap, we introduce Test-Time Variational Synthesis (TTVS), a novel framework that enables LRMs to self-evolve by dynamically augmenting the training stream from unlabeled test queries. TTVS comprises two synergistic modules: (1) Online Variational Synthesis, which transforms static test queries into a dynamic stream of diverse, semantically-equivalent variations, enforcing the model to learn underlying problem logic rather than superficial patterns; (2) Test-time Hybrid Exploration, which balances accuracy-driven exploitation with consistency-driven exploration across synthetic variants. Extensive experiments show TTVS yields superior performance across eight model architectures. Notably, using only unlabeled test-time data, TTVS not only surpasses other test-time adaptation methods but also outperforms state-of-the-art supervised RL-based techniques trained on vast, high-quality labeled data.",
+      "authors": [
+        "Sikai Bai",
+        "Haoxi Li",
+        "Jie Zhang",
+        "Yongjiang Liu",
+        "Song Guo"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-09T17:03:49+00:00",
+      "link": "https://arxiv.org/pdf/2604.08468v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Self-exploring RL for Large Reasoning Models",
+      "llm_evidence_cn": "大推理模型的自探索强化学习",
+      "llm_evidence": "大推理模型的自探索强化学习",
+      "canonical_evidence": "大推理模型的自探索强化学习",
+      "llm_tldr_en": "Introduces TTVS for test-time adaptation of Large Reasoning Models via self-evolving reinforcement learning.",
+      "llm_tldr_cn": "引入TTVS框架，通过自进化强化学习实现大推理模型的测试时自适应。",
+      "llm_tldr": "引入TTVS框架，通过自进化强化学习实现大推理模型的测试时自适应。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Recent advances in reinforcement learning and autonomous agents",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08545v1",
+      "source": "arxiv",
+      "title": "Act Wisely: Cultivating Meta-Cognitive Tool Use in Agentic Multimodal Models",
+      "abstract": "The advent of agentic multimodal models has empowered systems to actively interact with external environments. However, current agents suffer from a profound meta-cognitive deficit: they struggle to arbitrate between leveraging internal knowledge and querying external utilities. Consequently, they frequently fall prey to blind tool invocation, resorting to reflexive tool execution even when queries are resolvable from the raw visual context. This pathological behavior precipitates severe latency bottlenecks and injects extraneous noise that derails sound reasoning. Existing reinforcement learning protocols attempt to mitigate this via a scalarized reward that penalizes tool usage. Yet, this coupled formulation creates an irreconcilable optimization dilemma: an aggressive penalty suppresses essential tool use, whereas a mild penalty is entirely subsumed by the variance of the accuracy reward during advantage normalization, rendering it impotent against tool overuse. To transcend this bottleneck, we propose HDPO, a framework that reframes tool efficiency from a competing scalar objective to a strictly conditional one. By eschewing reward scalarization, HDPO maintains two orthogonal optimization channels: an accuracy channel that maximizes task correctness, and an efficiency channel that enforces execution economy exclusively within accurate trajectories via conditional advantage estimation. This decoupled architecture naturally induces a cognitive curriculum-compelling the agent to first master task resolution before refining its self-reliance. Extensive evaluations demonstrate that our resulting model, Metis, reduces tool invocations by orders of magnitude while simultaneously elevating reasoning accuracy.",
+      "authors": [
+        "Shilin Yan",
+        "Jintao Tong",
+        "Hongwei Xue",
+        "Xiaojun Tang",
+        "Yangyang Wang",
+        "Kunyu Shi",
+        "Guannan Zhang",
+        "Ruixuan Li",
+        "Yixiong Zou"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-04-09T17:59:57+00:00",
+      "link": "https://arxiv.org/pdf/2604.08545v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "RL for tool use in multimodal agents",
+      "llm_evidence_cn": "多模态智能体工具使用的强化学习",
+      "llm_evidence": "多模态智能体工具使用的强化学习",
+      "canonical_evidence": "多模态智能体工具使用的强化学习",
+      "llm_tldr_en": "Addresses meta-cognitive tool use in multimodal agents using reinforcement learning to balance internal knowledge.",
+      "llm_tldr_cn": "利用强化学习解决多模态智能体在内部知识与外部工具调用之间的元认知决策失衡问题。",
+      "llm_tldr": "利用强化学习解决多模态智能体在内部知识与外部工具调用之间的元认知决策失衡问题。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Integration of large language models with reinforcement learning agents",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.02687v1",
+      "source": "arxiv",
+      "title": "Inverse Safety Filtering: Inferring Constraints from Safety Filters for Decentralized Coordination",
+      "abstract": "Safe multi-agent coordination in uncertain environments can benefit from learning constraints from other agents. Implicitly communicating safety constraints through actions is a promising approach, allowing agents to coordinate and maintain safety without expensive communication channels. This paper introduces an online method to infer constraints from observing the safety-filtered actions of other agents. We approach the problem by using safety filters to ensure forward safety and exploit their structure to work backwards and infer constraints. We provide sufficient conditions under which we can infer these constraints and prove that our inference method converges. This constraint inference procedure is coupled with a decentralized planning method that ensures safety when the constraint activation distance is sufficiently large. We then empirically validate our method with Monte Carlo simulations and hardware experiments with quadruped robots.",
+      "authors": [
+        "Minh Nguyen",
+        "Jingqi Li",
+        "Gechen Qu",
+        "Claire J. Tomlin"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-03T03:31:43+00:00",
+      "link": "https://arxiv.org/pdf/2604.02687v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "decentralized coordination in multi-agent systems",
+      "llm_evidence_cn": "多智能体系统中的去中心化协作",
+      "llm_evidence": "多智能体系统中的去中心化协作",
+      "canonical_evidence": "多智能体系统中的去中心化协作",
+      "llm_tldr_en": "Develops an online method to infer safety constraints from other agents for decentralized multi-agent coordination.",
+      "llm_tldr_cn": "开发了一种在线推断其他智能体安全约束的方法，以实现去中心化的多智能体协作。",
+      "llm_tldr": "开发了一种在线推断其他智能体安全约束的方法，以实现去中心化的多智能体协作。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.03540v1",
+      "source": "arxiv",
+      "title": "Drift-Based Policy Optimization: Native One-Step Policy Learning for Online Robot Control",
+      "abstract": "Although multi-step generative policies achieve strong performance in robotic manipulation by modeling multimodal action distributions, they require multi-step iterative denoising at inference time. Each action therefore needs tens to hundreds of network function evaluations (NFEs), making them costly for high-frequency closed-loop control and online reinforcement learning (RL). To address this limitation, we propose a two-stage framework for native one-step generative policies that shifts refinement from inference to training. First, we introduce the Drift-Based Policy (DBP), which leverages fixed-point drifting objectives to internalize iterative refinement into the model parameters, yielding a one-step generative backbone by design while preserving multimodal action modeling capacity. Second, we develop Drift-Based Policy Optimization (DBPO), an online RL framework that equips the pretrained backbone with a compatible stochastic interface, enabling stable on-policy updates without sacrificing the one-step deployment property. Extensive experiments demonstrate the effectiveness of the proposed framework across offline imitation learning, online fine-tuning, and real-world control scenarios. DBP matches or exceeds the performance of multi-step diffusion policies while achieving up to $100\\times$ faster inference. It also consistently outperforms existing one-step baselines on challenging manipulation benchmarks. Moreover, DBPO enables effective and stable policy improvement in online settings. Experiments on a real-world dual-arm robot demonstrate reliable high-frequency control at 105.2 Hz.",
+      "authors": [
+        "Yuxuan Gao",
+        "Yedong Shen",
+        "Shiqi Zhang",
+        "Wenhao Yu",
+        "Yifan Duan",
+        "Jia pan",
+        "Jiajia Wu",
+        "Jiajun Deng",
+        "Yanyong Zhang"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-04-04T01:32:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.03540v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "One-step policy learning for online reinforcement learning",
+      "llm_evidence_cn": "用于在线强化学习的一步策略学习",
+      "llm_evidence": "用于在线强化学习的一步策略学习",
+      "canonical_evidence": "用于在线强化学习的一步策略学习",
+      "llm_tldr_en": "Proposes Drift-Based Policy to enable efficient one-step generative policy learning for robot control.",
+      "llm_tldr_cn": "提出漂移策略（DBP），实现机器人控制中高效的一步生成式策略学习。",
+      "llm_tldr": "提出漂移策略（DBP），实现机器人控制中高效的一步生成式策略学习。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.03523v1",
+      "source": "arxiv",
+      "title": "Optimizing Neurorobot Policy under Limited Demonstration Data through Preference Regret",
+      "abstract": "Robot reinforcement learning from demonstrations (RLfD) assumes that expert data is abundant; this is usually unrealistic in the real world given data scarcity as well as high collection cost. Furthermore, imitation learning algorithms assume that the data is independently and identically distributed, which ultimately results in poorer performance as gradual errors emerge and compound within test-time trajectories. We address these issues by introducing the \"master your own expertise\" (MYOE) framework, a self-imitation framework that enables robotic agents to learn complex behaviors from limited demonstration data samples. Inspired by human perception and action, we propose and design what we call the queryable mixture-of-preferences state space model (QMoP-SSM), which estimates the desired goal at every time step. These desired goals are used in computing the \"preference regret\", which is used to optimize the robot control policy. Our experiments demonstrate the robustness, adaptability, and out-of-sample performance of our agent compared to other state-of-the-art RLfD schemes. The GitHub repository that supports this work can be found at: https://github.com/rxng8/neurorobot-preference-regret-learning.",
+      "authors": [
+        "Viet Dung Nguyen",
+        "Yuhang Song",
+        "Anh Nguyen",
+        "Jamison Heard",
+        "Reynold Bailey",
+        "Alexander Ororbia"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-04-04T00:03:59+00:00",
+      "link": "https://arxiv.org/pdf/2604.03523v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Robotic RL agents learning from limited demonstrations",
+      "llm_evidence_cn": "从有限演示中学习的机器人强化学习智能体",
+      "llm_evidence": "从有限演示中学习的机器人强化学习智能体",
+      "canonical_evidence": "从有限演示中学习的机器人强化学习智能体",
+      "llm_tldr_en": "Presents MYOE framework for robotic agents to learn complex behaviors from sparse demonstration data.",
+      "llm_tldr_cn": "提出MYOE框架，使机器人智能体能从有限的演示数据中学习复杂行为。",
+      "llm_tldr": "提出MYOE框架，使机器人智能体能从有限的演示数据中学习复杂行为。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Recent advances in reinforcement learning and autonomous agents",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.04225v1",
+      "source": "arxiv",
+      "title": "Learning from Imperfect Demonstrations via Temporal Behavior Tree-Guided Trajectory Repair",
+      "abstract": "Learning robot control policies from demonstrations is a powerful paradigm, yet real-world data is often suboptimal, noisy, or otherwise imperfect, posing significant challenges for imitation and reinforcement learning. In this work, we present a formal framework that leverages Temporal Behavior Trees (TBT), an extension of Signal Temporal Logic (STL) with Behavior Tree semantics, to repair suboptimal trajectories prior to their use in downstream policy learning. Given demonstrations that violate a TBT specification, a model-based repair algorithm corrects trajectory segments to satisfy the formal constraints, yielding a dataset that is both logically consistent and interpretable. The repaired trajectories are then used to extract potential functions that shape the reward signal for reinforcement learning, guiding the agent toward task-consistent regions of the state space without requiring knowledge of the agent's kinematic model. We demonstrate the effectiveness of this framework on discrete grid-world navigation and continuous single and multi-agent reach-avoid tasks, highlighting its potential for data-efficient robot learning in settings where high-quality demonstrations cannot be assumed.",
+      "authors": [
+        "Aniruddh G. Puranic",
+        "Sebastian Schirmer",
+        "John S. Baras",
+        "Calin Belta"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.RO",
+        "eess.SY"
+      ],
+      "published": "2026-04-05T18:49:45+00:00",
+      "link": "https://arxiv.org/pdf/2604.04225v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "trajectory repair for downstream reinforcement learning",
+      "llm_evidence_cn": "用于下游强化学习的轨迹修复",
+      "llm_evidence": "用于下游强化学习的轨迹修复",
+      "canonical_evidence": "用于下游强化学习的轨迹修复",
+      "llm_tldr_en": "Uses Temporal Behavior Trees to repair imperfect demonstrations for better reinforcement learning outcomes.",
+      "llm_tldr_cn": "利用时序行为树修复不完美的演示数据，以提升强化学习的效果。",
+      "llm_tldr": "利用时序行为树修复不完美的演示数据，以提升强化学习的效果。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Recent advances in reinforcement learning and autonomous agents",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.03540v2",
+      "source": "arxiv",
+      "title": "Drift-Based Policy Optimization: Native One-Step Policy Learning for Online Robot Control",
+      "abstract": "Although multi-step generative policies achieve strong performance in robotic manipulation by modeling multimodal action distributions, they require multi-step iterative denoising at inference time. Each action therefore needs tens to hundreds of network function evaluations (NFEs), making them costly for high-frequency closed-loop control and online reinforcement learning (RL). To address this limitation, we propose a two-stage framework for native one-step generative policies that shifts refinement from inference to training. First, we introduce the Drift-Based Policy (DBP), which leverages fixed-point drifting objectives to internalize iterative refinement into the model parameters, yielding a one-step generative backbone by design while preserving multimodal action modeling capacity. Second, we develop Drift-Based Policy Optimization (DBPO), an online RL framework that equips the pretrained backbone with a compatible stochastic interface, enabling stable on-policy updates without sacrificing the one-step deployment property. Extensive experiments demonstrate the effectiveness of the proposed framework across offline imitation learning, online fine-tuning, and real-world control scenarios. DBP matches or exceeds the performance of multi-step diffusion policies while achieving up to $100\\times$ faster inference. It also consistently outperforms existing one-step baselines on challenging manipulation benchmarks. Moreover, DBPO enables effective and stable policy improvement in online settings. Experiments on a real-world dual-arm robot demonstrate reliable high-frequency control at 105.2 Hz.",
+      "authors": [
+        "Yuxuan Gao",
+        "Yedong Shen",
+        "Shiqi Zhang",
+        "Wenhao Yu",
+        "Yifan Duan",
+        "Jia pan",
+        "Jiajia Wu",
+        "Jiajun Deng",
+        "Yanyong Zhang"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-04-04T01:32:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.03540v2",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "One-step policy learning for online reinforcement learning",
+      "llm_evidence_cn": "在线强化学习的单步策略学习",
+      "llm_evidence": "在线强化学习的单步策略学习",
+      "canonical_evidence": "在线强化学习的单步策略学习",
+      "llm_tldr_en": "Proposes Drift-Based Policy to enable efficient one-step inference for online robot control and RL.",
+      "llm_tldr_cn": "提出基于漂移的策略，为在线机器人控制和强化学习实现高效的单步推理。",
+      "llm_tldr": "提出基于漂移的策略，为在线机器人控制和强化学习实现高效的单步推理。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.04497v1",
+      "source": "arxiv",
+      "title": "One Model for All: Multi-Objective Controllable Language Models",
+      "abstract": "Aligning large language models (LLMs) with human preferences is critical for enhancing LLMs' safety, helpfulness, humor, faithfulness, etc. Current reinforcement learning from human feedback (RLHF) mainly focuses on a fixed reward learned from average human ratings, which may weaken the adaptability and controllability of varying preferences. However, creating personalized LLMs requires aligning LLMs with individual human preferences, which is non-trivial due to the scarce data per user and the diversity of user preferences in multi-objective trade-offs, varying from emphasizing empathy in certain contexts to demanding efficiency and precision in others. Can we train one LLM to produce personalized outputs across different user preferences on the Pareto front? In this paper, we introduce Multi-Objective Control (MOC), which trains a single LLM to directly generate responses in the preference-defined regions of the Pareto front. Our approach introduces multi-objective optimization (MOO) principles into RLHF to train an LLM as a preference-conditioned policy network. We improve the computational efficiency of MOC by applying MOO at the policy level, enabling us to fine-tune a 7B-parameter model on a single A6000 GPU. Extensive experiments demonstrate the advantages of MOC over baselines in three aspects: (i) controllability of LLM outputs w.r.t. user preferences on the trade-off among multiple rewards; (ii) quality and diversity of LLM outputs, measured by the hyper-volume of multiple solutions achieved; and (iii) generalization to unseen preferences. These results highlight MOC's potential for real-world applications requiring scalable and customizable LLMs.",
+      "authors": [
+        "Qiang He",
+        "Yucheng Yang",
+        "Tianyi Zhou",
+        "Meng Fang",
+        "Mykola Pechenizkiy",
+        "Setareh Maghsudi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-04-06T07:48:32+00:00",
+      "link": "https://arxiv.org/pdf/2604.04497v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "RLHF for multi-objective controllable LLMs",
+      "llm_evidence_cn": "多目标可控大语言模型的强化学习对齐",
+      "llm_evidence": "多目标可控大语言模型的强化学习对齐",
+      "canonical_evidence": "多目标可控大语言模型的强化学习对齐",
+      "llm_tldr_en": "Proposes a multi-objective RLHF method to align LLMs with diverse and personalized human preferences.",
+      "llm_tldr_cn": "提出一种多目标强化学习对齐方法，使大语言模型能够适应多样化且个性化的人类偏好。",
+      "llm_tldr": "提出一种多目标强化学习对齐方法，使大语言模型能够适应多样化且个性化的人类偏好。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Fundamental theories and algorithms of reinforcement learning",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.03605v1",
+      "source": "arxiv",
+      "title": "Multi-Robot Multi-Queue Control via Exhaustive Assignment Actor-Critic Learning",
+      "abstract": "We study online task allocation for multi-robot, multi-queue systems with asymmetric stochastic arrivals and switching delays. We formulate the problem in discrete time: each location can host at most one robot per slot, servicing a task consumes one slot, switching between locations incurs a one-slot travel delay, and arrivals at locations are independent Bernoulli processes with heterogeneous rates. Building on our previous structural result that optimal policies are of exhaustive type, we formulate a discounted-cost Markov decision process and develop an exhaustive-assignment actor-critic policy architecture that enforces exhaustive service by construction and learns only the next-queue allocation for idle robots. Unlike the exhaustive-serve-longest (ESL) queue rule, whose optimality is known only under symmetry, the proposed policy adapts to asymmetry in arrival rates. Across different server-location ratios, loads, and asymmetric arrival profiles, the proposed policy consistently achieves lower discounted holding cost and smaller mean queue length than the ESL baseline, while remaining near-optimal on instances where an optimal benchmark is available. These results show that structure-aware actor-critic methods provide an effective approach for real-time multi-robot scheduling.",
+      "authors": [
+        "Mohammad Merati",
+        "H. M. Sabbir Ahmad",
+        "Wenchao Li",
+        "David Castañón"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.AI",
+        "math.OC"
+      ],
+      "published": "2026-04-04T06:32:35+00:00",
+      "link": "https://arxiv.org/pdf/2604.03605v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Actor-critic learning for multi-robot task allocation",
+      "llm_evidence_cn": "用于多机器人任务分配的 Actor-Critic 学习",
+      "llm_evidence": "用于多机器人任务分配的 Actor-Critic 学习",
+      "canonical_evidence": "用于多机器人任务分配的 Actor-Critic 学习",
+      "llm_tldr_en": "Develops an actor-critic architecture for online task allocation in multi-robot multi-queue systems.",
+      "llm_tldr_cn": "为多机器人多队列系统中的在线任务分配开发了一种 Actor-Critic 策略架构。",
+      "llm_tldr": "为多机器人多队列系统中的在线任务分配开发了一种 Actor-Critic 策略架构。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "State of the art multi agent reinforcement learning techniques",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.04703v1",
+      "source": "arxiv",
+      "title": "Bounded Autonomy: Controlling LLM Characters in Live Multiplayer Games",
+      "abstract": "Large language models (LLMs) are bringing richer dialogue and social behavior into games, but they also expose a control problem that existing game interfaces do not directly address: how should LLM characters participate in live multiplayer interaction while remaining executable in the shared game world, socially coherent with other active characters, and steerable by players when needed? We frame this problem as bounded autonomy, a control architecture for live multiplayer games that organizes LLM character control around three interfaces: agent-agent interaction, agent-world action execution, and player-agent steering. We instantiate bounded autonomy with probabilistic reply-chain decay, an embedding-based action grounding pipeline with fallback, and whisper, a lightweight soft-steering technique that lets players influence a character's next move without fully overriding autonomy. We deploy this architecture in a live multiplayer social game and study its behavior through analyses of interaction stability, grounding quality, whisper intervention success, and formative interviews. Our results show how bounded autonomy makes LLM character interaction workable in practice, frames controllability as a distinct runtime control problem for LLM characters in live multiplayer games, and provides a concrete exemplar for future games built around this interaction paradigm.",
+      "authors": [
+        "Yunjia Guo",
+        "Jinghan Zhu",
+        "Siyu Wang",
+        "Haixin Qiao"
+      ],
+      "primary_category": "cs.HC",
+      "categories": [
+        "cs.HC"
+      ],
+      "published": "2026-04-06T14:16:14+00:00",
+      "link": "https://arxiv.org/pdf/2604.04703v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLM character control in multiplayer games",
+      "llm_evidence_cn": "多人游戏中的大语言模型角色控制",
+      "llm_evidence": "多人游戏中的大语言模型角色控制",
+      "canonical_evidence": "多人游戏中的大语言模型角色控制",
+      "llm_tldr_en": "Introduces bounded autonomy to control LLM characters in live multiplayer games for social coherence.",
+      "llm_tldr_cn": "提出受限自主架构，用于控制多人游戏中的大语言模型角色，确保社交连贯性与可控性。",
+      "llm_tldr": "提出受限自主架构，用于控制多人游戏中的大语言模型角色，确保社交连贯性与可控性。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Large language model based autonomous agents",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.04233v1",
+      "source": "arxiv",
+      "title": "Precise Robot Command Understanding Using Grammar-Constrained Large Language Models",
+      "abstract": "Human-robot collaboration in industrial settings requires precise and reliable communication to enhance operational efficiency. While Large Language Models (LLMs) understand general language, they often lack the domain-specific rigidity needed for safe and executable industrial commands. To address this gap, this paper introduces a novel grammar-constrained LLM that integrates a grammar-driven Natural Language Understanding (NLU) system with a fine-tuned LLM, which enables both conversational flexibility and the deterministic precision required in robotics. Our method employs a two-stage process. First, a fine-tuned LLM performs high-level contextual reasoning and parameter inference on natural language inputs. Second, a Structured Language Model (SLM) and a grammar-based canonicalizer constrain the LLM's output, forcing it into a standardized symbolic format composed of valid action frames and command elements. This process guarantees that generated commands are valid and structured in a robot-readable JSON format. A key feature of the proposed model is a validation and feedback loop. A grammar parser validates the output against a predefined list of executable robotic actions. If a command is invalid, the system automatically generates corrective prompts and re-engages the LLM. This iterative self-correction mechanism allows the model to recover from initial interpretation errors to improve system robustness. We evaluate our grammar-constrained hybrid model against two baselines: a fine-tuned API-based LLM and a standalone grammar-driven NLU model. Using the Human Robot Interaction Corpus (HuRIC) dataset, we demonstrate that the hybrid approach achieves superior command validity, which promotes safer and more effective industrial human-robot collaboration.",
+      "authors": [
+        "Xinyun Huo",
+        "Raghav Gnanasambandam",
+        "Xinyao Zhang"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.CL"
+      ],
+      "published": "2026-04-05T19:30:54+00:00",
+      "link": "https://arxiv.org/pdf/2604.04233v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "grammar-constrained LLM for robot command understanding",
+      "llm_evidence_cn": "用于机器人指令理解的语法约束大语言模型",
+      "llm_evidence": "用于机器人指令理解的语法约束大语言模型",
+      "canonical_evidence": "用于机器人指令理解的语法约束大语言模型",
+      "llm_tldr_en": "Integrates grammar-driven NLU with fine-tuned LLMs for precise and flexible industrial robot control.",
+      "llm_tldr_cn": "结合语法驱动的NLU与微调大模型，实现工业机器人指令的精确且灵活的控制。",
+      "llm_tldr": "结合语法驱动的NLU与微调大模型，实现工业机器人指令的精确且灵活的控制。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.04247v1",
+      "source": "arxiv",
+      "title": "Combee: Scaling Prompt Learning for Self-Improving Language Model Agents",
+      "abstract": "Recent advances in prompt learning allow large language model agents to acquire task-relevant knowledge from inference-time context without parameter changes. For example, existing methods (like ACE or GEPA) can learn system prompts to improve accuracy based on previous agent runs. However, these methods primarily focus on single-agent or low-parallelism settings. This fundamentally limits their ability to efficiently learn from a large set of collected agentic traces. It would be efficient and beneficial to run prompt learning in parallel to accommodate the growing trend of learning from many agentic traces or parallel agent executions. Yet without a principled strategy for scaling, current methods suffer from quality degradation with high parallelism. To improve both the efficiency and quality of prompt learning, we propose Combee, a novel framework to scale parallel prompt learning for self-improving agents. Combee speeds up learning and enables running many agents in parallel while learning from their aggregate traces without quality degradation. To achieve this, Combee leverages parallel scans and employs an augmented shuffle mechanism; Combee also introduces a dynamic batch size controller to balance quality and delay. Evaluations on AppWorld, Terminal-Bench, Formula, and FiNER demonstrate that Combee achieves up to 17x speedup over previous methods with comparable or better accuracy and equivalent cost.",
+      "authors": [
+        "Hanchen Li",
+        "Runyuan He",
+        "Qizheng Zhang",
+        "Changxiu Ji",
+        "Qiuyang Mang",
+        "Xiaokun Chen",
+        "Lakshya A Agrawal",
+        "Wei-Liang Liao",
+        "Eric Yang",
+        "Alvin Cheung",
+        "James Zou",
+        "Kunle Olukotun",
+        "Ion Stoica",
+        "Joseph E. Gonzalez"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-04-05T20:07:48+00:00",
+      "link": "https://arxiv.org/pdf/2604.04247v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "scaling prompt learning for self-improving language model agents",
+      "llm_evidence_cn": "为自我改进的语言模型智能体扩展提示学习",
+      "llm_evidence": "为自我改进的语言模型智能体扩展提示学习",
+      "canonical_evidence": "为自我改进的语言模型智能体扩展提示学习",
+      "llm_tldr_en": "Presents Combee, a strategy for scaling prompt learning to improve LLM agents using large sets of agentic traces.",
+      "llm_tldr_cn": "提出Combee策略，通过并行化提示学习，利用大量智能体轨迹提升大模型智能体的性能。",
+      "llm_tldr": "提出Combee策略，通过并行化提示学习，利用大量智能体轨迹提升大模型智能体的性能。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.04269v1",
+      "source": "arxiv",
+      "title": "Beyond Fluency: Toward Reliable Trajectories in Agentic IR",
+      "abstract": "Information Retrieval is shifting from passive document ranking toward autonomous agentic workflows that operate in multi-step Reason-Act-Observe loops. In such long-horizon trajectories, minor early errors can cascade, leading to functional misalignment between internal reasoning and external tool execution despite continued linguistic fluency.   This position paper synthesizes failure modes observed in industrial agentic systems, categorizing errors across planning, retrieval, reasoning, and execution. We argue that safe deployment requires moving beyond endpoint accuracy toward trajectory integrity and causal attribution.   To address compounding error and deceptive fluency, we propose verification gates at each interaction unit and advocate systematic abstention under calibrated uncertainty. Reliable Agentic IR systems must prioritize process correctness and grounded execution over plausible but unverified completion.",
+      "authors": [
+        "Anushree Sinha",
+        "Srivaths Ranganathan",
+        "Debanshu Das",
+        "Abhishek Dharmaratnakar"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-05T21:20:57+00:00",
+      "link": "https://arxiv.org/pdf/2604.04269v1",
+      "tags": [
+        "keyword:RL AGT",
+        "query:RL AGT"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Framework for reliable trajectories in agentic IR",
+      "llm_evidence_cn": "智能体信息检索中可靠轨迹的框架",
+      "llm_evidence": "智能体信息检索中可靠轨迹的框架",
+      "canonical_evidence": "智能体信息检索中可靠轨迹的框架",
+      "llm_tldr_en": "Analyzes failure modes in agentic IR and proposes verification gates for reliable autonomous workflows.",
+      "llm_tldr_cn": "分析了智能体化信息检索中的失效模式，并为可靠的自主工作流提出了验证门机制。",
+      "llm_tldr": "分析了智能体化信息检索中的失效模式，并为可靠的自主工作流提出了验证门机制。",
+      "llm_tags": [
+        "query:rl-agt"
+      ],
+      "matched_query_tag": "query:rl-agt",
+      "matched_query_text": "Design and frameworks for intelligent agent systems",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    }
+  ]
+}

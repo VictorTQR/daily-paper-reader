@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.03540v1/fig-001.webp",
+      "caption": "Fig. 4: Online PPO fine-tuning results on RoboMimic and D4RL with anchor ablation (DBPO vs. DBPO w/o anchor). Solid bars denote offline initialization, and hatched bars denote gains after fine-tuning. In this evaluation setting, DBPO achieves the strongest post-fine-tuning performance, while removing the anchor consistently reduces gains over pretrained baselines.",
+      "page": 7,
+      "index": 1,
+      "width": 525,
+      "height": 550
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03540v1/fig-002.webp",
+      "caption": "TABLE II: Point-cloud imitation comparison on Adroit and Meta-World under the MP1/OMP protocol. Ours refers to DriftBased Policy. Entries report success rate (%, mean ± std over 3 seeds). Best results are in bold; second-best are underlined.",
+      "page": 8,
+      "index": 2,
+      "width": 1048,
+      "height": 339
+    },
+    {
+      "url": "assets/figures/arxiv/2604.03540v1/fig-003.webp",
+      "caption": "Fig. 5: Real-world bimanual deployment on the physical UR5 testbed. Drift-Based Policy executes precision Lift, Can, and synchronized bimanual Transport using raw trilateral camera inputs.",
+      "page": 8,
+      "index": 3,
+      "width": 1057,
+      "height": 327
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-001.webp",
+      "caption": "Figure 7: Experience distillation from TravelGym. The agent efficiently elicits preferences across multiple dimensions (climate, dates, budget, constraints) in 3 turns before searching. The distilled lesson emphasizes a logical hierarchy for preference discovery and the value of combining related questions.",
+      "page": 15,
+      "index": 1,
+      "width": 829,
+      "height": 600
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-002.webp",
+      "caption": "Figure 3: Comparison between base Raw models, PRIME, and RL-based models across challenging user-centric environments.",
+      "page": 7,
+      "index": 2,
+      "width": 793,
+      "height": 539
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-003.webp",
+      "caption": "Figure 6: Experience distillation from TurtleGym. The agent identifies the key symbolic element (snowman) in turn 1 and uses binary questions to confirm the hypothesis. Credit assignment via R2G identifies turns 1-2 as pivotal. The distilled lesson—focusing on unusual elements and using binary confirmation—generalizes to other lateral thinking puzzles.",
+      "page": 14,
+      "index": 3,
+      "width": 829,
+      "height": 508
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-004.webp",
+      "caption": "Table 2: Core PRIME hyperparameters.",
+      "page": 14,
+      "index": 4,
+      "width": 494,
+      "height": 398
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-005.webp",
+      "caption": "Figure 1: Memory library organization. Top row: Memories are organized by trajectory reward R(τ) into three semantic zones—golden (successful strategies), warning (failure patterns), and preference (user behavior patterns). Bottom row: Each memory is also annotated with its interaction stage—exploration (information gathering), verification (refining understanding), or completion (delivering solutions). Core components are color-coded: situation, action, and lesson.",
+      "page": 3,
+      "index": 5,
+      "width": 829,
+      "height": 573
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-006.webp",
+      "caption": "Figure 5: Memory evolution operators. The library evolves through four meta-level operations applied probabilistically. Mutation sharpens vague experiences based on feedback. Generalization abstracts domain-specific successes into transferable knowledge. Crossover synthesizes complementary insights into richer experiences. Pruning removes stale entries to keep the library focused. Together, these operators enable the experience library to improve over time without gradient computation.",
+      "page": 13,
+      "index": 6,
+      "width": 829,
+      "height": 431
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-007.webp",
+      "caption": "Figure 2: Vanilla LLM vs. PRIME on an IntentionGym task. (A) Without experience guidance, the agent jumps directly to providing solutions, makes incorrect assumptions about user preferences, and is forced to backtrack when corrected. (B) With PRIME, the agent systematically asks focused clarifying questions that efficiently cover all missing details, guided by retrieved experiences from similar past interactions. Green checks (✓) mark productive turns that address user needs; red crosses (×) mark turns that assume rather than ask.",
+      "page": 4,
+      "index": 7,
+      "width": 829,
+      "height": 633
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-008.webp",
+      "caption": "Figure 11: Experience-guided inference via contextualized retrieval. At each turn, PRIME determines the interaction stage, prefilters candidate experiences by environment and stage, uses LLM reasoning to select the most applicable experiences, and augments the agent prompt with zone-organized guidance. The bottom panel shows an example retrieval at turn 2 of an IntentionGym episode, where golden, warning, and preference experiences each contribute different types of guidance.",
+      "page": 17,
+      "index": 8,
+      "width": 814,
+      "height": 238
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-009.webp",
+      "caption": "Figure 10: Environment-specific system prompts. Each environment defines the agent’s role, available actions, and strategic guidance. At inference time, PRIME augments these base prompts with retrieved experiences from the three-zone library (golden strategies, warning patterns, user preferences) matched to the current interaction stage.",
+      "page": 17,
+      "index": 9,
+      "width": 829,
+      "height": 738
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-010.webp",
+      "caption": "Figure 8: Experience distillation from FunctionGym. The agent uses systematic coefficient isolation to discover a linear function. The distilled lesson—unit-vector testing followed by combined verification—provides an efficient algorithm for this class of problems.",
+      "page": 16,
+      "index": 10,
+      "width": 829,
+      "height": 506
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07645v1/fig-011.webp",
+      "caption": "Figure 9: Experience distillation from a successful IntentionGym trajectory. The agent efficiently uncovers 5 out of 6 missing details in 4 turns by strategically combining related questions. Credit assignment identifies the key turns, and the LLM distiller extracts a structured experience with applicability conditions for future contextualized retrieval. The distilled lesson — pairing related details in single questions — transfers to similar intentdiscovery tasks across environments.",
+      "page": 16,
+      "index": 11,
+      "width": 829,
+      "height": 545
+    }
+  ]
+}

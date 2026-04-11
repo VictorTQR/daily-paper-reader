@@ -1,0 +1,1265 @@
+Title: Selecting Decision-Relevant Concepts in Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.04808v1
+
+Published Time: Tue, 07 Apr 2026 01:55:17 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+Naveen Raman 1 Stephanie Milani 2 Fei Fang 1
+
+## Abstract 
+
+Training interpretable concept-based policies re-quires practitioners to manually select which human-understandable concepts an agent should reason with when making sequential decisions. This selection demands domain expertise, is time-consuming and costly, scales poorly with the num-ber of candidates, and provides no performance guarantees. To overcome this limitation, we pro-pose the first algorithms for principled automatic concept selection in sequential decision-making. Our key insight is that concept selection can be viewed through the lens of state abstraction: intu-itively, a concept is decision-relevant if removing it would cause the agent to confuse states that re-quire different actions. As a result, agents should rely on decision-relevant concepts; states with the same concept representation should share the same optimal action, which preserves the opti-mal decision structure of the original state space. This perspective leads to the Decision-Relevant Selection (DRS) algorithm, which selects a subset of concepts from a candidate set, along with per-formance bounds relating the selected concepts to the performance of the resulting policy. Em-pirically, DRS automatically recovers manually curated concept sets while matching or exceed-ing their performance, and improves the effective-ness of test-time concept interventions across re-inforcement learning benchmarks and real-world healthcare environments. 
+
+## 1. Introduction 
+
+Concept-based models produce interpretable agents by mak-ing predictions using human-understandable concepts (Kim et al., 2018). These models consist of a concept predictor, which maps high-dimensional states (e.g., images) to con-cepts (e.g., “Paddle Location > 0?”), and a policy which maps concept predictions to actions (Zabounidis et al., 
+
+> 1
+
+Carnegie Mellon University 2New York University. Corre-spondence to: Naveen Raman <naveenr@cmu.edu>. ,
+
+Figure 1. Standard pipeline for training concept-based policies. Practitioners select concepts for decision-making through a labor-intensive process of iteratively selecting candidate concepts, train-ing concept-based policies, and evaluating their performance. 
+
+2023). Concept-based models have three advantages: 1) interpretability is built into the model, 2) poor decisions can be traced to concept prediction errors, and 3) humans can intervene on mispredicted concepts (Zarlenga et al.). A key step in training these models is choosing the set of concepts for agent decision-making. As shown in Figure 1, practitioners distill a non-interpretable baseline policy into an interpretable concept-based policy by first selecting an initial set of concepts, then iteratively training and evaluat-ing policies to refine the concept set. This process is costly; it requires domain expertise, scales poorly with the number of concepts, and provides no performance guarantees. In this work, we propose the first principled algorithms for concept selection in sequential decision-making (Figure 2).  
+
+> 1
+
+While prior work has explored using large language mod-els (LLMs) to select concepts in supervised settings (Yang et al., 2023; Zhao et al., 2025), there is little work investi-gating principled selection for sequential decision-making. Such a problem is more complex in sequential decision-making because states must be distinguished according to their long-term decision consequences rather than any im-
+
+> 1
+
+To the best of our knowledge 
+
+1
+
+> arXiv:2604.04808v1 [cs.LG] 6 Apr 2026 Selecting Decision-Relevant Concepts in Reinforcement Learning
+
+mediate label. For example, the “Door Location” concept is useful in Minigrid only if the agent can first obtain the key. Automating this selection process offers three key bene-fits. First, it eliminates manual concept engineering, sub-stantially reducing the human effort needed to train these models. Second, it improves interpretability by reducing the number of variables used for decision-making (Bhatt et al., 2021). Third, it maintains model performance on the tasks of interest. However, automatic concept selection is challenging because concept utility depends on long-term decision consequences, and naively evaluating all concept subsets requires training exponentially many policies. To tackle this problem, we propose the decision-relevant selection (DRS) algorithm, which automatically selects con-cepts that best distinguish between states. We formalize concepts as a case of state abstractions . Using this perspec-tive, DRS identifies the subset of concepts that minimizes state abstraction error, ensuring states with identical concept representations share the optimal action. 
+
+Contributions: We (i) design algorithms for selecting decision-relevant concepts in decision-making; (ii) derive performance bounds by connecting concept selection to state abstraction theory; (iii) demonstrate strong empirical per-formance across RL benchmarks and real-world healthcare environments; and (iv) show that well-selected concepts improve the effectiveness of test-time interventions. 2
+
+## 2. Preliminaries 
+
+Reinforcement Learning We study decision-making in RL for an agent in an infinite-horizon Markov decision pro-cess (MDP). An MDP (S, A, P, R, γ ) is a tuple consisting of a set of states S, a set of actions A, a transition function 
+
+P : S × A × S → [0 , 1] that gives the transition proba-bilities given state-action-state triplets, a reward function 
+
+R : S × A → R that assigns a reward for each state-action pair, and a discount factor γ ∈ [0 , 1] . The agent learns a (possibly stochastic) policy π : S → A that maps states to actions. We evaluate π through the value V π (s) and action-value functions Qπ (s, a ):
+
+V π (s) := Eπ
+
+" ∞X
+
+> t=0
+
+γtR(st, a t) | s0 = s
+
+#
+
+Qπ (s, a ) := Eπ
+
+" ∞X
+
+> t=0
+
+γt R(st, a t) s0 = s, a 0 = a
+
+#
+
+,
+
+where at = π(st), s t+1 ∼ P (· | st, a t). The aim is to find the optimal policy π∗, which maximizes E[V π∗
+
+(s)] .    
+
+> 2Code is available at https://github.com/ naveenr414/concept_decisions
+
+Concept-Based Models Concept-based models ensure interpretability by mapping states to human-understandable concepts, then mapping concepts to actions (Figure 2). As in previous work (Koh et al., 2020), each concept, 
+
+ci, is a Boolean-valued function, and the concept set is 
+
+C = { c1, c 2, . . . , c K }, c i : S → { 0, 1}. Binary concepts are standard (Espinosa Zarlenga et al., 2022), though our results can be extended to continuous concepts. Concept-based models consist of a concept predictor, gc(s) := [ci1 (s), . . . , c ik (s)] and a policy πc : {0, 1}k → A , so that a state s is mapped to an action a as πc(gc(s)) (Zabounidis et al., 2023; Delfosse et al., 2024). Users can intervene on concept-based models during test-time by correcting a subset of concept predictions gc(s).
+
+State Abstractions We propose viewing concepts as a special case of state abstractions . State abstractions group together states via a function ϕSA : S → Z such that states in the same abstraction satisfy certain desiderata. Because concept representations may merge states that still differ in their true dynamics or value, we focus on 
+
+ϵ-approximate state abstractions , which require grouped states to have near-identical action values under the optimal policy (Abel et al., 2016). Formally, if ϕSA (s1) = ϕSA (s2),then max  
+
+> a∈A
+
+Qπ∗
+
+(s1, a ) − Qπ∗
+
+(s2, a ) ≤ ϵ. The state ab-straction literature allows us to give guarantees based on the level of coverage for a given abstraction: 
+
+Theorem 2.1 (Theorem 1, (Abel et al., 2016)) . Suppose that ϕSA is an ϵ-approximate state abstraction. Let πϕSA be 
+
+πϕSA = arg max  
+
+> π
+
+Es∼S 
+
+Qπ∗
+
+(ϕSA (s), π (ϕSA (s))) ,
+
+Then V π∗
+
+(s) − V πϕSA (s) ≤ 2ϵ 
+
+> (1 −γ)2
+
+for all s.
+
+## 3. Identifying Decision-Relevant Concepts 
+
+We now present the first formalism of the concept selection problem. We begin by defining the problem setting, then propose decision-relevancy as the key principle for selecting concepts. To demonstrate the benefit of this principle, we establish theory showing that decision-relevancy can pre-serve task performance during training and yield greater performance increases during test-time interventions. 
+
+3.1. Problem Setting 
+
+Concept predictors gc rely on the selection of a set of k
+
+concepts c from a larger bank of K concepts C. Here, k con-trols the number of concepts selected; a larger k can hinder interpretability (Bhatt et al., 2021) by introducing additional complexity. Concept banks are obtained either manually or through large language models (Oikarinen et al.). While any 
+
+c is semantically meaningful, the reward can vary: 
+
+Example 3.1. Consider a state space S = {1, 2, 3, 4} and 
+
+2Selecting Decision-Relevant Concepts in Reinforcement Learning  
+
+> Figure 2. Concept-based models rely on a set of decision-relevant concepts that help distinguish between different states, yet currently these concepts are manually selected. In this work, we study how to identify and select decision-relevant concepts. Our key insight is that decision-relevant concepts best separate “different” states, where difference is defined by their decision consequences. We use this insight to develop algorithms for concept selection with performance guarantees.
+
+an action space A = {left , stay , right }, which corresponds to an agent navigating a 1D state space with 4 states that loop around. Let R(1 , ·) = R(3 , ·) = 1 and R(2 , ·) = 
+
+R(4 , ·) = 0 . Consider two binary concepts: 
+
+c1(s) = 1{s mod 2 = 0 },c2(s) = 1{s mod 3 = 0 },
+
+where 1 is the indicator function. When k = 1 , selecting 
+
+c = {c1} ensures that states sharing the same parity have identical rewards and symmetric transitions under π∗. How-ever, selecting c = {c2} means the reward is not consistent; while gc(1) = gc(2) , R(1 , stay) ̸ = R(2 , stay) . A policy trained on c1 will achieve a reward of 9.5 while a policy trained on c2 will achieve a reward of 9.1 because it will take a suboptimal action for s = 1 .
+
+Objective Concept selection algorithms select c ⊆ C ,where C is the universe of concepts, and can come from human curation, LLM generation, or other sources. The goal is to maximize the performance of the policy π∗ 
+
+> c
+
+:
+
+max  
+
+> c:|c|≤ k
+
+Es∼μ
+
+Qπ∗ 
+
+> c
+
+(s, π ∗ 
+
+> c
+
+(gc(s))) . (1) Here, μ ∈ ∆( S) is the initial state distribution, and π∗ 
+
+> c
+
+is the optimal policy given the concept predictor gc. Unlike classi-cal state abstraction, which learns abstract state representa-tions without constraints, we restrict our attention to select-ing a subset of concepts from a fixed, human-interpretable concept bank. Our problem requires combinatorial opti-mization over a fixed concept bank, making it NP-hard to compute the optimal solution (proof in Appendix L). 
+
+3.2. Defining Decision-Relevancy 
+
+In Equation 1, the set of concepts c help distinguish between states through the concept predictor gc. In other words, con-cepts need to separate states with different optimal actions. As a result, we propose identifying decision-relevant con-cepts as the key principle for concept selection. Intuitively, concepts are decision-relevant only to the ex-tent that they distinguish states in which different actions lead to different outcomes. A natural condition is that if π∗(s)̸ = π∗(s′), then gc(s)̸ = gc(s′), where s and 
+
+s′ are pairs of states. A stronger desideratum is that if 
+
+Qπ∗
+
+(s, ·)̸ = Qπ∗
+
+(s′, ·), then gc(s)̸ = gc(s′). The former helps us better learn policies, while the latter is needed to guarantee good performance from the resulting policy. While our main concern is the latter condition, the former is useful for guiding algorithm development. To formally define decision-relevance, we first introduce two ideas: 
+
+Definition 3.2 (Q-Distance) . For two states s, s ′ ∈ S , the Q-distance is Ds,s ′ := max  
+
+> a∈A
+
+|Qπ (s, a ) − Qπ (s′, a )|.
+
+Definition 3.3 (Abstraction Error) . Define the abstraction 3Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+error for a concept predictor g as 
+
+ϵQπ (g) := max  
+
+> s,s ′:g(s)= g(s′)
+
+Ds,s ′ .
+
+Unless otherwise stated, let ϵ(g) = ϵQπ (g).
+
+3.3. Benefits of Decision-Relevant Concepts Improved Performance We first leverage results from the state abstraction literature (Abel et al., 2016) to provide guarantees for a set of concepts c based on ϵQπ :
+
+Proposition 3.1. For a concept predictor gc, we have that 
+
+V π∗
+
+(s) − V π∗ 
+
+> c
+
+(s) ≤ 2ϵ(gc)(1 − γ)2 .
+
+We prove that gc induces an ϵ-state abstraction, allowing us to use Theorem 2.1 (full proof in Appendix L). Intuitively, ϵ
+
+captures the quality of the abstraction; if ϵ is low, then the abstraction is fine-grained, leading to better performance because π∗ 
+
+> c
+
+can better distinguish between states. Obtaining a tighter bound is difficult because the 1/(1 − γ)2 term is standard in approximate state abstraction (Abel et al., 2016). 
+
+Receptivity to Test-Time Intervention During test-time intervention, a (potentially simulated) user intervenes on an α-fraction of concepts, raising their accuracy from δA
+
+to δH . Here, the exact subset of intervened concepts is unknown until test-time. Intuitively, when interventions improve concept accuracy, policies using decision-relevant concepts benefit more from human effort: 
+
+Assumption 3.4. For any two concept sets c, c′ and any two accuracy vectors δ′ ⪯ δ, if 
+
+E[V π∗ 
+
+> c,δ
+
+(s)] ≥ E[V π∗ 
+
+> c′,δ
+
+(s)] ,
+
+then 
+
+E[V π∗ 
+
+> c,δ ′
+
+(s)] ≥ E[V π∗ 
+
+> c′,δ ′
+
+(s)] .
+
+Assumption 3.5. For any two concept sets c, c′, when δ =
+
+1, if ϵ(gc) ≤ ϵ(gc′ ), then 
+
+E[V π∗ 
+
+> c,δ ′
+
+(s)] ≥ E[V π∗ 
+
+> c′,δ ′
+
+(s)] .
+
+Assumption 3.4 holds when concept errors are independent across concepts, or when E[V π∗ 
+
+> c,δ
+
+] = fπ∗ (c) + gπ∗ (δ) and 
+
+g is increasing in δ. Assumption 3.5 holds if Proposition 3.1 is tight, or more generally if V π∗
+
+(s) − V π∗ 
+
+> C
+
+(s) ≤ 2ϵ 
+
+> (1 −γ)2
+
+is constant across values of c.
+
+Theorem 3.1. Let c and c′ be two concept sets, and let 
+
+ϵ(gc) ≤ ϵ(gc′ ). Under Assumptions 3.4 and 3.5, for any intervention level α ∈ [0 , 1] and any accuracy vector δ(α)
+
+obtained by improving an α-fraction of concepts from δA
+
+toward δH = 1, we have 
+
+E[V π∗ 
+
+> c,δ (α)
+
+(s)] ≥ E[V π∗ 
+
+> c′,δ (α)
+
+(s)] .
+
+Intuitively, when interventions improve concept accuracy, policies built on more decision-relevant concepts benefit more from the same level of human effort. We provide em-pirical support for these Assumptions in Section 5 and these assumptions tend to hold because well-selected concepts lead to better performance across accuracy values. 
+
+## 4. Concept Selection Algorithms 
+
+We build on our problem formulation and optimality notion to propose two concept selection algorithms. The algorithms tackle perfect and imperfect concept predictors respectively. 
+
+4.1. Selection with Perfect Concept Predictors 
+
+We introduce an algorithm for concept selection based on the intuition from Section 3.2 called Decision-Relevant Selection (DRS) . The DRS algorithm chooses concepts c
+
+that minimize ϵ(gc) while separating states with different actions (via a hyperparameter ρ). The former is necessary to guarantee good performance, while the latter allows us to more easily learn good policies. Formally, let x be a 0-1 vector representing the subset of concepts selected, and 
+
+Y a binary matrix representing pairs of states differing in concept representations. We aim to minimize the abstraction error Ds,s ′ across state pairs s, s ′ with Ys,s ′ = 1 , while limiting concept selection to k concepts: 
+
+min 
+
+> x,Y
+
+X
+
+> s,s ′∈S
+
+Ds,s ′ (1 − Ys,s ′ ) (2a) s.t. 
+
+> K
+
+X
+
+> j=1
+
+xj ≤ k (2b) 
+
+Ys,s ′ ≤
+
+> K
+
+X
+
+> j=1
+
+xj 1[cj (s)̸ = cj (s′)] , ∀ s, s ′ ∈ S 
+
+(2c) 
+
+Ys,s ′ ≤ Yt,t ′
+
+∀ (s, s ′), (t, t ′) ∈ S 2 s.t. Ds,s ′ ≤ Dt,t ′ (2d) 
+
+X
+
+> s,s ′∈S
+
+1[π(s)̸ = π(s′)] Ys,s ′
+
+≥ ρ X
+
+> s,s ′∈S
+
+1[π(s)̸ = π(s′)] (2e) 
+
+xj ∈ { 0, 1}, Ys,s ′ ∈ { 0, 1}. (2f) 
+
+Practical Considerations Because the state space can be large, we sample from agent rollouts and consider only abstract states; do not differentiate states with cj (s) = 
+
+cj (s′)∀j ∈ [K]. Let nd denote the number of distinct ab-stract states observed, i.e., distinct values of gc(s). While 
+
+k binary concepts can induce up to 2k abstract states, roll-4Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+outs concentrate on a small subset due to environmental constraints and policy-induced structure. Two structural properties keep nd small in practice: (1) environmental con-straints limit which concept combinations are physically realizable, and (2) policy-induced structure concentrates rollouts on a small subset of reachable abstract states. States sharing the same abstract representation can be aggregated, yielding an MILP with O(n2 
+
+> d
+
++ K) variables/constraints (runtimes and further discussion in Appendix G). 
+
+4.2. Performance Guarantees 
+
+We provide performance guarantees for the DRS algorithm. 
+
+Theorem 4.1. Let (x∗, y∗) be an optimal solution to Equa-tion 2a with ρ = 0 , and let c = {cj : x∗ 
+
+> j
+
+= 1 }. gc minimizes 
+
+ϵ(gc) among predictors using k concepts: 
+
+ϵ(gc) = min   
+
+> g:|cg|≤ k
+
+ϵ(g).
+
+The solution exactly captures the optimization problem over 
+
+ϵ(gc), so the resulting concepts have small abstraction error. While Qπ (s, a ) might only be approximately known, the DRS algorithm is robust to errors in Qπ :
+
+Theorem 4.2. Assume that max  
+
+> s,a
+
+| ˆQπ (s, a ) − Qπ (s, a )| ≤ 
+
+δ. Let (x∗, Y∗) be an optimal solution to Equation 2a constructed using Ds,s ′ , and let c∗ = {cj : x∗ 
+
+> j
+
+= 1 }. Let 
+
+ˆDs,s ′ = max a | ˆQπ (s, a ) − ˆQπ (s′, a )|, and let (ˆ x, ˆY) be an optimal solution to Equation 2a constructed using ˆDs,s ′ ,with induced abstraction gˆc. Then 
+
+ϵQπ (gˆc) ≤ ϵQπ (gc∗ ) + 4 δ, 
+
+and for all s ∈ S ,
+
+V πc∗ (s) − V πˆc (s) ≤ 2( ϵQπ (gc∗ ) + 4 δ)(1 − γ)2 .
+
+We prove this in Appendix L by bounding | ˆDs,s ′ − Ds,s ′ |.
+
+4.3. Selection with Imperfect Concept Predictors 
+
+When concept predictors are imperfect, state separation (Equation 2c) is stochastic, requiring new algorithms for concept selection. To tackle this, we (i) introduce a noise model for concept predictors to capture imperfections, (ii) show that no method can guarantee low abstraction error under adversarial perturbations, and (iii) derive a lower bound on state separation under stochastic perturbations. 
+
+Noisy Concept Predictors Let f T 
+
+> c
+
+= [ f T1 
+
+> c1
+
+, . . . , f Tk 
+
+> ck
+
+] be a vector of perturbation functions so Ti ⊆ S and |Ti||S| = 1 −δi.Here, Ti are the states where we flip concept predictions: 
+
+f Ti 
+
+> ci
+
+(s) := 
+
+(1 − ci(s), if s ∈ Ti,ci(s), if s / ∈ Ti.
+
+Limits Under Adversarial Noise We note that while we can extend concept selection to imperfect scenarios, any algorithm will perform poorly under adversarial noise. Even if all concept predictors are near-perfect, there always exist perturbations so that the induced policy performs poorly: 
+
+Lemma 4.1. Suppose that for each concept i, an adversary may apply a perturbation f (Ti) that flips the value of ci
+
+on a subset Ti ⊆ S with |Ti|/|S| = 1 − δi. Then for any concept predictor gc with δi < 1, there exists a collection of perturbations f = {f T1 
+
+> c1
+
+, . . . , f Tk 
+
+> ck
+
+} such that ϵ(f (gc)) = max s,s ′ Ds,s ′ .
+
+We prove this by constructing adversarial perturbation func-tions f that fail to distinguish between states s and s′ with maximum values of Ds,s ′ , showing that worst-case robust-ness is fundamentally impossible (proof in Appendix L). 
+
+State Separation Under Noisy Concept Predictors In the DRS algorithm, we enforce state separation through 
+
+Ys,s ′ ≤ PKj=1 xj 1[cj (s)̸ = cj (s′)] . When concept pre-dictors are noisy, this constraint holds stochastically. To introduce this, let δ = [ δ1, . . . , δ k] be a vector represent-ing the accuracy of each concept, where each concept pre-dictor has stochastic and independent errors. Next, note that the probability that noisy predictions remain distinct is P[gc(s)j̸ = gc(s′)j | cj (s)̸ = cj (s′)] = δ2 
+
+> j
+
++ (1 − δj )2,since disagreement is preserved when both predictors are either correct or incorrect. For concepts with cj (s) = cj (s′),we conservatively ignore noise-induced separation. Because the product form is non-convex, we apply a logarithmic transformation to obtain a concave lower bound: 
+
+log(1 − Ys,s ′ ) ≥
+
+> K
+
+X  
+
+> j:1[cj(s)̸=cj(s′)]
+
+xj log  1−(δ2 
+
+> j
+
++(1 −δj )2).
+
+We construct a new algorithm, called DRS-log , which uses a log-based constraint for state separation. In practice, we optimize this efficiently using standard convex nonlinear primitives supported by modern optimization solvers. 
+
+## 5. Experiments 
+
+We evaluate our algorithms by focusing on three questions: 1. RQ1: What is the impact of decision-relevant concepts on performance? 2. RQ2: What is the impact of decision-relevant concepts on test-time intervention? 5Selecting Decision-Relevant Concepts in Reinforcement Learning 0
+
+> 50
+> 100
+> Reward (Perfect)
+
+CartPole  
+
+> 0
+> 50
+> 100
+
+MiniGrid  
+
+> 0
+> 50
+> 100
+
+Pong  
+
+> 0
+> 50
+> 100
+
+Boxing  
+
+> 0
+> 50
+> 100
+
+Glucose 0
+
+> 50
+> 100
+> Reward (Imperfect)
+
+CartPole  
+
+> 0
+> 50
+> 100
+
+MiniGrid  
+
+> 0
+> 50
+> 100
+
+Pong  
+
+> 0
+> 50
+> 100
+
+Boxing       
+
+> All Concepts Ground Truth Random Variance Greedy DRS DRS-Log
+
+Figure 3. Normalized reward of concept selection algorithms with perfect (top) and imperfect (bottom) concept predictors. Our algorithm, DRS, improves performance compared to the random, variance, and greedy baselines for four out of five environments in the perfect setting. DRS and DRS-log improve performance or are optimal in all environments in the imperfect setting. 
+
+3. RQ3: How do automatically selected concepts com-pare with manually selected ones? 
+
+5.1. Experimental Setup Environments We evaluate on CartPole, MiniGrid, Pong, Boxing, and Glucose (Sutton & Barto, 2018; Chevalier-Boisvert et al., 2023; Bellemare et al., 2013; Man et al., 2014). Concepts are discretizations of human-understandable features. For example, in CartPole, we dis-cretize “Paddle Y” and “Ball Velocity X” into “Ball Velocity X < -1” and “Paddle Y > 0” (see Appendix A). 
+
+Training Details We evaluate with perfect and imperfect concept predictors, where imperfect concept predictors use CNNs to predict concepts. In Appendix A, we provide exact accuracy values for each concept predictor, but note that all concept predictors achieve at least 95% accuracy except for CartPole (which achieves 85% due to velocity-related concepts). Because concept predictors achieve 100% accuracy for Glucose, we report only the perfect setting for that environment. We run all experiments with 6 seeds. 
+
+Algorithms We train concept predictors using Na-tureCNN (LeCun et al., 2015) and policies using proximal policy optimization (PPO) (Schulman et al., 2017) (details in Appendix A and Appendix C). For the DRS and DRS-log algorithms we fix ρ = 0 .75 and evaluate other choices in Appendix D. In DRS, we relax the constraint corresponding to Equation 2d because it is overly pessimistic by enforcing concept selection strictly in the order determined by state abstraction error. We compare against three baselines: 1) Random, which selects a random k-subset of concepts; 2) 250 500 750 1000 
+
+0
+
+50 
+
+100 
+
+> Reward
+
+250 500 750 1000 
+
+0
+
+50 
+
+100 
+
+Timesteps (×1000) 
+
+75% 
+
+k=3 
+
+85% 
+
+k=6 
+
+95% 
+
+k=11 
+
+Figure 4. We vary the number of timesteps that we train policies for in MiniGrid, while also varying the accuracy of concept predictors (left) or the number of concepts selected (right). Increasing the accuracy of concept predictors speeds up training, while increasing the number of concepts increases the maximum performance. 
+
+Variance, which selects concepts by ranking them according to their variation between being active ( ci(s) = 1 ) and inac-tive ( ci(s) = 0 ); 3) Greedy, which selects concepts that best explain downstream behavior by conditioning on actions and iteratively choosing those that most reduce variability in Q-values. We normalize all rewards on a 0-100 scale, where the extremes are the min and max per-environment reward. 
+
+5.2. RQ1: Impact on Performance Decision-relevant concepts improve performance We compare concept selection algorithms in both perfect (top) and imperfect (bottom) settings in Figure 3. For each en-6Selecting Decision-Relevant Concepts in Reinforcement Learning 1 2 3                                      
+
+> 75  85  95
+> Accuracy (%)
+> 813 20
+> 10 21 43
+> 10 57 77
+> CartPole
+> 3611
+> 18 17 12
+> 24 32 48
+> 26 67 93
+> MiniGrid
+> 14 28 57
+> 347
+> 4710
+> 610 19
+> Pong
+> 12 24 48
+> 17 29 44
+> 36 45 59
+> 54 66 80
+> Boxing
+> 2510
+> 27 26 20
+> 30 23 29
+> 30 35 42
+> Glucose
+
+Figure 5. Impact of the number of concepts selected against the accuracy of the underlying concepts. Increasing either number or accuracy of concepts has a similar impact on performance, and that sufficiently accurate and many concepts are needed to ensure good performance. 0.85 0.90 0.95 1.00                
+
+> Accuracy
+> 20
+> 40
+> 60
+> Reward
+> Cart Pole
+> 0.96 0.98 1.00
+> Accuracy
+> 0
+> 50
+> 100 Mini Grid
+> 0.6 0.8 1.0
+> Accuracy
+> 0
+> 25
+> 50
+> 75 Pong
+> 0.97 0.98 0.99 1.00
+> Accuracy
+> 0
+> 25
+> 50
+> 75 Boxing
+> Type
+> Intervention Baseline
+> Method
+> Random Variance Greedy DRS DRS-Log
+
+Figure 6. We assess the impact of concept selection upon test-time intervention across four environments. Across all four environments, the DRS algorithm has the highest reward both before and after intervention, showing that well-selected concepts improve intervention. 
+
+vironment, we fix k = K 
+
+> 4
+
+.3 For perfect settings, DRS performs best for four out of five environments, performing 159% better than the best baseline in CartPole, 28% bet-ter in MiniGrid, 5% better in Boxing, and 44% better in Glucose. While DRS performs poorly in perfect settings with Pong, it makes up for this in the imperfect setting, as the selected concepts are better able to leverage uncertainty. In imperfect settings, DRS and DRS-log either outperform baselines or are near-optimal across all four environments. In the MiniGrid, Pong, and Boxing environments, both DRS and DRS-log are optimal, while in CartPole, both DRS and DRS-log perform at least 58% better than alternatives. In Appendix F, we give qualitative insights. 
+
+Decision-relevant concepts increase maximum perfor-mance, while concept predictor accuracy increases train-ing efficiency To better understand how well-selected con-cepts impact performance, in Figure 4, we plot training curves for MiniGrid policies in two settings. On the left, we vary concept predictor accuracies, and on the right, the number of concepts selected. Increases in accuracy improve training efficiency; fewer timesteps are needed to achieve the same performance. Increases in the number of concepts increase the maximum performance after full training, and we demonstrate results with CartPole in Appendix H. In Figure 5, we show that accurate concept predictors (y 
+
+> 3
+
+In Appendix E, we vary k and find similar results. 
+
+axis) and many concepts (x axis) are needed to achieve near-optimal reward. For example, in CartPole, using only k = 2 
+
+concepts caps performance at 38, while having 85% accurate concept predictors caps performance at 43, compared to 77 with 95% accurate predictors at k = 3 . While well-selected concepts are necessary to ensure effective concept-based models, they are not sufficient. The exact number of concepts and accuracy level is environment-dependent; in Glucose and Pong even 95% accurate concept predictors are not sufficient, while in MiniGrid, 95% accurate concept predictors achieve a normalized reward of 93. 
+
+5.3. RQ2: Impact on Test-Time Intervention Decision-relevant concepts improve test-time interven-tion We evaluate the impact of concept selection on test-time intervention in the imperfect setting. We weaken poli-cies and concept predictors by training for fewer timesteps, which better mimics scenarios that require intervention. In Figure 6, we compare reward and accuracy with and with-out intervention, while fixing α = 0 .5 (we vary α and find similar results in Appendix I) and selecting a random subset of concepts to intervene upon. Across environments, DRS maximizes reward after intervention, performing 40% better in CartPole, 87% better in MiniGrid, 4% better in Pong, and 0.5% better in Boxing than all alternatives. Well-selected concepts enhance the efficacy of test-time intervention be-cause intervening on a small set of critical concepts leads 7Selecting Decision-Relevant Concepts in Reinforcement Learning 25 50 75 100     
+
+> # of Concepts
+> 55%
+> 60%
+> 65%
+> Accuracy
+> 25 50 75 100
+> # of Concepts
+> 0%
+> 25%
+> 50%
+> 75%
+> 100%
+> Similarity
+> Random
+> Variance
+> Greedy
+> DRS
+> DRS-Log
+> Manual
+> Figure 7. The DRS algorithm can mimic manual concept selection in CUB. It matches performance (left) while selecting a subset of the manually selected concepts (right).
+
+to large performance gains. We note that DRS-log can per-form worse under intervention because it is optimized for the original predictor accuracy profile. When intervention renders a subset of concept predictors perfectly accurate, the originally selected subset may no longer be appropriate. 
+
+5.4. RQ3: Automatic and Manually Selected Concepts Decision-relevant concepts match performance of man-ual selection We use the Caltech-UC Davis Birds (CUB) dataset (Wah et al., 2011), a standard supervised task in concept-based learning. Most prior work uses a manually selected subset of 112 of the original 312 concepts, so we investigate how selection algorithms compare with manual selection. We start from the original 312 concepts and com-pare concept selection algorithms. We detail how we extend algorithms to the supervised setting in Appendix J. In Figure 7, we show that automatically selecting concepts can replicate manual selection. We find that the variance, DRS, and DRS-log algorithms select the same concepts as manual selection because the concepts that best predict labels are the ones with the highest variance, resulting in the same performance when k = 112 . These algorithms can replicate manual selection using k = 80 concepts while achieving within 0.6% of manual performance. 
+
+## 6. Related Work 
+
+Interpretable Reinforcement Learning Work in inter-pretability examines how we can explain model predictions through methods that are trustworthy, informative, and trans-ferable (Lipton, 2018). In an RL setting, prior work investi-gates feature importance-based methods (Topin et al., 2021) and policy-level explanations (Topin & Veloso, 2019). Work in the concept-based RL space builds upon policy-level ex-planations to construct concept policy models (Das et al., 2023) and extends these to multi-agent (Zabounidis et al., 2023) and scarce-label settings (Ye et al.). Our work builds upon these policy-level explanations to better understand concept-based policy construction. 
+
+Concept-Based Interpretability Concept-based expla-nations fall into two categories: post-hoc methods (Kim et al., 2018) and interpretable models (Koh et al., 2020; Es-pinosa Zarlenga et al., 2022). Key to the success of both methods is the selection of concepts. While this parallels the classic feature selection problem (Li et al., 2017), our work differentiates itself by selecting human-interpretable concepts based on their decision relevance rather than pre-dictive performance. In the supervised setting, concepts are often selected manually (Koh et al., 2020; Espinosa Zarlenga et al., 2022), while in the unsupervised setting, concepts are selected via LLMs (Oikarinen et al.; Yang et al., 2023). We differentiate ourselves from Yeh et al. (2020), which analyzes alignment between concept vectors and states in supervised learning, because we 1) formalize the concept selection problem, 2) focus on interpretable models rather than post-hoc, and 3) focus on decision-relevance in RL. 
+
+State Abstractions We leverage state abstraction theory to generate performance guarantees for concept selection. Work in state abstraction imposes various desiderata on states within an abstraction group, including exact bisimu-lation (Givan et al., 2003) or ε–optimality criteria (Li et al., 2006). At a high level, an exact bisimulation abstraction groups states that behave identically under all possible ac-tions: that is, they yield the same immediate rewards and have the same transition patterns to abstract successor states. Beyond exact bisimulation, other work studies approxi-mate abstractions (Abel et al., 2016) and abstraction se-lection (Jiang et al., 2015). While both our work and state abstractions aim to aggregate states according to various desiderata, our goal is to ensure interpretability via state se-lection, while state abstraction focuses on improving sample complexity for non-interpretable models. 
+
+## 7. Discussion and Conclusion 
+
+Our work investigates how to reduce manual concept en-gineering by selecting concepts in an automated and prin-cipled manner. Our key intuition is that decision-relevant concepts should distinguish between states that are differ-ent. We use results from state abstractions to quantify what “different” means, and use this to bound performance for a selected subset of concepts. In practice, we show that our proposed algorithms can identify concepts most relevant for decision-making, which improves performance both in standalone settings and in human–AI collaboration. Our work takes a step toward understanding how explanation structure shapes decision quality and human–AI collabora-tion. Future work could extend our algorithms to non-binary concepts and more complex settings. 8Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+## References 
+
+Abel, D., Hershkowitz, D., and Littman, M. Near optimal behavior via approximate state abstraction. In Interna-tional Conference on Machine Learning , pp. 2915–2923. PMLR, 2016. Bellemare, M. G., Naddaf, Y., Veness, J., and Bowling, M. The arcade learning environment: An evaluation plat-form for general agents. Journal of artificial intelligence research , 47:253–279, 2013. Bhatt, U., Weller, A., and Moura, J. M. Evaluating and aggregating feature-based model explanations. In Pro-ceedings of the Twenty-Ninth International Conference on International Joint Conferences on Artificial Intelligence ,pp. 3016–3022, 2021. Chevalier-Boisvert, M., Dai, B., Towers, M., Perez-Vicente, R., Willems, L., Lahlou, S., Pal, S., Castro, P. S., and Terry, J. Minigrid & miniworld: Modular & customizable reinforcement learning environments for goal-oriented tasks. Advances in Neural Information Processing Sys-tems , 36:73383–73394, 2023. Das, D., Chernova, S., and Kim, B. State2explanation: Concept-based explanations to benefit agent learning and user understanding. Advances in Neural Information Processing Systems , 36:67156–67182, 2023. Delfosse, Q., Sztwiertnia, S., Rothermel, M., Stammer, W., and Kersting, K. Interpretable concept bottlenecks to align reinforcement learning agents. Advances in Neural Information Processing Systems , 37:66826–66855, 2024. Espinosa Zarlenga, M., Barbiero, P., Ciravegna, G., Marra, G., Giannini, F., Diligenti, M., Shams, Z., Precioso, F., Melacci, S., Weller, A., et al. Concept embedding models: Beyond the accuracy-explainability trade-off. Advances in Neural Information Processing Systems , 35:21400– 21413, 2022. Givan, R., Dean, T., and Greig, M. Equivalence notions and model minimization in markov decision processes. In Proceedings of the National Conference on Artificial Intelligence (AAAI) , 2003. Jiang, N., Kulesza, A., and Singh, S. Abstraction selection in model-based reinforcement learning. In International Conference on Machine Learning , pp. 179–188. PMLR, 2015. Kim, B., Wattenberg, M., Gilmer, J., Cai, C., Wexler, J., Viegas, F., et al. Interpretability beyond feature attribu-tion: Quantitative testing with concept activation vectors (tcav). In International conference on machine learning ,pp. 2668–2677. PMLR, 2018. Koh, P. W., Nguyen, T., Tang, Y. S., Mussmann, S., Pierson, E., Kim, B., and Liang, P. Concept bottleneck models. In International Conference on Machine Learning , pp. 5338–5348. PMLR, 2020. LeCun, Y., Bengio, Y., and Hinton, G. Deep learning. nature ,521(7553):436–444, 2015. Li, J., Cheng, K., Wang, S., Morstatter, F., Trevino, R. P., Tang, J., and Liu, H. Feature selection: A data perspective. 
+
+ACM computing surveys (CSUR) , 50(6):1–45, 2017. Li, L., Walsh, T. J., and Littman, M. L. Towards a unified theory of state abstraction for mdps. Proceedings of the Ninth International Symposium on Artificial Intelligence and Mathematics (ISAIM) , 2006. Lipton, Z. C. The mythos of model interpretability: In machine learning, the concept of interpretability is both important and slippery. Queue , 16(3):31–57, 2018. Man, C. D., Micheletto, F., Lv, D., Breton, M., Kovatchev, B., and Cobelli, C. The uva/padova type 1 diabetes sim-ulator: new features. Journal of diabetes science and technology , 8(1):26–34, 2014. Oikarinen, T., Das, S., Nguyen, L. M., and Weng, T.-W. Label-free concept bottleneck models. In The Eleventh International Conference on Learning Representations .Schulman, J., Wolski, F., Dhariwal, P., Radford, A., and Klimov, O. Proximal policy optimization algorithms. 
+
+arXiv preprint arXiv:1707.06347 , 2017. Sutton, R. S. and Barto, A. G. Reinforcement learning: An introduction . MIT press, 2018. Topin, N. and Veloso, M. Generation of policy-level expla-nations for reinforcement learning. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 33, pp. 2514–2521, 2019. Topin, N., Milani, S., Fang, F., and Veloso, M. Iterative bounding mdps: Learning interpretable policies via non-interpretable methods. In Proceedings of the AAAI Con-ference on Artificial Intelligence , volume 35, pp. 9923– 9931, 2021. Wah, C., Branson, S., Welinder, P., Perona, P., and Belongie, S. The caltech-ucsd birds-200-2011 dataset. California Institute of Technology , 2011. Yang, Y., Panagopoulou, A., Zhou, S., Jin, D., Callison-Burch, C., and Yatskar, M. Language in a bottle: Lan-guage model guided concept bottlenecks for interpretable image classification. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition ,pp. 19187–19197, 2023. 9Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+Ye, Z., Milani, S., Gordon, G. J., and Fang, F. Licorice: Label-efficient concept-based interpretable reinforcement learning. In The Thirteenth International Conference on Learning Representations .Yeh, C.-K., Kim, B., Arik, S., Li, C.-L., Pfister, T., and Ravikumar, P. On completeness-aware concept-based explanations in deep neural networks. Advances in neural information processing systems , 33:20554–20565, 2020. Zabounidis, R., Campbell, J., Stepputtis, S., Hughes, D., and Sycara, K. P. Concept learning for interpretable multi-agent reinforcement learning. In Conference on Robot Learning , pp. 1828–1837. PMLR, 2023. Zarlenga, M. E., Collins, K. M., Dvijotham, K. D., Weller, A., Shams, Z., and Jamnik, M. Learning to receive help: Intervention-aware concept embedding models. In Thirty-seventh Conference on Neural Information Processing Systems .Zhao, D., Huang, Q., Yan, D., Sun, Y., and Yu, J. Par-tially shared concept bottleneck models. arXiv preprint arXiv:2511.22170 , 2025. 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of machine learning. There are many potential societal consequences of our work, none of which we feel must be specifically highlighted here. 
+
+## Acknowledgements 
+
+We thank Mateo Espinosa-Zarlenga, Grace Liu, Nicholay Topin, and Santiago Cortes-Gomez for their comments on an earlier version of this work, and Sarah Cen for a discussion on concept selection. Co-author Raman is supported by an NSF GRFP award. This work was supported in part by NSF grant IIS-2046640 (CAREER). 
+
+## A. Environment Details 
+
+We provide details on the construction of glucose environ-ment, concept banks, and the training of concept predictors and groundtruth models in this section. 
+
+Glucose Environment Construction We use the glucose environment (Man et al., 2014) as a test-bed to understand the performance of our algorithm in real-world healthcare environments. Our observation space is a low-dimensional vector consisting of six normalized features derived from the current blood glucose (BG), its short-term trend, carbo-hydrate intake, insulin-on-board, and recent dosing history. The observation space is defined as a bounded continuous box, while the action space is discrete and corresponds to a set of clinically realistic bolus doses. Each step corresponds to 5 minutes of simulated time. At every step, a discrete action is mapped to an insulin dose (in units), which is then passed to the underlying simulator. The environment tracks BG history and the time since administration for all prior doses, and uses these quantities to construct the next observation. The reward function penalizes hypo- and hyperglycemia while incorporating dose size and BG rate-of-change. Resetting initializes the patient model, clears all histories, and returns the constructed feature vector for the first time step. 
+
+Concept Banks We give details on the concept banks used for each of our five environments: 1. CartPole originally has a state space consisting of four numbers: the position, velocity, angle, and angular ve-locity. We discretize each of these with two thresholds for position and angle, and four thresholds for angular velocity and velocity. This gives a total of 12 concepts. 2. MiniGrid is characterized through the agent’s position, door location, key obtaining, and door unlock status. 10 Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+For MiniGrid, we use a fully symbolic state represen-tation consisting of 12 discrete features extracted from the final observation frame. These features encode the agent’s (x, y ) position, orientation, object locations, and local binary indicators. Concretely, the features correspond to: the agent’s x-position and y-position; the agent’s direction; the x- and y-positions of the key; the x- and y-positions of the door; a binary indicator for whether the door is open; and four binary indica-tors denoting the presence of obstacles to the right, left, down, and up of the agent. This totals to 44 concepts, noting that each feature is discretized into multiple binary concepts. 3. Pong has concepts derived from object-centric state variables computed from the last one or two frames of the observation stack. Base features include continuous-valued positions, velocities, and relative offsets of the agent paddle, ball, and opponent paddle. Specifically, we extract the agent paddle’s vertical posi-tion; the ball’s horizontal and vertical positions; the op-ponent paddle’s vertical position; the ball’s horizontal and vertical velocities; the opponent paddle’s vertical velocity; and several relative position features, includ-ing paddle–ball and opponent–ball offsets. Position features are centered and normalized to lie approxi-mately in [−1, 1] , while velocity features are computed as frame-to-frame differences, clipped to a fixed range, and rescaled. This totals 228 concepts. 4. Boxing concepts are constructed from the positions and movements of the player and opponent sprites. Base features include the normalized x- and y-positions of both the player and the enemy in the final observation frame, as well as their velocities computed as differ-ences between the last two frames. We additionally include relative position features capturing the hori-zontal and vertical offsets between the player and the enemy. These concepts capture spatial dominance, mo-tion direction, and relative positioning between the two agents. 5. Glucose has a state which consists of six continuous-valued physiological or control-related variables ex-tracted from the final observation frame. Each feature corresponds to a scalar quantity, such as an absolute level, rate of change, or control signal, and no tem-poral differencing is applied. Concepts are defined by thresholding each feature at a hand-specified set of values chosen to reflect the feature’s numerical range and semantics. The threshold sets vary across features and include both fine-grained thresholds near zero and coarser thresholds for larger-magnitude variables. 
+
+Training Models We provide details on model training for each environment below. For all policies, we use Proximal Policy Optimization (PPO) (Schulman et al., 2017), with environment-specific hyperparameters. For CartPole, we train using nsteps = 1024 , a batch size of 256 , and 4 epochs per update, with an entropy coefficient of 5 × 10 −4, a learn-ing rate of 10 −4, and a value-function loss coefficient of 
+
+0.5. For MiniGrid, we again use nsteps = 1024 but increase the batch size to 1024 , while keeping 4 training epochs per update. For Pong, we use nsteps = 1024 , a batch size of 
+
+256 , and 5 epochs per update, with a learning rate of 10 −4.Finally, for Boxing, we use nsteps = 1024 , a batch size of 
+
+1024 , and 4 epochs per update. All experiments are run on a GPU using CUDA. Next, we give details on training interpretable policies, which again use PPO (Schulman et al., 2017) but with smaller or structured network architectures to encourage interpretability. For CartPole, we use a two-layer policy network with hidden dimensions [64 , 64] , a rollout length of 
+
+256 , batch size 128 , and 4 epochs per update, with a learn-ing rate of 10 −4, zero entropy regularization, a clipping range of 0.1, and a target KL divergence of 0.01 . For Mini-Grid, we use a learning rate of 3 × 10 −4 with nsteps = 1024 ,batch size 1024 , and 4 epochs per update. For Pong, we use a larger two-layer architecture with hidden dimensions 
+
+[256 , 256] , together with nsteps = 1024 , batch size 256 , 5
+
+epochs per update, and a learning rate of 10 −4. For Box-ing, we use different hyperparameters depending on the experimental setting: in imperfect or intervention-based settings, we use a wider architecture [512 , 256] , larger roll-outs ( nsteps = 2048 ), batch size 512 , 10 epochs per update, a learning rate of 2 × 10 −4, entropy coefficient 0.01 , and clipping fraction 0.1; otherwise, we use a smaller architec-ture [128 , 128] with nsteps = 128 , batch size 256 , 4 epochs per update, and entropy coefficient 0.01 . Finally, for the Glucose environment (including both processed and raw variants), we use nsteps = 1024 , batch size 256 , 5 epochs per update, a learning rate of 3 × 10 −4, and an entropy coefficient of 0.01 , which we found necessary for stable training. For training concept predictors, we use the Nature CNN backbone (LeCun et al., 2015). We train all CNNs for 25 epochs using 50k rollout steps. All concept predictors are at least 95% accurate per concept in MiniGrid, Pong, and Boxing. For CartPole, velocity-related concepts are at least 85% accurate, while all other concepts are at least 95% accurate. Concept predictions are kept as logits to preserve information rather than rounding. We train concept-based models under the sequential paradigm (Koh et al., 2020), where we first train concept predictors gc, then learn interpretable policies π∗ 
+
+> c
+
+.We train all models on a server running Ubuntu 20.04 (Linux kernel 5.15) with 4 NVIDIA RTX A6000 GPUs. 11 Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+## B. Experimental Details 
+
+We run all experiments for 6 seeds and report the standard error. We normalize rewards per-environment by setting the following min/max ranges for reward: CartPole is from 0 to 500, MiniGrid is from 0 to 1, Pong is from -21 to 21, Boxing is from 0 to 100, and Glucose is from -20 to 40. For the first four environments, the normalization comes from bounds on the reward, while for Glucose, we develop this normalization factor based on the performance of all poli-cies. For intervention experiments, we weaken training for all but the CartPole environment, so concept predictors are trained for only 1 epoch, and policies are trained for 250k, 4M, and 2M epochs for MiniGrid, Pong, and Boxing, respec-tively. We assume that intervening on concept j results in perfect accuracy for the concept, δj = 1 . For all policies, we use Proximal Policy Optimization (PPO) (Schulman et al., 2017), with environment-specific hyperparameters. 
+
+## C. Algorithm Implementation Details 
+
+We estimate Q-values using a stable TD learning proce-dure (Sutton & Barto, 2018). A neural Q-network with two ReLU hidden layers and orthogonal initialization is trained together with a slowly updated target network. At each step, the agent stores transitions (s, a, r, s ′) into a replay buffer and updates the parameters by minimizing the Double–DQN TD loss. 
+
+ℓ =
+
+
+
+Qθ (s, a ) − r + γ Q θ−
+
+ s′, arg max  
+
+> a′
+
+Qθ (s′, a ′) 2
+
+.
+
+Gradients are clipped for stability, and the target network is synchronized periodically. After training, the Q-value 
+
+Q(s, a ) for any state–action pair is obtained by a single forward pass through the learned network. The greedy method measures the within-class standard de-viation after splitting on each concept then sorts by this. That is, for each concept, we sum the standard deviation for Q values when the concept is on and off, summed across all actions. The intuition is that if a concept is highly rele-vant to the reward or dynamics, states where the concept is on should have similar Q-values, and states where it is off should have similar Q-values. For the DRS and DRS-log algorithms, we fix ρ = 0 .75 ; if no solution is found, we decrement ρ by 0.05 until a solu-tion is found. When using the DRS algorithm in practice, we relax P1c by dropping the constraint, as this improves performance in practice (see Appendix D). We sample Ds,s ′
+
+from rollouts of π∗ with 200k timesteps, while we compute 
+
+1[π∗(s)̸ = π∗(s′)] with 10k timesteps from the rollout of 
+
+π∗.0 1             
+
+> 0
+> 50
+> 100
+> Perfect  CartPole
+> 01
+> 0
+> 50
+> 100 MiniGrid
+> 01
+> 0
+> 50
+> 100
+> Imperfect
+> 01
+> 0
+> 50
+> 100
+> Ground Truth
+> Non-Relax.
+> = 0
+> = 0.5
+> = 0.75 (DRS)
+> = 0.99
+> Figure 8. We assess the performance of a) not relaxing constraint
+> P1c for DRS and b) varying ρfor CartPole and MiniGrid. We find that ρ= 0 .75 performs well across perfect and imperfect settings, while introducing P1c leads to lower performance in CartPole.
+
+## D. Hyperparameter Selection for DRS 
+
+We compare our DRS algorithm against two variations of the algorithm: one which incorporates P1c , along with others which vary the value of ρ ∈ { 0, 0.5, 0.75 , 0.99 }. We com-pare these in both the perfect and imperfect MiniGrid and CartPole algorithms as a simple evaluation to understand performance. In Figure 8, we find that re-introducing P1c leads to worse performance in perfect CartPole, while setting ρ = 0 .99 or 
+
+ρ = 0 .0 also leads to worse performance. Here, enforcing 
+
+P1c forces an ordering over state pairs to cover, which can be too strict in practice, leading us to relax it when constructing DRS. Similarly, setting ρ = 0 .99 can be too strict, as it forces DRS to separate 99% of state pairs with different optimal actions. 
+
+## E. Varied Number of Concepts Selected 
+
+We vary k ∈ { K 
+
+> 12
+
+, K 
+
+> 6
+
+, K 
+
+> 4
+
+} in Figure 9 for both perfect and imperfect settings. We find that better concept selection al-gorithms can improve performance across many values of k.For example, in the perfect environment setting for CartPole, we find that the DRS algorithm improves performance even with only k = 2 concepts, leading to an 32% improvement over the next best alternative. Similarly, such a trend is also present in MiniGrid, where the DRS algorithm improves performance by 96% when k = 7 . In some environments, many concepts are necessary to achieve high performance; for example, in Glucose, while the DRS algorithm is 24% better than alternatives when k = 3 , it achieves 131% better than all alternatives once k = 10 .12 Selecting Decision-Relevant Concepts in Reinforcement Learning 1 2 3                           
+
+> 0
+> 50
+> 100
+> Reward
+> CartPole
+> 4711
+> 0
+> 50
+> 100 MiniGrid
+> 19 38 57
+> 0
+> 50
+> 100 Pong
+> 16 32 48
+> 0
+> 50
+> 100 Boxing
+> 3710
+> 0
+> 50
+> 100 Glucose 123
+> 0
+> 50
+> 100
+> Reward
+> CartPole
+> 4711
+> 0
+> 50
+> 100 MiniGrid
+> 19 38 57
+> 0
+> 50
+> 100 Pong
+> 16 32 48
+> 0
+> 50
+> 100 Boxing
+> Random Variance Greedy DRS DRS-Log
+
+Figure 9. We compare concept selection algorithms while varying the number of concepts selected k with perfect (top) and imperfect (bottom) concept predictors. We find that for CartPole and MiniGrid, DRS outperforms baselines across values of k, while for environments such as Boxing and Glucose, a threshold number of concepts is needed before DRS outperforms baselines. 
+
+Table 1. Average number of concepts selected per group by DRS in MiniGrid, with total concepts per group. 
+
+Concept Group Avg. Selected Total 
+
+Agent 
+
+Position X 1 5Position Y 2 5Direction 3 4Action: Right 0 2Action: Left 1 2Action: Down 0 2Action: Up 1 2
+
+Key 
+
+Position X 0 5Position Y 1 5
+
+Door 
+
+Position X 0 5Position Y 1 5Open State 1 2
+
+## F. Qualitative Analysis 
+
+We next provide intuition for why DRS improves perfor-mance by comparing the set of concepts selected. In Min-iGrid, concepts include agent location, door location, and agent direction (see Table 1). DRS consistently selects direction-related concepts, which are not selected by vari-ance or greedy. This occurs because the direction-related concepts have high action variability, but are also decision-relevant. Knowing which direction an agent faces is critical to train effective policies. 
+
+## G. Runtime of Algorithms 
+
+We compare the runtime of the Variance, Greedy, DRS and DRS-log algorithms across different environments (while we note that the random selection algorithm essentially takes no time). In Figure 10, we show that all algorithms run in under ten minutes across all methods. This runtime is much smaller than the time needed to train the policies themselves, which can take hours. While more complex environments such as Pong or Boxing take longer for the DRS and DRS-log algorithms, they still run quickly. Much of this time is spent solving the optimization problem and for running rollouts to compute optimal actions. Moreover, we note that nd, or the effective dimension, is small in practice. For example, in our rollouts for Pong, we find that nd = 1951 
+
+when rolled out for 200,000 steps, which is much less than 
+
+2k = 2 228 . Additionally, even when we double the number of concepts in Pong (using redundant concepts), we find that all algorithms run in under 10 minutes (with only a 23% increase in the time taken) even with 400+ candidate concepts. We note that we precomputed Q values for all methods, though the computation of Q values takes under ten minutes as well. 
+
+## H. Training Curves for CartPole 
+
+In Figure 11, we plot training curves when varying the con-cept predictor accuracy (left) and number of concepts (right). Our results are noisier compared to those for MiniGrid, yet in both, we find that when concept predictor accuracy is low or the number of concepts is low, policies fail to train. Concepts train slightly faster when going from 75% to 85% accurate concept predictors, and similarly the maximum per-13 Selecting Decision-Relevant Concepts in Reinforcement Learning 0
+
+200 
+
+400 
+
+600 
+
+> Time (s)
+
+CartPole MiniGrid Pong Boxing 
+
+Variance Greedy DRS DRS-Log        
+
+> Figure 10. We compare the time to compute across methods and datasets, and find that all algorithms run in under ten minutes. While DRS and DRS-log take longer than variance and greedy, they still run quickly across environments. 1234
+> 0
+> 50
+> 100
+> Reward
+> 1234
+> 0
+> 50
+> 100
+
+Timesteps (x1M) 
+
+75% 
+
+k=1 
+
+85% 
+
+k=2 
+
+95% 
+
+k=3  
+
+> Figure 11. We vary the number of timesteps that we train policies for in CartPole, while also varying the accuracy of concept predic-tors (left) or the number of concepts selected (right). When the number of concepts is small or the accuracy of the concepts is low, policies fail to train, with the efficiency of training increasing with both parameters.
+
+formance increases when increasing the number of concepts selected. However, both of these trends are noisy in Cart-Pole due to the large amount of stochasticity; even small differences in the set of concepts selected or the training dynamics can greatly impact policy performance. 
+
+## I. Varying the Intervention Percentage 
+
+In Figure 12, we vary α and analyze the reward in Cart-Pole. We find that the DRS algorithm improves performance across values of α, and steadily improves as α increases. When α = 0 .5, DRS achieves 40% better than baselines and at α = 0 .75 , DRS achieves a 73% better performance. DRS also improves as α increases; at α = 0 .5 DRS improves performance compared to α = 0 by 7%, and at α = 0 .75 ,DRS improves by 30%. 0% 25% 50% 75% 100% 
+
+Intervention Prob. ( )
+
+0
+
+50 
+
+100 
+
+> Reward
+
+Random 
+
+Variance 
+
+Greedy 
+
+DRS 
+
+DRS-Log        
+
+> Figure 12. We assess test-time intervention performance when varying the level of intervention αin CartPole. Across all α,the DRS algorithm performs best, with steadily improving perfor-mance as αis increased.
+
+## J. Concept Selection Algorithms in Supervised Settings 
+
+We extend the algorithms from Section 4 in supervised set-tings to use with the CUB dataset. In this setting, rollouts are replaced by labeled examples, and concept selection is performed using empirical statistics computed over the training set. The variance method selects concepts whose presence most evenly partitions the data, favoring concepts with high empirical variability. The greedy method ranks concepts by their association with the target label, selecting those with the strongest marginal predictive signal. The DRS method formulates concept selection as a weighted hitting-set problem over pairs of training examples with differing labels, selecting a fixed-size subset of concepts that maximizes deterministic coverage of label-separating pairs. Here, weights capture whether s and s′ have the same label; Ds,s ′ = 1 if s and s′ have different labels, essentially capturing a one-step difference in Q values. Essentially, this extends coverage over Q values to the supervised setting. Finally, DRS-log extends this formulation by incorporating 14 Selecting Decision-Relevant Concepts in Reinforcement Learning 100 250 500  
+
+> *
+
+Timesteps (x1000) 
+
+0
+
+50 
+
+100 
+
+Variance 
+
+Greedy 
+
+DRS 
+
+DRS-log         
+
+> Figure 13. We vary the number of timesteps we use to train the policy πwithout concepts in MiniGrid. Typically, we have π=π∗,but here, we demonstrate that the DRS and DRS-log algorithms perform well even when πis trained for only 100k timesteps.
+
+concept accuracies into the coverage constraints, replac-ing hard coverage with a probabilistic notion of separation that accounts for uncertainty in concept predictions while retaining the same budgeted optimization structure. 
+
+## K. Selecting Concepts with Imperfect Policies 
+
+Throughout our work, we have assumed access to a perfect model π∗. In this section, we relax that assumption by training optimal policies π∗ in Minigrid for varied numbers of timesteps. We compare the performance of two baselines (variance and greedy) and our two algorithms (DRS and DRS-log) when varying the number of gold timesteps. We do not test the random selection algorithm because it is independent of π∗.In Figure 13, we find that the DRS and DRS-log algorithms perform well across the number of timesteps π∗ is trained for. Both algorithms achieve optimal performance regard-less of the number of timesteps π∗ is trained for. The greedy and variance algorithms perform at least 18% worse no matter how many timesteps π∗ is trained for. Therefore, even with access to an approximate policy ˆπ, the DRS and DRS-log algorithms perform well. 
+
+## L. Proofs 
+
+Theorem L.1. Optimizing the objective in Equation 1 is NP-hard, even under the following restrictions: (i) concept predictors are perfect, and (ii) the optimal action-value function Q∗ is known. Proof. We prove the claim via a polynomial-time reduction from the Weighted Maximum Coverage problem. An instance of weighted maximum coverage consists of a universe U = {e1, . . . , e n} with weights wi ≥ 0, a collec-tion of sets S = {S1, . . . , S m}, and a budget k. The goal is to select at most k sets maximizing P  
+
+> ei∈∪ Sj∈cSj
+
+wi.Given such an instance, we construct a deterministic episodic MDP. For each element ei, introduce two terminal states sLi and sRi and an initial state s0. From s0, the MDP transitions uniformly to one of the states {sLi , s Ri }ni=1 . The action space is A = {aL, a R}, and rewards are defined by R(sLi , a L) = wi, R(sLi , a R) = 0 , R(sRi , a R) = 
+
+wi, R(sRi , a L) = 0 . Thus the optimal action-value func-tion Q∗ is known. We define a concept bank as follows. For each set Sj ∈ S ,introduce a binary concept cj such that 
+
+cj (sLi ) = 0 , cj (sRi ) = 1 if ei ∈ Sj ,
+
+and cj (sLi ) = cj (sRi ) = 0 otherwise. Fix any subset of concepts c with |c| ≤ k, and let π∗ 
+
+> c
+
+be the optimal policy that conditions only on gc. If no selected concept distinguishes (sLi , s Ri ), then π∗ 
+
+> c
+
+must take the same action in both states, yielding expected reward wi/2. If the pair is distinguished by at least one selected concept, the policy can take the optimal action in each state and obtain reward wi.Let C(c) ⊆ U be the elements whose corresponding state pairs are distinguished by c. The expected return of π∗ 
+
+> c
+
+is 
+
+X
+
+> ei∈C(c)
+
+wi + X 
+
+> ei/∈C(c)
+
+wi
+
+2 = 12
+
+X
+
+> i
+
+wi + 12
+
+X
+
+> ei∈C(c)
+
+wi.
+
+Since the first term is constant, maximizing Equation 1 over 
+
+|c| ≤ k is equivalent to maximizing P  
+
+> ei∈∪ Sj∈cSj
+
+wi, i.e., solving weighted maximum coverage. Therefore, a polynomial-time algorithm for optimizing Equation 1 would imply a polynomial-time algorithm for weighted maximum coverage. Since weighted maximum coverage is NP-hard, the concept selection problem is NP-hard as well. 
+
+Proposition 3.1. For a concept predictor gc, we have that 
+
+V π∗
+
+(s) − V π∗ 
+
+> c
+
+(s) ≤ 2ϵ(gc)(1 − γ)2 .
+
+Proof. By assumption, whenever gc(s) = gc(s′) we have 
+
+max a |Q(s, a ) − Q(s′, a )| ≤ ϵ. Thus, gc induces an ϵ-approximate state abstraction in the sense of Theorem 2.1. The claimed bound on the value loss of the induced policy 
+
+π∗ 
+
+> c
+
+follows directly from that theorem. 
+
+Theorem 3.1. Let c and c′ be two concept sets, and let 
+
+ϵ(gc) ≤ ϵ(gc′ ). Under Assumptions 3.4 and 3.5, for any 
+
+15 Selecting Decision-Relevant Concepts in Reinforcement Learning 
+
+intervention level α ∈ [0 , 1] and any accuracy vector δ(α)
+
+obtained by improving an α-fraction of concepts from δA
+
+toward δH = 1, we have 
+
+E[V π∗ 
+
+> c,δ (α)
+
+(s)] ≥ E[V π∗ 
+
+> c′,δ (α)
+
+(s)] .
+
+Proof. By Assumption 3.5, a smaller abstraction error im-plies a higher value under perfect concept accuracy. There-fore, under perfect intervention, ϵ(gc) ≤ ϵ(gc′ ).Human test-time intervention improves concept accuracy coordinate-wise, so for any α, the resulting accuracy vector 
+
+δ(α) satisfies δ(α) ⪯ 1. By Assumption 3.4, relative perfor-mance rankings between policies induced by c and c′ are preserved as accuracy improves. Therefore, the ordering in-duced at perfect accuracy extends to all intermediate levels of intervention, completing the proof. 
+
+Theorem 4.1. Let (x∗, y∗) be an optimal solution to Equa-tion 2a with ρ = 0 , and let c = {cj : x∗ 
+
+> j
+
+= 1 }. gc minimizes 
+
+ϵ(gc) among predictors using k concepts: 
+
+ϵ(gc) = min   
+
+> g:|cg|≤ k
+
+ϵ(g).
+
+Proof. By constraint (P1a), the abstraction gc uses at most 
+
+k concepts. By construction, Y ∗ 
+
+> s,s ′
+
+= 0 if and only if gc(s) = gc(s′) or 
+
+Y ∗ 
+
+> t,t ′
+
+= 0 where Dt,t ′ ≥ Ds,s ′ . Let the state pairs be in-dexed so that D1 ≥ D2 ≥ · · · , and note that constraint (P1c) enforces Y ∗ 
+
+> 1
+
+≥ Y ∗ 
+
+> 2
+
+≥ · · · . Since Y ∗ 
+
+> s,s ′
+
+∈ { 0, 1}, there ex-ists a threshold τ such that Y ∗ 
+
+> s,s ′
+
+= 0 for all pairs with 
+
+Ds,s ′ ≤ τ , and Y ∗ 
+
+> s,s ′
+
+= 1 for all pairs with Ds,s ′ > τ .Therefore, 
+
+ϵ(gc) = max    
+
+> s,s ′:Y∗
+> s,s ′=0
+
+Ds,s ′ = τ. 
+
+Now consider any abstraction g using at most k concepts. For g to achieve abstraction error strictly less than τ , it must separate all state pairs with Ds,s ′ ≥ τ , which would contradict the optimality of (x∗, y∗) for (P1) . Hence, no such abstraction exists, and gc is minimax optimal. 
+
+Theorem 4.2. Assume that max  
+
+> s,a
+
+| ˆQπ (s, a ) − Qπ (s, a )| ≤ 
+
+δ. Let (x∗, Y∗) be an optimal solution to Equation 2a constructed using Ds,s ′ , and let c∗ = {cj : x∗ 
+
+> j
+
+= 1 }. Let 
+
+ˆDs,s ′ = max a | ˆQπ (s, a ) − ˆQπ (s′, a )|, and let (ˆ x, ˆY) be an optimal solution to Equation 2a constructed using ˆDs,s ′ ,with induced abstraction gˆc. Then 
+
+ϵQπ (gˆc) ≤ ϵQπ (gc∗ ) + 4 δ, 
+
+and for all s ∈ S ,
+
+V πc∗ (s) − V πˆc (s) ≤ 2( ϵQπ (gc∗ ) + 4 δ)(1 − γ)2 .
+
+Proof. Since ∥ ˆQ − Qπ∗
+
+∥∞ ≤ δ, for all s, s ′ we have 
+
+| ˆDs,s ′ − Ds,s ′ |
+
+(3) 
+
+= max  
+
+> a
+
+| ˆQ(s, a ) − ˆQ(s′, a )| − max  
+
+> a
+
+|Q(s, a ) − Q(s′, a )|
+
+(4) 
+
+≤ 2δ. 
+
+(5) Here, this holds because of the Lipschitzness of the max operator and triangle inequality. Fix any abstraction g. Then 
+
+max 
+
+> s,s ′:g(s)= g(s′)
+
+ˆDs,s ′ − max  
+
+> s,s ′:g(s)= g(s′)
+
+Ds,s ′ ≤ 2δ. 
+
+In particular, 
+
+ϵ ˆQ(g) ≤ ϵQ(g) + 2 δ. 
+
+Let gc∗ be the abstraction minimizing ϵQ(g), and gˆc be the abstraction minimizing ϵ ˆQ(g). By optimality of gˆc under ˆd,
+
+ϵ ˆQ(gˆc) ≤ ϵ ˆQ(gc∗ ) ≤ ϵQ(gc∗ ) + 2 δ. 
+
+Applying the bound in the opposite direction yields 
+
+ϵQ(gˆc) ≤ ϵ ˆQ(gˆc) + 2 δ ≤ (ϵ∗ + 2 δ) + 2 δ = ϵ∗ + 4 δ. 
+
+The value-function bound then follows directly from Propo-sition 3.1. 
+
+Lemma 4.1. Suppose that for each concept i, an adversary may apply a perturbation f (Ti) that flips the value of ci
+
+on a subset Ti ⊆ S with |Ti|/|S| = 1 − δi. Then for any concept predictor gc with δi < 1, there exists a collection of perturbations f = {f T1 
+
+> c1
+
+, . . . , f Tk 
+
+> ck
+
+} such that ϵ(f (gc)) = max s,s ′ Ds,s ′ .
+
+Proof. Since δi < 1 for all i, we may choose Ti = {s}
+
+for any state s ∈ S . Let (s∗, s ′∗ ) ∈ arg max s,s ′ Ds,s ′ , and define 
+
+P = {i : ci(s∗)̸ = ci(s′∗ )}.
+
+For each i ∈ P , let Ti = {s∗} and apply f (Ti), which flips the value of ci at s∗; for i / ∈ P , let f (Ti) be the identity. After applying all perturbations, we have 
+
+f (gc)( s∗) = f (gc)( s′∗ ).
+
+Since (s∗, s ′∗ ) maximizes Ds,s ′ , it follows that 
+
+ϵ(f (gc)) = max  
+
+> s,s ′
+
+Ds,s ′ .
+
+16

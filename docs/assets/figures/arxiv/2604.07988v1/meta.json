@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-001.webp",
+      "caption": "Figure 1. Existing ReAct / CodeAct agents run in an imperative loop; LogAct is a state machine playing a shared log.",
+      "page": 1,
+      "index": 1,
+      "width": 504,
+      "height": 614
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-002.webp",
+      "caption": "Figure 8. Agentic introspection enables semantic recovery, health check, and optimization. Left: Phase 1 (rglob worker) processes ∼1200 folders over 155s before being killed. After a 31s recovery window, Phase 2 (recovery worker) processes the remaining ∼800 folders. Right: The recovery agent’s AgentBus. The agent introspects the crashed agent’s bus, determines what was completed, diagnoses and fixes the slow implementation, and finishes the remaining 816 folders in 0.36s.",
+      "page": 11,
+      "index": 2,
+      "width": 930,
+      "height": 517
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-003.webp",
+      "caption": "Table 2. Entry types on the AgentBus, and which components append and play them.",
+      "page": 7,
+      "index": 3,
+      "width": 525,
+      "height": 229
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-004.webp",
+      "caption": "Figure 6. LogAct stops all unwanted actions with a rule-based Voter; and restores benign Utility with a dual Voter quorum. Left: Target (No Defense) has high benign Utility, but also an unacceptable ASR; a rule-based Voter stops all unwanted actions (1.4% involve action-less attacks) but also lowers Utility; while a dual voter quorum (rule-based + LLM) restores Utility. Right: Dual voter adds 82% latency and uses 13% more tokens compared to Target (No Defense).",
+      "page": 10,
+      "index": 4,
+      "width": 1035,
+      "height": 356
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-005.webp",
+      "caption": "Figure 7. Voters can be hot-swapped. We first add a rulebased Voter to stop attacks; and later, add a second LLMbased Voter to restore Utility. Each switch involves a dynamic change of Decider policy via the AgentBus.",
+      "page": 10,
+      "index": 5,
+      "width": 442,
+      "height": 355
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-006.webp",
+      "caption": "Table 1. Existing fault-tolerance approaches and their limitations for agents. None addresses agentic safety.",
+      "page": 3,
+      "index": 6,
+      "width": 525,
+      "height": 464
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-007.webp",
+      "caption": "Figure 2. The LogAct state machine. The agent cycles through four stages; each stage is triggered by playing a typed log entry and concludes by appending one.",
+      "page": 4,
+      "index": 7,
+      "width": 461,
+      "height": 404
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-008.webp",
+      "caption": "Figure 3. A deconstructed LogAct agent on the AgentBus. Physical nodes – Driver, Voter(s), Decider, and Executor – each append and play a subset of entry types.",
+      "page": 4,
+      "index": 8,
+      "width": 473,
+      "height": 313
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-009.webp",
+      "caption": "Figure 9. Agentic introspection makes swarms faster and cheaper. A supervisor agent inspects each AgentBus and sends mail in a 6-agent swarm, resulting in 17% more work for 41% less token usage.",
+      "page": 12,
+      "index": 9,
+      "width": 473,
+      "height": 486
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07988v1/fig-010.webp",
+      "caption": "Figure 5. LogAct imposes low overhead. For a simple task (write a C file, compile, run): (Top) most time is spent in inference rather than voting / deciding; (Middle) logging imposes low storage overhead (2.6KB/s); (Bottom) inference continues to dominate even with slower backends.",
+      "page": 9,
+      "index": 10,
+      "width": 526,
+      "height": 617
+    }
+  ]
+}
