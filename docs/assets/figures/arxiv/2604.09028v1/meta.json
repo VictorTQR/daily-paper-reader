@@ -1,0 +1,102 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-001.webp",
+      "caption": "Fig. 8. Mean UAV Energy Rate over Training.",
+      "page": 15,
+      "index": 1,
+      "width": 514,
+      "height": 310
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-002.webp",
+      "caption": "Fig. 7. Collisions per Episode over Training.",
+      "page": 15,
+      "index": 2,
+      "width": 514,
+      "height": 310
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-003.webp",
+      "caption": "Fig. 9. Performance comparison based on UAVs served users.",
+      "page": 15,
+      "index": 3,
+      "width": 504,
+      "height": 684
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-004.webp",
+      "caption": "Fig. 5. Normalized IQM across five system metrics. Each bar shows the per-metric min–max normalized IQM (middle 50% of episode values); error bars indicate standard error. Higher is better for Coverage, Return, and ServedNumber; lower is better for EnergyUse and Collisions (plotted as 1− normalized value so that taller bars remain preferable).",
+      "page": 14,
+      "index": 4,
+      "width": 511,
+      "height": 261
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-005.webp",
+      "caption": "Fig. 4. Mean Return over Training.",
+      "page": 13,
+      "index": 5,
+      "width": 514,
+      "height": 303
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-006.webp",
+      "caption": "Fig. 2. Evolution of the average expert feature rank over training.",
+      "page": 13,
+      "index": 6,
+      "width": 510,
+      "height": 288
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-007.webp",
+      "caption": "Fig. 3. Evolution of the total dormant neuron fraction over training.",
+      "page": 13,
+      "index": 7,
+      "width": 498,
+      "height": 354
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-008.webp",
+      "caption": "TABLE I SUMMARY OF KEY NOTATION",
+      "page": 4,
+      "index": 8,
+      "width": 524,
+      "height": 565
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-009.webp",
+      "caption": "Fig. 12. Ablation Study: IQM Drop When Removing Each Component.",
+      "page": 17,
+      "index": 9,
+      "width": 510,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-010.webp",
+      "caption": "TABLE II SIMULATION AND TRAINING PARAMETERS.",
+      "page": 12,
+      "index": 10,
+      "width": 484,
+      "height": 1065
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-011.webp",
+      "caption": "Fig. 11. Effect of Noise Injection Threshold on Coverage.",
+      "page": 16,
+      "index": 11,
+      "width": 510,
+      "height": 360
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09028v1/fig-012.webp",
+      "caption": "Fig. 10. Mean Action Response to Phase Switches.",
+      "page": 16,
+      "index": 12,
+      "width": 511,
+      "height": 340
+    }
+  ]
+}

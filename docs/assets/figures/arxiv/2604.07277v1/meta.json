@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-001.webp",
+      "caption": "Figure 1: (Top): Online rollout time distribution based on the measured time on 8 parallel environments in training for 80 steps. (Bottom I): The conventional online rollout and critic training loop. The primary bottleneck is the high-latency environmental interaction, while the GUI agent action inference is relatively fast. (Bottom II): Standard agent update with Single State Single Action paradigm. Agent updates rely merely on the state-action pairs collected from the online rollout. (Bottom III): ANDROID COACH update with Single State Multiple Actions paradigm. We fully leverage each expensive online state by generating multiple actions. The agent is then updated using this data. This approach improves training efficiency by gathering more training samples within the same online interaction cost.",
+      "page": 1,
+      "index": 1,
+      "width": 454,
+      "height": 399
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-002.webp",
+      "caption": "Table 2: Success rates of proprietary and open-source models on AndroidWorld and AndroidLab for mobile GUI interaction tasks. QD is the abbreviation for the query detect type, and OP is the abbreviation for the operation type. Standard deviations are reported in gray subscripts for all models except proprietary ones.",
+      "page": 6,
+      "index": 2,
+      "width": 950,
+      "height": 586
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-003.webp",
+      "caption": "Table 5: Main hyperparameters in ANDROID COACH.",
+      "page": 15,
+      "index": 3,
+      "width": 602,
+      "height": 594
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-004.webp",
+      "caption": "Table 6: Operation action space for GUI agent in ANDROID COACH.",
+      "page": 15,
+      "index": 4,
+      "width": 546,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-005.webp",
+      "caption": "Figure 4: Training efficiency analysis of different methods over training time. We report the relationship between training time and (a) interaction times, (b) sampled actions number, and (c) success rate. The GRPO group size and sample number of ANDROID COACH are both 4. Data is collected on AndroidWorld over UI-TARS-1.5-7B.",
+      "page": 7,
+      "index": 5,
+      "width": 950,
+      "height": 236
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-006.webp",
+      "caption": "Figure 5: The effect of the ACLOO advantage estimation. (a) The training reward curves. (b) The final success rate gain on AndroidLab.",
+      "page": 7,
+      "index": 6,
+      "width": 459,
+      "height": 475
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-007.webp",
+      "caption": "Figure 2: Overview and pipeline for a training step in ANDROID COACH. 1. Online Rollout: Policy interacts with parallel environments to collect complete trajectories. 2. Critic Update: Annotate state-action pairs with returns to train the value model. 3. Multiple sample: Resample multiple actions for each online state. 4. Actor Update: Compute action values and advantages with leave-one-out strategy, then update policy via gradient step.",
+      "page": 3,
+      "index": 7,
+      "width": 940,
+      "height": 509
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-008.webp",
+      "caption": "Figure 11: Prompt for GPT-4o to generate reason for PRM Training.",
+      "page": 18,
+      "index": 8,
+      "width": 950,
+      "height": 1435
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-009.webp",
+      "caption": "Table 1: Comparison of representative GUI agent training frameworks. ANDROID COACH is the first to achieve efficient Single State Multiple Actions (SSMA) exploration in an online setting, significantly improve sample efficiency with limited interaction costs compared to standard Single State Single Action (SSSA) approaches. ACLOO refers to Actor-Critic Leave-One-Out we proposed in our method.",
+      "page": 4,
+      "index": 9,
+      "width": 950,
+      "height": 246
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-010.webp",
+      "caption": "Figure 10: Prompt for Process Reward Model.",
+      "page": 17,
+      "index": 10,
+      "width": 950,
+      "height": 1287
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-011.webp",
+      "caption": "Figure 3: An overview of dataset construction pipeline for process reward model training.",
+      "page": 5,
+      "index": 11,
+      "width": 471,
+      "height": 381
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-012.webp",
+      "caption": "Figure 8: Prompt for ANDROID COACH. This prompt is consistent with the official prompt provided by UI-TARS1.5-7B.",
+      "page": 16,
+      "index": 12,
+      "width": 950,
+      "height": 608
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07277v1/fig-013.webp",
+      "caption": "Figure 9: Prompt for outcome verifier.",
+      "page": 16,
+      "index": 13,
+      "width": 950,
+      "height": 493
+    }
+  ]
+}

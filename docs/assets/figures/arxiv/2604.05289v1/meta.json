@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-001.webp",
+      "caption": "Fig. 4. The structure of MAS specification.",
+      "page": 6,
+      "index": 1,
+      "width": 660,
+      "height": 214
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-002.webp",
+      "caption": "Table 1. Overall results of Flare.",
+      "page": 15,
+      "index": 2,
+      "width": 827,
+      "height": 1002
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-003.webp",
+      "caption": "Fig. 1. ShortsMaker [14] creates videos with four agents.",
+      "page": 2,
+      "index": 3,
+      "width": 673,
+      "height": 335
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-004.webp",
+      "caption": "Fig. 5. ShortsMaker [14] specifications extracted by Flare.",
+      "page": 8,
+      "index": 4,
+      "width": 744,
+      "height": 406
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-005.webp",
+      "caption": "Fig. 7. The Test execution of ShortsMaker by Flare.",
+      "page": 12,
+      "index": 5,
+      "width": 744,
+      "height": 533
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-006.webp",
+      "caption": "Fig. 2. A representative framework of multi-agent systems.",
+      "page": 5,
+      "index": 6,
+      "width": 660,
+      "height": 206
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-007.webp",
+      "caption": "Fig. 3. An overview of Flare.",
+      "page": 5,
+      "index": 7,
+      "width": 827,
+      "height": 448
+    },
+    {
+      "url": "assets/figures/arxiv/2604.05289v1/fig-008.webp",
+      "caption": "Table 2. Root causes of the identified failures.",
+      "page": 16,
+      "index": 8,
+      "width": 827,
+      "height": 336
+    }
+  ]
+}

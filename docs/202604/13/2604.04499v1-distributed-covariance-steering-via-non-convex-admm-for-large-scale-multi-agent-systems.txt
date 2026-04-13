@@ -1,0 +1,2945 @@
+Title: Distributed Covariance Steering via Non-Convex ADMM for Large-Scale Multi-Agent Systems
+
+URL Source: https://arxiv.org/pdf/2604.04499v1
+
+Published Time: Tue, 07 Apr 2026 01:51:13 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+> 1
+
+# Distributed Covariance Steering via Non-Convex ADMM for Large-Scale Multi-Agent Systems 
+
+Augustinos D. Saravanos, Isin M. Balci, Arshiya Taj Abdul, Efstathios Bakolas and Evangelos A. Theodorou 
+
+Abstract — This paper studies the problem of steering large-scale multi-agent stochastic linear systems between Gaussian distributions under probabilistic collision avoid-ance constraints. We introduce a family of distributed co-variance steering (DCS) methods based on the Alternating Direction Method of Multipliers (ADMM), each offering dif-ferent trade-offs between conservatism and computational efficiency. The first method, Full-Covariance-Consensus (FCC)-DCS , enforces consensus over both the means and covariances of neighboring agents, yielding the least con-servative safe solutions. The second approach, Partial-Covariance-Consensus (PCC)-DCS , leverages the insight that safety can be maintained by exchanging only partial covariance information, reducing computational demands. The third method, Mean-Consensus (MC)-DCS , provides the most scalable alternative by requiring consensus only on mean states. Furthermore, we establish novel convergence guarantees for distributed ADMM with iteratively linearized non-convex constraints, covering a broad class of consen-sus optimization problems, and show that the proposed DCS methods fall within this framework. Simulations in 2D and 3D multi-agent environments verify safety, illustrate the trade-offs between methods, and demonstrate scalability to thousands of agents. 
+
+Index Terms — distributed optimization, multi-agent sys-tems, stochastic control 
+
+I. I NTRODUCTION 
+
+# THE increasing scale and complexity of multi-agent sys-tems, ranging from self-driving cars [1] and warehouse automation [2] to UAV coordination [3] and swarm robotics [4], necessitate algorithms capable of ensuring reliable op-eration. Two fundamental challenges arise: (i) scalability ,
+
+This work was supported by the ARO Award #W911NF2010151. Augustinos Saravanos acknowledges support by the A. Onassis Foun-dation Scholarship. (Corresponding author: Augustinos D. Saravanos) 
+
+Augustinos D. Saravanos was with the School of Electrical and Com-puter Engineering, Georgia Institute of Technology, Atlanta, GA 30332, USA, during this work. He is now with the Department of Aeronautics and Astronautics, Massachusetts Institute of Technology, Cambridge, MA 02139, USA (e-mail: asaravanos@gatech.edu; asaravan@mit.edu). Arshiya Taj Abdul is with the School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA 30332 USA (e-mail: aabdul6@gatech.edu). Isin M. Balci and Efstathios Bakolas are with the Department of Aerospace Engineering and Engineering Mechanics, The University of Texas at Austin, Austin, TX 78712 USA (isinmertbalci@utexas.edu, bakolas@austin.utexas.edu). Evangelos A. Theodorou is with the Daniel Guggenheim School of Aerospace Engineering, Georgia Institute of Technology, Atlanta, GA 30332 USA (e-mail: evangelos.theodorou@gatech.edu). 
+
+requiring computational and communication efficiency as team sizes grow, and (ii) safety , demanding probabilistic guarantees under uncertainty. This article addresses these challenges, by introducing a family of distributed methods for steering the state distributions of large-scale multi-agent stochastic systems to prescribed distributions, while ensuring collision avoidance. Classical stochastic control approaches such as Linear Quadratic Gaussian (LQG) control indirectly minimize the state variance, often leading to overly aggressive behavior which might be undesirable in safety-critical multi-agent set-tings. Other common approaches such as stochastic model pre-dictive control often rely on sampling-based approximations [5], fixed feedback gains [6] or other conservative reformu-lations [7], which can limit robustness and scalability. The idea of steering the distribution of a stochastic system from initial to target distributions offers an attractive alternative as it can be naturally associated with probabilistic guarantees under uncertainty. However, controlling the full density of distributions is known to be computationally intensive [8], rendering such approaches impractical for large-scale systems. Covariance Steering (CS) has emerged as a powerful methodology for steering the state distribution of stochastic systems from a given initial distribution to a prescribed terminal one. Originally formulated for linear systems under Gaussian uncertainty [9]–[11], CS methods have since been extended to nonlinear dynamics [12], [13], robust formulations [14], data-driven approaches [15], Gaussian mixture models (GMM) [16], general distribution steering [17], and various other settings. Successful applications are found in navigation [18], manipulation [19], aerospace systems [20] and multi-agent control [21], among other domains. Despite their promise for safety-critical systems, CS meth-ods typically result in computationally intensive semidefinite programming (SDP) problems, which restricts their applicabil-ity to low-dimensional systems. To overcome this fundamental bottleneck, this article introduces a family of distributed CS methods with desirable trade-offs between conservatism and computational efficiency, that achieve scalability to large-scale multi-agent systems with safety guarantees. 
+
+A. Related Work 
+
+Distribution Steering for Multi-Agent Systems. A signif-icant amount of the literature has studied the control of multi-agent systems through density control, where the collective be-havior of a swarm is represented as a single distribution. Such 
+
+> arXiv:2604.04499v1 [eess.SY] 6 Apr 2026 2
+
+approaches include mean-field formulations [22], [23], Markov chain representations [24] and power moment-based methods [25]. These approaches, however, differ fundamentally from the setting considered in this work, where each agent is itself modeled as a distribution whose mean and covariance must be steered to specific targets. The first distributed CS algorithm was introduced in [21], demonstrating scalability to dozens of agents; however, safety was enforced solely through constraints on the mean states. Similarly, the decentralized model predictive CS method in [26] and the hierarchical distribution steering framework in [27] adopted formulations that relied on actively optimizing only the mean states for achieving safety. More recently, a centralized CS approach was presented in [28], but its scalability is significantly limited to very few agents. Overall, existing works fall short in presenting decentralized methodologies that fully leverage distributional information to ensure safety, remain scalable to large systems and are supported by convergence guarantees. 
+
+Distributed ADMM in Non-Convex Optimization. Dis-tributed optimization algorithms based on the Alternating Direction Method of Multipliers (ADMM) [29] have gained widespread popularity in autonomy, networked systems and other areas. Naturally, distributed multi-agent control methods leveraging ADMM have also been proposed, often achieving remarkable scalability [30]–[32]. However, the convergence guarantees of such schemes typically hold only under con-vex settings. In contrast, the majority of multi-agent control problems in autonomy are inherently non-convex, e.g. due to collision avoidance constraints, so most distributed ADMM-based methods lack convergence guarantees in such settings. Early convergence analyses of ADMM considered problems with non-convex objectives, but in the absence of constraints [33], [34] or under convex ones [35]. Linearized ADMM ap-proaches have also been proposed, yet also without accounting for non-convex constraints [36], [37]. Several other works [38]–[40] have established results for non-convex ADMM schemes, but rely on a restrictive assumption on the linear coupling constraints, typically not satisfied in distributed con-sensus optimization, as pointed out by Sun and Sun in [41]. To accommodate that, the latter authors presented a two-level scheme in [41] with an outer Augmented Lagrangian (AL) loop on top of the inner ADMM to ensure convergence under non-convex constraints. Several works such as [42], [43] have followed a similar two-level setup, yet such schemes might require many iterations, limiting their applicability. In contrast to these approaches, we present a novel analysis for distributed ADMM with iterative linearization of the non-convex con-straints which guarantees convergence to a stationary point. 
+
+B. Contributions 
+
+This article introduces a family of Distributed Covariance Steering (DCS) methods based on ADMM that address these challenges. The contributions of this work are listed as follows: 1) We present Full-Covariance-Consensus (FCC)-DCS ,a distributed optimization approach which exploits both the mean and the full covariances of the states of the agents to effectively achieve safety. 2) Next, we propose Partial-Covariance-Consensus (PCC)-DCS , a method which leverages that ensuring safety requires only partial covariance information, thus reducing computational and communication requirements. 3) Subsequently, we present Mean-Consensus (MC)-DCS ,a further simplified approach which only requires a consensus among the mean states of the agents towards achieving even higher computational efficiency. 4) We establish novel convergence guarantees for dis-tributed ADMM with iteratively linearized non-convex constraints; a result of independent interest. As PCC-DCS and MC-DCS fall under this setup, their con-vergence to stationary points follows. We also discuss modifications for the convergence of FCC-DCS. 5) We validate the proposed methods through simulations in 2D and 3D environments, highlighting their safety and scalability to systems with up to thousands of agents. 
+
+Paper Organization. The rest of this article is organized as follows. Section II formulates the multi-agent covariance steering problem. In Sections III, IV and V, we present the FCC-DCS, PCC-DCS and MC-DCS algorithms, respectively. Section VI provides the convergence analysis. In Section VII, we present simulation experiments that verify the effectiveness of the approaches. Finally, Section VIII concludes this article. 
+
+Notation. The space of positive (semi)definite matrices of dimension n × n is given by S++  
+
+> n
+
+(S+ 
+
+> n
+
+). The inner product between two vectors x, y ∈ Rn is denoted by ⟨x, y ⟩ = x⊤y,while the ℓ2-norm of x is ∥x∥2 = p⟨x, x ⟩. Given a matrix 
+
+W ∈ S+ 
+
+> n
+
+, we define the weighted semi-norm as ∥x∥W =p⟨x, W x ⟩. The Frobenius inner product between two matrices 
+
+X, Y ∈ Rn×m is denoted with ⟨X, Y ⟩F = tr( X⊤Y ), while the Frobenius norm of X is ∥X∥F = p⟨X, X ⟩F. Given a random variable (r.v.) x, we denote its mean with μx = E[x]
+
+and its covariance with Σx = Cov[ x]. If a r.v. x is Gaussian, then this is expressed as x ∼ N (μ, Σ) . The cumulative distri-bution function (CDF) of the standard Gaussian distribution is denoted by Φ( ·), while the CDF of the chi-squared distribution with k d.o.f. is denoted by Fχ2 
+
+> k
+
+(·). Further, given a, b ∈ R,we denote the integer set [a, b ] ∩ Z as Ja, b K. We say that a function f : Rn → R, is M -partially strongly convex with 
+
+M ∈ S+ 
+
+> n
+
+if f (x) − 12 ∥x∥2 
+
+> M
+
+is convex. Finally, we call a differentiable function L-partially smooth with L ∈ S+ 
+
+> n
+
+if for any x, y ∈ dom f , we have ∥∇ f (y) − ∇ f (x)∥2 ≤ ∥ y − x∥2
+
+> L
+
+.
+
+II. P ROBLEM STATEMENT 
+
+This section states the multi-agent covariance steering (MACS) problem considered in this article. Section II-A intro-duces the agent topology and local communication structure. Section II-B details the dynamics, cost and constraints of the agents. The full MACS problem is formulated in Section II-C. 
+
+A. Agent Topology and Local Communication 
+
+Consider a set of N agents V = {1, . . . , N }. Each agent 
+
+i ∈ V has a set of neighbors Vi ⊆ V (including i), typically comprising other agents in proximity to i. We adopt the SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 3
+
+following assumptions regarding the neighborhoods and local communication capabilities. 
+
+Assumption 1 (Time-Invariant Neighborhoods): The neigh-bor sets Vi, i ∈ V , remain fixed over time. 
+
+Assumption 2 (Local Communication): Each agent i ∈ V 
+
+can exchange information with all agents j ∈ V i.For convenience, we also define the neighbor-of sets Wi := 
+
+{j ∈ V | i ∈ V j }, which include all agents that consider i as a neighbor. Note that Vi and Wi need not be equal. 
+
+B. Dynamics, Cost and Constraints 
+
+Each agent i ∈ V is subject to the following stochastic discrete-time linear dynamics: 
+
+xik+1 = Aikxik + Bikuik + wik, (1) where xik ∈ Rni is the state, uik ∈ Rmi is the control input, and the matrices Aik ∈ Rni×ni and Bik ∈ Rni×mi are known. The noise process {wik}T −1 
+
+> k=0
+
+over a time horizon T , is a sequence of independent and identically distributed zero-mean Gaussian r.v. wik ∼ N (0 , W ik) with W ik ∈ S+ 
+
+> ni
+
+and E[wikwi⊤ 
+
+> κ
+
+] = 0 for any k̸ = κ. The initial state xi 
+
+> 0
+
+of each agent is also a Gaussian r.v. given by 
+
+xi 
+
+> 0
+
+∼ N (μi
+
+> s
+
+, Σi
+
+> s
+
+), (2) with μi 
+
+> s
+
+∈ Rni , Σi 
+
+> s
+
+∈ S++  
+
+> ni
+
+and E[xi
+
+> 0
+
+wi⊤ 
+
+> k
+
+] = E[wikxi⊤ 
+
+> 0
+
+] = 0 .The concatenated state, control and noise sequences over the horizon T are defined as xi = [ xi
+
+> 0
+
+; . . . ; xiT ] ∈ R(T +1) ni , ui =[ui
+
+> 0
+
+; . . . ; uiT −1] ∈ RT m i and wi = [ wi
+
+> 0
+
+; . . . ; wiT −1] ∈ RT n i .Hence, the dynamics over that horizon can be written in a compact form as 
+
+xi = Gi
+
+> 0
+
+xi 
+
+> 0
+
++ Giuui + Giwwi, (3) with the matrices Gi
+
+> 0
+
+, Giu and Giw defined as in [44]. The aim of all agents is to minimize the collective objective 
+
+J = X
+
+> i∈V
+
+Ji(xi, u i), (4) where each local cost function Ji(xi, u i) is given by 
+
+Ji(xi, u i) = E
+
+ TX
+
+> k=0
+
+xi⊤ 
+
+> k
+
+Qikxik + 
+
+> T−1
+
+X
+
+> k=0
+
+ui⊤ 
+
+> k
+
+Rikuik
+
+
+
+, (5) with Qik ∈ S+ 
+
+> ni
+
+and Rik ∈ S++  
+
+> mi
+
+.For notational convenience, we refer to the state means and covariances as μik := μxik and Σik := Σ xik . The terminal distributions of the agents are constrained to satisfy: 
+
+μiT = μi 
+
+> f
+
+, ΣiT ⪯ Σi 
+
+> f
+
+, ∀i ∈ V , (6) with μi 
+
+> f
+
+∈ Rni and Σi 
+
+> f
+
+∈ Sni
+
+> ++
+
+.In addition, we consider the following chance constraints for obstacle avoidance: 
+
+P[xik /∈ R o] ≥ 1 − ϵ, ∀k ∈ J0, T K, o ∈ O , i ∈ V , (7) where O is the set of obstacles, and Ro is the region covered by each obstacle o ∈ O . Assuming spherical obstacles, these constraints can be further formulated as 
+
+P[cio k (xik) ≤ 0] ≥ 1 − ϵ, ∀k ∈ J0, T K, o ∈ O , i ∈ V , (8) with cio k (xik) = −∥ pik − po∥2 + so, where pik = Pixik ∈ Rq ,
+
+q ∈ { 2, 3} for 2D or 3D space, denotes the position of agent 
+
+i, with matrix Pi ∈ Rq×ni defined accordingly, and po ∈ Rq
+
+and so > 0 are the center and radius of obstacle o.Furthermore, we consider the inter-agent collision avoidance chance constraints: 
+
+P[dij k (xik, x jk) ≤ 0] ≥ 1 − ϵ, 
+
+∀k ∈ J0, T K, j ∈ V i, i ∈ V , (9) with dij k (xik, x jk) = −∥ pik − pjk∥2 + sij , where sij > 0 is the minimum allowed distance between agents i and j.
+
+Remark 1 (Additional Convex Constraints): It is straightfor-ward to incorporate additional constraints such as linear state or control chance constraints [45], bounds on the expected control effort [44], equality constraints on the state covariances [46], communication maintenance constraints, etc., since these typically admit convex reformulations. However, the primary focus of this article is on the more challenging case of non-convex constraints arising from collision avoidance, which are central to ensuring safety in multi-agent systems. 
+
+C. Problem Formulation 
+
+With the agent topology, dynamics, cost, and constraints defined, we now formally state the MACS problem. 
+
+Problem 1 (MACS Problem): Find the optimal control sequences u∗ 
+
+> i
+
+, for all i ∈ V , that solve: 
+
+min X
+
+> i∈V
+
+Ji(xi, u i)s.t. xik+1 = Aikxik + Bikuik + wik,μi 
+
+> 0
+
+= μi
+
+> s
+
+, Σi 
+
+> 0
+
+= Σ i
+
+> s
+
+, μ iT = μi 
+
+> f
+
+, ΣiT ⪯ Σi 
+
+> f
+
+,
+
+P[cio k (xik) ≤ 0] ≥ 1 − ϵ, P[dij k (xik, x jk) ≤ 0] ≥ 1 − ϵ, 
+
+∀k ∈ J0, T K, o ∈ O , j ∈ V i, i ∈ V .
+
+III. F ULL -C OVARIANCE -C ONSENSUS 
+
+DISTRIBUTED COVARIANCE STEERING 
+
+This section introduces the Full-Covariance-Consensus (FCC)-DCS approach for addressing the MACS problem. Section III-A presents a tractable transformation of the original problem. In Section III-B, we cast this reformulation as a consensus optimization. The derivation of FCC-DCS, as well as the final algorithm, are presented in Section III-C. 
+
+A. Problem Transformation 
+
+Let us consider affine disturbance history feedback control policies as in [44], for each agent i ∈ V ,
+
+uik = vik +
+
+> k
+
+X
+
+> κ=k−γ
+
+Kik,κ wiκ, (10) where vik ∈ Rmi are feed-forward control inputs, Kik,κ ∈
+
+Rmi×ni are feedback gains and γ ∈ J1, T K is a truncation parameter that defines the length of the history of disturbances, with the convention that wi 
+
+> −1
+
+= xi 
+
+> 0
+
+− μi
+
+> s
+
+. As shown in [44], γ4
+
+equal to 2 or 3 works well in practice. Then, the control and state sequences are given by 
+
+ui = vi + Ki ˆwi, (11) 
+
+xi = ( ˆGi + GiuKi) ˆ wi + Giuvi + Gi
+
+> 0
+
+μi
+
+> s
+
+, (12) where vi = [ v0 
+
+> i
+
+; . . . ; vT −1 
+
+> i
+
+] ∈ RT m i , Ki ∈ RT m i×(T +1) ni is 
+
+[Ki]k,κ =
+
+(
+
+Kik,κ if k − γ ≤ κ ≤ k
+
+0 otherwise , (13) 
+
+ˆwi = [xi 
+
+> 0
+
+− μi
+
+> s
+
+; wi
+
+> 0
+
+; . . . ; wiT −1] ∈ R(T +1) ni and ˆGi =[Gi
+
+> 0
+
+, G iw]. The mean μi := μxi and covariance Σi := Σ xi
+
+of the state sequence xi are provided by 
+
+μi = θi(vi), Σi = Θ i(Ki)Θ i(Ki)⊤, (14) where θi(vi) ∈ R(T +1) ni and Θi(Ki) ∈ R(T +1) ni×(T +1) ni
+
+are affine functions given by 
+
+θi(vi) = Gi
+
+> 0
+
+μi 
+
+> 0
+
++ Giuvi, (15) 
+
+Θi(Ki) = ( ˆGi + GiuKi)bdiag(Σ i
+
+> s
+
+, W i)1/2, (16) with Wi = bdiag( W i 
+
+> 0
+
+, . . . , W iT ).It follows that each local cost function (5) is then given by 
+
+Ji(vi, K i) = θi(vi)⊤Qiθi(vi) + v⊤ 
+
+> i
+
+Rivi (17) 
+
++ tr QiΘi(Ki)Θ i(Ki)⊤ + tr RiKibdiag(Σ i
+
+> s
+
+, W i)K⊤
+
+> i
+
+ ,
+
+with Qi = bdiag( Qi
+
+> 0
+
+, . . . , Q iT ), Ri = bdiag( Ri
+
+> 0
+
+, . . . , R iT −1).In addition, the terminal mean and covariance constraints (6) can be expressed as the linear equality constraint: 
+
+ai(vi) := Γ iT θi(vi) − μi 
+
+> f
+
+= 0 , (18) and the linear matrix inequality (LMI) constraint: 
+
+Bi(Ki) := 
+
+ Σi 
+
+> f
+
+ΓiT Θi(Ki)Θi(Ki)⊤Γi⊤ 
+
+> T
+
+I(T +1) ni
+
+
+
+⪰ 0, (19) respectively, where the matrix Γik ∈ Rni×(T +1) ni is defined such that xik = Γ ikxi, and the Schur complement is used for reformulating ΓiT Θi(Ki)Θ i(Ki)⊤Γi⊤ 
+
+> T
+
+⪯ Σi 
+
+> f
+
+as (19). 
+
+Remark 2 (Alternative Control Policy Parametrizations): 
+
+Several other policy parametrizations can be considered, based on state feedback or other auxiliary variables; for an overview, we refer the reader to [44]. In this work, we adopt the disturbance feedback parametrization, as it offers a favorable balance between performance and computational tractability, and in addition, yields convex reformulations of linear chance constraints. Yet, the proposed algorithms can be extended to any available policy parametrization. The most challenging constraints in Problem 1 are the obstacle and inter-agent safety constraints due to their non-convex nature. In the following, we provide convex tractable reformulations for approximating these constraints. We start with reformulating the inter-agent collision avoidance ones as second-order conic (SOC) constraints as follows. 
+
+Proposition 1 (Convex Approximation of Collision Avoid-ance Chance Constraints via Inner Linearization): The non-convex inter-agent collision avoidance chance constraint (9) is satisfied if the following SOC constraint holds: 
+
+d FCC  
+
+> ij,k
+
+(vi, K i, v j , K j ) ≤ 0, (20) where 
+
+d FCC  
+
+> ij,k
+
+:= Φ −1(1 − ϵ)
+
+PiΓikΘi(Ki) 00 Pj ΓjkΘj (Kj )
+
+⊤"aij k
+
+aij k
+
+#
+
+> 2
+
+− aij ⊤ 
+
+> k
+
+(PiΓikθi(vi) − Pj Γjkθj (vj )) − bij k , (21) with aij k = 2(ˆ pik−ˆpjk), bk = −∥ ˆpik−ˆpjk∥22−s2 
+
+> ij
+
+. The approxima-tion points ˆpik and ˆpjk are selected such that ∥ˆpik − ˆpjk∥2 = sij .
+
+Proof: Let us define the r.v. qij k = pik − pjk. Then, the chance constraint (9) can be rewritten as 
+
+P[∥qij k ∥22 ≥ s2 
+
+> ij
+
+] ≥ 1 − ϵ, (22) and it follows that qk ∼ N (μqk , Σqk ) with μqk = μpki −
+
+μpkj and Σqk = Σ pki + Σ pkj , where we temporarily drop the superscript (ij ) for notational convenience. By linearizing the inner part of the LHS of (22) around a point ˆqk that satisfies 
+
+∥ˆqk∥2 = sij , we obtain ∥ˆqk∥22 +2ˆ q⊤ 
+
+> k
+
+(qk − ˆqk) which yields the constraint a⊤ 
+
+> k
+
+qk + bk ≥ 0, with ak = 2ˆ qk and bk = −∥ ˆqk∥22 −
+
+s2 
+
+> ij
+
+. Note that this is a convex under-approximation of the constraint ∥qk∥22 ≥ s2 
+
+> ij
+
+, thus P(a⊤ 
+
+> k
+
+qk + bk ≥ 0) ≤ P(∥qk∥22 ≥
+
+s2 
+
+> ij
+
+). Consequently, the constraint 
+
+P[a⊤ 
+
+> k
+
+qk + bk ≥ 0] ≥ 1 − ϵ, (23) is a sufficient condition for constraint (22) to hold. Next, since qk is a multivariate Gaussian r.v., then a⊤ 
+
+> k
+
+qk +bk
+
+is univariate Gaussian, thus constraint (23) is equivalent with 
+
+Φ
+
+
+
+(a⊤ 
+
+> k
+
+μqk + bk)/
+
+q
+
+a⊤ 
+
+> k
+
+Σqk ak
+
+
+
+≥ 1 − ϵ. (24) Since Φ( ·) is a monotonically increasing function, we get 
+
+aij ⊤ 
+
+> k
+
+(μpik −μpjk
+
+) + bij k ≥ Φ−1(1 −ϵ)
+
+q
+
+aij ⊤ 
+
+> k
+
+(Σ pik +Σ pjk
+
+)aij k (25) which yields the constraint (20). Subsequently, we derive a similar SOC approximation for the obstacle avoidance chance constraints as well. 
+
+Proposition 2 (Convex Approximation of Obstacle Avoid-ance Chance Constraints via Inner Linearization): The non-convex obstacle avoidance chance constraint (8) is satisfied if the following SOC constraint holds: 
+
+cFCC  
+
+> io,k
+
+(vi, K i) ≤ 0, (26) where 
+
+cFCC  
+
+> io,k
+
+:= Φ −1(1 − ϵ)  PiΓikΘi(Ki)⊤ aio k 2
+
+(27) 
+
+− aio ⊤ 
+
+> k
+
+(PiΓikθi(vi) − pok) − bio k ,
+
+with aio k = 2(ˆ pik − po), bk = −∥ ˆpik − po∥22 − s2
+
+> o
+
+. The approximation point ˆpik is selected such that ∥ˆpik − po∥2 = so.
+
+Proof: Similar to Proposition 1 and is thus omitted. For notational convenience, we define the concatenated con-straints cFCC  
+
+> i
+
+(vi, K i) := {cFCC  
+
+> io,k
+
+(vi, K i)}o∈O ,k ∈J0,T K
+
+ ≤ 0 and 
+
+d FCC  
+
+> ij
+
+(vi, K i, v j , K j ) := {d FCC  
+
+> ij,k
+
+(vi, K i, v j , K j )}k∈J0,T K
+
+ ≤ 0.Therefore, a convex approximation of Problem 1 can be formulated through the following optimization problem. We refer to this formulation as the Full-Covariance-Constrained (FCC) variation since both the obstacle and collision avoidance constraints exploit the full state covariance to enforce safety. SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 5
+
+Problem 2 (MACS - Full-Covariance Constrained Refor-mulation): Find the optimal policies {v∗ 
+
+> i
+
+, K ∗ 
+
+> i
+
+}i∈V such that 
+
+min X
+
+> i∈V
+
+Ji(vi, K i)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0, cFCC  
+
+> i
+
+(vi, K i) ≤ 0,
+
+d FCC  
+
+> ij
+
+(vi, K i, v j , K j ) ≤ 0, ∀j ∈ V i, i ∈ V .
+
+Remark 3 (Scalability Limitations of Centralized Ap-proach): Solving Problem 2 in a centralized manner yields an optimization with N T (mi + γn imi) variables, N LMI constraints of dim. (T +2) ni, N T (|V i|+|O| ) SOC constraints of dim. 2( T + 1) ni and N n i linear equality constraints (see Table I). As the number of agents N increases, the dimension of the centralized problem renders it intractable for large-scale systems, motivating the need for distributed architectures. 
+
+B. Consensus Optimization 
+
+Problem 2 cannot be directly solved in a decentralized man-ner due to the inter-agent constraints d FCC  
+
+> ij
+
+(vi, K i, v j , K j ) ≤ 0.To address this, for each agent i ∈ V , we introduce the copy variables v(i) 
+
+> j
+
+, K (i) 
+
+> j
+
+, j ∈ V i, which represent the decisions of agent i regarding their neighbors j ∈ V i. It follows that we can then define the augmented (local) decision variables: 
+
+˜vi = [ {v(i) 
+
+> j
+
+}j∈V i ], ˜Ki = [ {K(i) 
+
+> j
+
+}j∈V i ]. (28) Hence, the inter-agent constraints can now be reformulated from the perspective of each agent i ∈ V as 
+
+˜d FCC  
+
+> i
+
+(˜ vi, ˜Ki) := [ {d FCC  
+
+> ij
+
+(vi, K i, v (i) 
+
+> j
+
+, K (i) 
+
+> j
+
+)}j∈V i ] ≤ 0. (29) However, introducing these additional variables necessitates a consensus among those corresponding to the same agent. To achieve this, we introduce the global variables z = [ {zi}i∈V ],
+
+Z = [ {Zi}i∈V ], and impose the consensus constraints 
+
+v(i) 
+
+> j
+
+= zj , K(i) 
+
+> j
+
+= Zj , ∀j ∈ V i, i ∈ V , (30) or written more compactly 
+
+˜vi = ˜ zi, ˜Ki = ˜Zi, ∀i ∈ V , (31) with ˜zi := [ {zj }j∈V i ] and ˜Zi := [ {Zj }j∈V i ].Therefore, Problem 2 can be equivalently reformulated as the following consensus optimization problem. 
+
+Problem 3 (MACS - Full-Covariance Consensus Reformu-lation): Find the optimal policies {v∗ 
+
+> i
+
+, K ∗ 
+
+> i
+
+}i∈V such that 
+
+min X
+
+> i∈V
+
+Ji(vi, K i)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0, cFCC  
+
+> i
+
+(vi, K i) ≤ 0,
+
+˜d FCC  
+
+> i
+
+(˜ vi, ˜Ki) ≤ 0, ˜vi = ˜ zi, ˜Ki = ˜Zi, ∀i ∈ V .
+
+C. Method 
+
+We proceed with deriving a distributed algorithm for solving (3). To achieve that, we treat ˜v = [ {˜vi}i∈V ], ˜K = [ { ˜Ki}i∈V ] as 
+
+Algorithm 1 Full-Covariance-Consensus DCS (FCC-DCS)  
+
+> 1:
+
+Initialize: ˜vi, ˜Ki, z i, Z i, y i, Y i ← 0. 
+
+> 2:
+
+while not converged and ℓ ≤ ℓmax do  
+
+> 3:
+
+cPCC  
+
+> i, lin
+
+, ˜d PCC  
+
+> i, lin
+
+← Get convexified constraints.  
+
+> 4:
+
+˜vi, ˜Ki ← Solve (34) in parallel ∀ i ∈ V . 
+
+> 5:
+
+Each agent i ∈ V receives v(j) 
+
+> i
+
+, K (j) 
+
+> i
+
+from all j ∈ W i\{ i}. 
+
+> 6:
+
+zi, Z i ← Update with (36) in parallel ∀ i ∈ V . 
+
+> 7:
+
+Each agent i ∈ V receives zj , Z j from all j ∈ V i\{ i}. 
+
+> 8:
+
+yi, Y i ← Update with (37) in parallel ∀ i ∈ V .the first, and z, Z as the second block of variables, following the two-block ADMM derivation [29]. The AL is given by 
+
+Lρ = X
+
+> i∈V
+
+Ji(vi, K i) + Iai,Bi,cFCC   
+
+> i,˜dFCC
+> i
+
+(˜ vi, ˜Ki) + ⟨yi, ˜vi − ˜zi⟩
+
++⟨Yi, ˜Ki − ˜Zi⟩F + ρv
+
+2 ∥˜vi − ˜zi∥22 + ρK
+
+2 ∥ ˜Ki − ˜Zi∥2F, (32) where yi and Yi are the dual variables for the constraints ˜vi =˜zi and ˜Ki = ˜Zi, and ρv , ρ K > 0 are penalty parameters. 
+
+Local primal updates. The first block is derived through 
+
+{˜v, ˜K}ℓ+1 = argmin  
+
+> ˜v, ˜K
+
+Lρ(˜ v, ˜K, {z, Z, y, Y }ℓ) (33) which yields the following parallelizable local subproblems 
+
+{˜vi, ˜Ki}ℓ+1 = argmin ˜J FCC  
+
+> i
+
+(˜ vi, ˜Ki)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0,
+
+cFCC  
+
+> i
+
+(vi, K i) ≤ 0, ˜d FCC  
+
+> i
+
+(˜ vi, ˜Ki) ≤ 0,
+
+(34) with 
+
+˜J FCC  
+
+> i
+
+(˜ vi, ˜Ki) := Ji(vi, K i) + ⟨yℓi , ˜vi⟩ + ⟨Y ℓi , ˜Ki⟩
+
++ ρv
+
+2 ∥˜vi − ˜zℓi ∥22 + ρK
+
+2 ∥ ˜Ki − ˜Zℓi ∥2F.
+
+Remark 4 (Successive Convex Approximations for Lo-cal Subproblems): The constraint functions cFCC  
+
+> i
+
+(vi, K i) and 
+
+˜d FCC  
+
+> i
+
+(˜ vi, ˜Ki) are recomputed at each ADMM round based on the current iterates, to yield more accurate convex approxima-tions of the original non-convex constraints in (8) and (9). 
+
+Global primal updates. The second block is derived as 
+
+{z, Z }ℓ+1 = argmin 
+
+> z,Z
+
+Lρ({˜v, ˜K}ℓ+1 , z, Z, {y, Y }ℓ) (35) which results into the parallelizable updates 
+
+zℓ+1  
+
+> i
+
+= 1
+
+|W i|
+
+X
+
+> j∈W i
+
+v(j),ℓ +1  
+
+> i
+
+, Zℓ+1  
+
+> i
+
+= 1
+
+|W i|
+
+X
+
+> j∈W i
+
+K(j),ℓ +1  
+
+> i
+
+. (36) 
+
+Dual updates. Finally, the dual variables are updated through the following dual ascent steps 
+
+yℓ+1  
+
+> i
+
+= yℓi + ρv (˜ vℓ+1  
+
+> i
+
+− ˜zℓ+1  
+
+> i
+
+), (37a) 
+
+Y ℓ+1  
+
+> i
+
+= Y ℓi + ρK ( ˜Kℓ+1  
+
+> i
+
+− ˜Zℓ+1  
+
+> i
+
+). (37b) 
+
+Algorithm. The FCC-DCS algorithm is detailed in Alg. 1. During each ADMM round, the local variables ˜vi, ˜Ki are first updated via solving subproblems (34). Then, each agent 
+
+i receives the copy variables v(j) 
+
+> i
+
+, K (j) 
+
+> i
+
+from all j ∈ W i\{ i},so that the global variables zi, Z i are updated with (36). Next, 6
+
+each agent i receives zj , Z j from all j ∈ V i\{ i}, and the dual updates (37) take place. The ADMM loop repeats until a termination criterion is met. 
+
+Remark 5 (Decentralized Structure of FCC-DCS): The FCC-DCS algorithm is fully decentralized since all compu-tations can be parallelized across the agents and only local communication is required. 
+
+Remark 6 (Computational Benefits of FCC-DCS): The FCC-DCS method is substantially more computationally ef-ficient than centralized CS, as the local subproblems (34) involve only |V i|T (mi + γn imi) variables, a single LMI constraint of dim. (T +2) ni, T (|V i|+|O| ) SOC constraints of dim. 2( T +1) ni and ni linear equality constraints (see Table I), and are solved in parallel. Furthermore, the amount of required ADMM rounds H to achieve an acceptable accuracy typically ranges from tens to hundreds in practice [29]. Therefore, given that for large-scale systems |V i| ≪ M , FCC-DCS offers a substantial computational improvement. 
+
+IV. P ARTIAL -C OVARIANCE -C ONSENSUS 
+
+DISTRIBUTED COVARIANCE STEERING 
+
+This section presents the Partial-Covariance-Consensus (PCC)-DCS method which further reduces the computational burden of solving the MACS problem. In Section III-A, we present a reformulation that substantially reduces the number of variables and computationally demanding constraints, and in Section III-B, we cast this new problem again as a consensus optimization. Section III-C presents the derivation and final algorithm for PCC-DCS. 
+
+A. Problem Transformation 
+
+The key insight underlying the PCC-DCS approach is that to enforce the probabilistic safety constraints, it is not necessary to leverage—and therefore establish consensus upon—the full covariance information of the agents, but only the part associ-ated with the major axis of their confidence ellipsoids. This is formalized through the following proposition in terms of the inter-agent collision avoidance constraints (Fig. 1). 
+
+Proposition 3 (Sufficient Conditions for Collision Avoid-ance via Confidence Ball Separation): The non-convex chance constraint (9) is satisfied if the following constraints hold: 
+
+ϕij k (μik, μ jk, r ik, r jk) := ∥μpik −μpjk
+
+∥2 −rik −rjk −sij ≥ 0, (38a) 
+
+αik(Σ ik, r ik) := 
+
+q
+
+βiλmax (Σ pik ) − rik ≤ 0, (38b) 
+
+αjk(Σ jk, r jk) := 
+
+q
+
+βj λmax (Σ pjk
+
+) − rjk ≤ 0, (38c) where rik, rjk > 0 are auxiliary variables, βi = F −1
+
+> χ2
+> q
+
+(1 − ϵi),
+
+βj = F −1
+
+> χ2
+> q
+
+(1 − ϵj ) and ϵi + ϵj ≤ ϵ.
+
+Proof: Given a multivariate Gaussian variable x ∼N (μ, Σ) with μ ∈ Rn, Σ ∈ S++  
+
+> n
+
+, the confidence ellipsoid 
+
+C1−ϵ(x) such that P[x ∈ C1−ϵ(x)] = 1 − ϵ, is given by 
+
+C1−ϵ(x) := {x : (x − μ)⊤Σ−1(x − μ) ≤ β} with β =
+
+F −1
+
+> χ2
+> n
+
+(1 − ϵ). Let us denote the confidence ellipsoids of pik and 
+
+pkj as Ci := C1−ϵi (pik) and Cj := C1−ϵj (pjk), respectively. If 
+
+pik ∈ C i and pjk ∈ C j , then by definition we have P[pik ∈ C i] = 
+
+Agent i
+
+Agent j
+
+sij 
+
+μpik − μpjk 2
+
+rik
+
+rjk
+
+Fig. 1 : Illustration of inter-agent constraint components via confidence ball separation in the PCC-DCS method. 
+
+1 − ϵi and P[pjk ∈ C j ] = 1 − ϵj . Now, let us also define the ball over-approximations of these ellipsoids as: 
+
+ˆCi := {pik : λmax (Σ pik )−1(pik − μpik )⊤(pik − μpik ) ≤ βi}, (39a) 
+
+ˆCj := {pjk : λmax (Σ pjk
+
+)−1(pjk − μpjk
+
+)⊤(pjk − μpjk
+
+) ≤ βj }, (39b) with βi = F −1
+
+> χ2
+> q
+
+(1 − ϵi), βj = F −1
+
+> χ2
+> q
+
+(1 − ϵj ). Since Ci ⊆ ˆCi and 
+
+Cj ⊆ ˆCj , then P[pik ∈ ˆCi] ≥ 1 − ϵi and P[pjk ∈ ˆCj ] ≥ 1 − ϵj .Next, we will show that a sufficient condition for constraint (9), i.e., P[∥pik − pjk∥2 ≥ sij ] ≥ 1 − ϵ, is the following one: 
+
+min     
+
+> pik∈ˆCi,p jk∈ˆCj
+
+∥pik − pjk∥2 ≥ sij , (40) with ϵi + ϵj ≤ ϵ. Using P (A ∩ B) ≥ 1 − P (Ac) − P (Bc),
+
+P[pik ∈ ˆCi ∩ pjk ∈ ˆCj ] ≥ 1 − ϵi − ϵj ≥ 1 − ϵ. (41) Further, if the condition (40) holds, then for any pik ∈ ˆCi,
+
+pjk ∈ ˆCj , we have ∥pik − pjk∥2 ≥ sij . Therefore, in the event 
+
+(pik ∈ ˆCi) ∩ (pjk ∈ ˆCj ), the inequality ∥pik − pjk∥2 ≥ sij always holds. As a result, (40) implies that 
+
+P[∥pik − pjk∥2 ≥ sij ] ≥ P[pik ∈ ˆCi ∩ pjk ∈ ˆCj ] ≥ 1 − ϵ. (42) Subsequently, the condition (40) holds if the constraints (38) hold, since each ˆCi has center μpik and radius (βiλmax (Σ pik )) 12 .Consequently, we have shown that system (38) is a sufficient condition for (40), which in turn suffices for constraint (9). 
+
+Proposition 4 (Sufficient Conditions for Obstacle Avoidance via Confidence Ball Separation): The non-convex chance constraint (8) is satisfied if the following constraints hold: 
+
+ψio k (μik, r ik) := ∥μpik − po∥2 − rik − so ≥ 0, (43a) 
+
+αik(Σ ik, r ik) ≤ 0, (43b) where αik(Σ ik, r ik) is defined as in Proposition 3. 
+
+Proof: With a similar argument as in the proof of Proposition 3, we can show that a sufficient condition for the constraint (8) to hold, i.e., P[∥pik −po∥2 ≥ so] ≥ 1−ϵ, is: 
+
+min   
+
+> pik∈ˆCi
+
+∥pik − po∥2 ≥ do, (44) where ˆCi refers to the ball over-approximation of the confi-dence ellipsoid of pik with probability 1 − ϵi > 1 − ϵ, as in Proposition 3. Subsequently, the condition (44) is satisfied if in addition to the constraint (38b), the constraint (43a) holds. SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 7
+
+TABLE I : Overview of Variable and Constraint Dimensions of Different Approaches                                                                
+
+> Centralized CS FCC-DCS
+> (per local problem)
+> PCC-DCS
+> (per local problem)
+> MC-DCS
+> Cov. part (solved once) Mean part (per local problem) Num. of variables N T (mi+γn imi)|V i|T(mi+γn imi)|V i|T(mi+ 1) + γT n imiγT n imi|V i|T m i
+> LMI constraints Nconstraints of dim. (T+ 2) ni
+> 1constraint of dim. (T+ 2) ni
+> 1constraint of dim. (T+ 2) ni
+> 1constraint of dim. (T+ 2) ni-SOC constraints N T (|V i|+|O| )constraints of dim. (T+ 2) ni
+> T(|V i|+|O| )constraints of dim. (T+ 2) ni
+> Tconstraints of dim. (T+ 2) ni--Linear ineq. constraints --T(|V i|+|O| )-T(|V i|+|O| )
+> Linear eq. constraints N n inini-ni
+
+Consequently, we have shown that the constraints (38b) and (43a) are a sufficient condition for (44), which in turn is sufficient for the constraint (8) to be satisfied. Although Propositions 3 and 4 provide conditions under which the original inter-agent collision and obstacle avoid-ance chance constraints are satisfied, the resulting constraints (38a) and (43a) are still non-convex w.r.t. μpik , μ pjk
+
+and the constraints (38b) and (38c) are non-convex w.r.t. Σpik , Σpjk
+
+.Considering the control policies (10), we will now reformulate these constraints w.r.t. vi and Ki. Before that, let us define the concatenated variables ri = [ ri
+
+> 0
+
+; . . . ; riK ] for each agent i ∈ V .
+
+Proposition 5 (Reformulation of Constraints in Propo-sitions 3 and 4 w.r.t. Decision Variables): The constraints 
+
+ψio k (μik, r ik) ≥ 0, ϕij k (μik, μ jk, r ik, r jk) ≥ 0 and αik(Σ ik, r ik) ≤ 0
+
+can be equivalently reformulated as follows, respectively: 
+
+cPCC  
+
+> io,k
+
+(vi, r i) := −∥ PiΓikθi(vi) − po∥2 + rik + so ≤ 0, (45a) 
+
+d PCC  
+
+> ij,k
+
+(vi, r i, v j , r j ) := −∥ PiΓikθi(vi) − Pj Γjkθj (vj )∥2 (45b) 
+
++ rik + rjk + sij ≤ 0,
+
+EPCC  
+
+> i,k
+
+(Ki, r i) := 
+
+ rki Iq PiΓikΘi(Ki)Θi(Ki)⊤Γi⊤ 
+
+> k
+
+P ⊤ 
+
+> i
+
+rik/β iI(T +1) ni
+
+
+
+⪰ 0. (45c) 
+
+Proof: The constraints ϕij k (μik, μ jk, r ik, r jk) ≥ 0 and 
+
+ψio k (μik, r ik) ≥ 0 can be rewritten as (45a) and (45b), by simply substituting μpik = PiΓikθi(vi) and μpjk
+
+= Pj Γjkθj (vj ). The constraint αik(Σ ik, r ik) ≤ 0 can be expressed as 
+
+q
+
+βiλmax 
+
+ PiΓikΘi(Ki)( PiΓikΘi(Ki)) ⊤ ≤ rik, (46) which is a convex constraint since it can be written in terms of the spectral norm of PiΓikΘi(Ki) as follows 
+
+∥PiΓikΘi(Ki)∥2 ≤ rik/pβi, (47) or equivalently as the semidefinite constraint: 
+
+PiΓikΘi(Ki)( PiΓikΘi(Ki)) ⊤ ⪯ (rik)2/β iIq . (48) Using Schur’s complement, we arrive to the LMI in (45c). 
+
+Corollary 1: Combining Propositions 3, 4 and 5, it follows that the constraint (8) is satisfied if d PCC  
+
+> ij,k
+
+(vi, r i, v j , r j ) ≤ 0,
+
+EPCC  
+
+> i,k
+
+(Ki, r i) ⪰ 0 and EPCC  
+
+> j,k
+
+(Kj , r j ) ⪰ 0, and the constraint (9) is satisfied if cPCC  
+
+> io,k
+
+(vi, r i) ≤ 0 and EPCC  
+
+> i,k
+
+(Ki, r i) ⪰ 0.Note that although the constraints EPCC  
+
+> i,k
+
+(Ki, r i) ⪰ 0 are con-vex, the constraints cPCC  
+
+> io,k
+
+(vi, r i) ≤ 0 and d PCC  
+
+> ij,k
+
+(vi, r i, v j , r j ) ≤
+
+0 are still non-convex. As shown later, we accommodate for that through a successive linearization strategy. For notational convenience, let us define the concate-nated constraints cPCC  
+
+> i
+
+(vi, r i) := {cPCC  
+
+> io,k
+
+(vi, r i)}o∈O ,k ∈J0,T K
+
+,
+
+d PCC  
+
+> ij
+
+(vi, r i, v j , r j ) := {d PCC  
+
+> ij,k
+
+(vi, r i, v j , r j )}k∈J0,T K
+
+ and 
+
+EPCC  
+
+> i
+
+(Ki, r i) := {E PCC  
+
+> i,k
+
+(Ki, r i)}k∈J0,T K
+
+. Therefore, we ar-rive to the following new problem. 
+
+Problem 4 (MACS - Partial-Covariance Constrained Re-formulation): Find the optimal {v∗ 
+
+> i
+
+, K ∗ 
+
+> i
+
+, r ∗ 
+
+> i
+
+}i∈V such that 
+
+min X
+
+> i∈V
+
+Ji(vi, K i)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0,
+
+cPCC  
+
+> i
+
+(vi, r i) ≤ 0, d PCC  
+
+> ij
+
+(vi, r i, v j , r j ) ≤ 0,
+
+EPCC  
+
+> i
+
+(Ki, r i) ⪰ 0, ∀j ∈ V i, i ∈ V .
+
+B. Consensus Optimization 
+
+Similar to Problem 2, Problem 4 cannot be directly solved in a decentralized manner due of the coupling constraints 
+
+d PCC  
+
+> ij
+
+(vi, r i, v j , r j ) ≤ 0 between neighboring agents. Yet, in contrast to FCC-DCS which requires a consensus on the feed-forward controls and the feedback gains, this formulation will require introducing copy variables only for the feed-forward controls vj and the auxiliary variables rj of neighbor agents. In this context, we introduce the copy variables v(i) 
+
+> j
+
+, r (i) 
+
+> j
+
+,
+
+j ∈ V i, from the perspective of each agent i, which gives rise to the augmented local decision variables ˜vi = [ {v(i) 
+
+> j
+
+}j∈V i ]
+
+and ˜ri = [ {r(i) 
+
+> j
+
+}j∈V i ]. Therefore, the inter-agent constraints can be expressed from the point of view of each i ∈ V as 
+
+˜d PCC  
+
+> i
+
+(˜ vi, ˜ri) := [ {d PCC  
+
+> ij
+
+(vi, r i, v (i) 
+
+> j
+
+, r (i) 
+
+> j
+
+)}j∈V i ] ≤ 0. (49) As in FCC-DCS, the presence of these copy variables also mandates introducing the global variables z = [ {zi}i∈V ], ζ =[{ζi}i∈V ] and the consensus constraints ˜vi = ˜zi, ˜ri = ˜ζi,
+
+∀i ∈ V , with ˜zi := [ {zj }j∈V i ] and ˜ζi := [ {ζj }j∈V i ].
+
+Remark 7 (More computationally efficient SOC constraint): 
+
+Despite the significant reduction in the amount of variables, a potential computational drawback could be the additional LMI constraints EPCC  
+
+> i
+
+(Ki, r i) ⪰ 0. To accommodate that, we replace the spectral norm with the Frobenius norm and obtain the more conservative SOC constraint: 
+
+ePCC  
+
+> i,k
+
+(Ki, r i) := ∥PiΓikΘi(Ki)∥F − rik/pβi ≤ 0. (50) 8
+
+Note that although typically replacing a spectral norm con-straint with a Frobenius norm one, introduces conservatism for high-dimensional matrices, this effect is mitigated in our case since PiΓikΘi(Ki)( PiΓikΘi(Ki)) ⊤ ∈ Rq×q with q = 2 
+
+or q = 3 for 2D or 3D spaces, respectively. Therefore, we arrive to the consensus optimization problem. 
+
+Problem 5 (MACS - Partial-Covariance Consensus Version): 
+
+For each i ∈ V , find the optimal {v∗ 
+
+> i
+
+, r ∗ 
+
+> i
+
+, K ∗ 
+
+> i
+
+} such that 
+
+min X
+
+> i∈V
+
+Ji(vi, K i)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0, cPCC  
+
+> i
+
+(vi, r i) ≤ 0,
+
+˜d PCC  
+
+> i
+
+(˜ vi, ˜ri) ≤ 0, ePCC  
+
+> i
+
+(Ki, r i) ≤ 0,
+
+˜vi = ˜ zi, ˜ri = ˜ζi, ∀i ∈ V .
+
+C. Method 
+
+Subsequently, we present a distributed algorithm for solving Problem 5, following a two-block ADMM derivation as in Section III-C. The first block of variables is ˜v = {˜vi}i∈V , ˜r =
+
+{˜ri}i∈V , K = [ {Ki}i∈V ], and the second block is z, ζ . At every ADMM round, the non-convex constraints in the local problems are iteratively linearized around the previous iterates. 
+
+Proposition 6: The constraints cPCC  
+
+> io,k
+
+(vi, r i) ≤ 0 and 
+
+d PCC  
+
+> ij,k
+
+(vi, r i, v j , r j ) ≤ 0 are satisfied if the following linearized inequalities hold: 
+
+cPCC 
+
+> io,k, lin
+
+(vi, r i) := −aio ⊤ 
+
+> k
+
+(PiΓikθi(vi)−po)+ rik +so ≤ 0, (51a) 
+
+d PCC 
+
+> ij,k, lin
+
+(vi, r i, v j , r j ) := −aij ⊤ 
+
+> k
+
+(PiΓikθi(vi)−Pj Γjkθj (vj )) + rik + rjk + sij ≤ 0, (51b) respectively, where aio k = (ˆ pik − po)/∥ˆpik − po∥2, aij k = (ˆ pik −
+
+ˆpjk)/∥ˆpik − ˆpjk∥2 and ˆpik, ˆpjk are the approximation points. 
+
+Proof: For brevity, we show the derivation of the inter-agent constraint; the obstacle avoidance constraint follows similarly. If we define qk = μpik − μpjk
+
+, then the first-order Taylor approximation of ∥qk∥2 around ˆqk = ˆ pik − ˆpjk, yields 
+
+∥ˆqk∥2 + ˆ q⊤ 
+
+> k
+
+(qk − ˆqk)/∥ˆqk∥2 = ˆ q⊤ 
+
+> k
+
+qk/∥ˆqk∥2 (52) which yields the constraint 
+
+aij ⊤ 
+
+> k
+
+(μpik − μpjk
+
+) ≥ rik + rjk + sij , (53) where aij k = (ˆ pik − ˆpjk)/∥ˆpik − ˆpjk∥2. Note that this is a convex under-approximation of (38a) from the convexity of norms. We also define the concatenated expressions cPCC  
+
+> i, lin
+
+(vi, r i),
+
+d PCC 
+
+> ij, lin
+
+(vi, r i, v j , r j ) and ˜d PCC  
+
+> i, lin
+
+(˜ vi, ˜ri) accordingly. The AL for Problem 5 is formulated as 
+
+Lρ = X
+
+> i∈V
+
+Ji(vi, K i) + Iai,Bi,cPCC    
+
+> i,˜dPCC
+> i,ePCC
+> i
+
+(˜ vi, ˜ri, K i) (54) 
+
++⟨yi, ˜vi − ˜zi⟩+⟨ξi, ˜ri − ˜ζi⟩+ ρv
+
+2 ∥˜vi − ˜zi∥22 + ρr
+
+2 ∥˜ri − ˜ζi∥22,
+
+where yi and ξi are the dual variables for the constraints ˜vi =˜zi and ˜ri = ˜ζi, and ρv , ρ r > 0 are penalty parameters. Then, the algorithm updates are derived as follows. 
+
+Local primal updates. The first block yields the following updates for the local variables 
+
+{˜vi, ˜ri, K i}ℓ+1 = argmin ˜J PCC  
+
+> i
+
+(˜ vi, ˜ri, K i)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0, cPCC  
+
+> i, lin
+
+(vi, r i) ≤ 0,
+
+˜d PCC  
+
+> i, lin
+
+(˜ vi, ˜ri) ≤ 0, ePCC  
+
+> i
+
+(Ki, r i) ≤ 0,
+
+(55) with 
+
+˜J PCC  
+
+> i
+
+(˜ vi, ˜ri, K i) := Ji(vi, K i) + ⟨yℓi , ˜vi⟩ + ⟨ξℓi , ˜ri⟩ (56) 
+
++ ρv
+
+2 ∥˜vi − ˜zℓi ∥22 + ρr
+
+2 ∥˜ri − ˜ζℓi ∥2F,
+
+where the constraints cPCC  
+
+> i, lin
+
+(vi, r i) and d PCC 
+
+> ij, lin
+
+(vi, r i, v (i) 
+
+> j
+
+, r (i) 
+
+> j
+
+)
+
+are linearized using μℓi and μℓj as approximation points. 
+
+Global primal updates. The global variables z and ζ are updated through 
+
+zℓ+1  
+
+> i
+
+= 1
+
+|W i|
+
+X
+
+> j∈W i
+
+v(j),ℓ +1  
+
+> i
+
+, ζℓ+1  
+
+> i
+
+= 1
+
+|W i|
+
+X
+
+> j∈W i
+
+r(j),ℓ +1  
+
+> i
+
+. (57) 
+
+Dual updates. Finally, the dual variables are updated as 
+
+yℓ+1  
+
+> i
+
+= yℓi + ρv (˜ vℓ+1  
+
+> i
+
+− ˜zℓ+1  
+
+> i
+
+), (58a) 
+
+ξℓ+1  
+
+> i
+
+= ξℓi + ρr (˜ rℓ+1  
+
+> i
+
+− ˜ζℓ+1  
+
+> i
+
+). (58b) 
+
+Algorithm. The PCC-DCS algorithm is described in Alg. 2. During each ADMM round, the variables ˜vi, ˜ri, K i are updated first by solving the local problems (55). Then, each agent i
+
+receives v(j) 
+
+> i
+
+, r (j) 
+
+> i
+
+from all j ∈ W i\{ i} and the global updates (57) take place so that the variables zi, ζ i are updated. Finally, every agent i receives zj , ζ j from all j ∈ V i\{ i}, so that the dual updates (58) are performed. 
+
+Remark 8 (Decentralized Structure of PCC-DCS): Similar to FCC-DCS, the PCC-DCS algorithm is fully decentralized. 
+
+Remark 9 (Computational Benefits of PCC-DCS): The PCC-DCS method offers a substantial computational advan-tage compared to FCC-DCS, as the number of variables in each local subproblem is reduced to |V i|T (mi + 1) + γT n imi.Further, each local problem involves a single LMI constraint and T SOC constraints of dim. (T + 2) ni (see Table I). 
+
+V. M EAN -C ONSENSUS 
+
+DISTRIBUTED COVARIANCE STEERING 
+
+Towards further improving computational efficiency, we also propose an approach that restricts inter-agent coupling, and therefore the need for consensus, only on the mean states. This is achieved by modifying the obstacle and inter-agent collision avoidance constraints (43a) and (38a), where the auxiliary variables rik are replaced with fixed parameters ˆri
+
+for all k ∈ J1, T K. The resulting constraints take the form: 
+
+ˆψio k (μik) := ∥μpik − po∥2 − ˆri − so ≥ 0, (59a) 
+
+ˆϕij k (μik, μ jk) := ∥μpik − μpjk
+
+∥2 − ˆri − ˆrj − sij ≥ 0. (59b) Then, following similar derivations as in Section IV, we obtain the equivalent constraints: 
+
+cMC 
+
+> io,k
+
+(vi) := −∥ PiΓikθi(vi) − po∥2 + ˆ ri + so ≤ 0, (60a) 
+
+d MC 
+
+> ij,k
+
+(vi, v j ) := −∥ PiΓikθi(vi)−Pj Γjkθj (vj )∥2 (60b) 
+
++ ˆ ri + ˆ rj + sij ≤ 0,SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 9
+
+Algorithm 2 Partial-Covariance-Consensus DCS (PCC-DCS)  
+
+> 1:
+
+Initialize: ˜vi ← 0, ˜ri ← [{r′ 
+
+> j
+
+}j∈V i ], zi ← ˜vi, ζi ← ˜ri. 
+
+> 2:
+
+while not converged and ℓ ≤ ℓmax do  
+
+> 3:
+
+cPCC  
+
+> i, lin
+
+, ˜d PCC  
+
+> i, lin
+
+← Get linearized constraints with (51).  
+
+> 4:
+
+˜vi, ˜ri, K i ← Solve (55) in parallel ∀ i ∈ V . 
+
+> 5:
+
+Each agent i ∈ V receives vji ,K ji from all j ∈ W i\{ i}. 
+
+> 6:
+
+zi, ζ i ← Update with (57) in parallel ∀ i ∈ V . 
+
+> 7:
+
+Each agent i ∈ V receives zj , ζ j from all j ∈ V i\{ i}. 
+
+> 8:
+
+yi, ξ i ← Update with (58) in parallel ∀ i ∈ V .which leads to the following problem formulation. 
+
+Problem 6 (MACS - Mean-Constrained Reformulation): For each i ∈ V , find the optimal {v∗ 
+
+> i
+
+, K ∗ 
+
+> i
+
+} such that 
+
+min X
+
+> i∈V
+
+Ji(vi, K i)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0, cMC  
+
+> i
+
+(vi) ≤ 0,
+
+d MC  
+
+> ij
+
+(vi, v j ) ≤ 0, ∀j ∈ V i, i ∈ V .
+
+In this formulation, the inter-agent coupling that hinders de-centralization involves only the feed-forward control variables. Consequently, it suffices to maintain only the augmented local variables ˜vi and enforce consensus with the global variables 
+
+z = [ {zi}i∈V ] through ˜vi = ˜ zi, ∀i ∈ V , with ˜zi := [ {zj }j∈V i ].The resulting consensus optimization becomes as follows. 
+
+Problem 7 (MACS - Mean Consensus Version): For each 
+
+i ∈ V , find the optimal {v∗ 
+
+> i
+
+, K ∗ 
+
+> i
+
+} such that 
+
+min X
+
+> i∈V
+
+Ji(vi, K i)s.t. ai(vi) = 0 , Bi(Ki) ⪰ 0, cMC  
+
+> i
+
+(vi) ≤ 0,
+
+˜d MC  
+
+> i
+
+(˜ vi) ≤ 0, ˜vi = ˜ zi, i ∈ V .
+
+In addition, each cost function Ji(vi, K i) decomposes into mean- and covariance-dependent components as follows: 
+
+Ji(vi, K i) = J mean  
+
+> i
+
+(vi) + J cov  
+
+> i
+
+(Ki), (61) with J mean  
+
+> i
+
+(vi) := θi(vi)⊤Qiθi(vi) + v⊤ 
+
+> i
+
+Rivi and 
+
+J cov  
+
+> i
+
+(Ki) := tr QiΘi(Ki)Θ i(Ki)⊤ (62) 
+
++ tr RiKi(Gi
+
+> 0
+
+Σi
+
+> 0
+
+Gi⊤ 
+
+> 0
+
++ GiwWiGi⊤ 
+
+> w
+
+)K⊤
+
+> i
+
+ .
+
+Notably, J mean  
+
+> i
+
+(vi) depends only on the feed-forward control inputs vi, while J cov  
+
+> i
+
+(Ki) depends only on the feedback gains Ki. This structure enables a complete decoupling of the problem into two parts. The mean part is given by: 
+
+min X
+
+> i∈V
+
+J mean  
+
+> i
+
+(vi) (63a) 
+
+s.t. ai(vi) = 0 , cMC  
+
+> i
+
+(vi) ≤ 0, (63b) 
+
+˜d MC  
+
+> i
+
+(˜ vi) ≤ 0, ˜vi = ˜ zi, i ∈ V . (63c) The covariance part can be further decoupled fully across all agents, and for each i ∈ V reduces to: 
+
+min J cov  
+
+> i
+
+(Ki) s.t. B(Ki) ⪰ 0, (64) which are only required to be solved once for each agent. 
+
+Algorithm 3 Mean-Consensus DCS (MC-DCS)  
+
+> 1:
+
+Initialize: ˜vi ← [{v′ 
+
+> j
+
+}j∈V i ], zi ← ˜vi, yi ← 0. 
+
+> 2:
+
+while not converged and ℓ ≤ ℓmax do  
+
+> 3:
+
+cMC 
+
+> i, lin
+
+, ˜d MC  
+
+> i, lin
+
+← Get linearized constraints.  
+
+> 4:
+
+˜vi ← Solve (65) in parallel ∀ i ∈ V . 
+
+> 5:
+
+Each agent i ∈ V receives vji from all j ∈ W i\{ i}. 
+
+> 6:
+
+zi ← Update with (67) in parallel ∀ i ∈ V . 
+
+> 7:
+
+Each agent i ∈ V receives zj from all j ∈ V i\{ i}. 
+
+> 8:
+
+yi ← Update with (68) in parallel ∀ i ∈ V .To solve the consensus-constrained mean part (7), we derive a distributed algorithm through the two-block ADMM deriva-tion with ˜v = {˜vi}i∈V as the first block of variables and z
+
+as the second one. The non-convex constraints are iteratively linearized as in PCC-DCS. The updates are as follows. 
+
+Local primal updates. The local variables ˜vi are updated through solving the following quadratic programs: 
+
+˜vℓ+1  
+
+> i
+
+= argmin 
+
+> ˜vi
+
+˜J MC  
+
+> i
+
+(˜ vi)s.t. ai(vi) = 0 , cMC 
+
+> i, lin
+
+(vi) ≤ 0, ˜d MC 
+
+> i, lin
+
+(˜ vi) ≤ 0,
+
+(65) with ˜J MC  
+
+> i
+
+(˜ vi) := J mean  
+
+> i
+
+(vi) + ⟨yℓi , ˜vi⟩ + ρv 
+
+> 2
+
+∥˜vi − ˜zℓi ∥22, and 
+
+cMC 
+
+> io,k, lin
+
+(vi) := −aio ⊤ 
+
+> k
+
+(PiΓikθi(vi) − po) + ˆ ri + so ≤ 0, (66a) 
+
+d MC 
+
+> ij,k, lin
+
+(vi, v j ) := −aij ⊤ 
+
+> k
+
+(PiΓikθi(vi)−Pj Γjkθj (vj )) (66b) 
+
++ ˆ ri + ˆ rj + sij ≤ 0,
+
+where the linearized constraints cMC 
+
+> i, lin
+
+(vi, r i) and ˜d MC 
+
+> i, lin
+
+(˜ vi, ˜ri)
+
+are obtained using μℓi and μℓj as the approximation points. 
+
+Global primal updates. The global updates for z are 
+
+zℓ+1  
+
+> i
+
+= 1
+
+|W i|
+
+X
+
+> j∈W i
+
+v(j),ℓ +1  
+
+> i
+
+. (67) 
+
+Dual updates. Finally, the dual variables are updated with 
+
+yℓ+1  
+
+> i
+
+= yℓi + ρv (˜ vℓ+1  
+
+> i
+
+− ˜zℓ+1  
+
+> i
+
+). (68) 
+
+Algorithm. The MC-DCS algorithm is presented in Alg. 3. Initially, each agent solves in parallel the single-agent covariance problem (64) to obtain Ki. Then in each ADMM loop, the local variables ˜vi are updated by solving problems (65). Subsequently, each agent i receives v(j) 
+
+> i
+
+from all j ∈Wi\{ i} and the global variables zi are updated through (67). Lastly, each agent i receives zj from all j ∈ V i\{ i} and the dual variables yi are updated with (68). 
+
+Remark 10 (Decentralized Structure of MC-DCS): Similar to Remarks 5 and 8, the MC-DCS method is also a fully decentralized algorithm. 
+
+Remark 11 (Computational Benefits of MC-DCS): The MC-DCS method exhibits remarkable computational advan-tages, even over PCC-DCS. The local subproblems (65) are quadratic programs involving |V i|T m i variables, T (|V i|+|O| )
+
+linear inequality constraints, and ni equality constraints. As a result, they are solved significantly faster than the subproblems in FCC-DCS and PCC-DCS, which involve LMI and SOC constraints. Moreover, the single-agent SDPs for the covari-ance part (64) are fully decoupled and only solved once. 10 
+
+VI. C ONVERGENCE ANALYSIS 
+
+This section presents a novel convergence analysis for distributed ADMM methods with iteratively linearized non-convex constraints. As PCC-DCS and MC-DCS fall under this setup, their convergence is guaranteed. Section VI-A introduces a general consensus optimization problem formu-lation and assumptions. Section VI-B establishes intermediate lemmas that lead to the sufficient descent of a Lyapunov function, which is then used in Section VI-C to prove the main theorem, establishing convergence to KKT points. We further discuss modifications for the convergence of FCC-DCS. 
+
+A. General Problem Formulation and Assumptions 
+
+Let us consider the following general consensus optimiza-tion problem formulation. For each i ∈ V , we denote the local variables subject to consensus with ¯xi ∈ R¯ni , the local variables not subject to consensus with ¯wi ∈ R¯n′ 
+
+> i
+
+, and the global variable with ¯z ∈ R ¯m. The functions fi(¯ xi, ¯wi) are the local objectives, gi(¯ xi, ¯wi) ≤ 0 and hi(¯ xi) ≤ 0 denote local convex and non-convex constraints, respectively, and the matrices ¯Ci ∈ R¯ni× ¯m define the consensus structure. 
+
+Problem 8 (General Consensus Optimization Problem): For each i ∈ V , find the optimal ¯x∗ 
+
+> i
+
+, ¯w∗ 
+
+> i
+
+such that 
+
+min X
+
+> i∈V
+
+fi(¯ xi, ¯wi)s.t. gi(¯ xi, ¯wi) ≤ 0, h i(¯ xi) ≤ 0, ¯xi = ¯Ci ¯z, ∀i ∈ V .
+
+Table II shows that both Problems 5 (PCC-DCS) and 7 (MC-DCS) are captured through Problem 8. We define the concatenated variables ¯x = [ {¯xi}i∈V ] ∈ R¯n, ¯w = [ { ¯wi}i∈V ] ∈
+
+R¯n′
+
+, and functions f (¯ x, ¯w) = P 
+
+> i∈V
+
+fi(¯ xi, ¯wi) : R¯n+¯ n′
+
+→ R,
+
+g(¯ x, ¯w) = [ {gi(¯ xi, ¯wi)}i∈V ] : R¯n+¯ n′
+
+→ R¯p, and h(¯ x) = [{hi(¯ xi)}i∈V ] : R¯n → R¯q . We also consider the (re-ordering) partition ¯x = [¯ xA; ¯ xB], where ¯xA ∈ R¯nA contains the variables appearing nonlinearly in the objective or constraints, and ¯xB ∈
+
+R¯nB contains variables appearing only linearly. The consensus structure respects this partition with ¯xA = ¯CA ¯zA and ¯xB =¯CB ¯zB, where ¯z = [¯ zA; ¯ zB] and ¯C = bdiag( ¯CA, ¯CB) ∈ R¯n× ¯m.In the context of PCC/MC-DCS, the variables ¯xA corre-spond to the feed-forward controls ˜v, ¯xB correspond to the auxiliary variables ˜r for PCC-DCS and are empty for MC-DCS, and finally, ¯w correspond to the feedback gains K.Next, we outline the following assumptions, which are straightforward to verify for both PCC-DCS and MC-DCS. 
+
+Assumption 3: The function f is convex and differentiable. In addition, f is M -partially strongly convex with M =bdiag( Mx, 0¯nB×¯nB , 0¯n′×¯n′ ), Mx = μxI¯nA and μx > 0.
+
+Assumption 4: The functions gj , j ∈ J1, ¯pK, are convex and differentiable. 
+
+Assumption 5: The (non-convex) functions hj , j ∈
+
+J1, ¯qK, are concave and Lj -partially smooth with Lj =bdiag( lj I¯nA , 0¯nB×¯nB ) and lj > 0.
+
+Remark 12 (Local Smoothness in Feasible Regions of PCC-and MC-DCS): For PCC-DCS and MC-DCS, the non-convex constraints involve norms and are not globally smooth due to the singularity at zero. However, concavity ensures that starting from a feasible initialization, all subsequent iterates 
+
+TABLE II : Compact Notation for Convergence Analysis                                                        
+
+> Compact Notation PCC-DCS MC-DCS
+> Local variables {¯xi,¯wi}{[˜ vi; ˜ ri],vec( Ki)] }{˜vi,vec( Ki)}
+> Global variables ¯z[z;ζ]z
+> Dual variables ¯yi[yi;ξi]yi
+> Objective function fi(¯ xi,¯wi)Ji(vi, K i)Ji(vi, K i)
+> Consensus constraints
+> ¯xi= ¯Ci¯z[˜ vi; ˜ ri] = [˜ zi; ˜ζi]˜vi= ˜ zi
+> Local convex constraints gi(¯ xi,¯wi)≤0
+> ai(vi) = 0 ,Bi(Ki)⪰0
+> ePCC
+> i(Ki, r i)≤0
+> ai(vi) = 0
+> Bi(Ki)⪰0
+> Local non-convex constraints hi(¯ xi)≤0
+> cPCC
+> i(vi, r i)≤0,
+> ˜dPCC
+> i(˜ vi,˜ri)≤0
+> cMC
+> i(vi)≤0,
+> ˜dMC
+> i(˜ vi)≤0
+
+remain feasible for the original non-convex constraints, and therefore the norm arguments will always be non-zero. In this feasible region, the Lj -partial smoothness required by Assumption 5 holds, so the convergence analysis applies. 
+
+Assumption 6: The matrix ¯C is full column rank, since each global variable is associated with at least one local variable. Subsequently, considering the distributed ADMM algo-rithms with iterative linearization of the non-convex con-straints, as in Sections IV and V, the local subproblems (55) and (65) at iteration ℓ + 1 can be written more compactly as 
+
+{¯xℓ+1  
+
+> i
+
+, ¯wℓ+1  
+
+> i
+
+} = argmin  
+
+> ¯xi,¯wi
+
+fi(¯ xi, ¯wi) + ρ
+
+2 ∥¯xi − ¯Ci ¯zℓ + ¯ yℓi /ρ ∥22
+
+s.t. gi(¯ xi, ¯wi) ≤ 0, h i(¯ xℓi ) + ∇hi(¯ xℓi )(¯ xi − ¯xℓi ) ≤ 0, (69) where ¯yi denote the dual variables for the consensus con-straints. Similarly, the global updates can then be written as 
+
+¯zℓ+1 = ( ¯C⊤ ¯C)−1 ¯C⊤ ¯xℓ+1 since ¯C⊤ ¯C is invertible as ¯C is full column rank. By denoting with ¯y ∈ Rn, the concatenation of all ¯yi, i ∈ V , while respecting the ordering of ¯x, the dual updates are then expressed as ¯yℓ+1 = ¯ yℓ + ρ(¯ xℓ+1 − ¯C ¯zℓ+1 ).The KKT conditions for Problem 8 are given as follows. 
+
+Definition 1 (KKT Conditions of General Consensus Prob-lem): A point (¯ x∗, ¯w∗, ¯z∗, ¯y∗, η ∗, λ ∗) is a stationary point of Problem 8 if and only if 
+
+∇¯xf (¯ x∗, ¯w∗)+ ∇¯xg(¯ x∗, ¯w∗)⊤η∗ +∇h(¯ x∗)⊤λ∗ + ¯ y∗ = 0 , (70a) 
+
+∇¯wf (¯ x∗, ¯w∗)+ ∇¯wg(¯ x∗, ¯w∗)⊤η∗ = 0 , (70b) 
+
+− ¯C⊤ ¯y∗ = 0 , (70c) 
+
+η∗ 
+
+> j
+
+gj (¯ x∗, ¯w∗) = 0 , ∀j ∈ J1, ¯pK, (70d) 
+
+λ∗ 
+
+> j
+
+hj (¯ x∗) = 0 , ∀j ∈ J1, ¯qK, (70e) 
+
+g(¯ x∗, ¯w∗) ≤ 0, h (¯ x∗) ≤ 0, ¯x∗ = ¯C ¯z∗, (70f) 
+
+η∗ ≥ 0, λ ∗ ≥ 0, (70g) where η ∈ R¯p and λ ∈ R¯q are the Lagrange multipliers for the constraints g(¯ x, ¯w) ≤ 0 and h(¯ x) ≤ 0, respectively. The KKT conditions for the local subproblems (69) can be written in a concatenated form for all i ∈ V , as follows. 
+
+Definition 2 (KKT Conditions of Local Subproblems): Apoint (¯ xℓ+1 , ¯wℓ+1 , σ ℓ+1 , ν ℓ+1 ) is a stationary point of the local SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 11 
+
+subproblems (69) if and only if 
+
+∇¯xf (¯ xℓ+1 , ¯wℓ+1 ) + yℓ + ρ(¯ xℓ+1 − ¯C ¯zℓ) (71a) 
+
++ ∇¯xg(¯ xℓ+1 , ¯wℓ+1 )⊤σℓ+1 + ∇h(¯ xℓ)⊤νℓ+1 = 0 ,
+
+∇¯wf (¯ xℓ+1 , ¯wℓ+1 ) + ∇¯wg(¯ xℓ+1 , ¯wℓ+1 )⊤σℓ+1 = 0 , (71b) 
+
+σℓ+1  
+
+> j
+
+gj (¯ xℓ+1 , ¯wℓ+1 ) = 0 , ∀j ∈ J1, ¯pK, (71c) 
+
+νℓ+1  
+
+> j
+
+[hj (¯ xℓ)+ ∇hj (¯ xℓ)⊤(¯ xℓ+1 − ¯xℓ)] = 0 , ∀j ∈ J1, ¯qK, (71d) 
+
+g(¯ xℓ+1 , ¯wℓ+1 ) ≤ 0, h (¯ xℓ)+ ∇h(¯ xℓ)⊤(¯ xℓ+1 − ¯xℓ) ≤ 0, (71e) 
+
+σℓ+1 ≥ 0, ν ℓ+1 ≥ 0, (71f) where σ and ν are the Lagrange multipliers for the constraints 
+
+g(¯ x, ¯w) ≤ 0 and h(¯ xℓ) + ∇h(¯ xℓ)⊤(¯ x − ¯xℓ) ≤ 0, respectively. Let us define the function V ℓ given by 
+
+V ℓ = ∥¯yℓ − ¯y∗∥2  
+
+> 1
+> ρI
+
++ ∥¯rℓ∥2 
+
+> Tν
+
++ ∥ ¯C(¯ zℓ − ¯z∗)∥2 
+
+> ρI +Tν
+
+, (72) with ¯rℓ = ¯ xℓ − ¯C ¯zℓ. We will prove that V ℓ is a Lyapunov function with the convergence points satisfying the KKT conditions (70). We further consider the following assumption. 
+
+Assumption 7: The sum P¯qj=1 λ∗ 
+
+> j
+
+Lj is upper bounded by a constant matrix Tλ = bdiag( τλI¯nA , 0¯nB×¯nB ) with τλ > 0, i.e., P¯qj=1 λ∗ 
+
+> j
+
+Lj ⪯ Tλ. Similarly, the sum P¯qj=1 νℓj Lj ⪯ Tν , with 
+
+Tν = bdiag( τν I¯nA , 0¯nB×¯nB ) and τν > 0, for any iteration ℓ.In addition, μx ≥ τλ and μx ≥ τν .
+
+Remark 13 (Interpretation of Assumption 7): Assumption 7 requires the boundedness of the Lagrange multipliers, a mild regularity condition in constrained optimization [47]. When 
+
+f, g and h, are twice differentiable, the conditions μx ≥ τλ and 
+
+μx ≥ τν would imply that the Hessian of the Lagrangians w.r.t. 
+
+¯x, ∇¯x¯xf (¯ x∗, ¯w∗)+ ∇¯x¯xg(¯ x∗, ¯w∗)⊤η∗ +∇¯x¯xh(¯ x∗)⊤λ∗ ⪰ 0 and 
+
+∇¯x¯xf (¯ xℓ, ¯wℓ)+ ∇¯x¯xg(¯ xℓ, ¯wℓ)σℓ +∇¯x¯xh(¯ xℓ)⊤νℓ ⪰ 0 , aligning with the second-order necessary optimality condition, which is widely used in the analysis of non-convex optimization meth-ods [47], [48]. As later shown in Lemma 3, these conditions guarantee the sufficient descent of V ℓ at each iteration. 
+
+B. Intermediate Lemmas 
+
+Let us establish the following necessary lemmas. 
+
+Lemma 1: Under Assumption 5, the following relationships hold for each j ∈ J1, ¯qK, at every iteration ℓ:
+
+−νℓ+1  
+
+> j
+
+⟨∇ hj (¯ xℓ), ¯xℓ+1 − ¯x∗⟩ ≤ νℓ+1 
+
+> j
+
+2 ∥¯xℓ − ¯x∗∥2 
+
+> Lj
+
+, (R1) 
+
+λ∗ 
+
+> j
+
+⟨∇ hj (¯ x∗), ¯xℓ+1 − ¯x∗⟩ ≤ λ∗
+
+> j
+
+2 ∥¯xℓ+1 − ¯x∗∥2 
+
+> Lj
+
+. (R2) 
+
+Proof: Let us denote the left-hand side (LHS) of (R1) with ¯A1. Then, we have 
+
+¯A1 = −νℓ+1  
+
+> j
+
+⟨∇ hj (¯ xℓ), ¯xℓ+1 − ¯xℓ + ¯ xℓ − ¯x∗⟩
+
+= νℓ+1  
+
+> j
+
+(hj (¯ xℓ) + ⟨∇ hj (¯ xℓ), ¯x∗ − ¯xℓ⟩), (73) using the slackness condition (71d). Subsequently, using the fact that each function −hj is also Lj -smooth, we have 
+
+hj (¯ xℓ)+ ⟨∇ hj (¯ xℓ), ¯x∗ − ¯xℓ⟩ ≤ hj (¯ x∗)+ 12 ∥¯xℓ − ¯x∗∥2 
+
+> Lj
+
+. (74) Combining (73), (74), νℓ+1  
+
+> j
+
+≥ 0 and hj (¯ x∗) ≤ 0, we obtain 
+
+¯A1 ≤ νℓ+1 
+
+> j
+
+ hj (¯ x∗) + 12 ∥¯xℓ − ¯x∗∥2
+
+> Lj
+
+ ≤ νℓ+1 
+
+> j
+
+2 ∥¯xℓ − ¯x∗∥2 
+
+> Lj
+
+,
+
+which proves (R1). The LHS of (R2), denoted with ¯A2, can be written as 
+
+¯A2 = λ∗ 
+
+> j
+
+[hj (¯ x∗) + ∇hj (¯ x∗)⊤(¯ xℓ+1 − ¯x∗)] , (75) using the slackness condition (70e). Then, using again the Lj -smoothness of −hj , we have hj (¯ x∗)+ ⟨∇ hj (¯ x∗), ¯xℓ+1 −¯x∗⟩ ≤ 
+
+hj (¯ xℓ+1 ) + 12 ∥¯xℓ+1 − ¯x∗∥2 
+
+> Lj
+
+, so since λ∗ 
+
+> j
+
+≥ 0, we obtain 
+
+¯A2 ≤ λ∗
+
+> j
+
+ hj (¯ xℓ+1 ) + 12 ∥¯xℓ+1 − ¯x∗∥2
+
+> Lj
+
+ ≤ λ∗
+
+> j
+
+2 ∥¯xℓ+1 − ¯x∗∥2 
+
+> Lj
+
+,
+
+where we also used the fact that hj (¯ xℓ+1 ) ≤ hj (¯ xℓ) + 
+
+⟨∇ hj (¯ xℓ), ¯xℓ+1 − ¯xℓ⟩ ≤ 0 from the concavity of hj .
+
+Lemma 2: Under Assumption 6, the following relationships hold at every iteration ℓ:
+
+⟨ ¯C(¯ zℓ+1 − ¯zℓ), ¯xℓ+1 − ¯x∗⟩ = 12
+
+ ∥ ¯C(¯ zℓ+1 − ¯zℓ)∥22, (R3) 
+
++ ∥ ¯C(¯ zℓ+1 − ¯z∗)∥22 − ∥ ¯C(¯ zℓ − ¯z∗)∥22
+
+,
+
+⟨¯yℓ+1 − ¯y∗, ¯xℓ+1 − ¯x∗⟩ = 12ρ
+
+ ∥¯yℓ+1 − ¯y∗∥22 (R4) 
+
+− ∥ ¯yℓ − ¯y∗∥22
+
+ + ρ
+
+2 ∥¯xℓ+1 − ¯C ¯zℓ+1 ∥22.
+
+Proof: We begin with proving (R3). Let Q( ¯C), P( ¯C) ∈
+
+R¯n×¯n be the orthogonal projection matrices onto Im( ¯C) and 
+
+Im( ¯C)⊥, respectively. Since ¯C has full column rank, then 
+
+Q( ¯C) = ¯C( ¯C⊤ ¯C)−1 ¯C⊤ and P( ¯C) = I − Q ( ¯C). The LHS of (R3), denoted with ¯A3, can be written as 
+
+¯A3 = ⟨ ¯C(¯ zℓ+1 − ¯zℓ), P( ¯C)¯ xℓ+1 + Q( ¯C)¯ xℓ+1 − ¯x∗⟩.
+
+Through ¯C⊤P( ¯C) = 0 , Q( ¯C)¯ xℓ+1 = ¯C ¯zℓ+1 and ¯x∗ = ¯C ¯z∗,
+
+¯A3 = ⟨ ¯C(¯ zℓ+1 − ¯zℓ), ¯C(¯ zℓ+1 − ¯z∗)⟩.
+
+Then, using 2⟨a, b ⟩ = ∥a∥22 + ∥b∥22 − ∥ a − b∥22, we obtain (R3). The LHS of (R4), denoted with ¯A4, can be written as 
+
+¯A4 = ⟨¯yℓ+1 − ¯y∗, ¯xℓ+1 − ¯C ¯z∗⟩ = ⟨¯yℓ+1 − ¯y∗, ¯xℓ+1 ⟩
+
+= ⟨¯yℓ+1 − ¯y∗, P( ¯C)¯ xℓ+1 + Q( ¯C)¯ xℓ+1 ⟩ (76) 
+
+= ⟨¯yℓ+1 − ¯y∗, ¯xℓ+1 − ¯C ¯zℓ+1 ⟩,
+
+since ¯C⊤ ¯y∗ = ¯C⊤ ¯yℓ+1 = 0 and P( ¯C)¯ xℓ+1 = ¯ xℓ+1 − ¯C ¯zℓ+1 .In addition, we have 
+
+2⟨¯yℓ+1 − ¯y∗, ¯yℓ+1 − ¯yℓ⟩ = ∥¯yℓ+1 − ¯y∗∥22 (77) 
+
++ ∥¯yℓ+1 − ¯yℓ∥22 − ∥ ¯yℓ − ¯y∗∥22.
+
+Substituting ¯yℓ+1 − ¯yℓ = ρ(¯ xℓ+1 − ¯C ¯zℓ+1 ) into (77), we get 
+
+2ρ⟨¯yℓ+1 − ¯y∗, ¯xℓ+1 − ¯C ¯zℓ+1 ⟩ = ∥¯yℓ+1 − ¯y∗∥22 (78) 
+
++ ρ2∥¯xℓ+1 − ¯C ¯zℓ+1 ∥22 − ∥ ¯yℓ − ¯y∗∥22.
+
+Then, using (78) in (76) yields (R4). 
+
+Lemma 3 (Sufficient Descent): Under Assumptions 3-7, the following inequality holds at every iteration ℓ:
+
+V ℓ+1 − V ℓ ≤ − c1∥¯rℓ+1 ∥22 − c2∥ ¯C(¯ zℓ+1 − ¯zℓ)∥22, (79) with c1, c 2 > 0.12 
+
+Proof: Taking the inner product of (71a) with ¯xℓ+1 − ¯x∗,and replacing ¯yℓ+1 = ¯ yℓ + ρ(¯ xℓ+1 − ¯C ¯zℓ+1 ), gives 
+
+⟨∇ ¯xf (¯ xℓ+1 , ¯wℓ+1 ) + ¯ yℓ+1 + ρ ¯C(¯ zℓ+1 − ¯zℓ), ¯xℓ+1 − ¯x∗⟩ (80) 
+
+= −⟨∇ ¯xg(¯ xℓ+1 , ¯wℓ+1 )⊤σℓ+1 + ∇h(¯ xℓ)⊤νℓ+1 , ¯xℓ+1 − ¯x∗⟩.
+
+In addition, the inner product of (71b) with ¯wℓ+1 − ¯w∗, gives 
+
+⟨∇ ¯wf (¯ xℓ+1 , ¯wℓ+1 ), ¯wℓ+1 − ¯w∗⟩ (81) 
+
+= −⟨∇ ¯wg(¯ xℓ+1 , ¯wℓ+1 )⊤σℓ+1 , ¯wℓ+1 − ¯w∗⟩.
+
+Next, we observe that 
+
+− ⟨∇ ¯xg(¯ xℓ+1 , ¯wℓ+1 )⊤σℓ+1 , ¯xℓ+1 − ¯x∗⟩ (82) 
+
+− ⟨∇ ¯wg(¯ xℓ+1 , ¯wℓ+1 )⊤σℓ+1 , ¯wℓ+1 − ¯w∗⟩≤ σℓ+1 ⊤(g(¯ x∗, ¯w∗) − g(¯ xℓ+1 , ¯wℓ+1 )) ≤ σℓ+1 ⊤g(¯ x∗, ¯w∗) ≤ 0,
+
+where the first step uses the convexity of g, i.e., 
+
+g(¯ x∗, ¯w∗) ≥ g(¯ xℓ+1 , ¯wℓ+1 ) + ∇¯xg(¯ xℓ+1 , ¯wℓ+1 )(¯ x∗ −
+
+¯xℓ+1 ) + ∇¯wg(¯ xℓ+1 , ¯wℓ+1 )( ¯ w∗ − ¯wℓ+1 ), the second one that 
+
+σℓ+1 ⊤g(¯ xℓ+1 , ¯wℓ+1 ) = 0 , and the third one that σℓ+1 ≥ 0
+
+and g(¯ x∗, ¯w∗) ≤ 0.Similarly, the inner product of (70a) with ¯x∗ − ¯xℓ+1 , yields 
+
+⟨∇ ¯xf (¯ x∗, ¯w∗) + ¯ y∗, ¯x∗ − ¯xℓ+1 ⟩ = (83) 
+
+− ⟨∇ ¯xg(¯ x∗, ¯w∗)⊤η∗ + ∇h(¯ x∗)⊤λ∗, ¯x∗ − ¯xℓ+1 ⟩,
+
+and the inner product of of (70b) with ¯w∗ − ¯wℓ+1 , gives 
+
+⟨∇ ¯wf (¯ x∗, ¯w∗), ¯w∗ − ¯wℓ+1 ⟩ = (84) 
+
+− ⟨∇ ¯wg(¯ x∗, ¯w∗)⊤η∗, ¯w∗ − ¯wℓ+1 ⟩,
+
+We also observe that 
+
+− ⟨∇ ¯xg(¯ x∗, ¯w∗)⊤η∗, ¯x∗ − ¯xℓ+1 ⟩ (85) 
+
+− ⟨∇ ¯wg(¯ x∗, ¯w∗)⊤η∗, ¯w∗ − ¯wℓ+1 ⟩≤ η∗⊤ (g(¯ xℓ+1 , ¯wℓ+1 ) − g(¯ x∗, ¯w∗)) ≤ η∗⊤ g(¯ xℓ+1 , ¯wℓ+1 ) ≤ 0,
+
+where the first step uses g(¯ xℓ+1 , ¯wℓ+1 ) ≥ g(¯ x∗, ¯w∗) + 
+
+∇¯xg(¯ x∗, ¯w∗)(¯ xℓ+1 − ¯x∗) + ∇¯wg(¯ x∗, ¯w∗)( ¯ wℓ+1 − ¯w∗), the second one that η∗⊤ g(¯ x∗, ¯w∗) = 0 , and the third one that 
+
+η∗ ≥ 0 and g(¯ xℓ+1 , ¯wℓ+1 ) ≤ 0.Adding together (80) and (81), subtracting (83) and (84), and leveraging (82), (85), (R1) and (R2) gives 
+
+⟨∇ ¯xf (¯ xℓ+1 , ¯wℓ+1 ) − ∇ ¯xf (¯ x∗, ¯w∗), ¯xℓ+1 − ¯x∗⟩
+
++ ⟨∇ ¯wf (¯ xℓ+1 , ¯wℓ+1 ) − ∇ ¯wf (¯ x∗, ¯w∗), ¯wℓ+1 − ¯w∗⟩ (86) 
+
++ ⟨¯yℓ+1 − ¯y∗ + ρ ¯C(¯ zℓ+1 − ¯zℓ), ¯xℓ+1 − ¯x∗⟩≤
+
+> ¯q
+
+X
+
+> j=1
+
+νℓ+1 
+
+> j
+
+2 ∥¯xℓ − ¯x∗∥2 
+
+> Lj
+
++ λ∗
+
+> j
+
+2 ∥¯xℓ+1 − ¯x∗∥2 
+
+> Lj
+
+.
+
+Next, from the M -partially strong convexity of f , we have 
+
+⟨∇ ¯xf (¯ xℓ+1 , ¯wℓ+1 ) − ∇ ¯xf (¯ x∗, ¯w∗), ¯xℓ+1 − ¯x∗⟩ (87) 
+
++⟨∇ ¯wf (¯ xℓ+1 , ¯wℓ+1 )−∇ ¯wf (¯ x∗, ¯w∗), ¯wℓ+1 − ¯w∗⟩≥ ∥ ¯xℓ+1 − ¯x∗∥2 
+
+> Mx
+
+.
+
+Substituting (87), (R3) and (R4) into (86), we obtain 
+
+1
+
+ρ
+
+∥¯yℓ+1 − ¯y∗∥22 − ∥ ¯yℓ − ¯y∗∥22
+
+ + ρ∥¯xℓ+1 − ¯C ¯zℓ+1 ∥22 (88) 
+
++ ρ∥ ¯C(¯ zℓ+1 − ¯zℓ)∥22 + ∥ ¯C(¯ zℓ+1 − ¯z∗)∥22 − ∥ ¯C(¯ zℓ − ¯z∗)∥22
+
+
+
+≤ −∥ ¯xℓ+1 − ¯x∗∥22Mx−Tλ + ∥¯xℓ − ¯x∗∥2 
+
+> Tν
+
+.
+
+Next, note that for any weighted semi-norm ∥ · ∥ ¯Ω with ¯Ω = bdiag(¯ ωI ¯nA , 0¯nB×¯nB ) and ¯ω > 0, we have 
+
+∥¯xℓ − ¯x∗∥2¯Ω = ∥P ( ¯C)¯ xℓ + Q( ¯C)¯ xℓ − ¯x∗∥2¯Ω (89) 
+
+= ∥P ( ¯C)¯ xℓ + ¯C(¯ zℓ − ¯z∗)∥2¯Ω
+
+= ∥P ( ¯C)¯ xℓ∥2¯Ω + ∥ ¯C(¯ zℓ − ¯z∗)∥2¯Ω
+
+= ∥¯xℓ − ¯C ¯zℓ∥2¯Ω + ∥ ¯C(¯ zℓ − ¯z∗)∥2¯Ω
+
+using that ¯x∗ = ¯C ¯z∗, Q( ¯C)¯ xℓ = ¯C ¯zℓ, P( ¯C) ¯Ω ¯C = 0 , and 
+
+¯xℓ − ¯C ¯zℓ = P( ¯C)¯ xℓ. The fact that P( ¯C) ¯Ω ¯C = 0 follows from P( ¯C) ¯Ω ¯C = bdiag(¯ ωP( ¯CA) ¯CA, 0) and P( ¯CA) ¯CA = 0 .As a result, the inequality becomes 
+
+1
+
+ρ
+
+∥¯yℓ+1 − ¯y∗∥2 − ∥ ¯yℓ − ¯y∗∥2 + ∥¯rℓ+1 ∥2 
+
+> Tν
+
+− ∥ ¯rℓ∥2
+
+> Tν
+
+
+
++ ∥ ¯C(¯ zℓ+1 − ¯z∗)∥2  
+
+> Tν+ρI
+
+− ∥ ¯C(¯ zℓ − ¯z∗)∥2 
+
+> Tν+ρI
+
+ (90) 
+
+≤ −∥ ¯rℓ+1 ∥22Mx−Tλ−Tν +ρI − ∥ ¯C(¯ zℓ+1 − ¯z∗)∥22Mx−Tλ−Tν
+
+− ρ∥ ¯C(¯ zℓ+1 − ¯zℓ)∥2,
+
+and then, given that 2Mx − Tλ − Tν ⪰ 0, we obtain 
+
+1
+
+ρ
+
+∥¯yℓ+1 − ¯y∗∥2 − ∥ ¯yℓ − ¯y∗∥2 + ( ∥¯rℓ+1 ∥2 
+
+> Tν
+
+− ∥ ¯rℓ∥2 
+
+> Tν
+
+)+  ∥ ¯C(¯ zℓ+1 − ¯z∗)∥2  
+
+> Tν+ρI
+
+− ∥ ¯C(¯ zℓ − ¯z∗)∥2 
+
+> Tν+ρI
+
+ ≤− ∥ ¯rℓ+1 ∥22Mx−Tλ−Tν +ρI −ρ∥ ¯C(¯ zℓ+1 − ¯zℓ)∥2,
+
+which implies (79) as ρ > 0, 2Mx −Tλ − Tν +ρI ≻ 0.
+
+C. Convergence Guarantees 
+
+Theorem 1 (Convergence of PCC/MC-DCS): Under As-sumptions 3-7, the iterates ¯xℓ, ¯zℓ and ¯yℓ converge, and any limit point of the sequence (¯ xℓ, ¯wℓ, ¯zℓ, ¯yℓ) satisfies the KKT conditions (70). 
+
+Proof: Let us now consider the sum 
+
+> ∞
+
+X
+
+> ℓ=0
+
+c1∥¯rℓ+1 ∥22 + c2∥ ¯C(¯ zℓ+1 − ¯zℓ)∥22 ≤ V 0 − lim  
+
+> ℓ→∞
+
+V ℓ. (91) Since the updates sequence and the stationary points of the problem lie inside a bounded set, lim ℓ→∞ V ℓ must be finite. The sum of an infinite sequence of non-negative terms is finite only if that sequence converges to zero. Therefore, we obtain 
+
+lim  
+
+> ℓ→∞
+
+∥¯rℓ+1 ∥ = lim  
+
+> ℓ→∞
+
+∥ ¯C(¯ zℓ+1 − ¯zℓ)∥ = 0 .
+
+Since ¯rℓ+1 and ¯C ¯zℓ+1 converge, ¯xℓ+1 = ¯ rℓ+1 + ¯C ¯zℓ+1 also converges, say to ˆx, and ¯z converges to ˆz := ( ¯C⊤ ¯C)−1 ¯C⊤ ˆx.In addition, since ¯yℓ+1 = ¯ yℓ + ρ¯rℓ+1 and ¯rℓ+1 converges to 
+
+ˆr := 0 , then ¯yℓ also converges, say to ˆy.Now that we have proved the convergence of (¯ xℓ, ¯zℓ, ¯yℓ),it remains to show that any limit point satisfies the KKT conditions (70). Using ¯xℓ+1 = ¯ xℓ = ˆ x, the condition (71e) gives g(ˆ x, ¯wℓ+1 ) ≤ 0 and h(ˆ x) ≤ 0. In addition, ˆx − ¯C ˆz = 0 ,SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 13 0 2 4 6 8 10 
+
+> x
+> -4 -2 024
+> y
+
+FCC-DCS 0 2 4 6 8 10                      
+
+> x
+> -4 -2 024
+> yk= 10 0246810
+> x
+> -4 -2 024
+> yk= 15 0246810
+> x
+> -4 -2 024
+> yk= 20 0246810
+> x
+> -4 -2 024
+> y
+
+PCC-DCS 0 2 4 6 8 10                      
+
+> x
+> -4 -2 024
+> yk= 10 0246810
+> x
+> -4 -2 024
+> yk= 15 0246810
+> x
+> -4 -2 024
+> yk= 20 0246810
+> x
+> -4 -2 024
+> y
+
+MC-DCS 0 2 4 6 8 10                 
+
+> x
+> -4 -2 024
+> yk= 10 0246810
+> x
+> -4 -2 024
+> yk= 15 0246810
+> x
+> -4 -2 024
+> yk= 20
+
+Fig. 2 : Two-agent illustrative 2D task. The top, middle and bottom rows correspond to FCC-, PCC- and MC-DCS, respectively. The samples illustrate 100 realizations of the distributions of the agents. The left column shows their full distribution trajectories, while the remaining subfigures on the right, show with solid ellipses the 99 .7% confidence regions of their distributions at 
+
+k = 10 , 15 , 20 . The dashed/dotted ellipses show their initial/target distributions. The black shapes are obstacles to be avoided. 0 5 10 15 20 25 30       
+
+> k
+> 012345
+> Agents 1 and 2 distance  FCC-DCS PCC-DCS MC-DCS
+> sij 0510 15 20 25 30
+> k
+> 012345
+> Agent 1 and obs. 1 distance
+> FCC-DCS PCC-DCS MC-DCS
+> so
+
+Fig. 3 : Safety distances for two-agent 2D task. Left: Inter-agent distance. Right: Distance between agent 1 and obstacle 1. Results shown for 100 realizations over the time horizon. so the condition (70f) is satisfied. The condition (71b) implies the satisfaction of (70b). Furthermore, since ¯C⊤ ¯yℓ+1 = 0 for any ℓ, then ¯C⊤ ˆy = 0 which coincides with (70c). In addition, at the limit, the optimality condition (71a) becomes 
+
+∇f (ˆ x, ¯wℓ) + ˆ y + ∇g(ˆ x, ¯wℓ)⊤σℓ + ∇h(ˆ x)⊤νℓ = 0 . (92) The slackness conditions (71c) and (71d) become 
+
+σℓj gj (ˆ x, ¯wℓ) = 0 , ∀j ∈ J1, ¯pK, (93a) 
+
+νℓj hj (ˆ x) = 0 , ∀j ∈ J1, ¯qK. (93b) Since σℓ ≥ 0 and νℓ ≥ 0, then (92) and (93) coincide with the conditions (70a), (70d) and (70e). Consequently, any limit point satisfies the KKT conditions (70), which proves that the algorithm reaches a stationary point of Problem 8. 
+
+Remark 14 (Novelty of Convergence Analysis): Previous analyses for non-convex ADMM have focused either on non-convex objectives [33]–[35] or addressing non-convex con-straints through complex schemes that reduce computational efficiency [41]–[43]. In contrast, we present a novel analysis for distributed ADMM with iterative linearization of the non-convex constraints, guaranteeing convergence to a KKT point. 
+
+Remark 15 (Discussion on the Convergence of FCC-DCS): Studying the convergence of FCC-DCS includes an additional layer of complexity beyond non-convexity, since the original chance constraints lack a closed form and the iterative linearization takes place inside the arguments of the chance constraints (see Remark 4). We provide the following statement for guaranteeing the convergence of the algorithm to the optimum of the (convex) fixed Problem 3. 
+
+Proposition 7 (Convergence of FCC-DCS): The iterates of FCC-DCS converge to the optimum of Problem 3. 
+
+Proof: By introducing a similar notation as in Table II, Problem 3 is rewritten in the form of Problem 8, where ¯xi =[˜ vi; vec( ˜Ki)] , ¯z = [ z; Z], fi(¯ xi) = Ji(vi, K i), the convex constraints gi(¯ x)i ≤ 0 encompass ai(vi) = 0 , Bi(Ki) ⪰ 0,
+
+cFCC  
+
+> i
+
+(vi, K i) ≤ 0, ˜d FCC  
+
+> i
+
+(˜ vi, ˜Ki) ≤ 0, and the non-convex ones hi(¯ xi) ≤ 0 are empty. Note that Assumptions 3, 4 and 6 are met. Thus, since ¯C has full column rank, then, by standard convergence of ADMM in convex optimization [49], the iterates converge to the optimum of Problem 3. 
+
+VII. S IMULATION RESULTS 
+
+This section presents simulations that verify the safety capabilities and scalability of the proposed methods. Section VII-A illustrates a two-agent 2D example, showing the main differences between the algorithms. Section VII-B presents a more complex 3D multi-drone scenario. Section VII-C 14    
+
+> k= 10 k= 20
+
+Fig. 4 : Multi-drone 3D task with FCC-DCS. The three subfigures show the 99 .7% confidence ellipsoids of the initial and target distributions of the agents (faded colors) and of their current distributions (solid colors). The dark gray shapes are obstacles. -5 0 5 10 15 
+
+x     
+
+> -10 -5 0510
+> y
+> k= 10 -5 0510 15
+
+x      
+
+> -10 -5 0510
+> yk= 20 -5 0510 15
+
+x  
+
+> -10 -5 0510
+> yk= 30
+
+Fig. 5 : Multi-agent 2D task with 32 agents via FCC-DCS. The three subfigures correspond to time instants k = 10 , 20 , 30 .
+
+TABLE III : Performance metrics for two-agent 2D task (Sec-tion VII-A) and eight-agent 3D task (Section VII-B).                       
+
+> Task Metrics FCC-DCS PCC-DCS MC-DCS
+> 2D Task Average Cost 174.6 193.9 205.9 (Sec. VII-A) Safety viol. rate (%) 0.02% 0.00% 0.00% 3D Task Average Cost 1145.9 1408.3 1638.3 (Sec. VII-B) Safety viol. rate (%) 0.01% 0.00% 0.00%
+
+demonstrates the scalability of the methods to large-scale systems. All simulations were performed in Matlab with an Intel(R) Core(TM) i9-13900K and 64GB RAM. The MOSEK solver [50] was used for SDP and OSQP [51] for QP problems. For completeness, a supplementary video is provided including the full-motion animations of the multi-agent trajectories. 
+
+A. Two-Agent Illustrative 2D Task 
+
+We consider a two-agent scenario with 2D double integrator dynamics. Each agent i has a state xi = [ pi
+
+> x
+
+, p i
+
+> y
+
+, v i
+
+> x
+
+, v i
+
+> y
+
+] and control ui = [ ai
+
+> x
+
+, a i
+
+> y
+
+], where (pi
+
+> x
+
+, p i
+
+> y
+
+), (vi
+
+> x
+
+, v i
+
+> y
+
+) and (ai
+
+> x
+
+, a i
+
+> y
+
+)
+
+are the 2D position, velocity and acceleration coordinates, respectively. The continuous-time dynamics are given by 
+
+Acont = [0 2×2, I 2; 0 2×4] and Bcont = [0 2×2; I2], and the discretization step and time horizon are ∆t = 0 .05 s and T =30 . The initial mean states are μ1s = [0; −1.5; 0; 0] and μ2s =[0; 1 .5; 0; 0] , while the target ones are μ1f = [10; −1; 0; 0] and 
+
+μ2f = [10; 1; 0; 0] . The initial and target covariances are Σi 
+
+> s
+
+=bdiag(0 .04 I2, 0.25 I2) and Σi 
+
+> f
+
+= bdiag(0 .04 , 0.0025 , 0.25 I2),while the noise covariance is W ik = bdiag(0 .02 I2, 0.2I2)
+
+∀k ∈ J0, T −1K, for all agents. We choose to penalize only the control effort, so we set Ri = 0 .01 I2 and Qi = 0 4×4 for each agent. For the safety constraints, we set so = 0 .2, sij = 0 .4
+
+and ϵ = 3 · 10 −3. For MC-DCS, we choose ˆri = 0 .65 for all agents. The penalty parameters are selected as ρv = ρK = 1 
+
+and ρr = 10 , and each algorithm is ran for 30 ADMM rounds. Figure 2 illustrates the 99 .7% confidence regions of the distribution trajectories of the agents, along with 100 sampled realizations for each algorithm. For the same sampled trajec-tories, Fig. 3 shows the inter-agent distance and the distance between agent 1 and obstacle 1 during the entire time horizon. Table III provides the average cost and safety violation rate for all methods. All three methods successfully steer the two agents to their target distributions, while avoiding collisions with each other and the obstacles. Further, they all achieve a safety violation rate below the prescribed threshold ϵ = 0 .3% .The FCC-DCS method yields the most cost-efficient and least conservative trajectories, as illustrated in Figs. 2 and 3, as well as in Table III, followed by PCC-DCS, and then MC-DCS. 
+
+B. Multi-Drone 3D Task 
+
+Next, we consider a more complex 3D multi-agent task with linearized drone dynamics [52]. Each agent has a state 
+
+xi = [ pi
+
+> x
+
+, p i
+
+> y
+
+, p i
+
+> z
+
+, v i
+
+> x
+
+, v i
+
+> y
+
+, v i
+
+> z
+
+], where (pi
+
+> x
+
+, p i
+
+> y
+
+, p i
+
+> z
+
+) and (vi
+
+> x
+
+, v i
+
+> y
+
+, v i
+
+> z
+
+)
+
+correspond to the 3D position and velocity coordinates, and a control ui = [ai
+
+> x
+
+, a i
+
+> y
+
+, a i
+
+> z
+
+], including the 3D acceleration coordinates. The continuous-time dynamics are given by 
+
+Acont = [0 3×3, I 3; 0 3×3, diag( −1.1, −1.1, −6)] and Bcont =[0 3×3; diag(1 .1, 1.1, 6)] . The initial and target covariances are 
+
+Σi 
+
+> s
+
+= bdiag(0 .04 I3, 0.25 I3) and Σi 
+
+> f
+
+= bdiag(0 .04 I3, 0.25 I3),while the noise covariance is W ik = bdiag(0 .02 I3, 0.2I3) for SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 15      
+
+> k= 10 k= 20 k= 30
+
+Fig. 6 : Large-scale 2D task with 128 agents via PCC-DCS. The two subfigures correspond to time instants k = 10 , 20 , 30 .all agents. The rest of the parameters are set as in Section VII-A. Figure 4 demonstrates all drones guided safely to their target distributions with the FCC-DCS method. Table III presents again the average cost and safety violation rate for each method, verifying that FCC-DCS provides the least conservative solution followed by PCC-DCS and MC-DCS. 
+
+C. Scalability on Large-Scale Multi-Agent Systems 
+
+Finally, we illustrate the scalability of the proposed methods to large-scale multi-agent systems. Figure 5 shows a system of 32 agents safely steered to their target distributions with FCC-DCS. In Fig. 6, PCC-DCS is demonstrated on a team of 128 agents, while Fig. 7 shows MC-DCS with 1024 
+
+agents. Figure 8 shows the total computational times of each method for an increasing number of agents N . The MC-DCS algorithm preserves the best scalability, followed by PCC-DCS and FCC-DCS. Solving these high-dimensional problems with centralized CS becomes intractable beyond 8 agents. 
+
+VIII. C ONCLUSION 
+
+This article introduces a family of distributed methods for the multi-agent covariance steering problem. The proposed ADMM-based algorithms enforce different levels of consen-sus, i.e., full covariance, partial covariance, and mean, thereby providing a trade-off between conservatism and computational burden. Furthermore, convergence is established via a novel analysis of distributed ADMM with iteratively linearized non-convex constraints. Numerical results demonstrate the safety capabilities and scalability of the methods to systems with up to thousands of agents. Future work includes extensions to nonlinear dynamics [12], GMM-based distributions [16], and learning-aided distributed optimization architectures [53]. 
+
+ACKNOWLEDGMENT 
+
+The authors thank Arkadi Nemirovski for valuable dis-cussions on the convergence and complexity of the methods presented in this article. 
+
+REFERENCES  
+
+> [1] A. A. Malikopoulos, L. Beaver, and I. V. Chremos, “Optimal time trajectory and coordination for connected and automated vehicles,”
+> Automatica , vol. 125, p. 109469, 2021.
+
+Fig. 7 : Large-scale 2D task with 1024 agents via MC-DCS. 
+
+Snapshot at time instant k = 20 .10 1 10 2 10 3
+
+N
+
+> 10 1
+> 10 2
+> 10 3
+> Computational Time ( s)
+
+Centralized CS FCC-DCS PCC-DCS MC-DCS 
+
+Fig. 8 : Scalability comparison. Computational times of Cen-tralized CS and FCC-, PCC- and MC-DCS for an increasing number of agents N .       
+
+> [2] Z. Liu, H. Wang, H. Wei, M. Liu, and Y.-H. Liu, “Prediction, planning, and coordination of thousand-warehousing-robot networks with motion and communication uncertainties,” IEEE Transactions on Automation Science and Engineering , vol. 18, no. 4, pp. 1705–1717, 2020. [3] K. M. Kabore and S. G¨ uler, “Distributed formation control of drones with onboard perception,” IEEE/ASME Transactions on Mechatronics ,pp. 1–11, 2021. [4] J. Cort´ es and M. Egerstedt, “Coordinated control of multi-robot sys-tems: A survey,” SICE Journal of Control, Measurement, and System Integration , vol. 10, no. 6, pp. 495–503, 2017. [5] G. Schildbach, L. Fagiano, C. Frei, and M. Morari, “The scenario approach for stochastic model predictive control with bounds on closed-16
+
+loop constraint violations,” Automatica , vol. 50, no. 12, pp. 3009–3018, 2014. [6] E. Arcari, A. Iannelli, A. Carron, and M. N. Zeilinger, “Stochastic MPC with robustness to bounded parameteric uncertainty,” IEEE Transactions on Automatic Control , vol. 68, no. 12, pp. 7601–7615, 2023. [7] M. Farina, L. Giulioni, and R. Scattolini, “Stochastic linear model predictive control with chance constraints–a review,” Journal of Process Control , vol. 44, pp. 53–67, 2016. [8] Y. Chen, T. T. Georgiou, and M. Pavon, “Optimal transport in systems and control,” Annual Review of Control, Robotics, and Autonomous Systems , vol. 4, no. 1, pp. 89–113, 2021. [9] ——, “Optimal steering of a linear stochastic system to a final prob-ability distribution, Part I,” IEEE Transactions on Automatic Control ,vol. 61, no. 5, pp. 1158–1169, 2015. [10] E. Bakolas, “Finite-horizon covariance control for discrete-time stochas-tic linear systems subject to input constraints,” Automatica , vol. 91, pp. 61–68, 2018. [11] F. Liu, G. Rapakoulias, and P. Tsiotras, “Optimal covariance steering for discrete-time linear stochastic systems,” IEEE Transactions on Automatic Control , vol. 70, no. 4, pp. 2289–2304, 2025. [12] J. Ridderhof, K. Okamoto, and P. Tsiotras, “Nonlinear uncertainty con-trol with iterative covariance steering,” in 2019 IEEE 58th Conference on Decision and Control (CDC) . IEEE, 2019, pp. 3484–3490. [13] A. Ratheesh, V. Pacelli, A. D. Saravanos, and E. A. Theodorou, “Oper-ator splitting covariance steering for safe stochastic nonlinear control,” in 2025 IEEE 64th Conference on Decision and Control (CDC) , 2025, pp. 3552–3559. [14] G. Kotsalis, G. Lan, and A. S. Nemirovski, “Convex optimization for finite-horizon robust covariance control of linear stochastic systems,” 
+
+SIAM Journal on Control and Optimization , vol. 59, no. 1, pp. 296– 319, 2021. [15] J. Pilipovsky and P. Tsiotras, “Data-driven covariance steering control design,” in 2023 62nd IEEE Conference on Decision and Control (CDC) .IEEE, 2023, pp. 2610–2615. [16] I. M. Balci and E. Bakolas, “Density steering of Gaussian mixture models for discrete-time linear systems,” in 2024 American Control Conference (ACC) . IEEE, 2024, pp. 3935–3940. [17] G. Wu, P. Tsiotras, and A. Lindquist, “Distribution steering for discrete-time uncertain ensemble systems,” arXiv preprint arXiv:2405.12415 ,2024. [18] J. Yin, Z. Zhang, E. Theodorou, and P. Tsiotras, “Trajectory distribution control for model predictive path integral control using covariance steering,” in 2022 International Conference on Robotics and Automation (ICRA) . IEEE, 2022, pp. 1478–1484. [19] Y. Shirai, D. K. Jha, and A. U. Raghunathan, “Covariance steering for uncertain contact-rich systems,” in 2023 IEEE International Conference on Robotics and Automation (ICRA) , 2023, pp. 7923–7929. [20] N. Kumagai and K. Oguri, “Sequential chance-constrained covariance steering for robust cislunar trajectory design under uncertainties,” in 
+
+AAS/AIAA Astrodynamics Specialist Conference , 2024, pp. 1–19. [21] A. D. Saravanos, A. Tsolovikos, E. Bakolas, and E. Theodorou, “Dis-tributed Covariance Steering with Consensus ADMM for Stochastic Multi-Agent Systems,” in Proceedings of Robotics: Science and Systems ,Virtual, July 2021. [22] Y. Chen, “Density control of interacting agent systems,” IEEE Transac-tions on Automatic Control , vol. 69, no. 1, pp. 246–260, 2024. [23] G. Rapakoulias, A. R. Pedram, and P. Tsiotras, “Steering large agent populations using mean-field schr¨ odinger bridges with gaussian mixture models,” IEEE Control Systems Letters , 2025. [24] N. Demir, U. Eren, and B. Ac ¸ıkmes ¸e, “Decentralized probabilistic den-sity control of autonomous swarms with safety constraints,” Autonomous Robots , vol. 39, no. 4, pp. 537–554, 2015. [25] G. Wu and A. Lindquist, “Group steering: Approaches based on power moments,” arXiv preprint arXiv:2211.13370 , 2022. [26] A. D. Saravanos, I. M. Balci, E. Bakolas, and E. A. Theodorou, “Distributed model predictive covariance steering,” in 2024 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS) ,2024, pp. 5740–5747. [27] A. D. Saravanos, Y. Li, and E. Theodorou, “Distributed Hierarchical Dis-tribution Control for Very-Large-Scale Clustered Multi-Agent Systems,” in Proceedings of Robotics: Science and Systems , Daegu, Republic of Korea, July 2023. [28] H. Bai, H. Zhu, X. Zhao, H. Li, and Y. Wang, “Robust motion coordi-nation with covariance steering model predictive control in bandwidth limited scenarios,” in 2024 IEEE International Conference on Robotics and Biomimetics (ROBIO) , 2024, pp. 1809–1814. [29] S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein, “Distributed optimization and statistical learning via the alternating direction method of multipliers,” Foundations and Trends® in Machine Learning , vol. 3, no. 1, pp. 1–122, 2011. [30] A. D. Saravanos, Y. Aoyama, H. Zhu, and E. A. Theodorou, “Distributed differential dynamic programming architectures for large-scale multia-gent control,” IEEE Transactions on Robotics , vol. 39, no. 6, pp. 4387– 4407, 2023. [31] O. Shorinwa, T. Halsted, J. Yu, and M. Schwager, “Distributed opti-mization methods for multi-robot systems: Part 1—a tutorial [tutorial],” 
+
+IEEE Robotics & Automation Magazine , vol. 31, no. 3, pp. 121–138, 2024. [32] A. T. Abdul, A. D. Saravanos, and E. A. Theodorou, “Scalable robust optimization for safe multi-agent control under unknown deterministic uncertainty,” in 2025 American Control Conference (ACC) . IEEE, 2025, pp. 3666–3673. [33] G. Li and T. K. Pong, “Global convergence of splitting methods for nonconvex composite optimization,” SIAM Journal on Optimization ,vol. 25, no. 4, pp. 2434–2460, 2015. [34] K. Guo, D. Han, and T.-T. Wu, “Convergence of alternating direction method for minimizing sum of two nonconvex functions with linear constraints,” International Journal of Computer Mathematics , vol. 94, no. 8, pp. 1653–1669, 2017. [35] M. Hong, Z.-Q. Luo, and M. Razaviyayn, “Convergence analysis of alternating direction method of multipliers for a family of nonconvex problems,” SIAM Journal on Optimization , vol. 26, no. 1, pp. 337–364, 2016. [36] Q. Liu, X. Shen, and Y. Gu, “Linearized ADMM for nonconvex non-smooth optimization with convergence analysis,” IEEE access , vol. 7, pp. 76 131–76 144, 2019. [37] S. Lu, J. D. Lee, M. Razaviyayn, and M. Hong, “Linearized ADMM converges to second-order stationary points for non-convex problems,” 
+
+IEEE Transactions on Signal Processing , vol. 69, pp. 4859–4874, 2021. [38] J. G. Melo and R. Monteiro, “Iteration-complexity of a linearized proximal multiblock ADMM class for linearly constrained nonconvex optimization problems,” Available on: http://www. optimization-online. org , 2017. [39] Y. Wang, W. Yin, and J. Zeng, “Global convergence of ADMM in nonconvex nonsmooth optimization,” Journal of Scientific Computing ,vol. 78, pp. 29–63, 2019. [40] A. Themelis and P. Patrinos, “Douglas–rachford splitting and admm for nonconvex optimization: Tight convergence results,” SIAM Journal on Optimization , vol. 30, no. 1, pp. 149–181, 2020. [41] K. Sun and X. A. Sun, “A two-level distributed algorithm for nonconvex constrained optimization,” Computational Optimization and Applica-tions , vol. 84, no. 2, pp. 609–649, 2023. [42] ——, “A two-level ADMM algorithm for AC OPF with global conver-gence guarantees,” IEEE Transactions on Power Systems , vol. 36, no. 6, pp. 5271–5281, 2021. [43] W. Tang and P. Daoutidis, “Fast and stable nonconvex constrained distributed optimization: the ELLADA algorithm,” Optimization and Engineering , vol. 23, no. 1, pp. 259–301, 2022. [44] I. M. Balci and E. Bakolas, “Constrained minimum variance and covariance steering based on affine disturbance feedback control pa-rameterization,” International Journal of Robust and Nonlinear Control ,vol. 34, no. 11, pp. 7332–7370, 2024. [45] K. Okamoto and P. Tsiotras, “Optimal stochastic vehicle path planning using covariance steering,” IEEE Robotics and Automation Letters ,vol. 4, no. 3, pp. 2276–2281, 2019. [46] G. Rapakoulias and P. Tsiotras, “Discrete-time optimal covariance steering via semidefinite programming,” in 2023 62nd IEEE Conference on Decision and Control (CDC) , 2023, pp. 1802–1807. [47] J. Nocedal and S. J. Wright, Numerical optimization . Springer, 2006. [48] P. T. Boggs and J. W. Tolle, “Sequential quadratic programming,” Acta numerica , vol. 4, pp. 1–51, 1995. [49] W. Deng and W. Yin, “On the global and linear convergence of the generalized alternating direction method of multipliers,” Journal of Scientific Computing , vol. 66, pp. 889–916, 2016. [50] M. ApS, The MOSEK optimization toolbox for MATLAB manual. Version 9.0. , 2019. [51] B. Stellato, G. Banjac, P. Goulart, A. Bemporad, and S. Boyd, “OSQP: An operator splitting solver for quadratic programs,” Mathematical Programming Computation , vol. 12, no. 4, pp. 637–672, 2020. [52] S. Zhang, O. So, K. Garg, and C. Fan, “Gcbf+: A neural graph control barrier function framework for distributed safe multi-agent control,” 
+
+IEEE Transactions on Robotics , 2025. SARAVANOS et al. : DISTRIBUTED COVARIANCE STEERING VIA NON-CONVEX ADMM FOR LARGE-SCALE MULTI-AGENT SYSTEMS 17 
+
+[53] A. D. Saravanos, H. Kuperman, A. Oshin, A. T. Abdul, V. Pacelli, and E. Theodorou, “Deep distributed optimization for large-scale quadratic programming,” in The Thirteenth International Conference on Learning Representations , 2025. 
+
+Augustinos D. Saravanos (Graduate Student Member, IEEE) received his Diploma in Elec-trical and Computer Engineering with highest honors from the University of Patras, Greece in 2019 and his M.S. in Aerospace Engineering and Ph.D. in Machine Learning from the Geor-gia Institute of Technology in 2024 and 2025. He is currently a Postdoctoral Associate at the Department of of Aeronautics and Astronautics at the Massachusetts Institute of Technology. His research interests lie at the intersection of optimization, control and machine learning for large-scale systems. 
+
+Isin M. Balci received a B.Sc. in Mechanical En-gineering from the Bogazici University, Istanbul, Turkey, in 2018 and the M.S. and Ph.D. degrees in Aerospace Engineering from the University of Texas at Austin, Austin, TX, USA, in 2020 and 2024, respectively. He is currently a software en-gineer at Applied Intuition. His research is mainly focused on control of uncertain and stochastic systems and optimization-based control. 
+
+Arshiya Taj Abdul (Student Member, IEEE) re-ceived a B.Tech in Electrical and Electronics En-gineering from the National Institute of Technol-ogy, Warangal, India. She is currently pursuing a Ph.D. in Electrical and Computer Engineering at Georgia Institute of Technology, Atlanta, USA. Her research interests lie in distributed and ro-bust optimization, focusing on developing safe and scalable frameworks to address uncertainty. 
+
+Efstathios Bakolas (Senior Member, IEEE) re-ceived the Diploma degree in Mechanical En-gineering with highest honors from the Na-tional Technical University of Athens, Athens, Greece, in 2004 and the M.S. and Ph.D. de-grees in Aerospace Engineering from the Geor-gia Institute of Technology, Atlanta, GA, USA, in 2007 and 2011, respectively. He is currently an Associate Professor with the Department of Aerospace Engineering and Engineering Me-chanics, University of Texas at Austin, Austin, TX, USA. His research is mainly focused on control of uncertain and stochastic systems, data-driven control of complex systems, optimal control theory, decision making and control of autonomous agents and multi-agent networks and differential games. 
+
+Evangelos A. Theodorou (Member, IEEE) is an Associate Professor with the Daniel Guggen-heim School of Aerospace Engineering at Geor-gia Institute of Technology. He is also the director of the Autonomous Control and Decision Sys-tems Laboratory, and he is affiliated with the In-stitute of Robotics and Intelligent Machines and the Center for Machine Learning Research at Georgia Institute of Technology. Dr. Theodorou holds a BS in Electrical Engineering, from the Technical University of Crete (TUC), Greece in 2001. He also holds three MSc degrees in Production Engineering from TUC in 2003, Computer Science and Engineering from University of Minnesota in 2007, and Electrical Engineering from the University of Southern California (USC) in 2010. In 2011, he graduated with his PhD in Computer Science from USC. From 2011 to 2013, he was a Postdoc-toral Research Fellow with the department of Computer Science and Engineering, University of Washington. Dr. Theodorou is the recipient of the King-Sun Fu best paper award of the IEEE Transactions on Robotics in 2012 and recipient of several best paper awards and nominations in machine learning and robotics conferences. His theoretical research spans the areas of stochastic optimal control theory, machine learning, statistical physics and optimization.

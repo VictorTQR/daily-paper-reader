@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07204v1/fig-001.webp",
+      "caption": "Fig. 1 Overview of accountability concepts from the literature",
+      "page": 12,
+      "index": 1,
+      "width": 723,
+      "height": 492
+    }
+  ]
+}

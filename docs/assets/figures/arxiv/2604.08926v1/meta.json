@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08926v1/fig-001.webp",
+      "caption": "Figure 1: The SFT-RL Dilemma: Balancing the high-bias stability of SFT against the high-variance exploration of RL.",
+      "page": 2,
+      "index": 1,
+      "width": 929,
+      "height": 535
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08926v1/fig-002.webp",
+      "caption": "Table 1: Overall performance on five competition-level mathematical reasoning benchmarks and two out-ofdistribution benchmarks(Qwen2.5-Math-7B). Best results are bolded and second-best are underlined.",
+      "page": 7,
+      "index": 2,
+      "width": 941,
+      "height": 498
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08926v1/fig-003.webp",
+      "caption": "Figure 2: The overall framework of DYPO. The system employs a Dynamic Difficulty Grading mechanism to categorize queries into Easy, Hard, and Mid tiers based on group rollout outcomes, dispatching them to the most effective optimization pathway.",
+      "page": 4,
+      "index": 3,
+      "width": 946,
+      "height": 333
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08926v1/fig-004.webp",
+      "caption": "Figure 4: Left: Offline data ratio over steps.Mid: Training reward; Right: Policy entropy.",
+      "page": 9,
+      "index": 4,
+      "width": 937,
+      "height": 196
+    }
+  ]
+}

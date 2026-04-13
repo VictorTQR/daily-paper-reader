@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08620v1/fig-001.webp",
+      "caption": "Fig. 3. Relationship between structural distance and temporal learning indicator t∗(s).",
+      "page": 4,
+      "index": 1,
+      "width": 420,
+      "height": 318
+    }
+  ]
+}

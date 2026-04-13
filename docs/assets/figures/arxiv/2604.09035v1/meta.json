@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.09035v1/fig-001.webp",
+      "caption": "Fig. 2: Training curves for the Mujoco environments: HalfCheetah, Hopper, Walker and Reacher. Shaded areas indicate the standard error. The curves have been smoothed by a running average for better readability.",
+      "page": 7,
+      "index": 1,
+      "width": 1052,
+      "height": 526
+    }
+  ]
+}

@@ -1,0 +1,1607 @@
+Title: Plasticity-Enhanced Multi-Agent Mixture of Experts for Dynamic Objective Adaptation in UAVs-Assisted Emergency Communication Networks
+
+URL Source: https://arxiv.org/pdf/2604.09028v1
+
+Published Time: Mon, 13 Apr 2026 00:40:22 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+> 1
+
+# Plasticity-Enhanced Multi-Agent Mixture of Experts for Dynamic Objective Adaptation in UAVs-Assisted Emergency Communication Networks 
+
+Wen Qiu, Member, IEEE , Zhiqiang He, Member, IEEE , Wei Zhao, Member, IEEE , Hiroshi Masui 
+
+Abstract —Unmanned aerial vehicles serving as aerial base sta-tions can rapidly restore connectivity after disasters, yet abrupt changes in user mobility and traffic demands shift the quality of service trade-offs and induce strong non-stationarity. Deep reinforcement learning policies suffer from plasticity loss under such shifts, as representation collapse and neuron dormancy impair adaptation. We propose plasticity enhanced multi-agent mixture of experts (PE-MAMoE), a centralized training with decentralized execution framework built on multi-agent proximal policy optimization. PE-MAMoE equips each UAV with a sparsely gated mixture of experts actor whose router selects a single specialist per step. A non-parametric Phase Controller injects brief, expert-only stochastic perturbations after phase switches, resets the action log-standard-deviation, anneals entropy and learning rate, and schedules the router temperature, all to re-plasticize the policy without destabilizing safe behaviors. We derive a dynamic regret bound showing the tracking error scales with both environment variation and cumulative noise energy. In a phase-driven simulator with mobile users and 3GPP-style channels, PE-MAMoE improves normalized interquartile mean return by 26.3% over the best baseline, increases served-user capacity by 12.8%, and reduces collisions by approximately 75%. Diagnostics confirm persistently higher expert feature rank and periodic dormant-neuron recovery at regime switches. 
+
+Index Terms —unmanned aerial vehicles, emergency commu-nications, multiagent reinforcement learning, mixture of experts, continuous learning, non-stationary environments, resource allo-cation. 
+
+I. I NTRODUCTION 
+
+# IN the wake of natural disasters such as earthquakes, floods, or wildfires, terrestrial communication infrastructures are often knocked out. This collapse of connectivity not only delays the delivery of critical information but also hampers coordinated emergency response efforts. Recent advances in unmanned aerial vehicle (UAV)-assisted communication have introduced aerial base stations as a promising means of rapidly restoring coverage in such disrupted environments [1], [2]. 
+
+Wen Qiu is with the Department of Information and Communication Engineering, Kitami Institute of Technology, Japan. Email: w-qiu@ieee.org. Zhiqiang He is with the Graduate School of Informatics and En-gineering, the University of Electro-Communications, Japan. Email: hezhiqiang@ieee.org. Wei Zhao is with the School of Computer Science and Technology, Anhui University of Technology, China. Emails: zhaowei@ahut.edu.cn. Hiroshi Masui is with the Department of Information and Communication Engineering and also Information Procession Center, Kitami Institute of Technology, Japan. Email: hgmasui@mail.kitami-it.ac.jp. The corresponding author are Wei Zhao and Hiroshi Masui. 
+
+Enabled by their flexibility and line of sight propagation advantages, fleets of UAVs can dynamically reposition to serve mobile users across challenging terrains [3]. However, achiev-ing robust and efficient UAV coordination remains nontrivial in the presence of user mobility and dynamic demand shifts. Multi-agent reinforcement learning (MARL) has emerged as a powerful tool for tackling complex coordination problems in UAV swarms, such as trajectory planning [4], energy aware task allocation [5], and real time spectrum sharing [6], [7]. These methods typically rely on predefined reward structures to encode the optimization objectives, for instance maximizing user coverage or minimizing transmission latency. Yet in real world emergencies, users move and their communication demands evolve over time, which shifts the objective weights across quality of service (QoS) terms such as coverage, energy, and collision avoidance, thereby making the learning problem inherently non-stationary. Evidence from UAVs-assisted net-working shows that time varying, spatially non-uniform traffic and user mobility are central drivers of these reweightings and must be explicitly modeled in policy design [8], [9]. These evolving priorities render the learning environment inherently non-stationary. Although mixture of experts (MoE) architectures [10], [11] and gradient noise injection techniques [12], [13] have shown promise in preserving plasticity in streaming or continual learning contexts, their potential remains largely underex-plored in UAVs-based multi-agent systems. In MARL, pre-vailing approaches to non-stationarity fall into three broad categories. (1) Replay and stabilization methods attach extra context to samples or down weight stale data, for exam-ple experience-replay “fingerprinting” and multi-agent im-portance sampling to make off policy updates usable [14]. (2) Methods that model or shape opponents and teammates explicitly anticipate other learners’ updates; notable examples include learning with opponent-learning awareness (LOLA) and proximal LOLA variants, which improve coordination but presume access to or accurate prediction of others’ learning dynamics [15], [16]. (3) Meta RL learns priors or update rules for quick task switching, which requires training over representative task distributions and can be brittle when mis-sion phases deviate from the meta train manifold [17]. UAV-specific work typically tackles dynamics via receding horizon, heuristic replanning, or standard deep reinforcement learning (DRL) controllers tuned per scenario, with limited treatment of 
+
+> arXiv:2604.09028v1 [cs.MA] 10 Apr 2026 2
+
+abrupt objective re-weighting and representation degradation during long runs. Recent surveys highlight that while DRL and MARL are increasingly used for trajectory and resource control, robust handling of phase level nonstationarity remains a gap [1], [18]. In this paper, we introduce the plasticity enhanced multi-agent mixture of experts (PE-MAMoE), a MARL framework designed for rapidly evolving UAV-assisted communication tasks. Our approach diverges from the above in two ways. First, instead of opponent aware updates or off policy replay fixes, we target the representation failure mode directly. PE-MAMoE preserves expressivity in a sparsely gated MoE actor via expert only stochastic perturbations injected briefly after phase switches, combined with lightweight router temperature and entropy scheduling to prevent expert under utilization. The entire mechanism is fully compatible with on-policy multi-agent PPO (MAPPO). Second, rather than meta training on many tasks, we operate within a single, phase driven ECN where weights over QoS terms change online. Our method maintains plasticity so the same policy can track shifting op-tima under user mobility and time varying demand, filling the UAV MARL gap where prior methods either assume stationary objectives or lack mechanisms to prevent rank collapse and neuron dormancy during long term operation [19]. We further provide a theoretical analysis of PE-MAMoE, deriving a dynamic regret bound that characterizes the trade-off between active forgetting and knowledge retention in non-stationary environments. The bound shows that the tracking error scales with both the path length of the evolving optimal objective sequence and the cumulative noise energy from stochasticity injection, offering principled guidance for tuning injection schedules. We validate our framework in a phase-driven simulator with mobile users, fluctuating interference, and 3GPP-style channel modeling. Compared with strong baselines, multilayer perceptron (MLP), MoE, and Sparse MoE, PE-MAMoE improves normalized interquartile mean (IQM) return by +26.3% over the best baseline, increases served-user capacity by +12.8% , and reduces collisions by 
+
+≈75% . It also maintains the highest expert feature rank with periodic recovery and exhibits phase-synchronous troughs in dormant neuron fraction, indicating effective re-plasticization under sparse MoE routing. The main contributions of this paper are as follows.  
+
+> •
+
+Plasticity enhanced MARL for UAV–ECNs. We in-troduce PE-MAMoE, a MAPPO-based controller that marries sparsely gated mixture of experts with controlled stochasticity to maintain plasticity and avoid expert col-lapse under phase driven non-stationarity. This leverages conditional computation for scalable capacity while re-maining stable in cooperative MARL.  
+
+> •
+
+Realistic, phase driven simulator. We build a high fidelity UAV–ECN environment with user mobility, de-mand shifts, clustered reuse and adjacent channel leakage, enabling reproducible evaluation under abrupt objective switches.  
+
+> •
+
+Plasticity diagnostics and robust evaluation. We use effective rank and dormant neuron fraction to quantify representation collapse and plasticity across switches, linking empirical behavior to primacy bias remedies via reset and perturb strategies, and using IQM with thorough ablations, show that PE-MAMoE achieves higher return, capacity, and stability than MLP, MoE, and Sparse MoE in fast switching regimes. II. R ELATED WORK 
+
+We structure this section into three subsections to better clarify problem setting, failure mechanisms, and architectural strategy, and to make our contributions explicit by contrast. Multi-UAV coordination for emergency communications de-scribes the application domain and operational objectives that define the evaluation criteria for our setting. Plasticity loss in neural decision systems integrates evidence on represen-tation collapse and dormant units, and explains why extend-ing plasticity preservation from single agent to multi agents learning introduces additional failure modes, non-stationarity from concurrently adapting teammates, coordination conven-tions that harden too early, and interference under parameter sharing. MoE and Modular Architectures outline modular designs that can mitigate such interference by decoupling capacities and localizing updates. This organization clarifies our contribution: within a highly dynamic UAV–ECN, we introduce PE-MAMoE, a sparsely gated actor with expert local re-plasticization and temperature scheduled routing, integrated with MAPPO, to sustain team level adaptability under abrupt objective and mobility mechanism shifts while avoiding rank collapse and neuron dormancy. 
+
+A. Multi-UAV Coordination for Emergency Communications 
+
+UAVs have emerged as a rapid deployment solution for maintaining connectivity when ground infrastructure fails, such as after natural disasters. Acting as aerial base sta-tions, UAVs can swiftly restore wireless coverage in af-fected areas [20]. Prior work in this domain has tackled core optimization problems including three dimensional (3D) UAV placement and trajectory design, transmit power control, and dynamic user association. For instance, researchers have studied how to jointly optimize UAV flight paths, user-UAV associations, and resource allocation to maximize coverage or network throughput under fairness and energy constraints [3]. These problems are intrinsically complex, both non-convex and combinatorial, and they often demand real time solu-tions owing to a highly dynamic environment characterized by user mobility and shifting network demands [4], [21]. Traditional optimization techniques struggle in this setting, especially without a central controller, motivating the use of RL and multi-agent coordination. Indeed, distributed multi-agent deep reinforcement learning (MADRL) approaches have been proposed to allow UAVs to learn cooperative policies for positioning and resource allocation on the fly [6]. These approaches enable each UAV to act as an agent, adjusting its 3D position and service strategy based on local observations, and have demonstrated superior performance over static or short sighted baselines in terms of achieved throughput and fairness [22]. 3
+
+Several broad surveys provide overviews of UAVs-assisted wireless networks and their challenges [22], [23]. Common themes include ensuring robust coverage, interference manage-ment, energy efficiency, and integration with existing cellular infrastructure. Wu et al. present tutorial discussions on using UAVs for wireless coverage extension in 5G and beyond, highlighting both opportunities and open problems in UAV communications [3]. To address these challenges, a variety of techniques have been explored: from metaheuristic algorithms for UAV placement to model based control for interference mitigation and energy aware scheduling [20]. More recently, single agent and MARL frameworks have been applied to UAV network control. For example, Q learning agents have been used for adaptive UAV deployment and movement, showing the ability of UAVs to learn 3D placements that maximize users’ quality of experience under mobility [6]. Multi-agent policy gradient methods like counterfactual multi-agent policy gradients have also been employed to coordinate multiple UAVs in coverage tasks [4]. These learning based approaches outperform static heuristics by enabling UAVs to continuously re-position and re-configure according to live network conditions. However, most existing UAV communication strategies as-sume a fixed or slowly varying mission objective, for example, maximize coverage of a given area or serve a set of users with known demand. In MARL, mainstream responses to non-stationarity fall into three families. (i) Replay methods attach additional context to samples or down weight stale data so that off policy updates remain usable, for example, “fingerprinting” identifiers in experience replay to reduce non-stationarity across agents [15]. (ii) Opponent aware updates explicitly model others’ learning, for example learning with opponent learning awareness, and proximal or consistent variants, which can improve coordination but presume access to or accurate prediction of others’ updates [16]. (iii) Meta RL for rapid adaptation learns priors rules that speed task switching, yet requires representative task families and may degrade when phases deviate from the meta train manifold [17]. Surveys emphasize that dealing with non-stationarity remains a central open issue in MADRL, despite these advances [1], [18]. In UAV communications specifically, most works react to dy-namics via receding horizon re-planning or task specific DRL tuned per scenario, but provide limited treatment of abrupt objective re-weighting and representation collapse during long deployments, a gap repeatedly noted by domain surveys syn-thesizing UAV networking under mobility, interference, and energy constraints. Our approach diverges from the above lines in two ways. First, rather than fixing off-policy instability or modeling opponents, we target the representation failure mode directly. PE-MAMoE preserves expressivity in a sparsely gated MoE actor via short-window, expert-only stochastic perturbations after phase switches, while keeping the router stable and lightly temperature-scheduled. This design is fully compatible with on-policy MAPPO. Second, instead of meta-training across many tasks, we operate within a single, phase-driven ECN where QoS weights change online. The same policy tracks shifting optima under user mobility and time-varying demand by maintaining plasticity, addressing the UAV-MARL gap where prior methods either assume stationary objectives or lack mechanisms to prevent rank collapse and neuron dormancy. 
+
+B. Plasticity Loss in Neural Decision Systems 
+
+Continual learning and long running RL agents often suffer from plasticity loss, a reduction in the ability to acquire new knowledge over time [24]. As training progresses, neural networks tend to gradually and irreversibly lose their plasticity, meaning the model becomes stable but rigid, struggling to adapt to new tasks or changes [24]. Recent studies have char-acterized this phenomenon by observing increasing fractions of dormant neurons, units that effectively stop updating or firing, and a collapse in the network’s feature rank or represen-tational diversity [25]. In DRL settings, for example, standard agents have been shown to eventually settle into narrow representations: many neurons become inactive and the learned features span a lower dimensional subspace, hampering the agent’s ability to continue learning. This loss of plasticity is closely tied to the stability–plasticity dilemma and has been identified as a culprit behind both catastrophic forgetting and the stagnation of performance on new tasks [26]. Researchers have begun quantifying and addressing plas-ticity loss in neural decision systems. For instance, Sokar et al. highlight a “dormant neuron phenomenon” in DRL, where many units drop out of activity during training, correlating with diminished learning capacity [27]. Lyle et al. further link plasticity loss to a collapse in feature space dimensionality and show how this correlates with the agent becoming over committed to its early policy patterns [25]. To counteract these issues, several mitigation strategies have been proposed. One line of attack is meta learning, which trains models to be inher-ently more adaptable [17], [28]. By learning an initialization or update rule that remains plastic, meta learning approaches enable quick learning on new tasks, thereby counteracting the tendency to get stuck on past knowledge. Another set of tech-niques focuses on injecting variability or perturbations during training to avoid the network settling into a complacent state. Nikishin et al. identify a primacy bias in deep RL and propose periodically resetting a portion of the agent’s parameters to combat this bias [12]. Similarly, shrink and perturb methods introduce small random perturbations to weights, preserving diversity and preventing dormant neurons [24]. Despite these advances, most have been studied in single-agent or supervised contexts. Applications to multi-agent coordination problems remain sparse. Extending plasticity preserving ideas from single agent to multi agents settings introduces additional failure modes: (i) non-stationarity from concurrently learning teammates or opponents, which destabilizes value and policy updates; (ii) multi-agent credit assignment and convention formation, where agents may overfit to early coordination patterns; (iii) parameter interference under parameter sharing, which can compress representation rank and reduce plasticity; and (iv) architecture specific dormancy in MARL modules that mirrors single agent dormant units. Recent work explicitly documents 4
+
+dormant neurons in MARL value factorization [29]; surveys and algorithms targeting non-stationarity and coordination fur-ther underline these challenges [30]–[32]. In parallel, continual multi-agent studies show that teams can forget prior coordi-nation skills across regime shifts, pointing to a need for team level plasticity maintenance [33]. Motivated by these findings, we instantiate a plasticity preserving approach for UAVs based multi-agent coordination, PE-MAMoE, that couples modular experts with stochasticity based plasticity injection to sustain adaptability under abrupt user demand and mobility regime shifts, extending plasticity loss remedies beyond single agent and supervised settings to MARL for ECNs. 
+
+C. MoE and Modular Architectures 
+
+MoE architectures have grown in popularity as a way to scale up models while handling task diversity. The MoE concept, originally proposed in the 1990s, involves a number of expert subnetworks and a gating mechanism that routes each input to one or a few experts [34]. Shazeer et al. 
+
+revitalized this idea in deep learning (DL) by introducing a sparsely gated MoE layer that enabled extremely large neural networks with manageable computation [10]. The key is that only a small subset of experts is active for any given input, so the model’s capacity grows while inference cost remains relatively constant. This architecture offers a natural way to handle heterogeneous tasks or data modes. Recent studies in deep RL have shown that augmenting agents with MoE layers significantly improves learning capacity and reduces dormant neurons [35]. Several advances have been made to address specific challenges in MoE systems. One focus area is routing sparsity and efficiency. Switch Transformers simplified the MoE gating by routing each input to exactly one expert, enabling trillion parameter models with moderate cost [36]. Another concern is expert utilization and diversity. Without intervention, experts may be underused or converge to similar functions, undermining modularity [37]. Diversity promoting regularization and load balancing techniques have been proposed to ensure distinct and balanced expert usage. A related line of research addresses controlled forgetting and lifelong adaptation in modular networks. For example, Lee et al. propose gradual expert updates to preserve old knowledge while learning new tasks [9]. Despite these advances, integration of MoE architectures with MARL and wireless networking problems remains largely unexplored. To our knowledge, there are no prior studies that use MoEs to handle non-stationary objectives in a multi-UAV coordination scenario. Our work is among the first to introduce a MoE design into MARL for UAV communications, enabling UAV teams to effectively switch strategies on the fly without incurring plasticity loss. III. P ROBLEM STATEMENT 
+
+We adopt a typical multi-UAV as aerial base station (BS) model over a square disaster area with slotted time and 3D motion characteristics because it is (i) representative of the dominant formulation in UAV communications, capturing the essential trade offs among coverage, interference, and                                                                   
+
+> TABLE I SUMMARY OF KEY NOTATION
+> Symbol Description
+> System model
+> ΩDisaster area [0 , S ]2
+> U,UUAV set and number of UAVs
+> N(t),NActive ground user set and total users
+> qu(t)3D position of UAV uat time t
+> ∆tTime slot duration
+> Pmax ,pn,u Max transmit power; power allocated to user nby UAV ugn,u (t)Channel power gain from UAV uto user nF,ρadj Frequency reuse factor; adjacent-channel leakage
+> B,Bu(t)Total bandwidth; per-user bandwidth of UAV uRn,u (t)Achievable rate for user nserved by UAV uEprop
+> u(t)Propulsion energy of UAV uin slot t
+> Phase and mobility model
+> ϕtPhase index ∈ { 0,1,2}
+> LPhase duration (number of steps)
+> dn(t)Demand class of user n:{L, M, H }
+> μqoe
+> t, μ ene
+> t, μ col
+> tPhase-dependent objective weights
+> κ,αRPGM follow gain; GM memory coefficient
+> PE-MAMoE architecture
+> E,kNumber of experts; top-krouting parameter
+> Wr,zit,gitRouter weights, logits, and gating probabilities
+> τRouter temperature
+> θjParameters of expert jγ(e)
+> tExpert noise injection scale
+> NNoise injection window (epochs after switch)
+> πref Frozen reference policy for KL stabilization
+
+energy, yet (ii) sufficiently compact to admit clean signal-to-interference-plus-noise ratio (SINR) expressions, propulsion and communication power accounting, and a Markov state ac-tion interface suited to MAPPO. Meanwhile, the time varying user set N (t) and user mobility can simulate realistic load and topology changes. Our goal is not to innovate on geometry itself, but to provide a faithful, extensible backbone on which to evaluate team level plasticity under system state shifts. The novelty lies in how the model is used: we embed phase driven QoS objective reweighting and demand and mobility pattern changes into the same environment, yielding abrupt but structured non-stationarity that stress representation plasticity without introducing with any special modeling techniques. This design allows direct comparison to standard baselines by disabling phases while isolating the effect of the proposed PE-MAMoE mechanisms on adaptation, stability, and sample efficiency. 
+
+A. System Model 
+
+Table I summarizes the key symbols used throughout the paper for easy reference. We consider a disaster stricken square area Ω = [0 , S ]2,where the communication infrastructure is severely damaged, and multiple UAVs are deployed as aerial BSs to provide emergency communication coverage. Time is slotted by t ∈{0, 1, 2, . . . } with slot length ∆t. Let U = 1 , . . . , U be the set of UAVs. The 3D position and velocity of UAV u ∈ U at time 
+
+t are 
+
+qu(t) = [ xu(t), y u(t), h u(t)] ⊤, ∀u ∈ U ,
+
+vu(t) = [ vh,u (t), v v,u (t)] ⊤. (1) 5
+
+The kinematics follow a discrete time update 
+
+qu(t + 1) = qu(t) + vu(t)∆ t. (2) subject to flight constraints 
+
+0 ≤ vh,u (t) ≤ vmax h,u , 0 ≤ vv,u (t) ≤ vmax v,u .
+
+Each UAV transmits with power Pu(t) ∈ [0 , P max ] (downlink). Let N (t) = 1 , . . . , N t denote the active ground users (GUs) set at time t. The position of user n ∈ N (t) are sn(t) = [xn(t), y n(t), z n]⊤ with motion update sn(t+1) = sn(t) + 
+
+vn(t)∆ t, where vn(t) is the horizontal velocity. 
+
+B. Channel Model 
+
+For any UAV u and user n at time t, denote the horizontal distance by dn,u (t) = [xn(t) − xu(t), y n(t) − yu(t)] 2, the relative height by hn,u (t) = hu(t) − zn, and the 3D distance by rn,u (t) = 
+
+q
+
+d2
+
+> n,u
+
+(t) + h2
+
+> n,u
+
+(t).
+
+a) LoS probability: We adopt a distance dependent and height dependent line of sight (LoS) probability 
+
+PLoS (r, h ) = 
+
+
+
+1, r ≤ 18 m,
+
+18 
+
+r + e−r/ 36 
+
+
+
+1 − 18 
+
+r
+
+
+
+· (1 + C0(h)) 
+
+, r > 18 m.
+
+(3) with a height correction C0(h) =  max {h − 13 , 0}/10 1.5.
+
+We clip PLoS ∈ [0 , 1] . This follows a 3GPP UMi-style form with an additional elevation-dependent term to capture low altitude air-to-ground (A2G) links [38], [39]. 
+
+b) Large scale path loss (dB): Conditioned on the LoS and non-LoS (NLoS) state, the path loss is modeled as 
+
+PL LoS (r, f c) = 28 + 22 log 10 (r) + 20 log 10 (fc), (4) 
+
+PL NLoS (r, f c) = PL LoS (r, f c) + 13 + 0 .1 r0.25 , (5) where r is in meters. The linear large scale gain is 10 −PL /10 .1
+
+c) Small scale fading and shadowing: Small scale fading is Rician under LoS and Nakagami-m under NLoS: 
+
+hsmall ∼
+
+(
+
+Rician (K ≈ 6 dB ), LoS ,
+
+Nakagami-m (m=mNLoS ), NLoS , (6) and multiplicative lognormal shadowing is applied with stan-dard deviations σLoS /σNLoS in dB. Let GTX , G RX be antenna gains. The per-link power gain is 
+
+gn,u (t) = GTX GRX hsmall (t) 2 · 10 −PL( rn,u (t),f c)/10 . (7)                
+
+> 1The LoS base term (4) matches the 3GPP UMi slope
+> 28+22 log 10 (r)+20 log 10 (fc);the NLoS offset and weak distance exponent refinement in (5) follow our implementation to penalize NLoS links.
+
+d) Clustered reuse and interference: We employ fre-quency reuse factor F ∈ N across UAVs: each UAV u is assigned a color c(u) ∈ { 0, . . . , F −1}. Let Pu(t), bounded by Pmax , be the total downlink power used by UAV u and 
+
+pn,u (t) the portion allocated to user n, pn,u (t) = 0 if n is not served by u. The co-channel interference at user n when served by UAV u is 
+
+In,u (t) = X 
+
+> u′̸=uc(u′)= c(u)
+
+Pu′ (t) gn,u ′ (t)+ ρadj 
+
+X
+
+> u′
+> c(u′)̸=c(u)
+
+Pu′ (t) gn,u ′ (t),
+
+(8) where ρadj ∈ [0 , 1) models adjacent-channel leakage. 
+
+e) Bandwidth allocation, noise and SINR: Each color receives bandwidth B/F . If UAV u concurrently serves Ku(t)
+
+users, their per user bandwidth is Bu(t) = BF K u(t) . With one sided noise spectral density N0, the noise power is N0Bu(t).The instantaneous SINR and achievable rate for user n (served by u) are 
+
+SINR n,u (t) = pn,u (t) gn,u (t)
+
+N0Bu(t) + In,u (t) , (9) 
+
+Rn,u (t) = α B u(t) log 2
+
+ 1 + SINR n,u (t), (10) where α ∈ (0 , 1] captures implementation loss and coding gap. 
+
+f) Feasibility driven power assignment: Given a target rate R∗
+
+> n
+
+(t) chosen from the demand level, the required SINR is 
+
+γ∗
+
+> n
+
+(t) = 2 R∗
+
+> n(t)/(αB u(t))
+
+−1. To meet R∗
+
+> n
+
+(t) under conservative interference In,u (t), the transmit power allocated to n is 
+
+pn,u (t) = γ∗
+
+> n
+
+(t)  N0Bu(t) + In,u (t)
+
+max {gn,u (t), ε } , (11) s.t. X
+
+> n
+
+pn,u (t) ≤ Pmax 
+
+with a small ε for numerical stability. Users are greedily admitted based on demand level and link efficiency until either the power budget of each UAV or the maximum number of users served by the UAV is met; finally (9)–(10) yield the realized SINR and rate. 
+
+C. Energy Consumption Model 
+
+Each UAV is powered by a finite onboard battery. The energy expenditure of UAV u is decomposed as 
+
+Eu(t) = Eprop  
+
+> u
+
+(t) + Ecomm  
+
+> u
+
+(t). (12) 
+
+a) 3D rotary wing propulsion power: Let Vh ≥ 0 and 
+
+Vz ∈ R denote the horizontal and vertical speeds. We adopt the rotary wing 3D propulsion power model [40], [41]: 
+
+Prot (Vh, V z ) = P0 1 + 3V 2
+
+> h
+
+U 2
+
+> tip
+
+!
+
+(13) 
+
++ Pi
+
+s
+
+1 + (V 2 
+
+> h
+
++ V 2 
+
+> z
+
+)2
+
+4v40
+
+− V 2 
+
+> h
+
++ V 2
+
+> z
+
+2v20
+
+!1/2
+
++ 12 d0 ρ s A V 3 
+
+> h
+
+.6
+
+Here P0 and Pi are the profile and induced power coefficients, 
+
+Utip is the blade tip speed, v0 is the hover induced speed, and 
+
+d0, ρ, s, A denote the fuselage drag coefficient, air density, rotor solidity and rotor disk area, respectively. The hover power is Prot (0 , 0) = P0 + Pi.
+
+b) Slot wise propulsion energy: Within one slot, the controller executes horizontal and vertical movements sequen-tially. Let the realized displacements between the beginning and end of slot t be sh(t) (horizontal) and sv (t) (vertical magnitude). Given commanded speeds |Vh(t)| > 0 and 
+
+|Vz (t)| > 0, the motion times satisfy 
+
+th(t) = sh(t)
+
+|Vh(t)| ,tv (t) = sv (t)
+
+|Vz (t)| ,tmove (t) = th(t) + tv (t) ≤ ∆t. (14) and the remaining time is hovering thov (t) = ∆ t − tmove (t).2
+
+Hence the propulsion energy in slot t is the sum of three segments: 
+
+Eprop  
+
+> u
+
+(t) = Prot 
+
+ Vh(t), 0 th(t) (15) 
+
++ Prot 
+
+ 0, V z (t) tv (t)+ Prot (0 , 0) thov (t).
+
+c) Battery update and budget: Let Bu(t) be the remain-ing battery energy at the beginning of slot t. The state update is 
+
+Bu(t+1) = Bu(t)−Eprop  
+
+> u
+
+(t), 0 ≤ Bu(t) ≤ Bmax  
+
+> u
+
+. (16) with terminal and mission feasibility requiring Bu(t) ≥ 0 for all t. In this work we neglect the communication related energy on the UAV side, since extensive studies show that, for rotary UAVs, the propulsion power overwhelmingly dominates the on-board energy budget, while radio and processing energy is typically negligible in comparison; hence “UAV energy” is taken to mean flight energy throughout the paper [42]. 
+
+D. User Mobility and Phase Model 
+
+We consider a population of N GUs, indexed by N =
+
+{1, . . . , N }, whose active set at time t is N (t) ⊆ N .
+
+a) Hotspots: Users are partitioned evenly into G
+
+hotspots, G = {1, . . . , G }, with fixed memberships {N g }Gg=1 
+
+and |N g | = N/G . Each hotspot has a center cg (t) ∈ Ω and a waypoint pg (t) ∈ Ω. Centers migrate with constant speed ug
+
+toward their targets and periodically retarget every Tret steps: 
+
+cg (t+∆ t) = cg (t) + ug
+
+pg (t) − cg (t)
+
+∥pg (t) − cg (t)∥ + ε ∆t, (17) which follows the “logical group center and individual per-turbations” principle of the Reference Point Group Mobility (RPGM) model. Group membership is locked, ensuring each hotspot always hosts N/G GUs [43], [44].    
+
+> 2If tmove (t)>∆t, the action is declared infeasible in our implementation.
+
+b) User mobility: For user n ∈ Ng , denote position 
+
+xn(t) ∈ Ω and velocity vn(t) ∈ R2. We use a Gauss Markov (GM) velocity process with memory α ∈ [0 , 1) and noise scale 
+
+σ > 0, blended with RPGM following: 
+
+vGM  
+
+> n
+
+(t+∆ t) = α vn(t) + (1 −α) v0
+
+vn(t)
+
+∥vn(t)∥ + ε
+
++ p1−α2 σ ξn(t), ξn(t) ∼ N (0, I2)
+
+(18) 
+
+v+ 
+
+> n
+
+(t) = (1 −κ) vGM  
+
+> n
+
+(t) + κ v 0
+
+cg (t) − xn(t)
+
+∥cg (t) − xn(t)∥ + ε
+
++ ηn(t), ηn(t) ∼ N (0, σ 2 
+
+> f
+
+I2)
+
+(19) 
+
+xn(t+∆ t) = Π Ω
+
+ xn(t) + v+ 
+
+> n
+
+(t)∆ t. (20) where κ ∈ [0 , 1] is the follow gain and ΠΩ(·) denotes reflecting boundaries [43], [44]. To reflect phase driven non-stationarity, these parameters are phase dependent: in low demand phases we use slower motion with smaller drift vlow  
+
+> 0
+
+, noise σlow and a weaker group following coefficient κlow ; in medium and high demand phases we gradually increase nominal speed and directional coherence, that is, larger vmed/high  
+
+> 0
+
+and κmed/high , and allow stronger exploration via σmed/high .
+
+c) Phase model: We partition time into a fixed number of phases ϕt ∈ { 0, 1, 2} with equal duration L; after every L
+
+steps the environment switches to the next phase in a cyclic manner: 
+
+ϕt = t/L  mod 3 .
+
+The phase index ϕt is used only by the simulator to set environment parameters; it is not included in any agent’s observation. Agents must therefore infer the current regime from the observable consequences of each phase, namely the user demand distribution and spatial mobility patterns. Each phase instantiates a distinct mobility demand regime. On the mobility side, users follow the GM and RPGM blended kinematics with phase specific parameters 
+
+v0 = v0(ϕt), α = α(ϕt), σ = σ(ϕt), κ = κ(ϕt),
+
+so that the low demand phase ( ϕ = 0 ) uses smaller nominal speed v0 and directional noise σ, while ϕ = 1 , 2 progressively increase crowd speed and directional coherence to emulate evacuation and aggregation effects in disaster scenes. On the traffic side, each user n holds a discrete demand class 
+
+dn(t) ∈ { L, M, H } whose targets and weights are phase wise constants: 
+
+Rtar  
+
+> d
+
+(t) = rd(ϕt), wd(t) = wd(ϕt), d ∈ { L, M, H }.
+
+Accordingly, the per user QoS threshold used by the scheduler is 
+
+Rmin  
+
+> n
+
+(t) = rdn(t)(ϕt), 0 < r L(ϕ0) < r M (ϕ0) ≪ rH (ϕ0),
+
+with rd(ϕ) and wd(ϕ) chosen to reflect phase priorities. 7
+
+E. Research Objective 
+
+According to the above, we cast the cooperative control of multi-UAV ECNs as a single step rolling optimization. At each decision step t, the controller selects UAV motion decisions so as to (i) maximize demand aware QoS utility, crediting a UAV only when a served user meets its demand class rate threshold, and (ii) minimize propulsion energy and safety penalties. QoS is treated as a soft objective via indicator terms inside the sum, which lets us reason algebraically about “demand satisfied” and “demand unsatisfied” events without introducing hard feasibility constraints. The UAV energy term accounts only for flight propulsion, following the common observation that communication energy is negligible compared to propulsion for rotary or fixed wing UAVs. We use the indicator bracket [ · ] to embed logical conditions into sums; it evaluates to 1 when the statement is true and 0 otherwise. At each decision step t, the controller must jointly select the pose qu ∈ R3 for each UAV u. A binary association matrix 
+
+an,u ∈ { 0, 1} indicating whether user n ∈ N is served by UAV 
+
+u; and non-negative per-link bandwidth and power allocations 
+
+bn,u ≥ 0, pn,u ≥ 0. These decisions feed the objective in (O ′)and are constrained by the kinematics, spectrum, and power budgets mentioned below. 
+
+max  
+
+> q,v,a,b,p
+
+μqoe 
+
+> t
+
+X
+
+> n∈N
+
+X
+
+> u∈U
+
+an,u wdn(t)
+
+  Rn,u ≥ rdn(t)
+
+ | {z }
+
+> demand-aware QoS utility
+
+− μene 
+
+> t
+
+X
+
+> u∈U
+
+Eprop 
+
+> u
+
+| {z }
+
+> propulsion energy
+
+− μcol 
+
+> t
+
+X
+
+> u<u ′
+
+[ ∥qu − qu′ ∥ < d min ]
+
+| {z }
+
+> safety penalty (collisions)
+
+− λov 
+
+X
+
+> u<u ′
+
+[ ∥qu − qu′ ∥ < 2R ] exp 
+
+
+
+− ∥qu−qu′ ∥2
+
+> 2σ2
+
+| {z }
+
+> overlap penalty
+
+(O ′)
+
+Subject to: 
+
+Bu(t+∆ t) = Bu(t) − Eprop  
+
+> u
+
+(t),
+
+0 ≤ Bu(t) ≤ Bmax  
+
+> u
+
+, ∀u ∈ U , (C1) 
+
+X
+
+> u∈U
+
+an,u ≤ 1, an,u ∈ { 0, 1},an,u = 0 if ∥qxy u − xxy n ∥ > R srv (ϕt), ∀n ∈ N , u ∈ U ,
+
+(C2) 
+
+X
+
+> n∈N
+
+bn,u ≤ BF (ϕt) ,b n,u ≥ 0, X
+
+> n∈N
+
+pn,u ≤ Pmax ,pn,u ≥ 0, ∀u ∈ U , (C3) 
+
+SINR n,u = pn,u gn,u (qu, x n)
+
+N0 bn,u + In,u 
+
+,Rn,u = α b n,u log 2
+
+ 1 + SINR n,u 
+
+, ∀n ∈ N , u ∈ U , (C4) 
+
+X
+
+> u∈U
+
+an,u Rn,u ≥ rDn(t) I
+
+ X 
+
+> u∈U
+
+an,u > 0
+
+
+
+, ∀n ∈ N , (C5) 
+
+∥qu − qu′ ∥ ≥ dmin , ∀u̸ = u′ ∈ U . (C6) 
+
+U and N are the UAV and user index sets; qu=( xu, y u, h u)
+
+and vu denote UAV position and horizontal velocity; an,u ∈{0, 1} indicates association; bn,u and pn,u are per-link band-width and power, bounded by (C3). The achievable rate is 
+
+Rn,u = α b n,u log 2(1 + SINR n,u ) with α ∈ (0 , 1] capturing implementation loss and SINR n,u defined in (C4), where 
+
+gn,u (qu, x n) follows TR 38.901 large and small scale fading and In,u aggregates co-channel and adjacent leakage interfer-ence. The demand class dn(t) ∈ { L, M, H } maps to a target rate rdn(t) and weight wdn(t); the bracket  Rn,u ≥ rdn(t)
+
+
+
+equals 1 if user n served by UAV u meets its threshold and 0
+
+otherwise. The energy term Eprop  
+
+> u
+
+is the per-step propulsion energy of UAV u with battery dynamics given in (C1); communication energy is neglected relative to propulsion. The safety penalty uses a minimum separation indicator, and the overlap penalty is a truncated Gaussian with range cutoff 2R
+
+and scale σ to discourage dense UAV packing while allowing flexibility inside the service radius. Having specified (O ′) as the task level target, the remainder of this paper addresses how to keep the policy plastic enough to track it under regime switches. 
+
+a) Policy action space versus environment-side heuris-tics: The formulation in (O ′) involves joint decisions over UAV poses qu, user association an,u , bandwidth bn,u , and power pn,u . In our MARL instantiation, the learned policy outputs only the 2D displacement of each UAV per time slot (i.e., ait ∈ R2, the horizontal movement target). All remaining resource allocation decisions are handled by deter-ministic, environment-side heuristics that execute within each simulator step: (i) user association : each user is assigned to the nearest UAV within the phase-dependent service radius 
+
+Rsrv (ϕt); (ii) user admission : each UAV greedily admits users in decreasing demand-class priority ( H > M > L ,ties broken by proximity) up to the per-UAV capacity limit; (iii) bandwidth allocation : the per-color bandwidth B/F is split equally among the Ku(t) admitted users; (iv) power allocation : transmit power per user is set via the feasibility-driven rule in Eq. (11) to meet the demand-class rate target. This decomposition follows a common pattern in UAV-MARL research where trajectory control is learned while lower-layer radio resource management uses model-based rules, keeping the action space low-dimensional and the learning problem tractable. The policy’s influence on QoS, energy, and collisions is therefore indirect : by choosing where to fly, each UAV determines which users fall within its coverage, how link budgets are distributed, and how close it is to other UAVs. Concretely, we design a plasticity–enhanced, sparsely gated MoE controller whose router reassigns traffic across special-ized experts when the phase weights μt and demand com-binations change, and whose experts receive light stochastic perturbations around switches to avoid common problems such as primacy bias and dormant neurons. In the next sections we instantiate this design, PE–MAMoE, analyze its stability and plasticity trade offs, and show empirically that it maintains effective rank and adaptability when the objective function undergoes sudden changes [10], [12], [24], [27]. 8
+
+IV. P ROPOSED METHOD : PE-MAM OE F RAMEWORK 
+
+We propose plasticity enhanced multi-agent mixture of experts, that is PE-MAMoE, a centralized training with de-centralized execution (CTDE) style MARL architecture that pairs conditional computation with stochasticity based plastic-ity injection to keep policies adaptable when phase weights 
+
+μt and demand combinations change abruptly. Specifically, decentralized actors consist of a sparsely gated MoE router that selects a small set of specialized experts per state, providing reconfigurable capacity without linear compute growth; acentralized critic stabilizes training. Actors are optimized with proximal policy optimization (PPO) and generalized advantage estimation (GAE) under the MAPPO recipe for cooperative games, while light, scheduled perturbations around regime switches re-plasticize the experts to avoid primacy bias and dormant units. 
+
+a) Why UAV–ECN non-stationarity demands expert-level plasticity injection: While stochastic perturbation is a general remedy for plasticity loss in deep RL, several properties of the phase-driven, multi-agent UAV–ECN problem make expert-level noise injection especially critical. First, UAV–ECN phase switches are abrupt and compound : a single switch simul-taneously changes user mobility parameters, demand-class weights, and QoS thresholds (Section III-D), so the optimal joint policy shifts across multiple coupled dimensions at once; a monolithic network must overwrite its entire representa-tion, whereas expert-level perturbation selectively loosens only the activated specialists while the router retains the regime-selection map. Second, under CTDE with parameter sharing, all UAVs execute the same actor; once an early coordination convention hardens into a few dominant experts, the team loses the ability to redistribute coverage after a mobility regime change. Expert-only noise breaks this convention lock-in at the specialist level without destabilizing the router’s coarse regime assignment, a separation that has no analogue in single-agent plasticity methods. Third, emergency communication imposes hard safety constraints (collision avoidance, energy budget) alongside soft QoS objectives; global weight pertur-bation would jeopardize the safety-critical components learned in earlier phases, whereas confining noise to the selected experts and briefly freezing the router limits the disturbance radius and preserves the collision-avoidance policy encoded in unselected experts. Fourth, on-policy MAPPO discards data after each update, so the agent cannot revisit old-regime samples to counteract representation drift; the controlled noise window right after a switch acts as a lightweight substitute for experience replay, re-diversifying features precisely when new data is most scarce. Together, these factors make the combination of sparse MoE routing with switch-aware, expert-confined perturbation a structurally motivated design for UAV– ECN coordination rather than a generic RL enhancement. 
+
+A. MoE Architecture Paradigm a) Overview: We instantiate the decentralized actor in PE-MAMoE as a sparsely gated MoE policy: a light router selects a small subset of expert heads per agent step, and only those experts are executed; the centralized critic remains                                     
+
+> Fig. 1. PE-MAMoE architecture. For each UAV i, the local observation
+> oitis fed into the Actor router . The router produces gates g, dispatches to the Top-kexperts, and combines their outputs to form a shared MoE trunk, which parameterizes the policy head (μa,log σ). A Phase Controller
+> performs non-gradient scheduling at phase switch: router τ-anneal, per group learning rate scheduling and Adam state reset, and log-σreset →
+> clamp/anneal; it also injects expert noise to enhance plasticity. On the critic side, the centralized state Xtis processed by a Critic MoE encoder to produce the team value Vteam (Xt). Training follows CTDE with the total loss Ltotal =Lppo +λvLvalue −λent Lent +λkl ref Lkl ref . Gradients propagate to routers and experts (conditional computation: only the selected experts execute).
+
+dense. This conditional computation design increases repre-sentational capacity without proportional compute, and uses a load balancing auxiliary loss to prevent expert collapse [10], [36]. Figure 1 sketches the information flow under CTDE: each UAV uses the shared actor with local observation oit, while the critic consumes the global state. Sparse routing follows top-k
+
+token choice gating [10] with switch style load balancing [36]. 
+
+b) Core innovations: The PE-MAMoE framework intro-duces three tightly coupled innovations beyond standard sparse MoE, each targeting a distinct failure mode under phase-driven non-stationarity (see Fig. 1). (i) Expert-only stochastic perturbation. After each phase switch, controlled Gaussian noise is injected into expert parameters for a short, fixed window (Section IV-B). This re-diversifies expert features and counteracts primacy bias and dormant neurons, while leaving the router undisturbed so that the coarse regime-selection map is preserved. (ii) Non-parametric Phase Controller. Aset of non-gradient schedules fires at every switch: the router temperature τ is raised to encourage exploration across ex-perts, the action log-standard-deviation is reset to re-open behavioral exploration, the entropy coefficient is reset and re-annealed, the learning rate is reduced and warmed up, and Adam moments are cleared. These schedules add zero learnable parameters yet orchestrate the transition from an “explore new regime” mode to a “consolidate” mode within each phase (Algorithm 1). (iii) KL-anchored stabilization. Afrozen copy of the pre-switch policy serves as a reference for a decaying KL penalty term in the total loss, preventing the policy from drifting too far too fast while the noise injection and schedules take effect. Together, these three mechanisms form a layered system that separates representational plasticity (noise injection), behavioral exploration (logstd reset, entropy, temperature), and stability (KL anchor, LR warmup), enabling fast yet safe re-adaptation at every regime change. 9
+
+c) Router and Top-K gating: For agent i at time t, the router input is xit = ϕ(oit), where ϕ(·) is an identity mapping (no separate embedding) and oit is the local observation vector containing UAV poses, energy levels, per-user rates, per-user demand classes (normalized), and user positions. The phase preference μt is not provided to the agent as a direct input; instead, the agent infers the current regime indirectly through the demand-class distribution and user spatial patterns that change at phase boundaries. The router produces logits and temperature–scaled probabilities 
+
+zit = Wr xit + br , git = softmax 
+
+ zit
+
+τ
+
+
+
+∈ ∆E−1, (21) with E experts and temperature τ > 0. Let Tk(xit) be indices of the k largest entries of git [10]. Define sparse mixture weights 
+
+wit,j =
+
+
+
+git,j 
+
+P 
+
+> m∈T k(xit)
+
+git,m 
+
+, j ∈ T k(xit),
+
+0, otherwise. (22) 
+
+d) Expert heads and fused Gaussian policy: Each expert 
+
+fj outputs an action head conditioned on xit. For the 2D motion action with bounded displacement ait ∈ R2, we use a fused Gaussian actor where expert means are linearly combined and a shared log–standard is maintained: 
+
+μ(j) 
+
+> t
+
+= W (j) 
+
+> μ
+
+xit + b(j) 
+
+> μ
+
+, j = 1 , . . . , E, (23) 
+
+¯μit =
+
+> E
+
+X
+
+> j=1
+
+wit,j μ(j) 
+
+> t
+
+, log σ. (24) The stochastic policy is then 
+
+πθ (ait | sit, μ t) = N  ait ¯μit, diag( σ2) , (25) so the forward pass executes only the k selected experts and the small router. 
+
+e) Actor objective with MoE terms: Under MAPPO, the actor minimizes 
+
+Lactor = E[LPPO (θ)] − λent EH πθ (· | sit, μ t) , (26) with λent ≥ 0. The critic and advantage estimator follow standard PPO and GAE [45], [46] under CTDE [47]. 
+
+f) Why MoE here: Top-K token choice routing scales capacity while keeping per-step cost near that of a small dense actor; the load balancing term keeps experts engaged and prevents idle or dominant experts, which is important for handling abrupt objective shifts [10], [36]. We will next describe how plasticity injection is integrated into the experts to maintain adaptability during system switching. 
+
+B. Training Experts with Plasticity Injection a) Design Motivation: Deep RL policies gradually lose the ability to fit new targets after long training, a phenomenon known as loss of plasticity, manifested by dormant neurons and rank collapse; this is aggravated under non-stationary ob-jectives and on policy updates [12], [24], [27], [48]. 3 To keep 
+
+> 3Empirical evidence spans Atari/MuJoCo and classification; maintaining plasticity typically requires continual diversity injection or resets.
+
+MoE experts adaptable when phase weights μt and demand combinations change, PE-MAMoE couples light stochastic perturbations with targeted reactivation at regime switches, while retaining PPO and GAE optimization. As discussed above, expert-only injection is chosen over global perturba-tion because UAV–ECN switches are compound (mobility, demand, and QoS shift simultaneously) and safety critical (collision avoidance must persist); confining noise to the activated specialists re-plasticizes the capacity needed for the new regime while the frozen router and unselected experts protect previously learned safe behaviors. 
+
+b) Where the noise enters: Let θj denote the parameters of expert j ∈ { 1, . . . , E }. For a minibatch B, the PPO actor loss with MoE terms (see Eq. (26)) is optimized with noise-perturbed parameter updates on the selected experts: 
+
+θj ← θj − ηt∇θj Lactor + ηt γ(e) 
+
+> t
+
+εj , ε j ∼ N (0, I), ∀j ∈ T k.
+
+(27) where ηt is the learning rate, and γ(e) 
+
+> t
+
+is switch-aware noise scales. 
+
+c) Switch aware noise window: Let ts be a phase switch time. We use a fixed amplitude pulse for N epochs after each switch and zero otherwise: 
+
+γ(e) 
+
+> t
+
+=
+
+(
+
+γ(e)0 , t ∈ [ts, t s+N ),
+
+0, otherwise . (28) In the main experiments we set γ0=0 .005 . In the ablation (Sec. VI-G) we set γ0 with different values and apply it only within the first N epochs after a switch. 
+
+d) Monitoring dormant units: To quantify plasticity degradation, we only monitor the dormant neuron fraction (DNF) per layer during training and across phase switches, without applying any reinitialization. For a layer of width d,the DNF over a minibatch B is 
+
+DNF = 1
+
+d
+
+> d
+
+X
+
+> u=1
+
+I
+
+(
+
+1
+
+|B| 
+
+X
+
+> x∈B
+
+|au(x)| < δ 
+
+)
+
+, (29) where au(·) is the output before nonlinear activation and δ is a small threshold. We report DNF together with effective rank statistics to diagnose plasticity loss and representation collapse under non-stationary phases. 
+
+e) Router temperature control: To avoid early router collapse while keeping training simple, we do not add a router entropy regularizer to the loss. Instead, a non-gradient Phase Controller adjusts the router temperature immediately after a phase switch and then cools it as the phase stabilizes: 
+
+gt = softmax 
+
+ zt
+
+τt
+
+
+
+, τt = τmin + τmax − τmin 
+
+1 + κ e −β ∆( t) , (30) where ∆( t) is time since the last switch. This temperature schedule increases routing diversity right after switches with-out introducing an extra loss term. 10 
+
+Algorithm 1 PE-MAMoE Training Loop 
+
+1: Input: phase schedule {ϕ0, ϕ 1, . . . }, phase length L, experts {fj }Ej=1 ,router Wr , noise budget N , noise scale γ0, temperature bounds 
+
+τmin , τ max , freeze window Kfreeze , warm window Kwarm 
+
+2: Initialize shared actor πθ (MoE), centralized critic Vψ , optimizer (Adam) 3: noise left ← 0; freeze left ← 0; πref ← None 4: for iteration = 1 , 2, . . . do 
+
+5: // — Check phase switch — 
+
+6: if iteration mod L = 0 then 
+
+7: ϕ ← next phase; update env demands and mobility 8: // Phase Controller (non-gradient): 
+
+9: πref ← frozen copy of πθ ▷ KL anchor 10: Reset Adam optimizer states (moments ← 0)11: Inject expert noise: θj ← θj + γ0εj , ε j ∼ N (0, I), ∀j
+
+12: noise left ← N ; freeze left ← Kfreeze 
+
+13: Reset log σ ← σinit ▷ re-open exploration 14: Reset entropy coef. to initial value; begin anneal 15: Set LR ← αphase · α0; begin warmup over Kwarm iters 16: Set conservative PPO clip and target-KL for Kwarm iters 17: end if 
+
+18: // — Scheduling within phase — 
+
+19: if freeze left > 0 then 
+
+20: Set router LR ← 0 (freeze router weights) 21: freeze left ← freeze left −1
+
+22: else 
+
+23: Restore router LR; warm up toward α0
+
+24: end if 
+
+25: Anneal τt via Eq. (30) based on time since last switch 26: Anneal entropy coefficient linearly within current phase 27: // — Rollout — 
+
+28: Collect trajectories {(oit, a it, r t, o it+1 )} using πθ with top-k routing 29: Compute advantages ˆAt via GAE with centralized critic Vψ
+
+30: // — PPO update epochs — 
+
+31: for epoch = 1 , . . . , E update do 
+
+32: for each minibatch B do 
+
+33: Compute LPPO , Lvalue , H(πθ )
+
+34: if πref ̸ = None and λkl ref > 0 then 
+
+35: Ltotal ← L PPO + λV Lvalue − λent H + λkl ref KL( πθ ∥πref )
+
+36: else 
+
+37: Ltotal ← L PPO + λV Lvalue − λent H
+
+38: end if 
+
+39: Update θ, ψ via Adam on Ltotal 
+
+40: end for 
+
+41: if noise left > 0 then 
+
+42: Inject expert noise: θj ← θj + γ0εj , ∀j ∈ T k
+
+43: noise left ← noise left −1
+
+44: end if 
+
+45: end for 
+
+46: Decay λkl ref ; if below threshold, release πref 
+
+47: end for 
+
+f) Stability: Training follows CTDE with PPO and GAE. The total loss used in our experiments is 
+
+min  
+
+> θ,ψ
+
+Ltotal = EB
+
+LPPO (θ)| {z }
+
+> actor
+
++ λV EB
+
+(Vψ − ˆV )2| {z }
+
+> value
+
+(31) 
+
+− λent EB
+
+H(πθ ) + λkl ref EB
+
+KL( πθ ∥ πref ),
+
+where πref is a reference policy used for stabilization across switches, set to the pre-switch actor snapshot. Parameters are updated with the expert noise rule in Eq. (27). The Phase Controller also applies non-gradient schedules at switches: per-group learning rate warmup and decay, Adam state reset, and actor log-σ reset followed by clamp and anneal (cf. Fig. 1). Algorithm 1 consolidates the full PE-MAMoE training procedure, making the execution order and conditional logic explicit. V. T HEORETICAL ANALYSIS 
+
+We analyze PE-MAMoE under phase driven non-stationarity and prove a dynamic regret bound showing that the tracking error is governed by two factors: the variation budget of the changing environment and the cumulative noise energy injected to restore plasticity. 
+
+a) Problem setting: Let {M t}Tt=1 be a sequence of cooperative Markov decision processes (MDPs), induced by phase switches. At step t, let π∗ 
+
+> t
+
+be the optimal policy for 
+
+Mt, and let Jt(π) denote its episodic performance criterion. The dynamic regret of a learning policy sequence {πt} is 
+
+DynRegret T ≜
+
+> T
+
+X
+
+> t=1
+
+
+
+Jt(π∗ 
+
+> t
+
+) − Jt(πt)
+
+
+
+. (32) We quantify non-stationarity by a variation budget VT (a.k.a. path length), instantiated either on rewards and transitions 
+
+(Br , B p) or on the path length of the optimal values and policies, as standard in non-stationary RL [49], [50]. 
+
+A. Assumptions 
+
+(A1) Bounded variation. The environment drift is controlled: 
+
+VT < ∞, e.g., bounded total variation in rewards and transitions [49], or bounded path length in Jt(π∗ 
+
+> t
+
+).(A2) PPO and trust region policy optimization (TRPO)-style stability. Per-step policy updates obey a TRPO and PPO performance difference bound with a trust region surrogate [51], [52]. (A3) Centralized critic error bound. The CTDE critic yields bounded estimation error; GAE reduces variance, pro-ducing a summable martingale remainder. (A4) MoE Lipschitz stability. Assume router logits and expert policies are Lipschitz in parameters and the Top-
+
+k selection uses a bounded temperature τt, yielding a piecewise smooth mixed policy πθ (a | s, ϕ ) =PKk=1 Gk(s, ϕ ) πθk (a | s) with 
+
+∥πθ′ (· | s, ϕ ) − πθ (· | s, ϕ )∥1 ≤ LG∥Gθ′ − Gθ ∥ (33) 
+
++
+
+> K
+
+X
+
+> k=1
+
+Lk∥θ′ 
+
+> k
+
+− θk∥.
+
+Thus MoE does not violate TRPO and PPO stability; it only affects constants in the performance difference bound [53]–[55]. (A5) Expert only noise. At training step t, we inject zero mean Gaussian perturbations only into the selected ex-perts. The expert noise scale γ(e) 
+
+> t
+
+is a constant and a fixed amplitude pulse restricted to the first N epochs after each phase switch. Hence the cumulative “noise energy” PTt=1 (γ(e) 
+
+> t
+
+)2 is finite. 
+
+B. Auxiliary lemmas 
+
+Lemma V.1 (TRPO or PPO performance difference) . Let π′ be the PPO or TRPO update of π under a trust region surrogate. Then for the MDP at time t,
+
+Jt(π′)−Jt(π) ≥ Es∼dπt ,a ∼π′
+
+Aπt (s, a )−Ct Div( π′∥π)−εest  
+
+> t
+
+,
+
+(34) 11 
+
+where Aπt is the advantage under π in Mt, Div is a di-vergence, Ct is a constant depending on mixing and reward bounds, and εest  
+
+> t
+
+collects critic or GAE approximation er-rors [51], [52]. 
+
+Lemma V.2 (Drift decomposition under variation budget) . Let 
+
+{πt}, {π∗ 
+
+> t
+
+} be the learner and step wise optimal policies. Then 
+
+> T
+
+X
+
+> t=1
+
+ Jt(π∗ 
+
+> t
+
+) − Jt(πt) ≤
+
+> T
+
+X
+
+> t=1
+
+ Jt(π∗ 
+
+> t
+
+) − Jt−1(π∗
+
+> t−1
+
+)| {z }
+
+DT (VT )+
+
+(35) 
+
+> T
+
+X
+
+> t=1
+
+ Jt(πt) − Jt(πt−1)−
+
+| {z }
+
+OT
+
++
+
+> T
+
+X
+
+> t=1
+
+εest  
+
+> t
+
+,
+
+where DT (VT ) is controlled by the environment variation budget VT , and OT is the optimization cost bounded via Lemma V.1 by trust region terms. Standard non-stationary RL arguments further give a representative bound DT (VT ) ∈
+
+eO(T 3/4V 1/4 
+
+> T
+
+) under common mixing or diameter condi-tions [49], [50]. 
+
+Lemma V.3 (Noise energy penalty) . Under (A5) , noise per-turbed updates add a martingale difference variance term so that 
+
+> T
+
+X
+
+> t=1
+
+ Jt(πt) − E[Jt(πt) | F t−1] = OP
+
+q PTt=1 (γ(e) 
+
+> t
+
+)2
+
+
+
+.
+
+(36) 
+
+Consequently, the cumulative penalty scales as O(γ√T ) for constant γ, and as O(γ√KN ) when a fixed amplitude pulse is applied for N epochs after each of K phase switches, independent of annealing. 
+
+Lemma V.4 (MoE routing stability) . Under (A4), the mixed policy πθ (a | s, ϕ ) = PKk=1 Gk(s, ϕ ) πθk (a | s) satisfies 
+
+∥πθ′ (· | s, ϕ )−πθ (· | s, ϕ )∥1 ≤ LG∥Gθ′ −Gθ ∥+
+
+> K
+
+X
+
+> k=1
+
+Lk∥θ′
+
+> k
+
+−θk∥,
+
+(37) 
+
+with Lipschitz constants (LG, L k) that depend on Top-K spar-sity and load balancing or entropy regularization. Hence MoE does not violate the TRPO or PPO stability preconditions; it only affects constants in Lemma V.1. [53]–[55]. C. Main result 
+
+Theorem V.5 (Dynamic regret of PE-MAMoE) . Under As-sumptions V-A and Lemmas V.1–V.4, the dynamic regret of PE-MAMoE over T steps admits 
+
+DynRegret T (PE-MAMoE ) ≤ eO T 3/4V 1/4
+
+> T
+
++ (38) 
+
+O
+
+q PTt=1 γ2
+
+> t
+
+
+
++ Eest (T ),
+
+where Eest (T ) aggregates critic or GAE approximation terms. Proof. By Lemma V.2, 
+
+DynRegret T ≤ D T (VT ) + OT + X
+
+> t
+
+εest  
+
+> t
+
+. (39) The drift term DT (VT ) yields the eO(T 3/4V 1/4 
+
+> T
+
+) dependence under standard non-stationary MDP arguments [49], [50]. For OT , Lemma V.1 upper bounds the optimization cost by trust region remainders; MoE routing respects the stability preconditions by Lemma V.4. The additional penalty from expert perturbations scales as O(pP  
+
+> t
+
+γ2 
+
+> t
+
+) by Lemma V.3. Summing all contributions and grouping estimation terms into 
+
+Eest (T ) proves the claim. VI. R ESULTS AND ANALYSIS 
+
+This section evaluates PE-MAMoE through a progres-sion from setup and internal diagnostics to system level outcomes and sensitivity analysis. Section VI-A describes the phase driven simulation environment and its parameters. Section VI-B introduces the three baselines that share the same MAPPO pipeline but lack plasticity mechanisms. Sec-tion VI-C examines effectiveness from two complementary angles: plasticity indicators (expert feature rank and dormant neuron fraction) that reveal whether the representation stays expressive across regime switches, and task performance metrics (return and normalized IQM) that quantify the end result. Section VI-D inspects how the policy and value routers redistribute expert traffic at phase boundaries, linking routing diversity to the plasticity and load balancing design. Sec-tion VI-E reports system level metrics, including collision rate, energy consumption, served user count, and UAV utilization, to assess operational robustness. Section VI-F visualizes action level responses to regime switches, connecting internal control behavior to the system outcomes observed earlier. Finally, Sec-tion VI-G isolates individual design components via ablation and sweeps the noise injection threshold to characterize the sensitivity of plasticity injection. 
+
+A. Simulation Environment 
+
+We simulate a 1 km × 1 km post disaster urban square with slotted time ∆t. Non-stationarity is driven by a phase variable ϕt ∈ { 0, 1, 2} that jointly switches user mobility regime and demand mix, as well as radio reuse ( F ) and UAV service radius Rsrv (ϕt). Users follow phase dependent crowd like mobility: as the system transitions from low to medium and high demand phases, both the nominal speed and directional persistence increase, which induces abrupt density shifts and hotspot formation at the switch times. The simulation parameters are summarized in Table II. 
+
+B. Baselines 
+
+We benchmark PE-MAMoE against three non-plasticity baselines implemented under the same CTDE and MAPPO pipeline and environment dynamics: 
+
+a) MLP.: A shared parameter multilayer perceptron with-out conditional computation. The actor and critic are standard feedforward networks, trained with PPO and GAE; no expert routing, load balancing, or stochasticity injection is used. This represents a strong vanilla baseline commonly adopted in MADRL. 12 
+
+TABLE II SIMULATION AND TRAINING PARAMETERS .                                                                                                                   
+
+> Area 1000 ×1000 (m) Number of UAVs 3
+> Concurrent users 20
+> Time step 60 sEpisode length 32 steps Service radius {200 ,150 ,150 }(m) Max users per UAV 5
+> Reuse factor 1
+> Adjacent leakage 10 −3
+> Mobility and Demand Phases
+> Phase model phases [0 ,1,2]
+> Repeat phases 3cycles User moves True
+> User speed {0.2,0.5,0.8}(m/s) Direction jitter {0.2,0.5,0.8}
+> Mobility model GM GM memory 0.9
+> GM noise 0.08 (m/s) RPGM enabled; groups = 3 , follow gain = 0 .3
+> RPGM follow noise 0.15 (m/s) RPGM center speed 1.2×User_speed
+> Demand mode cycle ; cycle length = 3 (L →M→H) Demand thresholds (Mbps) L: 0.5, M: 1.0, H: 2.0
+> Reward / Penalties
+> Success cover reward (a user) μqoe
+> tL: 5.0, M: 10 .0, H: 20 .0
+> Energy penalty μene
+> t0.1
+> Collision penalty μcol
+> t100 .0
+> Overlap penalty λov {20 ,40 ,80 }
+> Overlap scale σ150 m
+> Policy / Value Network
+> Actor/Value type mlp, moe, smoe, PEMAMoE
+> Activation ReLU Experts per MoE 3
+> Top-krouting k= 1
+> Expert hidden size 32
+> PPO / MAPPO Training
+> Total timesteps 22 ,118 ,400
+> Rollout length 2048
+> Minibatches 32
+> Update epochs 8
+> Learning rate 3×10 −4
+> Weight decay 10 −4
+> Adam (β1, β 2)(0 .9,0.999)
+> Discount γ0.99
+> GAE λ0.95
+> Clip coef. 0.15
+> Value loss coef. 2.0
+> Entropy coef. start/end 0.01 →0.003
+> Entropy anneal portion 0.3(of training) Anneal LR False
+> Target KL 0.1
+> Max grad norm 0.5
+> Switch-time Schedules
+> KL-to-ref (init / decay) 0.1/0.985 per iteration Warm window after switch Kwarm = 80 iters Freeze router window Kfreeze router = 30 iters Phase LR multiplier 0.3(warmup back over 200 iters) Log-std reset 0.3
+> Noise Injection epochs 30
+
+b) MoE.: A mixture of experts policy where a learned router mixes multiple expert sub-networks to produce the action distribution, but without plasticity injection, router tem-perature and entropy scheduling. Experts are trained jointly via the PPO loss; the router outputs a combination over all experts each step. This baseline isolates the benefit of conditional computation from plasticity maintenance. 
+
+c) Sparse MoE.: A sparse MoE variant that routes each input to the top-k experts and combines only their outputs; no plasticity injection is applied. This reduces communication versus dense mixing and is widely used in large scale sparse models. Our SMoE matches the MoE capacity while enforcing sparse activation through top-k gating. 
+
+Implementation notes. All baselines share the same observa-tion and action interfaces, PPO hyperparameters, and expert counts and hidden sizes as PE-MAMoE for fairness. The MoE and SMoE baselines differ only in their routing rule and exclude any plasticity preserving mechanisms, thereby attributing gains to conditional computation alone rather than re-plasticization. 
+
+d) Baseline selection rationale: Our baseline set is de-signed to perform a controlled architectural ablation within a single, consistent MAPPO pipeline: MLP tests whether a monolithic network suffices, dense MoE tests whether conditional computation alone helps, and Sparse MoE tests whether sparsity improves over dense mixing. PE-MAMoE adds plasticity injection on top of Sparse MoE, so the pro-gression MLP → MoE → SMoE → PE-MAMoE isolates each design factor. We acknowledge that the current set does not include methods from the non-stationary RL or continual learning literature, such as periodic full-network resets [12], elastic weight consolidation (EWC) [56], policy distillation, or meta-RL approaches [17]. These methods originate from different problem formulations (single-agent, supervised, or task-family settings) and would require non-trivial adaptation to our cooperative MAPPO pipeline with shared parameters and phase-driven objective reweighting. In particular, full-network reset destroys all inter-agent coordination conven-tions; EWC requires per-task Fisher information matrices that are ill-defined when tasks blend continuously; and meta-RL presupposes a task distribution for meta-training, which is unavailable in our single-environment, phase-cycling setup. We regard comparison with suitably adapted versions of these methods as valuable future work. 
+
+e) Environment generality: Our UAV–ECN simulator is released as open-source and exposes a standard Gymnasium-compatible multi-agent interface (observation dicts, continuous action spaces, step/reset protocol). Any MARL algorithm that accepts this interface can be evaluated without modification to the environment code. The phase-driven demand and mobility switching mechanism is a configurable module: phase count, duration, cycling order, demand thresholds, and mobility pa-rameters are all exposed as configuration variables (Table II). We deliberately chose this design so that the environment is not tailored to PE-MAMoE; the same simulator equally challenges any policy, as evidenced by the fact that all four methods, including the plain MLP baseline, were trained and evaluated under identical dynamics with no environment-side adjustments. 
+
+f) Computational cost: Table III compares the parameter count and per-step inference cost of each method. With an observation dimension of 177 , expert hidden size 32 , and E=3 
+
+experts, the MLP actor contains roughly 6.8k parameters. MoE and SMoE triple the expert parameters and add a router, reach-ing about 20 .9k and 21 .4k, respectively. PE-MAMoE has the same parametric footprint as SMoE ( 21 .4k) because its Phase Controller (temperature annealing, learning rate warmup, log-
+
+σ reset, and noise injection) operates entirely through non-13 
+
+TABLE III COMPUTATIONAL COST COMPARISON (ACTOR NETWORK ).                          
+
+> Method Actor params Params vs. MLP Inference active params MLP 6 820 1.00 ×6 820 (all) MoE 20 858 3.06 ×20 858 (all experts) SMoE 21 392 3.14 ×7 820 (top-1 + router) PE-MAMoE 21 392 3.14 ×7 820 (top-1 + router) 0.000 0.222 0.444 0.667 0.889 1.111 1.333 1.555 1.778 2.000
+> Step 1e6
+> 20.00
+> 22.00
+> 24.00
+> 26.00
+> 28.00
+> 30.00
+> 32.00
+> Rank
+> Average Rank over All Experts
+> MoE
+> SMoE
+> PEMAMoE
+
+Fig. 2. Evolution of the average expert feature rank over training. 
+
+gradient schedules and adds no learnable parameters. At inference, top-1 routing activates only one expert plus the router per step, so the effective multiply-accumulate cost is approximately 1.16 × that of MLP despite the 3.1× parame-ter ratio, retaining the conditional computation advantage of sparse MoE. Training wall-clock time increases by roughly 15–20% over MLP, predominantly from the router forward pass and the per-switch noise injection window ( N =30 epochs out of ∼10 800 total). 
+
+C. Effectiveness of PE-MAMoE 1) Plasticity indicators: feature rank and dormant neurons: 
+
+Fig. 2 reports the average feature rank across experts over training. 4 PE-MAMoE consistently maintains the highest rank among all methods and exhibits a clear phase-synchronous, periodic pattern: at each environment switch, the rank briefly decreases and then recovers to a high plateau before the next switch. This cyclical recovery evidences rapid re-plasticization followed by re-stabilization under the new objective, rather than settling into a low-rank, brittle representation. In contrast, vanilla MoE quickly drifts toward a low, nearly stationary rank, and SMoE shows step wise degradations that only partially recover. Fig. 3 complements this view using the dormant neuron fraction. While PE-MAMoE’s DNF can be temporarily higher than SMoE within a phase, it exhibits periodic troughs aligned with regime switches, indicating reactivation of previously quiescent channels. This is precisely the behavior desired under non-stationarity: neurons are recruited when objectives change and then pruned back as the policy re-stabilizes. By contrast, vanilla MoE accumulates a large, persistent dormant 
+
+> 4
+
+We use the stable rank of expert activations as a proxy for representational expressiveness; rank collapse is associated with loss of plasticity [25]. 0.0 0.5 1.0 1.5 2.0  
+
+> Step
+
+1e6 
+
+30 
+
+40 
+
+50 
+
+60 
+
+70 
+
+80 
+
+> Dormant Fraction (%)
+> Total Dormant Fraction
+
+MoE 
+
+SMoE 
+
+PEMAMoE 
+
+Fig. 3. Evolution of the total dormant neuron fraction over training. 0.000 0.222 0.444 0.665 0.887 1.109 1.331 1.552 1.774 1.996  
+
+> Step 1e6
+> -150.00
+> -100.00
+> -50.00
+> 0.00
+> 50.00
+> 100.00
+> 150.00
+> Reward
+
+Mean Return 
+
+> MLP
+> MoE
+> SMoE
+> PEMAMoE
+
+Fig. 4. Mean Return over Training. 
+
+set, consistent with the “dormant neuron phenomenon” that harms expressivity in deep RL [27]. The periodic reactivation in PE-MAMoE is enabled by its stochasticity based plasticity injection and sparse routing, which together counteract pri-macy bias and sustained neuron dormancy. 
+
+2) Task performance and robustness under phase switches: 
+
+Fig. 4 compares the mean return across methods. PE-MAMoE delivers the highest asymptotic returns in most phases and the smoothest recovery after each abrupt switch, whereas MoE and SMoE suffer deeper dips and slower rebounds. This aligns with the theory that conditional computation plus controlled stochasticity bolsters adaptation while avoiding long term plasticity loss. To summarize performance across multiple objectives, Fig. 5 reports the normalized interquartile mean computed over five metrics: coverage, return, and served users, as well as energy consumption and collision rate. Following the robust evaluation protocol of Agarwal et al. [57], IQM is computed by sorting the per-episode metric values recorded during training, discarding the bottom 25% and the top 25%, and averaging the remaining middle 50%; this trims outlier episodes and gives a more reliable central tendency than the ordinary mean. Each method is trained with a single long run 14 Coverage Return ServedNumber EnergyUse Collisions    
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> IQM (normalized per metric)
+> MLP MoE SMoE PEMAMoE
+
+Fig. 5. Normalized IQM across five system metrics. Each bar shows the per-metric min–max normalized IQM (middle 50% of episode values); error bars indicate standard error. Higher is better for Coverage, Return, and ServedNumber; lower is better for EnergyUse and Collisions (plotted as 
+
+1 − normalized value so that taller bars remain preferable). 
+
+under the same random seed to ensure identical environment stochasticity across comparisons. For cross-metric visualiza-tion in Fig. 5, we apply per-metric min–max normalization: for each metric m, let vm
+
+min and vm
+
+max be the smallest and largest IQM values among all methods, then the normalized score of method a is (IQM ma − vm
+
+min )/(vm
+
+max − vm
+
+min ). This rescales every metric to [0 , 1] , allowing direct comparison of quantities with different units. Error bars show standard error of the IQM computed across episodes. PE-MAMoE dominates or ties the best on most metrics: it achieves the highest normalized IQM on Coverage, Return, and ServedNumber, matches the best EnergyUse, and yields the lowest Collisions. Combined with the smallest return dips and fastest post switch recovery in Fig. 4, these results indicate that PE-MAMoE is the most robust method under regime jumps, validating its design goal: maintain high performance while preserving plasticity across dynamic objectives. Across plasticity proxies, including a high feature rank that recovers periodically and phase synchronous troughs in DNF, as well as end task metrics such as return and normalized IQM, PE-MAMoE consistently adapts the fastest and stabilizes at the highest level after objective switches. This provides converging evidence that sparse MoE routing combined with annealed stochasticity injection mitigates dormant neuron accumulation and plasticity loss, yielding state of the art robustness for non-stationary UAV–ECN control. 
+
+D. Selection Probabilities of Each Expert a) Policy router: Fig. 6a plots the routing rate, the proba-bility that the policy router selects a given expert, over training. PE-MAMoE reveals two clear behaviors. First, its selection probabilities remain well spread across experts rather than collapsing onto a single expert, indicating sustained capacity usage and diversity. Second, the routing shows clear phase synchronous cycles: after each switch, the router transiently re-allocates traffic and then re-stabilizes to a new mixture, repeating this pattern at every subsequent switch. This cyclic redistribution is consistent with our plasticity mechanism and with the design goal of conditional computation: adapt expert 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00                    
+
+> Step 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Route Rate
+> Policy Expert-0
+> MoE
+> SMoE
+> PEMAMoE
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Route Rate
+> Policy Expert-1
+> MoE
+> SMoE
+> PEMAMoE
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Route Rate
+> Policy Expert-2
+> MoE
+> SMoE
+> PEMAMoE
+
+(a) Policy-side expert routing probability 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00                    
+
+> Step 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Route Rate
+> Value Expert-0
+> MoE
+> SMoE
+> PEMAMoE
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Route Rate
+> Value Expert-1
+> MoE
+> SMoE
+> PEMAMoE
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> Step 1e7
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Route Rate
+> Value Expert-2
+> MoE
+> SMoE
+> PEMAMoE
+
+(b) Value-side expert routing probability Fig. 6. Probability distribution of each expert selected for Policy and Value. 
+
+usage when objectives change, and consolidate once the new regime is learned. 
+
+b) Value router: Fig. 6b shows the centralized critic router’s selection probabilities. The same trends emerge: PE-MAMoE maintains balanced, non-degenerate expert usage and rapidly reconfigures at phase boundaries, then settles to a stable allocation within each phase. This indicates that not only the actor but also the critic leverages specialized experts per regime, which helps stabilize advantages and speeds re-adaptation after switches. In contrast, MoE exhibits longer periods of over reliance on a subset of experts and slower post switch re-balancing. Sustained diversity in routing probabilities is a necessary condition for avoiding the well known MoE failure modes of expert collapse and dropped tokens under load imbalance [55], [58]. The observed periodic reallocation in PE-MAMoE is precisely the expected outcome of combining sparse MoE routing with controlled stochasticity: noise in the gate encour-ages exploration and prevents early commitment, while load balancing and entropy regularization preserves capacity across experts. The router’s quick, phase synchronous shifts are consistent with resetting or perturbation remedies for primacy bias, facilitating fast “re-plasticization” at regime changes, then annealing back to stability [12]. Overall, the selection probability dynamics corroborate that PE-MAMoE actively reallocates expertise when objectives change while retaining balanced utilization within each phase, a prerequisite for the superior robustness observed in return and IQM metrics. 
+
+c) Top-1 routing and expert diversity: A legitimate con-cern with top-1 (k=1 ) routing is that a single expert may dom-inate and the remaining experts become idle. Fig. 6a directly addresses this: across the entire training run, PE-MAMoE’s per-expert selection probabilities remain distributed among all three experts rather than collapsing onto one. Two mechanisms contribute. First, the noisy top-k gating (Section IV-A) adds softplus-scaled Gaussian noise to the router logits, so that even when one expert has the highest mean logit, stochastic tie-breaking keeps rival experts engaged. Second, the temperature schedule (Eq. (30)) raises τ immediately after each switch, flattening the softmax and broadening the selection distribution when diversity matters most. In contrast, SMoE, which uses the same top-1 rule but lacks the plasticity mechanisms, shows visible periods of single-expert dominance (Fig. 6a), confirming that top-1 routing alone is insufficient and that the 15 0.000 0.222 0.444 0.665 0.887 1.109 1.331 1.552 1.774 1.996  
+
+> Step 1e6
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> Collisions
+
+Collisions Per Episode  
+
+> MLP
+> MoE
+> SMoE
+> PEMAMoE
+> Fig. 7. Collisions per Episode over Training.
+
+diversity is maintained by the combined plasticity design rather than by the routing rule itself. Regarding overhead, Table III shows that the additional parameter cost of maintaining three experts is modest ( 3.1× MLP), and top-1 activation keeps the per-step inference cost at only 1.16 × MLP. Scaling to larger expert pools ( E> 3) or higher k values is a natural extension; we expect that load-balancing regularizers from the large-scale MoE literature [36], [55] will remain effective, and we flag this as an avenue for future work. 
+
+E. System Performance a) Safety under regime switches: Fig. 7 shows the colli-sions per episode across training. PE-MAMoE maintains near zero collision rates throughout, with only shallow transients at phase boundaries. In contrast, MoE and SMoE exhibit pro-nounced collision spikes after several switches, and the plain MLP baseline occasionally becomes unstable for extended in-tervals. In multi-agent control, collision rate is a primary safety key performance indicator (KPI) and a canonical RL penalty term; thus the consistently low collision profile indicates that PE-MAMoE preserves safe coordination while adapting to non-stationary objectives. 
+
+b) Energy consumption and efficiency: Fig. 8 reports the mean UAV energy rate. PE-MAMoE tracks the most energy efficient methods in steady regime and, crucially, avoids the severe energy dips experienced by MoE and SMoE when objectives switch. This matters because energy efficiency in wireless systems is fundamentally measured in bit/Joule (or its inverse Joule/bit), and transient collapses in rate or power control degrade the bits per Joule metric even if average power is similar. The smoother PE-MAMoE traces imply better energy per bit behavior during re-adaptation, consistent with our feasibility driven power allocation and the plasticity aware router that prevents large, wasteful corrections after phase changes. 
+
+c) Service capacity and resource utilization: Fig. 9a reports the mean successfully served users; Fig. 9b shows the mean UAV utilization rate. Across phases, PE-MAMoE reaches the highest or tied highest stable number of served users and exhibits the fastest recovery after each abrupt switch. Simultaneously, its utilization remains high and stable, 0.000 0.222 0.444 0.665 0.887 1.109 1.331 1.552 1.774 1.996  
+
+> Step 1e6
+> 0.88
+> 0.90
+> 0.92
+> 0.94
+> 0.96
+> 0.98
+> 1.00
+> 1.02
+> Energy Rate
+
+Mean UAV Energy Rate            
+
+> MLP
+> MoE
+> SMoE
+> PEMAMoE
+> Fig. 8. Mean UAV Energy Rate over Training. 0.000 0.222 0.444 0.665 0.887 1.109 1.331 1.552 1.774 1.996
+> Step 1e6
+> 2.00
+> 4.00
+> 6.00
+> 8.00
+> 10.00
+> 12.00
+> 14.00
+> Success Serve Number
+
+Mean Serve User Number           
+
+> MLP
+> MoE
+> SMoE
+> PEMAMoE
+> (a) Successfully Served Users 0.000 0.222 0.444 0.665 0.887 1.109 1.331 1.552 1.774 1.996
+> Step 1e6
+> 0.20
+> 0.40
+> 0.60
+> 0.80
+> UAV Using Rate
+
+Mean UAV Using Rate  
+
+> MLP
+> MoE
+> SMoE
+> PEMAMoE
+> (b) UAV Using Rate Fig. 9. Performance comparison based on UAVs served users.
+
+indicating effective load balancing across UAVs rather than overloading a subset. As served user count is a direct proxy for network capacity, these results, together with the energy profile, suggest that PE-MAMoE converts bandwidth and power into delivered service more reliably than competing methods. Across safety, efficiency, and capacity, PE-MAMoE de-livers the most consistent system level performance under phase driven non-stationarity. These outcomes corroborate our design: sparse MoE routing prevents expert collapse, while annealed plasticity injection enables quick re-plasticization at 16 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75   
+
+> Step 1e6
+> 0.00
+> Action (mean over UAVs)
+> Action Response to System Change
+> MLP
+> MoE
+> SMoE
+> PEMAMoE
+> Fig. 10. Mean Action Response to Phase Switches.
+
+regime changes without sacrificing safety or energy efficiency. 
+
+F. Influence on System Internal States a) Action-level adaptation to regime switches: Fig. 10 reports the mean action over UAVs as phases change. PE-MAMoE reacts with clear but bounded action shifts exactly at the switch points, then quickly re-centers to a new operating level within each phase. In contrast, MLP exhibits large oscillations and prolonged overshoot, while vanilla MoE under reacts in some phases and SMoE often shows delayed, high variance corrections. These curves indicate that PE-MAMoE achieves a good balance between responsiveness and stability: making decisive adjustments when the target changes, fol-lowed by stable control with minimal jitter. 
+
+b) Why the actions look different: Two design elements explain PE-MAMoE’s internal behavior. First, PPO style clipped updates with a centralized critic provide stable policy steps after each switch, avoiding the large policy jumps observed for baselines that either over commit or mis-estimate advantages. Second, sparsely gated MoE with load balancing allows the router to reallocate traffic to the most relevant ex-perts for the new phase, rather than forcing a single monolithic network to change all at once; this conditional computation supports fast reconfiguration without global instability. The brief noise injection at switches counteracts primacy bias, enabling re-plasticization without sustained action noise. 
+
+c) Link to higher level performance: The action dynam-ics match system outcomes reported earlier: low collision spikes (Fig. 7), smooth energy usage (Fig. 8), and rapid recovery in served users and returns (Figs. 9a and Fig. 4). In reliable RL evaluation, such stability after distribution shifts is reflected by robust aggregates like IQM rather than single run peaks [57]. The observed PE-MAMoE traces moderate transients at switches and low variance within phases, explain its superior IQM and return, corroborating that sparse MoE routing & plasticity injection steers internal states toward fast adaptation and stable control. 0.002 0.004 0.006 0.008 0.010  
+
+> Noise Injection Threshold
+> 4
+> 6
+> 8
+> 10
+> 12
+> Coverage Number
+> MoE
+> PEMAMoE
+> Fig. 11. Effect of Noise Injection Threshold on Coverage.
+
+G. Ablation Study 1) Noise Sensitivity Analysis: We ablate the plasticity injec-tion level by varying the expert noise threshold γ and reporting average number of concurrently served users after convergence in each regime. Unless otherwise stated, all other experiments in this paper use γ = 0 .005 .
+
+a) Observations (Fig. 11): PE-MAMoE exhibits a clear sweet spot: coverage improves as γ increases from 0.001 to 
+
+0.005 and then collapses when γ is raised to 0.010 . In contrast, vanilla MoE remains essentially flat across thresholds. The non-monotonic curve for PE-MAMoE reflects the expected trade off: (i) too little noise fails to overcome primacy bias and dormant neuronal states, yielding under adaptation after phase changes; (ii) moderate noise re-plasticizes the router and experts, enabling rapid specialization and higher steady state coverage; (iii) excessive noise injects instability and harms policy improvement, reducing coverage. This pattern is con-sistent with prior evidence that periodic perturbations combat primacy bias in DRL, while overly large perturbations degrade performance, and with continual learning results showing that shrink and perturb style variability mitigates plasticity loss but should be carefully tuned. The flat MoE curve further supports that conditional computation alone is insufficient without plasticity maintenance mechanisms. 
+
+2) Tricks Analysis: Fig. 12 reports the IQM drop in mean return when we remove one component from PEMAMoE at a time. We highlight four implementation choices below. 
+
+a) Entropy Annealing: We linearly anneal the policy’s entropy bonus within each phase, and reset the entropy coef-ficient to its initial value right after a phase switch before re-annealing. Removing this schedule causes a substantial performance drop ( −46 .7% IQM). Intuitively, early phase entropy helps exploration after regime changes; annealing then tightens the policy for exploitation. 
+
+b) Reset logstd at switches: Our continuous action pol-icy resets the Gaussian logstd immediately after each phase switch, then lets it relearn. Without this reset, IQM collapses by −101 .3% , the worst among ablations. Resetting combats primacy bias, an early over commitment that hampers later 17 -No Entropy Annealing  
+
+> -No Reset logstd
+> -No LR Annealing
+> -No Noise Injection
+> 100
+> 80
+> 60
+> 40
+> 20
+> 0
+> IQM of Mean Return (%)
+> Ablation on PEMAMoE (remove one trick)
+> -46.7%
+> -101.3%
+> -5.6%
+> -23.6%
+> -No Entropy Annealing
+> -No Reset logstd
+> -No LR Annealing
+> -No Noise Injection
+> Fig. 12. Ablation Study: IQM Drop When Removing Each Component.
+
+adaptation, by re-opening exploration after abrupt distribu-tion shifts. This matches prior evidence that periodically re-initializing parts of the network helps the agent “forge” stale priors and adapt faster. 
+
+c) Learning rate (LR) Annealing: We anneal the LR within each phase and reset them to initial values at switches before re-annealing. Removing LR annealing yields a smaller but non-negligible degradation ( −5.6% IQM), aligning with the common use of LR schedules to stabilize late stage updates and improve convergence across tasks. In our non-stationary setting, resets at phase boundaries prevent under or over shoot caused by stale step sizes. 
+
+d) Noise Injection (plasticity): We inject controlled Gaussian noise into expert weights only for the first N
+
+epochs after a switch (then off), with a conservative default 
+
+γ=0 .005 for this ablation. Disabling noise leads to a −23 .6% 
+
+IQM drop. Moderate perturbations re-plasticize experts and the gate, avoiding dormant specialists and enabling rapid re-specialization; excessive noise would harm stability, hence our short post switch window and small magnitude. This aligns with prior results showing that reset and perturb strategies mitigate primacy bias but must be dosed carefully. All four components contribute, but Reset logstd and En-tropy Annealing with reset are the most critical mechanisms for fast, stable re-adaptation after regime switches; Noise Injection adds a further, complementary gain by restoring plasticity in MoE experts. Together with LR annealing, these mechanisms keep PEMAMoE responsive right after a switch and conservative once a phase has stabilized, precisely the reactivity–stability balance needed in non-stationary UAV-ECNs. 
+
+e) Interaction effects among components: The individual IQM drops sum to approximately 177% , far exceeding 100% ,which indicates strong positive interaction among the four mechanisms rather than independent, additive contributions. This is expected because the components address overlapping but distinct facets of the same post-switch adaptation problem. Reset logstd and Entropy Annealing both re-open exploration after a switch, but through different channels: logstd reset directly widens the action distribution, while entropy annealing controls the policy-gradient regularizer. When both are present, each can operate at a moderate level; removing either forces the remaining one to compensate for the full exploration burden, which it cannot do alone, hence the super-additive drops. Noise Injection and Reset logstd are complementary rather than redundant: logstd reset re-opens action-space ex-ploration (what the policy samples), whereas noise injection re-diversifies the expert feature representations (what the net-work can express). Removing noise injection while logstd reset is active still causes a −23 .6% drop, confirming that action-level exploration alone does not prevent the underlying repre-sentation collapse that noise injection targets. LR Annealing interacts more weakly ( −5.6% ), suggesting it plays a sup-porting role, stabilizing the gradient steps that the other three mechanisms make possible, rather than driving adaptation on its own. In summary, the four components form a layered system: logstd reset and entropy annealing handle behavioral 
+
+exploration, noise injection handles representational plasticity, and LR annealing stabilizes the resulting updates. Their joint effect is a design feature, not an artifact, and reflects the multi-faceted nature of the post-switch adaptation challenge. VII. C ONCLUSIONS 
+
+We presented PE-MAMoE, a plasticity enhanced multi agents mixture of experts framework for UAV-assisted emer-gency communications operating under phase driven non-stationarity. The method combines sparsely gated conditional computation with switch aware, fixed window expert noise injection to preserve plasticity, and adopts MAPPO for stable cooperative learning. Across extensive simulations grounded in 3GPP style A2G channel modeling, PE-MAMoE consistently achieved the best or near best performance on system level metrics. Internally, we observe phase synchronous signals, periodic peaks in expert feature rank and switch synchronous oscillations in dormant neuron fraction, indicating effective re-plasticization at regime switches without explicit dormant unit reinitialization. Although PE-MAMoE delivers consistent gains under phase driven non-stationarity and is grounded in standardized A2G propagation, several limitations remain and open concrete avenues for improvement. First, our simulator abstracts flight, sensing and actuator dynamics; validating with hardware in the loop or field trials is needed to assess latency, con-trol robustness, and safety envelopes under wind and global navigation satellite system (GNSS) imperfections. Second, while the radio frequency (RF) stack follows 3GPP guid-ance, interference control is simplified; richer physical layer (PHY), medium access control (MAC) and tighter cross layer learning are left for future work. Third, the current CTDE setting assumes reliable global observations during training and no explicit inter-UAV messaging at execution; extending to communication constrained MARL with learned, bandwidth budgeted messaging is a natural step. Fourth, our plasticity mechanism uses switch aware, fixed window noise injection on experts only; learning the noise schedule online and jointly balancing adaptation and stability under unknown variation budgets remains open, especially in light of primacy bias phenomena in DRL. Finally, scaling to larger fleets and expert pools raises system concerns; importing routing regularizers and systems techniques from large scale SMoE deployments, 18 
+
+together with stronger reliability reporting beyond single point estimates, will be important for safety critical ECNs. Fifth, our phase model cycles deterministically through three regimes with fixed period L. While this is a common benchmarking protocol for switching environments, it represents a relatively benign form of non-stationarity because, in principle, an agent could learn to anticipate switches. We note that (i) the phase index is not provided to the agent; agents must infer the current regime solely from observed demand distributions and user spatial patterns, and (ii) the primary challenge studied here is not switch prediction but representation degradation (rank collapse and dormant neurons) that accumulates over long training regardless of predictability. Nonetheless, evaluating PE-MAMoE under randomized phase durations, orderings, or entirely unseen regimes is a natural next step that would further test the robustness of the plasticity injection mechanism and is left for future work. REFERENCES [1] W. Zhao, S. Cui, W. Qiu, Z. He, Z. Liu, X. Zheng, B. Mao, and N. Kato, “A survey on drl based uav communications and networking: Drl fun-damentals, applications and implementations,” IEEE Communications Surveys & Tutorials , pp. 1–1, 2025. [2] J. Sun, Z. Sheng, A. A. Nasir, Z. Huang, H. Yu, and Y. Fang, “Energy efficiency maximization for wpt-enabled uav-assisted emergency communication with user mobility,” Physical Communication , vol. 61, p. 102200, 2023. [Online]. Available: https://www.sciencedirect.com/ science/article/pii/S1874490723002033 [3] Q. Wu, Y. Zeng, and R. Zhang, “Joint trajectory and communication design for multi-uav enabled wireless networks,” IEEE Transactions on Wireless Communications , vol. 17, no. 3, pp. 2109–2121, 2018. [4] J. Foerster, G. Farquhar, T. Afouras, N. Nardelli, and S. Whiteson, “Counterfactual multi-agent policy gradients,” 2024. [Online]. Available: https://arxiv.org/abs/1705.08926 [5] Z. Zhang, J. Jiang, W.-A. ZHANG et al. , “Distributed dynamic task allocation for unmanned aerial vehicle swarm systems: A networked evolutionary game-theoretic approach,” Chinese Journal of Aeronautics ,vol. 37, no. 6, pp. 182–204, 2024. [6] B. Badnava, T. Kim, K. Cheung, Z. Ali, and M. Hashemi, “Spectrum-aware mobile edge computing for uavs using reinforcement learning,” in 
+
+2021 IEEE/ACM Symposium on Edge Computing (SEC) . IEEE, 2021, pp. 376–380. [7] C. Yin, Y. Lin, W. Xu, S. Tam, X. Zeng, Z. Liu, and Z. Yin, “Deep-thinkvla: Enhancing reasoning capability of vision-language-action mod-els,” arXiv preprint arXiv:2511.15669 , 2025. [8] X. Zuo, J. Yang, M. Wang, and Y. Cui, “Adaptive bitrate with user-level qoe preference for video streaming,” in IEEE INFOCOM 2022 - IEEE Conference on Computer Communications , 2022, pp. 1279–1288. [9] H. Lee, H. Cho, H. Kim, D. Kim, D. Min, J. Choo, and C. Lyle, “Slow and steady wins the race: Maintaining plasticity with hare and tortoise networks,” 2025. [Online]. Available: https://arxiv.org/abs/2406.02596 [10] N. Shazeer, A. Mirhoseini, K. Maziarz, A. Davis, Q. Le, G. Hinton, and J. Dean, “Outrageously large neural networks: The sparsely-gated mixture-of-experts layer,” arXiv preprint arXiv:1701.06538 , 2017. [11] T. Willi, J. Obando-Ceron, J. Foerster, K. Dziugaite, and P. S. Castro, “Mixture of experts in a mixture of rl settings,” 2024. [Online]. Available: https://arxiv.org/abs/2406.18420 [12] E. Nikishin, M. Schwarzer, P. D’Oro, P.-L. Bacon, and A. Courville, “The primacy bias in deep reinforcement learning,” 2022. [Online]. Available: https://arxiv.org/abs/2205.07802 [13] A. Galashov, M. Titsias, A. Gy¨ orgy, C. Lyle, R. Pascanu, Y. W. Teh, and M. Sahani, “Non-stationary learning of neural networks with automatic soft parameter reset,” in Advances in Neural Information Processing Systems , A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang, Eds., vol. 37. Curran Associates, Inc., 2024, pp. 83 197–83 234. [Online]. Available: https://proceedings.neurips.cc/paper files/paper/ 2024/file/978cc34c539fd26f0e8afb7e3905f34a-Paper-Conference.pdf [14] J. N. Foerster, N. Nardelli, G. Farquhar, P. H. S. Torr, P. Kohli, and S. Whiteson, “Stabilising experience replay for deep multi-agent reinforcement learning,” arXiv preprint arXiv:1702.08887 , 2017. [Online]. Available: https://arxiv.org/abs/1702.08887 [15] J. Foerster, R. Y. Chen, M. Al-Shedivat, S. Whiteson, P. Abbeel, and I. Mordatch, “Learning with opponent-learning awareness,” in 
+
+Proceedings of the 17th International Conference on Autonomous Agents and MultiAgent Systems (AAMAS) , 2018, pp. 122–130. [Online]. Available: https://dl.acm.org/doi/10.5555/3237383.3237408 [16] X. Zhao, X. Chen, K. Zhang, and T. Basar, “Pola: Proximal optimistic learning with opponent-learning awareness,” in Advances in Neural Information Processing Systems (NeurIPS) , 2022. [Online]. Available: https://papers.nips.cc/paper files/paper/2022/hash/ 4dbf3707a3e6730b4fef79aece343bfc-Abstract-Conference.html [17] C. Finn, P. Abbeel, and S. Levine, “Model-agnostic meta-learning for fast adaptation of deep networks,” in International Conference on Machine Learning , 2017, pp. 1126–1135. [18] X. Li, X. Zhou et al. , “A survey of multi-agent reinforcement learning: Foundations, advances, and challenges,” arXiv preprint arXiv:2203.08975 , 2024. [Online]. Available: https://arxiv.org/abs/2203. 08975 [19] S. Gupta et al. , “Tackling non-stationarity in decentralized multi-agent reinforcement learning: Prudent q-learning,” in International Conference on Principles and Practice of Multi-Agent Systems (PRIMA) . Springer, 2022, pp. 491–507. [20] X. Sun, J. Wang, and Z. Ding, “Energy efficiency maximization for wpt-enabled uav-assisted emergency communication with user mobility,” 
+
+Physical Communication , vol. 56, p. 102200, 2023. [21] W. Zhao, T. Weng, Y. Ruan, Z. Liu, X. Wu, X. Zheng, and N. Kato, “Quantum computing in wireless communications and networking: A tutorial-cum-survey,” IEEE Communications Surveys & Tutorials ,vol. 27, no. 4, pp. 2378–2419, 2025. [22] A. Hussain, S. Li, T. Hussain, X. Lin, F. Ali, and A. A. AlZubi, “Computing challenges of uav networks: A comprehensive survey.” 
+
+Computers, Materials & Continua , vol. 81, no. 2, 2024. [23] L. Zhang, R. Xie, P. Wang et al. , “Survey of uav-assisted wireless com-munications: Technical challenges, standardization, and future trends,” 
+
+IEEE Communications Surveys & Tutorials , vol. 25, no. 1, pp. 188–223, 2023. [24] S. K. Dohare, M. Abbas et al. , “Loss of plasticity in deep continual learning,” Nature , vol. 627, no. 8002, pp. 123–130, 2024. [25] C. Lyle, Z. Zheng, E. Nikishin, B. A. Pires, R. Pascanu, and W. Dabney, “Understanding plasticity in neural networks,” 2023. [Online]. Available: https://arxiv.org/abs/2303.01486 [26] Z. Abbas, R. Zhao, J. Modayil, A. White, and M. C. Machado, “Loss of plasticity in continual deep reinforcement learning,” 2023. [Online]. Available: https://arxiv.org/abs/2303.07507 [27] G. Sokar, R. Agarwal, P. S. Castro, and U. Evci, “The dormant neuron phenomenon in deep reinforcement learning,” in Proceedings of the 40th International Conference on Machine Learning (ICML) , ser. Proceedings of Machine Learning Research, vol. 202, 2023. [Online]. Available: https://proceedings.mlr.press/v202/sokar23a/sokar23a.pdf [28] C. Beattie et al. , “Meta-learning plasticity rules for continual learning,” 
+
+IEEE Transactions on Neural Networks and Learning Systems , 2022. [29] H. Qin, C. Ma, M. Deng, Z. Liu, S. Mei, X. Liu, C. Wang, and S. Shen, “The dormant neuron phenomenon in multi-agent reinforcement learning value factorization,” in The Thirty-eighth Annual Conference on Neural Information Processing Systems , 2024. [Online]. Available: https://openreview.net/forum?id=4NGrHrhJPx [30] G. Papoudakis, F. Christianos, A. Rahman, and S. V. Albrecht, “Dealing with non-stationarity in multi-agent deep reinforcement learning,” 2019. [Online]. Available: https://arxiv.org/abs/1906.04737 [31] F. Christianos, G. Papoudakis, M. A. Rahman, and S. V. Albrecht, “Scaling multi-agent reinforcement learning with selective parameter sharing,” in International Conference on Machine Learning . PMLR, 2021, pp. 1989–1998. [32] T. Wang, H. Dong, V. Lesser, and C. Zhang, “Roma: Multi-agent reinforcement learning with emergent roles,” arXiv preprint arXiv:2003.08039 , 2020. [33] L. Yuan, L. Li, Z. Zhang, F. Zhang, C. Guan, and Y. Yu, “Multiagent continual coordination via progressive task contextualization,” IEEE Transactions on Neural Networks and Learning Systems , vol. 36, no. 4, pp. 6326–6340, 2025. [34] R. A. Jacobs, M. I. Jordan, S. J. Nowlan, and G. E. Hinton, “Adaptive mixtures of local experts,” Neural Computation , vol. 3, no. 1, pp. 79–87, 1991. 19 
+
+[35] Y. He and X. Liu, “Mixture of experts in a mixture of reinforcement learning settings,” arXiv preprint arXiv:2406.18420 , 2024. [36] W. Fedus, B. Zoph, and N. Shazeer, “Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity,” 2022. [Online]. Available: https://arxiv.org/abs/2101.03961 [37] X. Zhang, P. Schmitt, M. Chetty, N. Feamster, and J. Jiang, “Enabling personalized video quality optimization with vidhoc,” 2022. [Online]. Available: https://arxiv.org/abs/2211.15959 [38] C. Yan, L. Fu, J. Zhang, and J. Wang, “A comprehensive survey on uav communication channel modeling,” IEEE Access , vol. 7, p. —, 2019, early access version; comprehensive A2G/A2A/G2G survey. [39] 3GPP, “Study on channel model for frequencies from 0.5 to 100 GHz,” 3GPP, Technical Report TR 38.901, Nov. 2020, release 16. UMi/UMa/InH channel models; LoS probability and path loss baselines. [Online]. Available: https://www.etsi.org/deliver/etsi tr/138900 138999/ 138901/16.01.00 60/tr 138901v160100p.pdf [40] H. Yan, Y. Chen, and S.-H. Yang, “New energy consumption model for rotary-wing UAV propulsion,” IEEE Wireless Communications Letters ,vol. 10, no. 9, pp. 2009–2012, 2021. [41] Y. Zeng, J. Xu, and R. Zhang, “Energy minimization for wireless communication with rotary-wing UAV,” IEEE Transactions on Wireless Communications , vol. 18, no. 4, pp. 2329–2345, 2019. [42] Z. Wang et al. , “Maximizing energy-efficiency for ris–uav assisted mobile edge computing,” Applied Soft Computing , 2024, remarks that the communication portion is negligible relative to flight energy in UAV systems. [Online]. Available: https://www.sciencedirect.com/ science/article/abs/pii/S1874490724001575 [43] T. Camp, J. Boleng, and V. Davies, “A survey of mobility models for ad hoc network research,” Wireless Communications and Mobile Computing , vol. 2, no. 5, pp. 483–502, 2002. [44] X. Hong, M. Gerla, G. Pei, and C.-C. Chiang, “A group mobility model for ad hoc wireless networks,” in Proc. ACM/IEEE MSWiM , 1999, pp. 53–60. [45] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, “Proximal policy optimization algorithms,” in arXiv:1707.06347 , 2017. [46] J. Schulman, P. Moritz, S. Levine, M. I. Jordan, and P. Abbeel, “High-dimensional continuous control using generalized advantage estimation,” 
+
+arXiv:1506.02438 , 2016. [47] C. Amato, “An introduction to centralized training for decentralized execution in cooperative multi-agent reinforcement learning,” 2024. [Online]. Available: https://arxiv.org/abs/2409.03052 [48] C. Lyle, Z. Zheng, K. Khetarpal, H. van Hasselt, R. Pascanu, J. Martens, and W. Dabney, “Disentangling the causes of plasticity loss in neural networks,” 2024. [Online]. Available: https://arxiv.org/abs/2402.18762 [49] W. C. Cheung, D. Simchi-Levi, and R. Zhu, “Reinforcement learning for non-stationary markov decision processes: The blessing of (more) optimism,” in Proceedings of the 37th International Conference on Machine Learning (ICML) , ser. Proceedings of Machine Learning Research, vol. 119, 2020, pp. 1843–1854. [Online]. Available: https://proceedings.mlr.press/v119/cheung20a.html [50] Y. Fei, Z. Yang, Z. Wang, and Q. Xie, “Dynamic regret of policy optimization in non-stationary environments,” in Advances in Neural Information Processing Systems (NeurIPS 2020) ,2020. [Online]. Available: https://proceedings.neurips.cc/paper/2020/ file/4b0091f82f50ff7095647fe893580d60-Paper.pdf [51] Y. Wang, H. He, X. Tan, and Y. Gan, “Trust region-guided proximal policy optimization,” 2019. [Online]. Available: https: //arxiv.org/abs/1901.10314 [52] R.-A. Lascu, D. ˇSiˇ ska, and Łukasz Szpruch, “Ppo in the fisher-rao geometry,” 2025. [Online]. Available: https://arxiv.org/abs/2506.03757 [53] Z. Chen, Y. Deng, Y. Wu, Q. Gu, and Y. Li, “Towards understanding the mixture-of-experts layer in deep learning,” in Advances in Neural Information Processing Systems (NeurIPS 2022) , 2022, includes theory and supplemental material on non-collapse and specialization. [On-line]. Available: https://proceedings.neurips.cc/paper files/paper/2022/ file/91edff07232fb1b55a505a9e9f6c0ff3-Supplemental-Conference.pdf [54] C. Baykal, N. Dikkala, R. Panigrahy, C. Rashtchian, and X. Wang, “A theoretical view on sparsely activated networks,” 2022. [Online]. Available: https://arxiv.org/abs/2208.04461 [55] Y. Zhou, T. Lei, H. Liu, N. Du, Y. Huang, V. Zhao, A. Dai, Z. Chen, Q. V. Le, and J. Laudon, “Mixture-of-experts with expert choice routing,” in Advances in Neural Information Processing Systems (NeurIPS 2022) , 2022. [Online]. Available: https://proceedings.neurips.cc/paper files/paper/ 2022/file/2f00ecd787b432c1d36f3de9800728eb-Paper-Conference.pdf [56] J. Kirkpatrick, R. Pascanu, N. Rabinowitz, J. Veness, G. Desjardins, A. A. Rusu, K. Milan, J. Quan, T. Ramalho, A. Grabska-Barwinska, D. Hassabis, C. Claudia, D. Kumaran, and R. Hadsell, “Overcoming catastrophic forgetting in neural networks,” Proc. Nat. Acad. Sci. USA ,vol. 114, no. 13, pp. 3521–3526, 2017. [57] R. Agarwal, M. Schwarzer, P. S. Castro, A. Courville, and M. G. Bellemare, “Deep reinforcement learning at the edge of the statistical precipice,” in Advances in Neural Information Processing Systems (NeurIPS) , 2021, introduces robust aggregate metrics such as IQM; library: https://github.com/google-research/rliable. [Online]. Available: https://arxiv.org/abs/2108.13264 [58] N. Shazeer, A. Mirhoseini, K. Maziarz, A. Davis, Q. V. Le, G. Hinton, and J. Dean, “Outrageously large neural networks: The sparsely-gated mixture-of-experts layer,” in International Conference on Learning Representations (ICLR) , 2017, iCLR 2017; see also PDF mirror: https://www.cs.toronto.edu/ ∼hinton/absps/Outrageously. pdf. [Online]. Available: https://arxiv.org/abs/1701.06538 20 
+
+Wen Qiu is currently a Postdoctoral Fellow in Kitami Institute of Technology. She received her Ph.D. degree in Co-creative Engineering from Ki-tami Institute of Technology, Japan. Her research interests include deep reinforcement learning and emergency wireless communication networks, focus-ing on developing intelligent networking solutions for disaster response scenarios. Her work specifically addresses challenges in network resilience, dynamic resource allocation, and system optimization using advanced machine learning techniques. 
+
+Zhiqiang He is currently pursuing a Ph.D. in the University of Electric Communications in Japan. He received his MS degree in Control Science and En-gineering from Northeastern University, Shenyang, China. His research interests focus on deep rein-forcement learning and its applications. He pre-viously worked at Baidu and InspirAI, where he developed a master-level AI for the game Landlord that outperformed professional players. 
+
+Wei Zhao (S’12-M’16) received his Ph.D. degree in the Graduate School of Information Sciences, Tohoku University. He is currently a Professor at the School of Computer Science and Technology, Anhui University of Technology. His research interests in-clude deep reinforcement learning, edge computing, and resource allocation in wireless networks. He was the recipient of the IEEE WCSP-2014 Best Paper Award, and IEEE GLOBECOM-2014 Best Paper Award. He is a member of IEEE. 
+
+Hiroshi Masui received his Ph.D. in Science from Osaka University in 1998. His research interests are theoretical nuclear physics, analysis on public transportation, cloud optimization, data-driven sci-ence. He currently works on Information Processing Center of Kitami Institute of Technology.
