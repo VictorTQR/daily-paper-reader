@@ -45,6 +45,18 @@
       baseUrl: 'https://api.openai.com/v1',
       models: Object.freeze(['gpt-4.1-mini', 'gpt-4.1']),
     }),
+    siliconflow: Object.freeze({
+      key: 'siliconflow',
+      label: '硅基流动 SiliconFlow',
+      baseUrl: 'https://api.siliconflow.cn/v1',
+      models: Object.freeze([
+        'Qwen/Qwen3-8B',
+        'Qwen/Qwen3-72B',
+        'deepseek-ai/DeepSeek-V3',
+        'meta-llama/Llama-3.1-8B-Instruct',
+        'meta-llama/Llama-3.1-70B-Instruct',
+      ]),
+    }),
   });
 
   const normalizeText = (value) => String(value || '').trim();
@@ -146,6 +158,9 @@
     if (/bltcy\.ai|gptbest\.vip/i.test(summary.baseUrl)) {
       return 'plato';
     }
+    if (/siliconflow\.cn/i.test(summary.baseUrl)) {
+      return 'openai-compatible';
+    }
     return 'openai-compatible';
   };
 
@@ -172,6 +187,9 @@
     }
     if (/bltcy\.ai|gptbest\.vip/i.test(normalizedBaseUrl)) {
       return 'plato';
+    }
+    if (/siliconflow\.cn/i.test(normalizedBaseUrl)) {
+      return 'generic-openai';
     }
     return 'generic-openai';
   };
@@ -213,7 +231,8 @@
       || /thinking/i.test(normalizedModel)
       || /^kimi-/i.test(normalizedModel)
       || /^minimax-/i.test(normalizedModel)
-      || normalizedModel.toLowerCase() === 'deepseek-reasoner';
+      || normalizedModel.toLowerCase() === 'deepseek-reasoner'
+      || /siliconflow\.cn/i.test(normalizedBaseUrl);
     const payload = {
       model: normalizedModel,
       messages: [
