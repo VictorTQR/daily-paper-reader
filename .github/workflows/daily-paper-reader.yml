@@ -46,6 +46,11 @@ jobs:
       SUMMARY_BASE_URL: ${{ secrets.SUMMARY_BASE_URL }}
       SUMMARY_MODEL: ${{ secrets.SUMMARY_MODEL }}
       PYTHONUNBUFFERED: "1"
+      EMBED_PROVIDER: siliconflow
+      RERANK_PROVIDER: siliconflow
+      SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+      SILICONFLOW_EMBED_MODEL: BAAI/bge-large-zh-v1.5
+      SILICONFLOW_RERANK_MODEL: BAAI/bge-reranker-v2-m3
 
     steps:
       - name: Random delay to spread scheduled runs
