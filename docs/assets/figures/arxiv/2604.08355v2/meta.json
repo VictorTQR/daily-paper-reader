@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-001.webp",
+      "caption": "Figure 5. Learning curve for Successor Features (SF) in MiniGrid. The agent interacts with environments sequentially, with performance dips indicating task transfers.",
+      "page": 21,
+      "index": 1,
+      "width": 495,
+      "height": 362
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-002.webp",
+      "caption": "Figure 6. Learning curve for Successor Features (SF) in MiniWorld. The flat reward curve indicates a failure to learn or transfer to the target tasks.",
+      "page": 21,
+      "index": 2,
+      "width": 495,
+      "height": 368
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-003.webp",
+      "caption": "Figure 8. Text-guided image generation demonstrating latent disentanglement. Structural features captured in z remain fixed (preserving the background layout) while the text modifies the semantic appearance. Left: MiniWorld, Right: MiniGrid.",
+      "page": 22,
+      "index": 3,
+      "width": 917,
+      "height": 571
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-004.webp",
+      "caption": "Figure 7. Visualization of spatial latent channels. The first two rows of the latent feature maps remain consistent between (b) and (d), capturing the preserved background structure, while other channels shift to reflect the semantic change from (a) to (c).",
+      "page": 22,
+      "index": 4,
+      "width": 950,
+      "height": 263
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-005.webp",
+      "caption": "Figure 1. The overall idea of ASPECT. The agent uses an LLM to semantically remap the target observation (e.g., target task: “pick yellow duckie from blue room”) to a source-aligned description (e.g., source task: “pick blue box from grey room”), enabling the direct application of the pre-trained source policy to the target task.",
+      "page": 4,
+      "index": 5,
+      "width": 396,
+      "height": 356
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-006.webp",
+      "caption": "Figure 3. PPO Fine-tuning in MiniWorld in each case.",
+      "page": 19,
+      "index": 6,
+      "width": 1006,
+      "height": 271
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-007.webp",
+      "caption": "Figure 10. Visualisation of failure cases. The model struggles with extreme close-ups, leading to generation artefacts, and occasionally fails to generate the source object even when the target is visible.",
+      "page": 24,
+      "index": 7,
+      "width": 754,
+      "height": 1216
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-008.webp",
+      "caption": "Table 5. Experimental results of ASPECT for MiniWorld environment using unstructured, VLM-generated captions. The method demonstrates robustness to noise and variability in the conditioning text.",
+      "page": 20,
+      "index": 8,
+      "width": 1006,
+      "height": 400
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08355v2/fig-009.webp",
+      "caption": "Figure 4. Fine-tuning curves for MiniGrid and Fragile Object Manipulation.",
+      "page": 20,
+      "index": 9,
+      "width": 842,
+      "height": 293
+    }
+  ]
+}

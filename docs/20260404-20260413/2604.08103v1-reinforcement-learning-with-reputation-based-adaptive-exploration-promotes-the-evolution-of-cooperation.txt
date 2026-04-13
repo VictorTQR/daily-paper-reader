@@ -1,0 +1,858 @@
+Title: Reinforcement learning with reputation-based adaptive exploration promotes the evolution of cooperation
+
+URL Source: https://arxiv.org/pdf/2604.08103v1
+
+Published Time: Fri, 10 Apr 2026 00:57:05 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Reinforcement learning with reputation-based adaptive exploration promotes the evolution of cooperation 
+
+An Li, 1, 5, ∗ Wenqiang Zhu, 2, 5, 6, ∗ Chaoqian Wang, 11 Longzhao Liu, 2, 5, 6, 8 Hongwei Zheng, 9 Yishen Jiang, 1, 5, 6 Xin Wang, 2, 5, 6, 8, 10, † and Shaoting Tang 2, 3, 4, 5, 6, 7, 8, ‡
+
+> 1
+
+School of Mathematical Sciences, Beihang University, Beijing 100191, China 
+
+> 2
+
+School of Artificial Intelligence, Beihang University, Beijing 100191, China 
+
+> 3
+
+Hangzhou International Innovation Institute, Beihang University, Hangzhou 311115, China 
+
+> 4
+
+Institute of Trustworthy Artificial Intelligence, Zhejiang Normal University, Hangzhou 310013, China 
+
+> 5
+
+Key laboratory of Mathematics, Informatics and Behavioral Semantics, Beihang University, Beijing 100191, China 
+
+> 6
+
+Zhongguancun Laboratory, Beijing 100094, China 
+
+> 7
+
+Institute of Medical Artificial Intelligence, Binzhou Medical University, Yantai 264003, China 
+
+> 8
+
+Beijing Advanced Innovation Center for Future Blockchain and Privacy Computing, Beihang University, Beijing 100191, China 
+
+> 9
+
+Beijing Academy of Blockchain and Edge Computing, Beijing 100085, China 
+
+> 10
+
+State Key Laboratory of General Artificial Intelligence, BIGAI, Beijing 100080, China 
+
+> 11
+
+School of Mathematics and Statistics, Nanjing University of Science and Technology, Nanjing 210094, China 
+
+Multi-agent reinforcement learning serves as an effective tool for studying strategy adaptation in evolutionary games. Although prior work has integrated Q-learning with reputation mechanisms to promote cooperation, most existing algorithms adopt fixed exploration rates and overlook the influence of social context on exploratory behavior. In practice, individuals may adjust their will-ingness to explore based on their reputation and perceived social standing. To address this, we propose a Q-learning model that couples exploration rates with local reputation differences and in-corporates asymmetric, state-dependent reputation updates. Our results show that each mechanism independently promotes cooperation, and their combination yields a reinforcing effect. The joint mechanism enhances cooperation by making “high reputation–low exploration, low reputation–high exploration”, while adjusting reputation updates to amplify cooperative gains at low status and defection penalties at high status. This study thus offers insights into how social evaluation can shape learning behavior in complex environments. 
+
+I. INTRODUCTION 
+
+Cooperation is widespread in biological systems and human societies [1, 2], yet it is difficult to explain from the perspective of Darwinian selection because individually beneficial actions can undermine collective welfare [3]. This tension is formalized as a social dilemma [4], and motivates the question of how cooperation can emerge and persist among self-interested competitors [5]. Evolu-tionary game theory (EGT) [6, 7] provides a theoretical framework for addressing this question by linking inter-action structures [8–10], payoff incentives [11], and be-havioral update rules [12–15]. Canonical models such as the Prisoner’s Dilemma game (PDG) capture the conflict between short-term individual advantage and long-term collective welfare [16, 17]. Over decades of research, many mechanisms have been shown to promote cooperation. These include kin selec-tion, direct reciprocity, indirect reciprocity, group selec-tion, and spatial reciprocity [18]. Cooperation can also be reinforced by institutional incentives such as reward and punishment [11, 19–23] and by factors like aspira-tion [24, 25] or environmental feedback [26–28]. In so-cial settings, cooperation also depends on how individ-   
+
+> ∗These authors contributed equally to this work.
+> †Corresponding author: wangxin 1993@buaa.edu.cn
+> ‡Corresponding author: tangshaoting@buaa.edu.cn
+
+uals are evaluated and remembered. Reputation allows individuals to condition their behavior on others’ past actions, thereby influencing future opportunities for co-operation [29–32]. In models of indirect reciprocity, repu-tation is updated by assessment rules that map observed actions to a public score [33–36]. A common baseline is first-order assessment, where cooperation increases repu-tation and defection decreases it [37, 38]. Most models of reputation use a symmetric updat-ing rule, where cooperation and defection change rep-utation by equal amounts in opposite directions [37–39]. This simplifying assumption rules out state-dependent tolerance and forgiveness, since a given action has the same reputational effect regardless of the actor’s prior reputation. However, evidence from social psychology shows that evaluations can be asymmetric and depend on observers’ expectations and prior impressions [40–43]. For example, a high-status individual may be held to a stricter standard, so even a single norm violation can cause a disproportionately large loss of reputation. In contrast, a low-status individual might face persistent distrust, or they might be more readily forgiven if ob-servers reward reparative behavior [44–46]. Motivated by these findings, we consider reputation updating rules that are both asymmetric and state-dependent. Specifi-cally, state-dependent means that the reputation change depends on an agent’s pre-action reputation, and asym-metric means that the magnitudes of positive and nega-tive updates are not constrained to be equal. Despite its 
+
+> arXiv:2604.08103v1 [physics.comp-ph] 9 Apr 2026
+
+2behavioral relevance, such asymmetric updating remains underexplored in spatial social dilemmas, particularly in scenarios with adaptive decision-making. How agents adapt their behavior is crucial in dynamic environments, because individuals do not know the op-timal strategy in advance. Instead, they learn from re-peated interactions and adjust their decisions based on feedback. This challenge motivates integrating EGT with multi-agent reinforcement learning [47–55]. Recent stud-ies have shown that incorporating reputation into such learning-based evolutionary models can promote cooper-ation [56–61]. However, in these models the exploration rate is fixed, meaning that agents explore with the same intensity regardless of their social standing. In ϵ-greedy Q-learning [62], an agent takes a non-greedy action with a fixed probability ϵ. As a result, even when coopera-tion appears to be the best choice, an agent might still defect due to this exploratory step [63]. If reputation gains and losses depend on prior standing, then the rep-utational cost of such exploratory defection will differ for high- and low-reputation individuals. Thus, treating the exploration rate as fixed ignores a key way in which repu-tation can influence the risks and rewards of exploration. With state-dependent, asymmetric reputation up-dates, exploration carries a reputation-dependent risk. The same exploratory move can have different reputa-tional outcomes depending on the agent’s current stand-ing, thereby altering the expected payoff of exploration versus exploitation. For a high-reputation agent, even a single defection can be costly if it triggers a large reputa-tion loss under stricter standards. For a low-reputation agent, exploration can either deepen the distrust against them if their reputation is hard to restore, or help them recover if cooperative behavior yields larger reputation gains. In both cases, reputation is not just a record of past behavior–it also shapes the perceived risk and re-ward of trying a new strategy. This observation suggests that the exploration–exploitation balance should adapt based on reputation. In other words, reputation can serve as a social state variable that adjusts how cautiously or aggressively an agent explores in a social dilemma [63– 65]. Motivated by these considerations, we propose a spa-tial PDG model that couples Q-learning with (i) areputation-dependent adaptive exploration mechanism and (ii) an asymmetric, state-dependent reputation up-dating rule. In our model, reputation serves as a so-cial state variable that shapes the expected risk of ex-ploratory moves [38, 66, 67]. Meanwhile, the learning dynamics reshape both the evolution of strategies and the distribution of reputations. This framework allows us to isolate how asymmetric reputation updating and adaptive exploration jointly determine long-run cooper-ation in structured populations. Our simulations indicate that coupling reputation with exploration leads to higher cooperation compared to a fixed-exploration baseline. We find that cooperation reaches its highest levels under two conditions. First, high-reputation agents explore more cautiously while low-reputation agents explore more actively. Second, the asymmetric reputation rule makes a high reputation frag-ile but allows a low reputation to be recovered more easily. When these two ingredients are combined, the increase in cooperation is stronger than that produced by either mechanism alone, indicating that adaptive ex-ploration and asymmetric reputation updating reinforce each other. We further find that increasing the reputa-tion concern raises the fraction of cooperation, while the advantage brought by adaptive exploration becomes less pronounced when reputation dominates fitness. In addi-tion, the baseline exploration rate has a non-monotonic effect. Cooperation reaches its minimum at an intermedi-ate baseline exploration intensity. An asymmetric repu-tation rule that rewards low-status cooperation more and penalizes high-status defection more buffers this drop, whereas reversing the asymmetry deepens it. The remainder of this paper is structured as follows: Section II provides a detailed description of the model, Section III presents the main results and analysis, and Section IV concludes the study.   
+
+> II. MODEL A. Spatial Prisoner’s Dilemma Game
+
+We consider a population of agents on an L × L square lattice with periodic boundary conditions. Each lattice site hosts a single agent. Interaction topology is defined by a von Neumann neighborhood, meaning each agent interacts with its four nearest neighbors. At each inter-action step, every agent plays the PDG with each of its neighbors and each pairwise interaction yields a payoff according to the payoff matrix and strategy choices. Each agent has two possible strategies: Cooperation (C) or Defection (D). The payoff for an interaction is de-termined by a matrix M, with entries ( R, S ; T, P ) fol-lowing the canonical ordering T > R > P > S and 2R > T + S. Mutual cooperation yields R for both play-ers, mutual defection yields P , and a defector against a cooperator receives T while the cooperator receives S. In this study, we adopt the weak PDG parametrization [68], setting R = 1, P = S = 0, and T = b, where 1 < b < 2. The payoff matrix M is thus: 
+
+M =
+
+R ST P
+
+
+
+=
+
+1 0 
+
+b 0
+
+
+
+. (1) The strategy of an agent i at time t is represented by a basis vector, where si = (1 , 0) T corresponds to coopera-tion and si = (0 , 1) T corresponds to defection. The total payoff accrued by agent i at time t, denoted Pi(t), is the sum of payoffs from games with each of its neighbors: 
+
+Pi(t) = X
+
+> j∈Ωi
+
+si(t)TMs j (t), (2) where Ω i denotes the set of neighbors for agent i.3 
+
+> B. Asymmetric Reputation Dynamics
+
+To model social evaluation, we assign every agent a reputation score that updates over time in an asymmet-ric manner. Let Ri(t) be the reputation of agent i at time t. The update of Ri depends on agent i’s action 
+
+si(t) (C or D) and its previous reputation Ri(t − 1). We define a reputation threshold A that divides agents into low-reputation ( Ri < A ) and high-reputation ( Ri ≥ A)categories. The reputation update rule is formulated as follows: 
+
+Ri(t) = 
+
+
+
+Ri(t − 1) + δ, if si(t) = C and Ri(t − 1) < A, Ri(t − 1) + 1 , if si(t) = C and Ri(t − 1) ≥ A, Ri(t − 1) − δ, if si(t) = D and Ri(t − 1) ≥ A, Ri(t − 1) − 1, if si(t) = D and Ri(t − 1) < A, 
+
+(3) Where δ > 0 is the reputation sensitivity parame-ter governing the asymmetry. If δ = 1, the incre-ments/decrements are symmetric. For δ > 1, the rep-utation dynamics are more punishing for defectors with high reputation and more rewarding for cooperators with low reputation. Conversely, if 0 < δ < 1, the asymme-try is reduced, giving low-reputation cooperators smaller reputation gains and high-reputation defectors smaller reputation losses than in the symmetric case. Reputation is assumed to be nonnegative and bounded, reflecting a finite evaluation scale. We therefore re-strict Ri(t) to [ Rmin , R max ] (with Rmin ≥ 0) and choose the threshold consistently within the same range, A ∈
+
+(Rmin , R max ); in simulations, we enforce the bounds by clipping Ri(t) after each update.  
+
+> C. Fitness Calculation
+
+We define each agent’s fitness as a combination of its game payoff and its reputation, reflecting both material success and social standing [69]. Specifically, the fitness of agent i at time t is given by a weighted sum of its total payoff and normalized reputation: 
+
+fi(t) = (1 − θ)Pi(t) + θ 4bRmax − Rmin 
+
+Ri(t), (4) where θ ∈ [0 , 1] is a weight capturing the agent’s con-cern for reputation. When θ = 0, fitness depends only on payoff, whereas θ = 1 means only reputation matters; intermediate values blend the two. The factor 4bRmax −Rmin 
+
+scales the reputation term so that its maximum possible contribution is comparable to the maximum game payoff. In our formulation, an agent can earn at most 4 b in one round (by defecting against four cooperative neighbors), so we use 4 b as a normalization for the reputation influ-ence. This way, both payoff and reputation are measured on a roughly equal scale when combined into fitness.  
+
+> D. Q-Learning Framework
+
+Each agent is modeled as an independent reinforce-ment learning player that seeks to maximize its long-term fitness. We implement this via a self-interested Q-learning algorithm [49, 50], where each agent learns from its own experience. The strategic decision process for each agent i can be viewed as a Markov Decision Process (MDP) with state space S and action space A. The state is defined by the agent’s previous action, so S = {C, D},and the action space is A = {C, D}.Agent i maintains an action-value function Qi(s, a ) for each state-action pair, which estimates the expected cu-mulative future fitness if the agent is currently in state 
+
+s and then takes action a. These values are stored in a 2 × 2 Q-table for each agent: 
+
+Qi =
+
+Qi(C , C) Qi(C , D) 
+
+Qi(D , C) Qi(D , D) 
+
+
+
+, (5) where, for example, Qi(D , C) is the Q-value if agent i’s last action was D and it chooses C now. Agents update these Q-values based on the outcomes of interactions. We employ an ϵ-greedy policy for ac-tion selection: with probability 1 − ϵi(t), agent i chooses the action with the highest Qi(s, a ) for its current state 
+
+s (exploitation), and with probability ϵi(t), it selects a random action (exploration). After agent i takes action 
+
+a in state s and obtains a fitness reward fi(t), it updates its Q-value for ( s, a ) using the standard Q-learning rule: 
+
+Qi(s, a ) ← Qi(s, a )+ α[fi(t)+ γ max  
+
+> a′
+
+Qi(s′, a ′)−Qi(s, a )] ,
+
+(6) where s was the state before taking a, and s′ is the new state after the action (in our formulation, s′ = a, since the agent’s next state is its current action). Here α ∈
+
+(0 , 1] is the learning rate and γ ∈ [0 , 1) is the discount factor accounting for future rewards.  
+
+> E. Reputation-Based Adaptive Exploration Rate
+
+Unlike models with a fixed exploration probability, we let an agent’s exploration rate ϵi(t) adapt dynamically based on its social context. We modulate ϵi(t) according to the difference between agent i’s reputation and the average reputation of its neighbors. Let ¯RΩi (t) denote the mean reputation of the neighbors of i. We define the adaptive exploration rate as: 
+
+εi(t) = ε    
+
+> 1+tanh
+> 
+> η
+> Ri(t)−¯RΩi(t)
+> Rmax −Rmin
+> 
+> 0
+
+, (7) where ε0 ∈ [0 , 1] is the baseline exploration rate and 
+
+η ∈ [−1, 1] controls how relative reputation biases explo-ration. When η > 0, agents with lower reputation than their neighborhood average explore more, while higher-reputation agents explore less; η < 0 reverses this ten-dency. Setting η = 0 yields εi(t) = ε0, recovering the fixed exploration case. 4
+
+F. Parameter Configuration 
+
+We employ an asynchronous update scheme in our sim-ulations. One full Monte Carlo step (MCS) consists of L2
+
+elementary steps, and each elementary step randomly se-lects one agent to update according to Algorithm 1. We run simulations for 1 × 10 5 MCS and collect statistics by averaging over the last 5 ,000 MCS. Each data point is further averaged over 20 independent runs. Table I summarizes the model parameters. 
+
+Algorithm 1 Q-learning with reputation-based adaptive exploration  
+
+> 1:
+
+Input: Lattice size L (N = L2), total Monte Carlo steps 
+
+TMCS , parameters b, δ, η, θ, ε 0, A, R min , R max , α, γ . 
+
+> 2:
+
+Output: Stationary fraction of cooperators ρC 
+
+> 3:
+
+Initialize: For all agents i ∈ { 1, . . . , N }, set Qi(s, a ) = 0 for s ∈ S , a ∈ A ; set Ri(0) = A; assign initial state 
+
+si(0) ∈ { C, D} uniformly at random.  
+
+> 4:
+
+for t = 1 to TMCS do  
+
+> 5:
+
+for k = 1 to N do  
+
+> 6:
+
+Randomly select one agent i ∈ { 1, . . . , N }. 
+
+> 7:
+
+Compute εi(t) by Eq. (7)  
+
+> 8:
+
+Let s ← si (agent i’s current state, i.e., its previous action).  
+
+> 9:
+
+if a uniform random number p < ε i(t) then  
+
+> 10:
+
+Select action a uniformly at random from A =
+
+{C, D}. 
+
+> 11:
+
+else  
+
+> 12:
+
+Select action a ∈ arg max a′∈A Qi(s, a ′).  
+
+> 13:
+
+end if  
+
+> 14:
+
+Set si(t) according to a and compute Pi(t) by Eq. (2).  
+
+> 15:
+
+Update reputation Ri by Eq. (3) and clip it to [Rmin , R max ].  
+
+> 16:
+
+Compute fitness fi by Eq. (4).  
+
+> 17:
+
+Update Qi(s, a ) by Eq. (6) with s′ ← a. 
+
+> 18:
+
+Update state: si ← a. 
+
+> 19:
+
+end for  
+
+> 20:
+
+end for 
+
+TABLE I. Model parameters and their descriptions 
+
+Symbol Description 
+
+L Lattice dimension ( L × L grid) 
+
+b Temptation to defect in the PDG 
+
+Rmin Minimum reputation value 
+
+Rmax Maximum reputation value 
+
+A Reputation threshold for high/low status 
+
+δ Reputation sensitivity parameter 
+
+θ Reputation concern (weight in fitness) 
+
+α Learning rate for Q-table updates 
+
+γ Discount factor for future rewards 
+
+ϵ0 Baseline exploration rate 
+
+η Exploration bias based on reputation difference 
+
+III. ANALYSIS OF RESULTS 
+
+In the simulations, we fix L = 200 throughout and confirmed that enlarging the lattice does not change the stationary outcomes reported below. We also tested dif-ferent initial strategy fractions, different initial reputa-tion distributions, and alternative reputation ranges, and found that these variations do not affect the stationary cooperation level or the qualitative phase behavior. Un-less stated otherwise, we fix Rmin = 0, Rmax = 100, and A = 50. In addition, for comparability with prior learning-based evolutionary studies [50, 56–58, 60], we set α = 0 .8 and γ = 0 .8 in all simulations and vary the remaining control parameters ( b, δ, θ, ε 0, η ) to character-ize how asymmetric reputation updating and reputation-coupled exploration jointly shape long-run cooperation. 
+
+A. Separate Effects of Adaptive Exploration and Asymmetric Reputation 
+
+To isolate the roles of adaptive exploration and asym-metric reputation updating, we vary one mechanism at a time. Specifically, we fix δ = 1 in Fig. 1(a) to remove asymmetry in reputation updating, and we fix η = 0 in Fig. 1(b) to remove reputation dependence in explo-ration. Figure 1(a) shows the evolution of ρC for different ex-ploration bias η under symmetric reputation updating (δ = 1). When η = 0, the model reduces to standard ε-greedy learning with a constant exploration rate ε0. For 
+
+η > 0, agents with lower reputation than their neigh-borhood average explore more, while higher-reputation agents explore less. In this regime, the stationary co-operation level increases with η. In contrast, for η < 0the exploration pattern is reversed, and the stationary 
+
+ρC decreases as η becomes more negative. These results show that adaptive exploration affects cooperation, and the sign of η determines whether the effect is cooperative or detrimental. Figure 1(b) shows the evolution of ρC for different asymmetry levels δ under fixed exploration ( η = 0). The case δ = 1 corresponds to symmetric reputation updat-ing. When δ > 1, cooperation produces a larger repu-tation increase for low-reputation agents, and defection produces a larger reputation decrease for high-reputation agents. Under this incentive structure, ρC converges to a higher stationary level, and the increase is stronger for larger δ. When 0 < δ < 1, these reputation incentives are weakened, and the stationary cooperation level declines. In summary, both mechanisms have a directional effect on cooperation. Cooperation is enhanced when explo-ration is concentrated on low-reputation agents ( η > 0) or when reputation updating strengthens rewards for low-reputation cooperation and penalties for high-reputation defection ( δ > 1). 5MCS MCS 
+
+10 0 10 1 10 2 10 3 10 4 10 5
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+MCS 
+
+10 0 10 1 10 2 10 3 10 4 10 5
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+MCS 
+
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 50.3
+> 0.35
+> 0.4
+> 0.45
+> 0.5
+> 0.55
+> 0.6
+> MCS
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> 0.3
+> 0.35
+> 0.4
+> 0.45
+> 0.5
+> 0.55
+> 0.6
+> MCS
+> 𝜌 !
+> 𝜌 !
+
+# (a) (b) 
+
+FIG. 1. Adaptive exploration and asymmetric reputation updating independently and directionally reshape the evolution of cooperation. (a) Time evolution of the ρC for different η under symmetric reputation updating ( δ = 1). When η > 0, cooperation is promoted, conversely, when η < 0, cooperation is inhibited. (b) Time evolution of the ρC for different δ under fixed exploration ( η = 0, i.e., εi(t) = ε0). When δ > 1, cooperation is promoted, whereas δ < 1 leads to a decline in cooperation levels. The fixed parameters are b = 1 .6, θ = 0 .6, ϵ0 = 0 .02. 0.35 
+
+> 0.4
+> 0.45
+> 0.5
+> 0.55
+
+0-1 1
+
+## 𝜂 
+
+0.5 
+
+1
+
+2
+
+E!R!
+
+> 0.3359
+
+E"R!
+
+> 0.3918
+
+E#R!
+
+> 0.4608
+
+E"R"
+
+> 0.4192
+
+E!R"
+
+> 0.3475
+
+E!R#
+
+> 0.4196
+
+E"R#
+
+> 0.4813
+
+E#R#
+
+> 0.5807
+
+E#R"
+
+> 0.4972
+> 𝛿
+
+𝜌 $    
+
+> 01234
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0 1 2 3 4
+
+## 𝛿 
+
+> 𝜌 #
+
+0    
+
+> -1 -0.5 00.5 1
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+
+0.5 -1 -0.5 1
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+## 𝜂 
+
+> 𝜌 #
+
+# (a) (b) (c)       
+
+> -1 -0.5 0
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> -1 -0.5 00.5 1
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+
+FIG. 2. Synergistic effect between adaptive exploration and asymmetric reputation. (a) Heat map of the fraction of cooperation 
+
+ρC for the nine combinations of exploration mechanism (columns, controlled by η) and reputation update rule (rows, controlled by δ), where each cell reports the corresponding ρC. (b) Fraction of cooperation ρC as a function of η for different δ values, showing that the cooperative advantage of η > 0 becomes stronger as δ increases (i.e., asymmetric reputation updating amplifies the effect of reputation-directed exploration). (c) Fraction of cooperation ρC as a function of δ for different η values, showing that increasing δ promotes cooperation, but as δ continues to increase, the marginal gain in the frequency of cooperation decreases. The fixed parameters are b = 1 .6, θ = 0 .6, ϵ0 = 0 .02. 
+
+B. Synergistic Effect Between Adaptive Exploration and Asymmetric Reputation 
+
+We next examine the joint effects of reputation-based exploration and asymmetric reputation updating. For clarity, Table II summarizes the notation used for the exploration mechanism (E) and the reputation update rule (R). The combined outcomes across the nine settings are summarized in Fig. 2(a). Relative to the baseline E 0R0,increasing η alone (E +R0) or increasing δ alone (E 0R+)raises ρC. When both are applied together, cooperation increases further. We can find that ρC under E +R+ ex-ceeds both E +R0 and E 0R+. This ranking shows that the two mechanisms reinforce each other rather than acting as substitutes. To clarify where this reinforcement comes from, Fig. 2(b) and Fig. 2(c) examine the two control directions separately. For a fixed δ, ρC increases with η, and the in-crease becomes stronger as δ grows (Fig. 2(b)), showing that asymmetric reputation updating amplifies the co-operative advantage of directing exploration toward low-reputation agents. Conversely, for a fixed η, ρC increases with δ (Fig. 2(c)). When η > 0, ρC rises rapidly as 
+
+δ crosses 1 and then levels off, so further increases in δ
+
+yield smaller gains. This motivates a microscopic analysis 61 2 3 4    
+
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> Fraction
+> 1234
+> -2
+> -1
+> 0
+> 1
+> 2
+> 3
+> 4
+> Q(C,C)-Q(C,D)
+> Q(D,C)-Q(D,D)
+> 1.02 1.1
+> -0.2
+> 0
+> 0.2
+
+1 2 3 4
+
+## 𝛿 
+
+> ∆ #𝑄
+
+-2
+
+-1
+
+0
+
+1
+
+2
+
+3
+
+4       
+
+> 1234
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> Fraction
+> LD HD LC HC
+
+𝑛 !:         
+
+> 1234
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> Fraction
+> LD HD LC HC
+> 1234
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> Fraction
+
+1 2 3 4
+
+## 𝛿 
+
+0
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1
+
+0
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1
+
+> Fraction
+
+E"R" E#R#
+
+E#R"
+
+E"R#
+
+# (a) (b) (c) Fraction       
+
+> 11.5 22.5 33.5 4
+> -2
+> -1
+> 0
+> 1
+> 2
+> 3
+> 4
+
+FIG. 3. Microscopic evidence for how the joint mechanism stabilizes cooperation. (a) Steady-state Q-value gaps ∆ ¯Q as a function of δ under the exploration bias ( η = 1). Here, ∆ ¯QC > 0 indicates that agents who previously cooperated value continuing to cooperate more than switching to defection, while ∆ ¯QD > 0 indicates that agents who previously defected value switching to cooperation more than persisting in defection. (b) Fractions of the four behavioral–reputational types (LC/HC for low-/high-reputation cooperators; LD/HD for low-/high-reputation defectors) versus δ under η = 1. (c) Distribution of the number of cooperative neighbors nC ∈ { 0, 1, 2, 3, 4} for cooperation survival events (a D → C switch followed by at least two further consecutive cooperative actions) under four representative mechanisms. The fixed parameters are b = 1 .6, θ = 0 .6, 
+
+ϵ0 = 0 .02. 0.1 0.3 0.6 0.9 
+
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+0.1 0.3 0.7 0.9 
+
+## 𝜃      
+
+> 1.0 1.2 1.4 1.6 1.8 2.0
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> 𝜃
+
+## Ⅰ
+
+## Ⅱ
+
+## Ⅲ
+
+1 1.2 1.4 1.6 1.8 2
+
+## 𝑏 
+
+0
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1
+
+0
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1
+
+0
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1
+
+> 𝜌 !
+> 𝜌 !
+
+1 1.2 1.4 1.6 1.8 2
+
+## 𝑏 
+
+𝜌 !
+
+# (a) (b) (c)      
+
+> 11.2 1.4 1.6 1.8 2
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+FIG. 4. Reputation concern governs the cooperation regime. (a) Bar chart of the fraction of cooperation ρC versus θ under three exploration biases η ∈ {− 1, 0, 1} at b = 1 .6. ρC increases with θ, while the differences among η shrink at large θ. (b) Fraction of cooperation ρC as a function of b for θ ∈ { 0, 0.2, 0.4, 0.6, 0.8, 1} at η = 1. Reputation entering fitness ( θ > 0) markedly elevates ρC. Intermediate θ yields a saturation state near ρC ≈ 0.6. (c) Heat map of ρC in the ( b, θ ) plane at η = 1. The lower region (I) corresponds to low cooperation, the middle region (II) shows a saturation state with ρC ≈ 0.6, and the upper region (III) exhibits high cooperation with ρC > 0.6. Dashed curves indicate the boundaries between these regimes. The fixed parameters are δ = 3, ϵ0 = 0 .02. 
+
+of how the joint mechanism reshapes learning incentives and population composition. To explain the diminishing marginal gain in Fig. 2(c) for η > 0 and δ > 1, we analyze the learning signals and the resulting population structure under the exploration bias ( η = 1). Figure 3(a) tracks two Q-value gaps. Define ∆ ¯QC = Q(C , C) − Q(C , D) , (8a) ∆ ¯QD = Q(D , C) − Q(D , D) , (8b) where the overline denotes an average over agents at steady state. A positive ∆ ¯QC indicates that coopera-tors assign higher value to persisting in cooperation than switching to defection, while a positive ∆ ¯QD indicates that defectors assign higher value to switching to coop-eration than remaining in defection. As δ increases above 1, ∆ ¯QC grows and ∆ ¯QD decreases, so agents increasingly prefer to repeat their current action. Both curves then change more slowly as δ becomes large, which is consis-tent with the leveling-off behavior of ρC.The same situation is reflected in the population com-position. As shown in Fig. 3(b), when δ = 1, HC, LC, HD, and LD all occupy non-negligible shares, indicating that reputation and strategy are not yet tightly coupled. When δ ≥ 2, the high-reputation group is dominated by cooperators and the low-reputation group is domi-7                    
+
+> TABLE II. Notation for exploration and reputation mecha-nisms
+> Symbol Parameter Meaning
+> Exploration mechanism
+> E0η= 0 Fixed exploration rate (baseline). E−η < 0Lower exploration for low-reputation agents and higher exploration for high-reputation agents. E+η > 0Higher exploration for low-reputation agents and lower exploration for high-reputation agents.
+> Reputation update rule
+> R0δ= 1 Symmetric reputation updating. R−δ < 1Smaller reputation changes for cooperation by low-reputation agents and defection by high-reputation agents. R+δ > 1Larger reputation changes for cooperation by low-reputation agents and defection by high-reputation agents.
+
+nated by defectors, and the composition changes little with further increases in δ. This pattern shows that the mechanism can reliably identify cooperators (defectors) and assign them high (low) reputation, consistent with social expectations. Once this correspondence is estab-lished, increasing δ mainly rescales the strength of the same separation, which explains why additional gains in 
+
+ρC become limited. Finally, Fig. 3(c) links the joint mechanism to co-operation stability under local temptation. Let nC ∈{0, 1, 2, 3, 4} be the number of cooperative neighbors of a focal agent. In the weak PDG, the immediate gain from defecting against cooperative neighbors increases with 
+
+nC (a larger nC corresponds to stronger temptation). We define a cooperation-survival event as a transition D → Cfollowed by at least two further consecutive cooperative actions. Fig. 3(c) plots the distribution of nC for these events under different mechanisms. Under E +R+, a large share of survival events occurs at nC = 3 or 4, indicat-ing that cooperation can persist even when the short-term incentive to defect is strong. In contrast, under E0R0 survival events concentrate at small nC , meaning cooperation is mainly stable in low-temptation neighbor-hoods. This comparison supports the interpretation that E+R+ improves cooperation by stabilizing it under high temptation rather than by relying on sheltered local con-figurations.  
+
+> C. Impact of the Reputation Concern
+
+We now examine how the reputation concern θ, which weights reputation in fitness, shapes cooperation under the synergistic setting. As shown in Fig. 4(a), increas-ing θ raises the fraction of cooperation for all three exploration biases. Meanwhile, the differences among 
+
+η = −1, 0, 1 shrink as θ increases. This indicates that when reputation contributes more to fitness, reputation-driven selection becomes the dominant force shaping be-havior, and the additional effect introduced by the explo-ration bias becomes less pronounced. The effect of θ becomes more evident when the temp-tation to defect increases. Figure 4(b) shows that intro-ducing reputation into fitness ( θ > 0) markedly improves cooperation compared with θ = 0. For θ = 1, coop-erators occupy almost the whole population across the explored range of b. For intermediate values of θ, coop-eration decreases as b increases and then stabilizes close to ρC ≈ 0.6, indicating a cooperation saturation state in which the long-run cooperation level becomes weakly sensitive to further increases in b.These trends are summarized in the phase diagram in Fig. 4(c), where the ( b, θ ) plane can be divided into three representative regions. Region I corresponds to low co-operation, with ρC fluctuating around a relatively small value. Region II corresponds to the cooperation satura-tion state, where ρC stays around 0 .6 over a broad param-eter range. Region III corresponds to high cooperation, with ρC exceeding 0 .6 and responding more strongly to changes in b and θ. Increasing θ expands Region III, whereas increasing b compresses it and enlarges the sat-uration regime. This indicates that stronger reputation concern offsets the temptation to defect, while stronger temptation pushes the system toward coexistence rather than near-full cooperation. To reveal the microscopic patterns behind the three regions, we fix b = 1 .5 and select θ = 0 .1, 0 .6, and 0 .9, which correspond to Regions I–III in Fig. 4(c). Figure 5 shows the spatiotemporal evolution of strategy and rep-utation. For small θ (Fig. 5(a)), payoffs dominate fitness and reputation contributes little. Defectors expand by ex-ploiting nearby cooperators, and the remaining coop-erators survive mainly in small compact clusters. The reputation field drifts toward low values, consistent with the prevalence of defection. For intermediate θ
+
+(Fig. 5(b)), reputation and payoff jointly determine fit-ness, and the system evolves toward a stable spatial coexistence. Strategies and reputations become locally organized, and high-reputation cooperators and low-reputation defectors appear as interwoven neighbors, forming a checkerboard-like pattern. The emergence and stability of this checkerboard-like coexistence can be understood from a local fitness comparison, as shown in Appendix. This spatial structure also supports the cooperation saturation level observed in Fig. 4(b) and Fig. 4(c). For large θ (Fig. 5(c)), reputation dominates fitness. Agents therefore learn to cooperate to maintain high reputation, and the population becomes nearly all cooperative. The remaining defectors are sparse and sur-rounded by cooperators, and their reputations stay low. 8𝜃  = 0.6𝜃  = 0.9
+
+> Strategy  Reputation
+
+# (a) 
+
+# (b) 
+
+# (c) 𝜃  = 0.1
+
+# MCS Local 
+
+FIG. 5. Spatiotemporal evolution of strategy and reputation for different reputation concern. Snapshots of strategy (top row in each block; C in blue and D in red) and reputation (bottom row in each block; color scale) at θ ∈ { 0.1, 0.6, 0.9}. Columns show increasing MCS from left to right, and the right panels show a local view taken from the marked area in the final snapshot. (a) θ = 0 .1 yields dominant defection with small cooperative clusters and generally low reputation. (b) θ = 0 .6 yields stable coexistence in which high-reputation cooperators and low-reputation defectors occupy interwoven neighboring sites, producing a checkerboard-like pattern in strategy and a corresponding local ordering in reputation. (c) θ = 0 .9 yields near full cooperation with sparse defectors and high reputation for most agents. The fixed parameters are δ = 3, η = 1, b = 1 .5 and ϵ0 = 0 .02. 
+
+Overall, increasing θ strengthens the selective pressure induced by reputation, which raises cooperation and can drive the system from cluster-based survival, through a robust coexistence regime, to near-full cooperation. 
+
+D. Impact of the baseline exploration rate 
+
+Figure 6 shows how the fraction of cooperation de-pends on the baseline exploration rate ε0 under different asymmetry levels δ. Across all cases, ρC changes non-monotonically as ε0 increases. In the small-ε0 range, co-operation rises slightly; at intermediate ε0, cooperation drops markedly; and when ε0 becomes close to 1, ρC in-910 -3 10 -2 10 -1 10 0
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+= 0.5 
+
+= 1.0 
+
+= 3.0 
+
+# 𝜀 !                            
+
+> 𝜌 "
+> FIG. 6. Impact of baseline exploration rate. We show the fraction of cooperation ρCas a function of the baseline explo-ration rate ϵ0for δ∈ { 0.5,1,3}. The fraction of cooperation increases at small ϵ0, decreases over an intermediate range, then rises toward ρC≈0.5 as ϵ0→1. Asymmetric updating with δ > 1 reduces the cooperation drop at intermediate ε0,whereas δ < 1 enlarges it. The fixed parameters are η= 1,
+> θ= 0 .6, b= 1 .6.
+
+creases again and approaches 0 .5. When ε0 is very small, action selection is nearly greedy and the dynamics are dominated by exploitation. Asmall increase in ε0 introduces occasional trial moves, which helps agents correct early misjudgments and ad-just their action values. As a result, ρC exhibits a mild upward trend, although the improvement remains lim-ited in magnitude. As ε0 enters an intermediate range, exploration becomes frequent enough to interfere with the formation of stable behavioral patterns. Random ac-tions, in particular random defections, occur more often and disrupt local cooperative neighborhoods. This weak-ens the reputation–fitness feedback and leads to a pro-nounced decrease in ρC. When ε0 is very large, action choice is dominated by randomness and exploitation be-comes ineffective. In this limit, neither cooperation nor defection can be consistently reinforced, and the popula-tion approaches an approximately unbiased mixed state with ρC ≈ 0.5. The role of δ is reflected in both the overall level of cooperation and the position of the downturn. Larger δ
+
+maintains a higher ρC and shifts the onset of the decline to larger ε0, indicating that stronger asymmetric repu-tation updating makes cooperative configurations more resistant to exploration-induced noise.  
+
+> IV. CONCLUSION
+
+Reinforcement learning provides a framework for mod-eling strategy adaptation in social dilemmas, allowing individuals to learn optimal behaviors through repeated interactions and feedback [47, 62, 63]. In many social sys-tems, however, learning through trial is not socially neu-tral. Exploratory actions can be read as unreliability or norm violation, and the social cost of a deviation depends on prior standing and others’ expectations. This makes it necessary to treat learning and evaluation as coupled pro-cesses rather than independent components. Two com-mon assumptions weaken this connection. Fixed ϵ-greedy exploration makes deviations context independent, and symmetric reputation updating assumes equal-size re-wards and penalties, even though social judgment is often expectation dependent and status dependent [37, 38, 40– 42]. In this work, we propose a spatial Prisoner’s Dilemma model that couples Q-learning with two mechanisms. The first is a reputation-based adaptive exploration rule in which an agent’s exploration probability depends on its reputation relative to its neighbors. The second is an asymmetric, state-dependent reputation update rule in which the reputation change depends on the agent’s prior reputation. Together, they make the risk of explo-ration depend on social standing, so the consequences of trying a risky action are no longer the same for everyone. Our simulations show that each mechanism promotes cooperation on its own, and that their combination produces a clear reinforcing effect. Cooperation in-creases when low-reputation agents explore more and high-reputation agents explore less, compared with fixed exploration. Cooperation also increases when the reputa-tion rule gives larger gains to low-reputation cooperation and larger losses to high-reputation defection, compared with symmetric updating. When both are applied simul-taneously, the stationary cooperation level is higher than under either mechanism alone. Moreover, cooperation becomes more stable under strong temptation, because high-reputation agents are less likely to switch to de-fection through exploration, while low-reputation agents can improve their standing through sustained coopera-tion. We further examined how reputation concern and learning noise shape these outcomes. Increasing the rep-utation weight θ raises cooperation overall, while reduc-ing the extra benefit of exploration bias when reputa-tion becomes the dominant contributor to fitness. For intermediate θ and temptation, strategies and reputa-tions self-organize into a robust coexistence pattern, with high-reputation cooperators and low-reputation defectors forming an interwoven spatial structure that matches the observed cooperation saturation regime. We also found a non-monotonic dependence on the baseline ex-ploration rate ε0. Moderate exploration disrupts coop-erative structure most strongly, while very small explo-ration limits correction of early mistakes and very large exploration weakens reinforcement and drives the system toward a mixed state. Importantly, asymmetric updat-ing with δ > 1 reduces the cooperation drop at interme-diate ε0, whereas δ < 1 enlarges it. This highlights that 10 stronger penalties for high-status defection and stronger gains for low-status cooperation help cooperation resist exploration-induced disturbances. Overall, these results support the view that reputation can act as a dynamic signal that regulates risk taking dur-ing learning, rather than only a score that enters fitness. Linking reputation to exploration produces more robust cooperation than treating exploration as socially blind. Future work can combine this mechanism with institu-tional incentives such as reward and punishment to study how external enforcement interacts with adaptive learn-ing [19–21]. It is also important to go beyond first-order reputation and consider richer assessment rules from in-direct reciprocity to test how information quality and evaluation standards reshape adaptive exploration [33– 35]. 
+
+> ACKNOWLEDGMENTS
+
+This work is supported by National Science and Tech-nology Major Project (2022ZD0116800), Program of Na-tional Natural Science Foundation of China (12425114, 62141605, 12201026, 12301305, 62441617, 12501702), the Fundamental Research Funds for the Central Universi-ties, Beijing Natural Science Foundation (Z230001), Na-tional Cyber Security-National Science and Technology Major Project (2025ZD1503700), the Opening Project of the State Key Laboratory of General Artificial Intelli-gence(Project No. SKLAGI2025OP16), and Beijing Ad-vanced Innovation Center for Future Blockchain and Pri-vacy Computing. 
+
+> Appendix A: Formation and Stability of the Checkerboard-Like Pattern
+
+This appendix provides a local fitness comparison that helps explain the emergence and stability of the checkerboard-like coexistence shown in Fig. 5(b). We consider a focal agent with reputation R and 
+
+nC ∈ {0, 1, 2, 3, 4} cooperative neighbors. Under the weak PDG, the one-step payoff is PC = nC if the agent cooperates and PD = bn C if it defects. The fitness is given by Eq. (4), where the reputation term uses the post-update reputation. According to the reputation rule in Eq. (3), the repu-tation change depends on the current status. If R < A ,cooperation yields R′ = R + δ while defection yields 
+
+R′ = R − 1. If R ≥ A, cooperation yields R′ = R + 1 while defection yields R′ = R − δ. In both cases, the difference between choosing cooperation and defection is the same, 
+
+R′ 
+
+> C
+
+− R′ 
+
+> D
+
+= δ + 1 . (A1) Using Eq. (4), the one-step fitness difference between co-operation and defection can be written as 
+
+fC − fD = (1 − θ)( nC − bn C) + θ 4bRmax − Rmin 
+
+(R′ 
+
+> C
+
+− R′
+
+> D
+
+)= θ 4bRmax − Rmin 
+
+(δ + 1) − (1 − θ)nC(b − 1) .
+
+(A2) This expression implies a critical neighbor count 
+
+n∗ 
+
+> C
+
+= θ
+
+1 − θ
+
+4b(δ + 1) (Rmax − Rmin )( b − 1) , (A3) such that cooperation is favored when nC < n ∗ 
+
+> C
+
+and de-fection is favored when nC > n ∗
+
+> C
+
+.A checkerboard-like coexistence requires that coopera-tion is advantageous in defector-rich surroundings, while defection can still be advantageous in cooperator-rich surroundings. A sufficient condition is 0 < n ∗ 
+
+> C
+
+< 4. For Fig. 5(b) with θ = 0.6, δ = 3, b = 1.5, and 
+
+Rmax − Rmin = 100, Eq. (A3) gives n∗ 
+
+> C
+
+= 0 .72. This yields fC − fD > 0 at nC = 0 and fC − fD < 0 at 
+
+nC = 4, which supports an alternating arrangement. For Fig. 5(c) with θ = 0 .9 and the same δ, b, and reputation range, Eq. (A3) gives n∗ 
+
+> C
+
+= 4 .32 > 4, so fC − fD remains nonnegative for all nC ∈ { 0, 1, 2, 3, 4}. In this case, the alternating pattern is not stable and the system tends toward near-full cooperation. Finally, an ideal checkerboard would give ρC ≃ 0.5, whereas our simulations show a checkerboard-like state with ρC ≃ 0.6. This deviation is consistent with the joint effect of adaptive exploration and asymmetric repu-tation updating. Low-reputation agents explore more fre-quently, so defectors embedded in the coexistence struc-ture more often try cooperation. Under δ > 1, successful cooperative trials yield faster reputation recovery, which reduces subsequent exploration and makes cooperation more persistent. As a result, some sites that would be de-fectors in an ideal alternating configuration become coop-erators, producing a cooperator-enriched checkerboard-like pattern.         
+
+> [1] D. G. Rand and M. A. Nowak, Human cooperation, Trends in Cognitive Sciences 17 , 413 (2013). [2] R. Axelrod and W. D. Hamilton, The evolution of coop-eration, Science 211 , 1390 (1981). [3] K. Sigmund, The calculus of selfishness (Princeton Uni-versity Press, 2010). [4] P. A. Van Lange, Social dilemmas: Understanding human cooperation (OUP USA, 2014). [5] E. Pennisi, How did cooperative behavior evolve?, Sci-ence 309 , 93 (2005). [6] J. M. Smith and G. R. Price, The logic of animal conflict, Nature 246 , 15 (1973).
+
+11 
+
+[7] P. D. Taylor and L. B. Jonker, Evolutionary stable strate-gies and game dynamics, Mathematical Biosciences 40 ,145 (1978). [8] H. Ohtsuki, C. Hauert, E. Lieberman, and M. A. Nowak, A simple rule for the evolution of cooperation on graphs and social networks, Nature 441 , 502 (2006). [9] M. Perc and A. Szolnoki, Coevolutionary games—a mini review, BioSystems 99 , 109 (2010). [10] M. Perc, J. J. Jordan, D. G. Rand, Z. Wang, S. Boc-caletti, and A. Szolnoki, Statistical physics of human co-operation, Physics Reports 687 , 1 (2017). [11] C. Wang, M. Perc, and A. Szolnoki, Evolutionary dynam-ics of any multiplayer game on regular graphs, Nature Communications 15 , 5349 (2024). [12] C. Wang and A. Szolnoki, Evolution of cooperation un-der a generalized death-birth process, Physical Review E 
+
+107 , 024303 (2023). [13] C. Wang and A. Szolnoki, Inertia in spatial public goods games under weak selection, Applied Mathematics and Computation 449 , 127941 (2023). [14] C. Wang, W. Zhu, and A. Szolnoki, The conflict between self-interaction and updating passivity in the evolution of cooperation, Chaos, Solitons & Fractals 173 , 113667 (2023). [15] C. Wang, W. Zhu, and A. Szolnoki, When greediness and self-confidence meet in a social dilemma, Physica A 625 ,129033 (2023). [16] R. Axelrod, Effective choice in the prisoner’s dilemma, Journal of Conflict Resolution 24 , 3 (1980). [17] G. Szab´ o and C. T˝ oke, Evolutionary prisoner’s dilemma game on a square lattice, Physical Review E 58 , 69 (1998). [18] M. A. Nowak, Evolutionary dynamics: exploring the equations of life (Harvard University Press, 2006). [19] K. Sigmund, C. Hauert, and M. A. Nowak, Reward and punishment, Proceedings of the National Academy of Sci-ences 98 , 10757 (2001). [20] A. Szolnoki and M. Perc, Reward and cooperation in the spatial public goods game, Europhysics Letters 92 , 38003 (2010). [21] A. Szolnoki, G. Szab´ o, and M. Perc, Phase diagrams for the spatial public goods game with pool punishment, Physical Review E 83 , 036101 (2011). [22] W. Zhu, Q. Pan, S. Song, and M. He, Effects of exposure-based reward and punishment on the evolution of coop-eration in prisoner’s dilemma game, Chaos, Solitons & Fractals 172 , 113519 (2023). [23] T. A. Han, M. H. Duong, and M. Perc, Evolutionary mechanisms that promote cooperation may not promote social welfare, Journal of the Royal Society Interface 21 ,20240547 (2024). [24] L. Zhou, B. Wu, J. Du, and L. Wang, Aspiration dynam-ics generate robust predictions in heterogeneous popula-tions, Nature Communications 12 , 3250 (2021). [25] F. Chen, L. Zhou, and L. Wang, Cooperation among un-equal players with aspiration-driven learning, Journal of the Royal Society Interface 21 , 20230723 (2024). [26] J. S. Weitz, C. Eksin, K. Paarporn, S. P. Brown, and W. C. Ratcliff, An oscillating tragedy of the commons in replicator dynamics with game-environment feedback, Proceedings of the National Academy of Sciences 113 ,E7518 (2016). [27] A. R. Tilman, J. B. Plotkin, and E. Ak¸ cay, Evolutionary games with environmental feedbacks, Nature communi-cations 11 , 915 (2020). [28] X. Wang and F. Fu, Eco-evolutionary dynamics with en-vironmental feedback: Cooperation in a changing world, Europhysics Letters 132 , 10001 (2020). [29] F. Fu, C. Hauert, M. A. Nowak, and L. Wang, Reputation-based partner choice promotes cooperation in social networks, Physical Review E 78 , 026117 (2008). [30] F. P. Santos, F. C. Santos, and J. M. Pacheco, Social norm complexity and past reputations in the evolution of cooperation, Nature 555 , 242 (2018). [31] C. Xia, J. Wang, M. Perc, and Z. Wang, Reputation and reciprocity, Physics of Life Reviews 46 , 8 (2023). [32] J. Wang and C. Xia, Reputation evaluation and its im-pact on the human cooperation—a recent survey, Euro-physics Letters 141 , 21001 (2023). [33] H. Ohtsuki and Y. Iwasa, How should we define good-ness?—reputation dynamics in indirect reciprocity, Jour-nal of Theoretical Biology 231 , 107 (2004). [34] H. Ohtsuki and Y. Iwasa, The leading eight: social norms that can maintain cooperation by indirect reciprocity, Journal of theoretical biology 239 , 435 (2006). [35] C. Hilbe, L. Schmid, J. Tkadlec, K. Chatterjee, and M. A. Nowak, Indirect reciprocity with private, noisy, and incomplete information, Proceedings of the National Academy of Sciences 115 , 12241 (2018). [36] M. Wei, X. Wang, L. Liu, H. Zheng, Y. Jiang, Y. Hao, Z. Zheng, F. Fu, and S. Tang, Indirect reciprocity in the public goods game with collective reputations, Journal of the Royal Society Interface 22 , 20240827 (2025). [37] M. A. Nowak and K. Sigmund, Evolution of indirect reci-procity by image scoring, Nature 393 , 573 (1998). [38] M. A. Nowak and K. Sigmund, Evolution of indirect reci-procity, Nature 437 , 1291 (2005). [39] W. Zhu, X. Wang, C. Wang, L. Liu, H. Zheng, and S. Tang, Reputation-based synergy and discount-ing mechanism promotes cooperation, New Journal of Physics 26 , 033046 (2024). [40] J. J. Skowronski and D. E. Carlston, Negativity and ex-tremity biases in impression formation: A review of ex-planations, Psychological Bulletin 105 , 131 (1989). [41] S. T. Fiske, Social beings: Core motives in social psychol-ogy (John Wiley & Sons, 2018). [42] R. F. Baumeister, E. Bratslavsky, C. Finkenauer, and K. D. Vohs, Bad is stronger than good, Review of general psychology 5, 323 (2001). [43] I. S. Lim and N. Masuda, To trust or not to trust: Evolu-tionary dynamics of an asymmetric n-player trust game, IEEE Transactions on Evolutionary Computation 28 ,117 (2023). [44] A. R. Fragale, B. Rosen, C. Xu, and I. Merideth, The higher they are, the harder they fall: The effects of wrongdoer status on observer punishment recommenda-tions and intentionality attributions, Organizational Be-havior and Human Decision Processes 108 , 53 (2009). [45] Y. Dong, S. Sun, C. Xia, and M. Perc, Second-order rep-utation promotes cooperation in the spatial prisoner’s dilemma game, IEEE Access 7, 82532 (2019). [46] Q. Chen, X. Peng, H. Kang, Y. Shen, and X. Sun, The impact of historical-behavior-based asymmetric reputa-tion and deposit mechanisms on the evolutionary spatial public goods game, Chaos: An Interdisciplinary Journal of Nonlinear Science 35 , 10.1063/5.0293944 (2025). [47] R. Koster, M. Pˆ ıslar, A. Tacchetti, J. Balaguer, L. Liu, R. Elie, O. P. Hauser, K. Tuyls, M. Botvinick, and 12 
+
+C. Summerfield, Deep reinforcement learning can pro-mote sustainable human behaviour in a common-pool resource problem, Nature Communications 16 , 2824 (2025). [48] K. R. McKee, A. Tacchetti, M. A. Bakker, J. Balaguer, L. Campbell-Gillingham, R. Everett, and M. Botvinick, Scaffolding cooperation in human groups with deep re-inforcement learning, Nature Human Behaviour 7, 1787 (2023). [49] L. Wang, D. Jia, L. Zhang, P. Zhu, M. Perc, L. Shi, and Z. Wang, L´ evy noise promotes cooperation in the pris-oner’s dilemma game with reinforcement learning, Non-linear Dynamics 108 , 1837 (2022). [50] L. Fan, Z. Song, L. Wang, Y. Liu, and Z. Wang, Incorpo-rating social payoff into reinforcement learning promotes cooperation, Chaos: An Interdisciplinary Journal of Non-linear Science 32 , 10.1063/5.0093996 (2022). [51] Y. Geng, Y. Liu, Y. Lu, C. Shen, and L. Shi, Re-inforcement learning explains various conditional coop-eration, Applied Mathematics and Computation 427 ,127182 (2022). [52] Y. Xu, J. Wang, J. Chen, D. Zhao, M. ¨Ozer, C. Xia, and M. Perc, Reinforcement learning and collective coopera-tion on higher-order networks, Knowledge-Based Systems 
+
+301 , 112326 (2024). [53] B. Mintz and F. Fu, Evolutionary multi-agent rein-forcement learning in group social dilemmas, Chaos: An Interdisciplinary Journal of Nonlinear Science 35 ,10.1063/5.0246332 (2025). [54] K. Xie and A. Szolnoki, Reinforcement learning in evo-lutionary game theory: A brief review of recent devel-opments, Applied Mathematics and Computation 510 ,129685 (2026). [55] Y. Hou, Y.-S. Ong, L. Feng, and J. M. Zurada, An evo-lutionary transfer reinforcement learning framework for multiagent systems, IEEE Transactions on Evolutionary Computation 21 , 601 (2017). [56] K. Zou and C. Huang, Incorporating reputation into re-inforcement learning can promote cooperation on hyper-graphs, Chaos, Solitons & Fractals 186 , 115203 (2024). [57] T. Ren and X.-J. Zeng, Reputation-based interaction promotes cooperation with reinforcement learning, IEEE Transactions on Evolutionary Computation 28 , 1177 (2023). [58] K. Xie and A. Szolnoki, Reputation in public goods coop-eration under double q-learning protocol, Chaos, Solitons & Fractals 196 , 116398 (2025). [59] T. Ren, X. Yao, Y. Li, and X.-J. Zeng, Bottom-up reputation promotes cooperation with multi-agent re-inforcement learning, arXiv preprint arXiv:2502.01971 10.48550/arXiv.2502.01971 (2025). [60] Y. Zhu, B. Xing, and C. Xia, Q-learning update with second-order reputation promotes the evolution of trust within structured populations, Chaos, Solitons & Frac-tals 199 , 116653 (2025). [61] Q. Zhang and X. Zhang, Q-learning driven cooperative evolution with dual-reputation incentive mechanisms, Applied Mathematics and Computation 507 , 129590 (2025). [62] C. J. Watkins and P. Dayan, Q-learning, Machine Learn-ing 8, 279 (1992). [63] R. S. Sutton, A. G. Barto, et al. , Reinforcement learn-ing: an introduction, 2nd edn. Adaptive computation and machine learning , Vol. 1 (MIT press Cambridge, 2018). [64] M. Tokic and G. Palm, Value-difference based explo-ration: adaptive control between epsilon-greedy and softmax, in Annual conference on artificial intelligence 
+
+(Springer, 2011) pp. 335–346. [65] S. Shen, X. Zhang, A. Xu, and T. Duan, An adaptive exploration mechanism for q-learning in spatial public goods games, Chaos, Solitons & Fractals 189 , 115705 (2024). [66] M. Milinski, D. Semmann, and H.-J. Krambeck, Repu-tation helps solve the ‘tragedy of the commons’, Nature 
+
+415 , 424 (2002). [67] D. Fudenberg and D. K. Levine, Maintaining a reputation when strategies are imperfectly observed, The Review of Economic Studies 59 , 561 (1992). [68] M. A. Nowak and R. M. May, Evolutionary games and spatial chaos, nature 359 , 826 (1992). [69] W. Zhu, Q. Pan, and M. He, Exposure-based reputa-tion mechanism promotes the evolution of cooperation, Chaos, Solitons & Fractals 160 , 112205 (2022).

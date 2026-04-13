@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08944v1/fig-001.webp",
+      "caption": "Table 4. Notation summary for methodology section.",
+      "page": 14,
+      "index": 1,
+      "width": 1017,
+      "height": 459
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08944v1/fig-002.webp",
+      "caption": "Figure 1. Comparative performance on hospital environment. Top: Episode reward. Bottom: Severity improvement. SeqComm-DFL (blue) substantially outperforms OMD baseline (orange).",
+      "page": 8,
+      "index": 2,
+      "width": 492,
+      "height": 565
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08944v1/fig-003.webp",
+      "caption": "Table 9. Hyperparameters for all experiments.",
+      "page": 19,
+      "index": 3,
+      "width": 459,
+      "height": 398
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08944v1/fig-004.webp",
+      "caption": "Table 10. Matched hyperparameters for fair comparison between SeqComm-DFL and baseline OMD.",
+      "page": 20,
+      "index": 4,
+      "width": 500,
+      "height": 325
+    }
+  ]
+}

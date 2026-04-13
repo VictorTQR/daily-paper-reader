@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04251v1/fig-001.webp",
+      "caption": "Fig. 5. Engagement return over training steps.",
+      "page": 11,
+      "index": 1,
+      "width": 529,
+      "height": 395
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04251v1/fig-002.webp",
+      "caption": "Fig. 6. Reward Hacking Severity Index (RHSI) over training steps.",
+      "page": 11,
+      "index": 2,
+      "width": 529,
+      "height": 395
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04251v1/fig-003.webp",
+      "caption": "Fig. 3. Final return across methods (mean ± std across 10 seeds).",
+      "page": 9,
+      "index": 3,
+      "width": 529,
+      "height": 395
+    }
+  ]
+}

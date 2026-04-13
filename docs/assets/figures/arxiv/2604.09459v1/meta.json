@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-001.webp",
+      "caption": "Table 1: Summary of key notation used throughout this paper.",
+      "page": 6,
+      "index": 1,
+      "width": 736,
+      "height": 654
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-002.webp",
+      "caption": "Table 9: Alphabetical index of credit assignment methods reviewed in this paper.",
+      "page": 43,
+      "index": 2,
+      "width": 964,
+      "height": 1165
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-003.webp",
+      "caption": "Table 4: Mapping agentic challenges (Section 4) to methods that address them. ✓= directly addresses; ◦ = partially addresses. †HICRA is a reasoning RL method whose planning/procedural distinction provides transferable insights for these agentic challenges.",
+      "page": 25,
+      "index": 3,
+      "width": 964,
+      "height": 524
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-004.webp",
+      "caption": "Table 2: Trajectory complexity across reasoning and agentic RL settings. Agentic tasks involve dramatically more turns, tokens, and decision points, creating qualitative challenges for credit assignment.",
+      "page": 15,
+      "index": 4,
+      "width": 914,
+      "height": 253
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-005.webp",
+      "caption": "Figure 4: Temporal distribution of credit assignment papers for LLM RL covered in this paper. Papers are classified by their primary evaluation setting (Reasoning/Agentic/Multi-Agent) and binned by arXiv submission date. Papers that span both settings (e.g., C3) are counted in their primary category. The field has shifted from predominantly reasoning-focused methods (2024) to agentic-focused methods (2025–2026). The March 2026 burst of three counterfactual CA papers (HCAPO, C3, CCPO) suggests growing community attention to this problem.",
+      "page": 30,
+      "index": 5,
+      "width": 769,
+      "height": 444
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-006.webp",
+      "caption": "Figure 3: Method selection decision tree for credit assignment in LLM RL. This reflects the authors’ synthesis; actual suitability depends on base model, data, and infrastructure.",
+      "page": 29,
+      "index": 6,
+      "width": 964,
+      "height": 556
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-007.webp",
+      "caption": "Table 8: Practical guidance for selecting credit assignment methods based on task characteristics. Methods listed as promising candidates based on evaluation settings and design properties; actual performance depends on base model, data, and infrastructure. “Directly evaluated” methods have been tested on the listed scenario; others are listed based on design suitability.",
+      "page": 42,
+      "index": 7,
+      "width": 964,
+      "height": 746
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-008.webp",
+      "caption": "Table 12: Checklist validation: three representative papers scored against the reporting checklist.",
+      "page": 46,
+      "index": 8,
+      "width": 964,
+      "height": 638
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-009.webp",
+      "caption": "Table 11: Recommended reporting checklist for credit assignment papers in LLM RL.",
+      "page": 45,
+      "index": 9,
+      "width": 960,
+      "height": 898
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-010.webp",
+      "caption": "Figure 2: Two-dimensional taxonomy of credit assignment methods for LLM RL, organized by assignment granularity (vertical) and computational methodology (horizontal). Blue: primarily reasoning RL; Red: primarily agentic RL; Purple: multi-agent. The dashed arrow indicates the evolutionary trend from fine-grained reasoning methods (upper-left) toward coarser but environmentaware agentic methods (lower-right). The densest cluster at the Step/Turn level reflects the natural action granularity of LLM agents.",
+      "page": 8,
+      "index": 10,
+      "width": 958,
+      "height": 437
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-011.webp",
+      "caption": "Table 5: Comprehensive comparison of credit assignment methods for LLM RL. Setting: R = Reasoning RL, A = Agentic RL, M = Multi-Agent. Type: C = Core CA method (primary contribution is a novel CA mechanism); E = CA-adjacent enabler (CA is one component among several). Year: arXiv submission year; Venue: publication venue if accepted (may differ from arXiv year).",
+      "page": 40,
+      "index": 11,
+      "width": 968,
+      "height": 1154
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-012.webp",
+      "caption": "Table 3: Credit assignment challenges: Reasoning RL vs. Agentic RL.",
+      "page": 17,
+      "index": 12,
+      "width": 972,
+      "height": 269
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-013.webp",
+      "caption": "Table 10: Complete paper inventory with taxonomy labels (41 core + 6 adjacent = 47 total).",
+      "page": 44,
+      "index": 13,
+      "width": 968,
+      "height": 1429
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-014.webp",
+      "caption": "Table 7: Quantitative results of credit assignment methods on agentic RL benchmarks. Results compiled from original papers with each paper’s own baseline.",
+      "page": 41,
+      "index": 14,
+      "width": 964,
+      "height": 306
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-015.webp",
+      "caption": "Table 6: Quantitative results of credit assignment methods on reasoning RL benchmarks. ∆ denotes improvement over the paper’s own episode-level baseline (GRPO/PPO). All numbers from original papers.",
+      "page": 41,
+      "index": 15,
+      "width": 964,
+      "height": 326
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09459v1/fig-016.webp",
+      "caption": "Figure 1: Evolution of RL for LLMs and the corresponding credit assignment challenges. Each phase introduces longer trajectories, more complex environments, and harder credit assignment problems. The shift from reasoning to agentic RL represents a qualitative leap in CA difficulty.",
+      "page": 5,
+      "index": 16,
+      "width": 964,
+      "height": 235
+    }
+  ]
+}

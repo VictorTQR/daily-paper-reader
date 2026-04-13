@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.06616v1/fig-001.webp",
+      "caption": "Figure 1: Motivating examples for hybrid vector similarity search with spatio-temporal filters. Each data object is represented by a high-dimensional vector embedding x𝑖 and associated with spatiotemporal metadata s𝑖 (e.g., geolocation and timestamp). (1) Urban event retrieval: a city management platform stores geo-tagged reports, images, and videos. Given a query vector q (e.g., flooded streets) and a spatio-temporal filter 𝜙 , the task is to retrieve the top-𝑘 most similar objects satisfying 𝜙 (s𝑖 ) = 1. (2) Regional multimedia retrieval: a multimedia database stores geo-tagged images and videos. Given a query image q and a complex polygonal filter 𝜙 , the system must return the top-𝑘 nearest neighbors within the specified spatiotemporal constraints.",
+      "page": 2,
+      "index": 1,
+      "width": 502,
+      "height": 246
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06616v1/fig-002.webp",
+      "caption": "Figure 5: Search efficiency comparison across different datasets with Bounding Boxes Filter (recall@20 vs. Qps).",
+      "page": 10,
+      "index": 2,
+      "width": 896,
+      "height": 488
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06616v1/fig-003.webp",
+      "caption": "Figure 6: Search efficiency comparison across different dimensions (3D/4D) with Bounding Boxes filter (recall@20 vs. Qps).",
+      "page": 10,
+      "index": 3,
+      "width": 844,
+      "height": 439
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06616v1/fig-004.webp",
+      "caption": "Figure 7: Comparison of Polygon and Radius filters vs Cube filter on SIFT (recall@20 vs. Qps).",
+      "page": 10,
+      "index": 4,
+      "width": 888,
+      "height": 180
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06616v1/fig-005.webp",
+      "caption": "Table 2: Summary of Notations",
+      "page": 3,
+      "index": 5,
+      "width": 506,
+      "height": 253
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06616v1/fig-006.webp",
+      "caption": "Figure 2: Framework of CubeGraph. The hierarchical grid partitions the metadata space into multiple levels of cubes. At each level, data points are assigned to their containing cubes and local graph indexes are built. During query processing, cubes intersecting the filter are identified, and their local graphs are merged on-the-fly via cross-cube connections (dashed lines), forming a unified search graph. Note, we only plot the cross-cube edges of the boundary nodes for simplicity; the CubeGraph index requires that each node link cross-cube edges to the adjacent cube nearest neighbors, whether on the boundary of meta space or not.",
+      "page": 5,
+      "index": 6,
+      "width": 1054,
+      "height": 399
+    }
+  ]
+}

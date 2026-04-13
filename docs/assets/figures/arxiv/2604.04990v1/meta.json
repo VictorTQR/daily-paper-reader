@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04990v1/fig-001.webp",
+      "caption": "Fig. 2. Composition of coupling patterns in a single system (RAG chatbot with tool access). Pattern IDs match the catalog in Section IV. Cross-cutting concerns (dashed) span multiple patterns and add infrastructure no single pattern accounts for on its own.",
+      "page": 5,
+      "index": 1,
+      "width": 915,
+      "height": 327
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04990v1/fig-002.webp",
+      "caption": "TABLE II PROMPT-ARCHITECTURE COUPLING PATTERNS",
+      "page": 4,
+      "index": 2,
+      "width": 1010,
+      "height": 357
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04990v1/fig-003.webp",
+      "caption": "Fig. 1. Architectural components introduced by each prompt variant. Darker shading indicates components added by increasing prompt specificity. Variant A passes FAQ context to the LLM and returns free-form text; Variant B adds Zod validation, JSON Schema mode, and retry logic; Variant C adds a tool registry, agent loop, and SQLite state management.",
+      "page": 3,
+      "index": 3,
+      "width": 844,
+      "height": 226
+    }
+  ]
+}

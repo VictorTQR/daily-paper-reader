@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08728v1/fig-001.webp",
+      "caption": "Fig. 5: Average communication action per agent (left axis) and prey-finding distribution (right axis, orange bars) over 2000 postconvergence trajectories in PP 10×10, 3 agents.",
+      "page": 11,
+      "index": 1,
+      "width": 505,
+      "height": 350
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08728v1/fig-002.webp",
+      "caption": "Fig. 6: Sample trajectory illustrating positive listening in PP 10×10, 3 agents. (a) Steps 1–9: Agent 1 finds the prey at step 9 and broadcasts. (b) Steps 10–15: Agent 2, after receiving the message, reverses direction toward the prey. (c) Agent positions at step 9. (d) Agent positions at step 10.",
+      "page": 11,
+      "index": 2,
+      "width": 477,
+      "height": 478
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08728v1/fig-003.webp",
+      "caption": "Fig. 7: Cosine similarity matrix of messages sampled from 2000 evaluation episodes in PP 10×10. Messages 0–9 correspond to preyfinding events; their high intra-group similarity (dark diagonal block) confirms semantically consistent prey-finding representations.",
+      "page": 11,
+      "index": 3,
+      "width": 450,
+      "height": 338
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08728v1/fig-004.webp",
+      "caption": "Fig. 4: Performance comparison. (a) PP with obstacles, 7× 7 grid, 3 agents. (b) PP with obstacles, 10× 10 grid, 4 agents. (c) LJ with tree shadowing, 7 × 7 grid, 4 agents, 3 trees. (d) LJ with tree shadowing, 10 × 10 grid, 5 agents, 3 trees. Subfigures (a)–(b) show number of steps to catch the prey (lower is better); subfigures (c)–(d) show episode return (higher is better). Shaded regions: ±1 standard deviation over 5 seeds.",
+      "page": 10,
+      "index": 4,
+      "width": 992,
+      "height": 639
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08728v1/fig-005.webp",
+      "caption": "Fig. 8: Bandwidth adaptation in PP 10×10, 3 agents. Left: steps to catch prey. Right: average transmit probability. Under reduced bandwidth (“-BW”), CLOVER maintains performance by reducing communication frequency, while TarMAC degrades.",
+      "page": 12,
+      "index": 5,
+      "width": 472,
+      "height": 268
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08728v1/fig-006.webp",
+      "caption": "Fig. 9: Mixer ablation comparing the proposed GNN-based mixer with a standard QMIX hypernetwork while holding all other components fixed. (a) Predator-Prey, 10×10, 4 agents. (b) Lumberjacks, 10×10, 5 agents, 3 trees. This ablation isolates the effect of communication-graph-conditioned mixing during centralized training.",
+      "page": 12,
+      "index": 6,
+      "width": 478,
+      "height": 271
+    }
+  ]
+}

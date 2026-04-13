@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07274v1/fig-001.webp",
+      "caption": "Figure 2. Corpora to chunking and indexing workflow.",
+      "page": 6,
+      "index": 1,
+      "width": 925,
+      "height": 383
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07274v1/fig-002.webp",
+      "caption": "Figure 3. Section-wise Chunking Workflow.",
+      "page": 6,
+      "index": 2,
+      "width": 925,
+      "height": 381
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07274v1/fig-003.webp",
+      "caption": "Figure 5. Comparison of MedEmbed and BGE under dense retrieval with query reformulation and Llama- Med 42, zero-shot.",
+      "page": 11,
+      "index": 3,
+      "width": 925,
+      "height": 573
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07274v1/fig-004.webp",
+      "caption": "Table 2. Retrieval-Augmented Performance",
+      "page": 10,
+      "index": 4,
+      "width": 927,
+      "height": 352
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07274v1/fig-005.webp",
+      "caption": "Figure 4. Query reformulation example showing how a clinical vignette is converted into a concise textbook-style medical query.",
+      "page": 8,
+      "index": 5,
+      "width": 925,
+      "height": 654
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07274v1/fig-006.webp",
+      "caption": "Figure 6. Accuracy-runtime tradeoff across retrieval configurations (run time in second, log scale).",
+      "page": 12,
+      "index": 6,
+      "width": 924,
+      "height": 565
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07274v1/fig-007.webp",
+      "caption": "Figure 1. End-to-end workflow of the proposed retrieval-augmented medical question answering system.",
+      "page": 5,
+      "index": 7,
+      "width": 925,
+      "height": 492
+    }
+  ]
+}

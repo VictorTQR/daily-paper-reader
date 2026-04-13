@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-001.webp",
+      "caption": "Figure 5: Relationship between the safety surrogate and the",
+      "page": 11,
+      "index": 1,
+      "width": 365,
+      "height": 391
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-002.webp",
+      "caption": "Table 11: Scalability analysis: Frozen Lake Task 2 results across configurations (mean ± std over 10 seeds).",
+      "page": 15,
+      "index": 2,
+      "width": 1056,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-003.webp",
+      "caption": "Table 10: Scalability analysis: Frozen Lake Task 1 results across configurations (mean ± std over 10 seeds).",
+      "page": 15,
+      "index": 3,
+      "width": 1056,
+      "height": 340
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-004.webp",
+      "caption": "Figure 4: Scalability analysis across diagonal Frozen Lake",
+      "page": 7,
+      "index": 4,
+      "width": 506,
+      "height": 396
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-005.webp",
+      "caption": "Figure 3: Examples of experiment environments: Frozen Lake standard_4x4 (first row) and Poisoned Apple simple_5x5 (sec-",
+      "page": 7,
+      "index": 5,
+      "width": 354,
+      "height": 350
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-006.webp",
+      "caption": "Figure 8: Neural policy probabilities for the worst-case logit vector in the source task of Frozen Lake (standard 4x4).",
+      "page": 14,
+      "index": 6,
+      "width": 489,
+      "height": 421
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-007.webp",
+      "caption": "Figure 7: Logit bounds illustrate the following guarantee of",
+      "page": 14,
+      "index": 7,
+      "width": 489,
+      "height": 473
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-008.webp",
+      "caption": "Figure 6: Environment frames at initial states.",
+      "page": 13,
+      "index": 8,
+      "width": 476,
+      "height": 1296
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-009.webp",
+      "caption": "Table 4: Downstream Task performance metrics in Frozen Lake and Poisoned Apple (mean ± standard deviation over 10 seeds).",
+      "page": 8,
+      "index": 9,
+      "width": 1056,
+      "height": 252
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-010.webp",
+      "caption": "Figure 1: Overview of the proposed method. The unsafety labelling function 𝑈source yields safe demonstrations 𝐷safe source (Phase 1). A certified safe parameter region Θsafe source is computed around 𝜋source (Phase 2), and the downstream policy 𝜋down is adapted within this region (Phase 3).",
+      "page": 4,
+      "index": 10,
+      "width": 526,
+      "height": 512
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09452v1/fig-011.webp",
+      "caption": "Table 5: Frozen Lake vs. Poisoned Apple experiment setup.",
+      "page": 12,
+      "index": 11,
+      "width": 486,
+      "height": 479
+    }
+  ]
+}

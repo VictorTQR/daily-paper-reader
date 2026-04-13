@@ -1,0 +1,739 @@
+Title: Truncated Rectified Flow Policy for Reinforcement Learning with One-Step Sampling
+
+URL Source: https://arxiv.org/pdf/2604.09159v1
+
+Published Time: Mon, 13 Apr 2026 00:44:37 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# TRUNCATED RECTIFIED FLOW POLICY FOR REINFORCEMENT 
+
+# LEARNING WITH ONE -S TEP SAMPLING 
+
+Xubin Zhou 
+
+Harbin Institute of Technology 
+
+24B904016@stu.hit.edu.cn 
+
+Yipeng Yang 
+
+Harbin Institute of Technology 
+
+ypyang@hit.edu.cn 
+
+Zhan Li 
+
+Harbin Institute of Technology 
+
+zhanli@hit.edu.cn 
+
+April 13, 2026 
+
+ABSTRACT 
+
+Maximum entropy reinforcement learning (MaxEnt RL) has become a standard framework for sequential decision making, yet its standard Gaussian policy parameterization is inherently unimodal, limiting its ability to model complex multimodal action distributions. This limitation has motivated increasing interest in generative policies based on diffusion and flow matching as more expressive alternatives. However, incorporating such policies into MaxEnt RL is challenging for two main reasons: the likelihood and entropy of continuous-time generative policies are generally intractable, and multi-step sampling introduces both long-horizon backpropagation instability and substantial inference latency. To address these challenges, we propose Truncated Rectified Flow Policy (TRFP), a framework built on a hybrid deterministic-stochastic architecture. This design makes entropy-regularized optimization tractable while supporting stable training and effective one-step sampling through gradient truncation and flow straightening. Empirical results on a toy multigoal environment and 10 MuJoCo benchmarks show that TRFP captures multimodal behavior effectively, outperforms strong baselines on most benchmarks under standard sampling, and remains highly competitive under one-step sampling. 
+
+1 Introduction 
+
+Reinforcement learning has established itself as a foundational framework for solving complex sequential decision problems [1, 2]. Within this framework, maximum entropy reinforcement learning (MaxEnt RL) modifies the traditional optimization goal by integrating the policy entropy into the reward signal. This regularization encourages the agent to maintain diverse action choices, which directly improves adaptability and robustness during training. However, most existing approaches within this framework rely on Gaussian distributions for policy parameterization. The inherent unimodality of Gaussian models severely limits the representational capacity of the policy. The agent struggles to model complex multimodal action distributions, resulting in suboptimal performance across challenging environments [3]. To address these bottlenecks, generative models based on diffusion [4,5] and flow matching [6,7], have recently emerged as highly effective alternatives for policy parameterization. These generative policies exhibit a superior capacity for modeling complex multimodal distributions, thereby showing strong potential in domains such as autonomous driving [8 –10] and robotics [11 –14]. Despite their remarkable expressiveness, integrating these generative policies into MaxEnt RL faces two fundamental obstacles. The first major impediment is the theoretical intractability of likelihood computation. Standard MaxEnt algorithms rely on evaluating the exact log-likelihood of the policy to estimate the entropy. However, deriving the exact marginal likelihood for diffusion models or flow matching typically involves solving complex differential equations, rendering the process computationally infeasible during online training. The second major obstacle relates to the computational burden of optimization and inference. Generative models fundamentally rely on a multi-step iterative process for sampling. The direct application of backpropagation through time (BPTT) across the entirety of this generation chain frequently results in severe vanishing or exploding gradients. Furthermore, this iterative requirement introduces substantial latency during inference, thereby preventing the policy from satisfying the demands of real-time control applications. 
+
+> arXiv:2604.09159v1 [cs.LG] 10 Apr 2026
+
+A PREPRINT - A PRIL 13, 2026 To overcome the aforementioned challenges, we propose a novel MaxEnt RL framework termed Truncated Rectified Flow Policy (TRFP). The proposed framework integrates three fundamental mechanisms to achieve stable training. First, we introduce a hybrid architecture that separates the overall process of sampling into a prefix governed by a deterministic ordinary differential equation (ODE) and a tail governed by a stochastic differential equation (SDE). This structural design enables a tractable surrogate log-likelihood to be formulated along the generation path. As a result, it bypasses the computationally expensive integration of the velocity-field divergence that is typically required in continuous-flow models. Second, the framework incorporates a gradient truncation mechanism at the prefix-tail interface. By restricting optimization exclusively to the stochastic refinement phase, this approach prevents gradient pathologies associated with BPTT over long horizons. Unlike DRaFT [15], which applies truncated backpropagation to reward-based finetuning of pre-trained text-to-image diffusion models, our truncation serves as part of a decoupled MaxEnt RL optimization scheme for rectified flow policies trained from scratch. Finally, we employ flow straightening regularization for decoupled training, utilizing self-distillation to enforce linear transport trajectories within the prefix. This structural constraint simultaneously provides a theoretical motivation by minimizing the surrogate divergence error and yields a practical advantage by allowing one-step sampling during deployment. Our core contributions are summarized as follows: • We propose the truncated rectified flow policy framework, which integrates flow matching into MaxEnt RL. This framework addresses the dual challenges of intractable likelihood computation and unstable backpropaga-tion through time that typically hinder flow policies in online settings. • By incorporating flow straightening regularization, we establish a theoretical boundary for the error of the approximate entropy. In practice, this mechanism enables highly competitive one-step inference with high fidelity. • Extensive experiments demonstrate that the proposed method achieves state-of-the-art performance on most MuJoCo benchmark tasks, and attains comparable results to existing diffusion policy methods even under one-step sampling. 
+
+2 Related Work 
+
+Maximum Entropy Reinforcement Learning. MaxEnt RL is one of the most widely adopted off-policy RL frameworks due to beneficial exploration properties. Represented by the SAC [16], this approach establishes a robust off-policy actor-critic paradigm. By explicitly integrating policy entropy alongside the cumulative return, it achieves a superior balance among exploration capacity, sample efficiency, and training stability. Recent advanced baselines including CrossQ [17] and BRO [18] further advance sample efficiency and computational performance in continuous control. However, these improvements primarily originate from critic network normalization, structural regularization, and architectural scaling, rather than expanding policy representational capacity. Motivated by this context, replacing the conventional Gaussian policy with highly expressive generative policy, while preserving the inherent advantages of MaxEnt RL, emerges as a critical direction for future research. 
+
+Generative Policies in Imitation Learning and Offline RL. Recent advances in generative models have made generative policies attractive alternatives to Gaussian parameterizations. In imitation learning and offline RL, these models have shown strong ability to capture complex multimodal action distributions, leading to improved policy expressiveness and strong empirical performance [19 –23]. These results establish generative policies as a promising foundation for decision making, but they do not directly resolve the additional challenges of online optimization, where the policy must be updated from evolving value estimates while maintaining efficient sampling and stable training. 
+
+Diffusion and Flow Policies in Online Reinforcement Learning. In contrast to offline RL and imitation learning, online RL introduces a fundamental challenge for generative policy optimization. Since the agent must improve its policy from rewards collected through environment interaction, rather than relying on directly supervised target actions, diffusion and flow policies can no longer depend on standard behavior cloning objectives. To address this issue, existing methods mainly focus on translating Q-function information into trainable updates for generative policies without access to supervised action targets. DIPO [24] updates replay-buffer actions using the action gradient of the Q-function, and then trains a diffusion policy to imitate the improved actions. QSM [25] instead links the policy score to the action gradient of the Q-function, casting policy updates through the lens of score matching. QVPO [26] and RSM [27] incorporate value information into diffusion training through weighted objectives, respectively via a Q-weighted variational objective and reweighted score matching, thereby avoiding direct supervision from optimal action targets. A second core difficulty lies in the intractability of likelihood and entropy, which forms a central theoretical bottleneck when combining generative policies with MaxEnt RL. Consequently, generative policies cannot be directly incorporated 2A PREPRINT - A PRIL 13, 2026 into standard MaxEnt and policy-gradient methods, such as SAC and PPO [28], which typically require tractable action likelihoods. DACER [29] addresses this issue by estimating the entropy of the diffusion policy with a Gaussian mixture surrogate. DIME [30] approaches this challenge from an approximate inference perspective by deriving a lower bound on the MaxEnt objective. MaxEntDP [31] approximates the log-probability of the diffusion policy within the SAC framework through Q-weighted noise estimation and numerical integration. Beyond off-policy methods, recent work has also investigated how diffusion policies can be optimized in on-policy settings. DPPO [32] treats the denoising chain as a diffusion MDP with Gaussian transitions, while ReinFlow [33] injects learnable noise into deterministic flow trajectories to convert them into a discrete-time Markov process. GenPO [34] further leverages exact diffusion inversion to construct an invertible action mapping, thereby enabling action likelihood estimation. Beyond the challenges of objective design and likelihood tractability, iterative generative policies face an additional critical bottleneck. Specifically, the multi-step process of denoising or flow rollout introduces substantial inference latency, and it frequently causes optimization instability when gradients are backpropagated through the complete generation chain. In fine-tuning of text-to-image diffusion models, DRaFT [15] improves the efficiency of long-chain optimization through truncated backpropagation, together with LoRA and gradient checkpointing. SAC Flow [35] interprets multi-step flow rollout as a form of residual recurrent computation, attributing its training instability to the resulting vanishing and exploding gradients. FPMD [36] moves toward one-step inference for flow policies, thereby reducing the sampling overhead of generative policies in online decision making. Overall, these studies suggest that the continued development of online generative policies depends not only on tractable likelihood estimation, but also on achieving efficient sampling and stable optimization over multi-step generation processes. 
+
+3 Preliminaries 
+
+3.1 Maximum Entropy Reinforcement Learning 
+
+We formulate the sequential decision-making problem as an infinite-horizon Markov Decision Process (MDP), defined by the tuple (S, A, p, r, γ ), where S ∈ Rds denotes the state space, and A ∈ Rda represents the continuous action space. At each discrete time step t, the agent selects an action at based on the current state st according to a policy 
+
+π(·| st). The environment then transitions to the next state st+1 governed by the dynamics p(st+1 |st, at) and yields a scalar reward r(st, at).Unlike standard reinforcement learning, which maximizes the expected cumulative reward, MaxEnt RL augments the objective with an entropy term H(π(·| st)) = Ea∼π [− log π(a|st)] . The primary goal is to learn an optimal policy π∗
+
+that maximizes the expected entropy-regularized return: 
+
+J(π) = Eτ ∼π
+
+" ∞X
+
+> t=0
+
+γt (r(st, at) + αH (π(·| st))) 
+
+#
+
+, (1) where γ ∈ [0 , 1) is the discount factor, and α > 0 is the temperature parameter that balances the trade-off between exploration and exploitation. SAC [16] is a prominent off-policy algorithm designed to optimize this objective via an iterative process. In the policy evaluation step, SAC learns a parameterized soft Q-function Qψ (s, a) by minimizing the soft Bellman residual: 
+
+LQ(ψ) = E(s,a,r, s′)∼D 
+
+h
+
+(Qψ (s, a) − y)2i
+
+, (2) where y = r + γEa′∼πθ (·| s′)
+
+h
+
+min j=1 ,2 Q ¯ψj (s′, a′) − α log πθ (a′|s′)
+
+i
+
+is the soft target value constructed using target networks ¯ψ.In the policy improvement step, the policy parameters θ are updated to minimize the Kullback-Leibler divergence between the policy and the Boltzmann distribution induced by the Q-function: 
+
+Lπ (θ) = Es∼D 
+
+Ea∼πθ (·| s) [α log πθ (a|s) − Qψ (s, a)]  . (3) Finally, to avoid manual tuning of the temperature parameter, SAC formulates entropy maximization as a constrained optimization problem, where the average entropy is constrained to be at least a target value ¯H. This leads to the following dual objective for learning α:
+
+Lα(α) = Es∼D ,a∼πθ (·| s)
+
+−α  log πθ (a|s) + ¯H . (4) While Gaussian policies are standard in SAC, their inherent unimodality limits the agent’s ability to capture complex, multimodal action distributions. Our work addresses this limitation by integrating flow-based generative models within the MaxEnt framework, thereby enhancing expressivity while maintaining stable training. 3A PREPRINT - A PRIL 13, 2026 
+
+3.2 From Diffusion to Flow Matching 
+
+Generative modeling in continuous control tasks aims to approximate the policy distribution π(a|s) using a parame-terized model. Diffusion Probabilistic Models (DPMs) [4, 5] have emerged as a powerful paradigm for this purpose. Typically, DPMs define a forward SDE that gradually corrupts data into Gaussian noise. Sampling is then performed by solving the reverse-time SDE or its equivalent Probability Flow ODE (PF-ODE): 
+
+dx =
+
+
+
+f (x, τ ) − 12 g2(τ )∇x log pτ (x)
+
+
+
+dτ, (5) where f (·) and g(·) denote the drift and diffusion coefficients, respectively. While effective, standard diffusion paths (e.g., Variance Preserving) often induce high-curvature trajectories, necessitating computationally expensive numerical solvers with many steps for high-fidelity sampling. To overcome the sampling inefficiency of diffusion models, Flow Matching (FM) [6] introduces a generalized framework for training Continuous Normalizing Flows (CNFs) without explicitly simulating the forward SDE. FM directly regresses a time-dependent vector field vθ (x, τ ) that generates a probability density path pτ (x) interpolating between a simple prior p0 = N (0, I) and the data distribution p1. The dynamics are governed by the ODE: 
+
+dx
+
+dτ = vθ (xτ , τ ), τ ∈ [0 , 1] . (6) The core objective of FM is to match the model vector field vθ to a target conditional vector field uτ (x|x1) that generates the conditional probability path pτ (x|x1):
+
+LCFM (θ) = Eτ, x1,p τ (x|x1)
+
+∥vθ (x, τ ) − uτ (x|x1)∥2 . (7) While FM allows for arbitrary probability paths, the choice of path significantly impacts sampling efficiency. In this work, we adopt the specific parameterization used in Optimal Transport CFM (OT-CFM) and Rectified Flow [7], which constructs the path via linear interpolation: 
+
+xτ = τ x1 + (1 − τ )x0, x0 ∼ p0, x1 ∼ pdata . (8) Under this linear design, the conditional target vector field admits a remarkably simple constant form: uτ (x|x1, x0) = 
+
+x1 − x0. This formulation corresponds to the optimal transport plan under Euclidean cost, theoretically yielding straight-line trajectories for individual samples. Although the marginal flow field may still exhibit crossings due to multimodal data couplings, the linear interpolation prior serves as a strong inductive bias for straightness. This property is crucial for our method, as it justifies the use of low-order solvers (and potentially one-step generation) during online interactions, addressing the latency bottleneck inherent in curved diffusion paths. 
+
+4 Method 
+
+We propose TRFP, an off-policy actor-critic framework that trains a flow policy from scratch for decision making. TRFP explicitly addresses three fundamental challenges that hinder the integration of diffusion-based policies with MaxEnt RL: (i) multi-step sampling incurs the high computational cost and gradient instability of BPTT; (ii) exact policy likelihood for an ODE-based flow is generally intractable without computing Jacobian determinants or divergence integrals; and (iii) iterative generation incurs substantial inference latency during decision making. To overcome these challenges, our methodology integrates a hybrid ODE-SDE sampling architecture with a path-based entropy surrogate and a decoupled truncated gradient estimator. Furthermore, to reconcile the truncated training with high-fidelity inference, we introduce a flow straightening regularization mechanism. This auxiliary objective aligns the flow with linear trajectory priors, ensuring that the policy maintains superior expressivity and performance even under the stringent constraint of one-step sampling. 
+
+4.1 The Hybrid Policy Architecture 
+
+Deploying diffusion-based policies in off-policy reinforcement learning faces a fundamental dilemma: while multi-step iterative refinement is essential for modeling complex multimodal distributions, it incurs high inference latency and generates deep computational graphs that are hostile to stable backpropagation. To resolve this, we propose a hybrid sampling architecture that decomposes the generation trajectory of total length K into two distinct phases: a deterministic transport phase (first K − L steps) and a stochastic refinement phase (last L steps). Formally, let s ∈ S denote the state. We discretize the time horizon into K steps tk = k/K to generate the latent variable uK . The generation process starts from a Gaussian prior u0 ∼ N (0, I) and evolves as follows: 4A PREPRINT - A PRIL 13, 2026 
+
+Deterministic Prefix (ODE Transport). The first K − L steps constitute the transport phase. We model this phase as a deterministic ODE: du = vode  
+
+> θ
+
+(s, u, τ )d τ . For the discrete steps k < K − L, we perform numerical integration using a second-order solver. Benefiting from the linear trajectory priors induced by Rectified Flow, this deterministic prefix efficiently transports the probability mass from the uninformative prior to the high-density regions of the target action distribution. This property enables the phase to traverse the trajectory with fewer steps (potentially reducing to a single step), thereby significantly lowering the computational overhead compared to stochastic diffusion processes. 
+
+Stochastic Tail (SDE Refinement). The final L steps serve as the refinement phase. To inject the necessary stochasticity, we switch the dynamics to a discretized SDE: 
+
+uk+1 = uk + vsde  
+
+> θ
+
+(s, uk, t k)∆ t + σθ (s, uk, t k) ⊙ εk, εk ∼ N (0, I), (9) where k ∈ { K − L, . . . , K − 1}, ∆t = 1 /K , and σθ denotes the noise scale parameterized by the policy network. This hybrid design ensures that the policy retains the multimodal generation capability of flow models via the prior u0,while the stochastic tail induces a tractable transition density, which is essential for computing the entropy surrogate and policy gradients in the subsequent steps. After the final update step, the terminal variable uK is taken as the action output of the policy, i.e., a = uK .
+
+4.2 Approximate Entropy and Log-Likelihood 
+
+Standard MaxEnt RL algorithms, such as SAC, necessitate the computation of the log-likelihood log π(a|s). However, for ODE-based generative policies, calculating the exact marginal log-likelihood requires evaluating the trace of the vector field’s Jacobian. Exact likelihood evaluation requires integrating the divergence of the vector field along the ODE trajectory. Both exact Jacobian-trace computation and stochastic trace estimation introduce substantial computational overhead, making online training impractical. To address this challenge, we construct a tractable surrogate log-likelihood by formulating the entropy maximization objective over the augmented latent trajectory space—the joint space of all stochastic variables involved in the generation process. Specifically, based on the hybrid architecture defined in Sec. 4.1, we define the surrogate log-density log ˜ π as the joint log-probability of the initial prior and the stochastic tail transitions: 
+
+log ˜ π(u0: K |s) ≜ log N (u0; 0, I) + 
+
+> K
+
+X
+
+> k=K−L
+
+log N (uk+1 ; uk + vsde  
+
+> θ
+
+∆t, σ2 
+
+> θ
+
+I). (10) This factorization circumvents the expensive integration over the deterministic ODE prefix. Effectively, this surrogate objective approximates the marginal density by omitting the volume change induced by the deterministic transport. To validate the rationality of this approximation in TRFP, we quantitatively examine the introduced error. First, we invoke the standard result from Neural ODEs [37] describing density evolution in continuous flows: 
+
+Theorem 1 (Instantaneous Change of Variables). For a continuous transformation following the ODE du(t)dt =
+
+v(u(t), t ), the rate of change of the log-density along the trajectory is equal to the negative divergence of the velocity field: 
+
+ddt log pt(u(t)) = −tr 
+
+ ∂v
+
+∂u (u(t), t )
+
+
+
+= −∇ u · v(u(t), t ). (11) By integrating Theorem 1 over the prefix duration, we derive the upper bound of the error introduced by ignoring the prefix volume change: 
+
+Proposition 1 (Approximation Error Bound). Let τ = ( K − L)/K be the end time of the prefix. The approximation error ∆pre ≜ log p(uτ |s) − log p(u0) satisfies: 
+
+|∆pre | =
+
+Z τ
+
+> 0
+
+∇u · vode  
+
+> θ
+
+(s, u(t), t )d t ≤ M τ, (12) 
+
+provided that |∇ u · vode  
+
+> θ
+
+| ≤ M along the trajectory. 
+
+Proposition 1 reveals that the approximation error is controlled by the divergence magnitude of the prefix velocity field. Motivated by this observation, we incorporate flow straightening regularization (detailed in Sec. 4.4) to encourage nearly linear transport trajectories in the deterministic prefix. In the ideal case where the learned prefix velocity becomes approximately independent of u along the transport path, the induced divergence can be substantially reduced, which in turn helps control the surrogate-likelihood approximation error in practice. Thus, the flow straightening mechanism empirically supports few-step sampling. 5A PREPRINT - A PRIL 13, 2026 Finally, we incorporate this surrogate into the SAC framework. The actor loss Lπ is defined as: 
+
+Lπ (θ) = Es,u0,ε [α log ˜ π(u0: K |s) − Qψi (s, a)] . (13) This formulation allows TRFP to efficiently update the policy under a surrogate MaxEnt objective. 
+
+4.3 Truncated Gradient Optimization 
+
+While the actor objective Lπ (Eq. 13) derived in the previous section is theoretically principled, optimizing it directly via reparameterization involves differentiating through the entire generation chain. For a K-step sampler, this is algebraically equivalent to BPTT in a Recurrent Neural Network (RNN) of depth K. As K increases, this full-chain differentiation not only limits the batch size due to memory overhead but also induces severe gradient pathologies, destabilizing the training process. To mitigate these issues, we propose a Truncated Gradient Estimator. Specifically, we detach the computational graph at the interface between the deterministic prefix and the stochastic tail. Let kc = K − L denote the cutoff step. During training, the prefix produces an intermediate state ukc , which is used to initialize the stochastic tail without allowing gradients to propagate back into the prefix. The policy is then optimized only through the SDE dynamics from ukc
+
+to uK , such that the SAC objective affects only the final L steps. This truncated optimization avoids long-horizon backpropagation through the deterministic prefix. This truncation strategy is conceptually related to DRaFT [15], which finetunes pretrained text-to-image diffusion models under differentiable rewards. However, the role of truncation in TRFP is different: it is not merely a memory-saving or efficiency strategy, but part of a decoupled MaxEnt RL optimization scheme that restricts RL gradients to the stochastic tail. Although the optimization is truncated at step kc, the resulting training objective remains well defined. Specifically, the intermediate state ukc is treated as a fixed anchor when optimizing the stochastic tail, and the SAC objective therefore backpropagates only through the final L denoising steps. Equivalently, the tail parameters are optimized with respect to a truncated surrogate objective of the form 
+
+Ltrunc (θ) = Es,u0,ε [α log ˜ π(ukc:K | s, ukc ) − Q(s, uK )] , (14) where gradients are taken only through the tail dynamics from step kc to step K.This formulation implies that the RL update concentrates on optimizing the stochastic tail refinement conditioned on the current transport endpoint. By confining the backward pass to the short stochastic tail ( L ≪ K), this mechanism substantially alleviates the vanishing and exploding gradient problems associated with long-horizon BPTT, thereby promoting more robust and stable training dynamics. However, gradient truncation introduces a challenge: the prefix parameters receive no update signal from the RL objective. To address this, our framework adopts a decoupled learning strategy. While Ltrunc shapes the tail for value maximization, the prefix is trained separately via flow straightening regularization (detailed in Sec. 4.4). This auxiliary task not only provides the necessary supervision for the prefix but also enforces linear transport characteristics, enabling efficient few-step or even one-step sampling. This synergy ensures global policy improvement while circumventing the drawbacks of deep BPTT. 
+
+4.4 Flow Straightening Regularization 
+
+The truncated gradient estimator proposed in Sec. 4.3, while stabilizing optimization, severs the RL update signal to the prefix ODE parameters. Left unconstrained, the prefix vector field may degenerate or yield highly curved trajectories, which not only violates the “linear flow assumption” in Sec. 4.2 but also exacerbates numerical integration errors, rendering few-step inference infeasible. To bridge this gap, we introduce Flow Straightening Regularization, which provides explicit supervision for the prefix while encouraging near-linear transport trajectories. To implement this regularization, we first employ a self-distillation strategy to construct a regression target. For a given state s and base noise u0, we perform a full rollout using the current policy. To obtain a deterministic guidance signal, we disable the noise injection in the tail (i.e., set εk = 0) during this rollout. This yields a trajectory endpoint utg that serves as a deterministic realization of the current policy. We subsequently utilize this endpoint as the fixed reference target to guide the flow straightening process. With the source u0 and target utg fixed, the theory of Rectified Flow [7] establishes that the optimal transport path connecting them is the straight line xt = tutg +(1 −t)u0, corresponding to a constant ideal velocity field v∗ = utg −u0.6A PREPRINT - A PRIL 13, 2026 
+
+Algorithm 1 Truncated Rectified Flow Policy (TRFP)  
+
+> 1:
+
+Initialize: Policy θ, Critics ψ1,2, Target Critics ¯ψ1,2, Temperature α, and Replay Buffer D. 
+
+> 2:
+
+for each environment step do  
+
+> 3:
+
+Sample action at ∼ πθ (·| st) via the hybrid sampler (Sec. 4.1).  
+
+> 4:
+
+Execute at, store transition (st, at, r t, st+1 ) in D. 
+
+> 5:
+
+for each update step do  
+
+> 6:
+
+Sample batch B = {(s, a, r, s′)} ∼ D . 
+
+> 7:
+
+Update critics ψ1,2 by minimizing LQ(ψ) (2), using surrogate log ˜ π (10) for targets.  
+
+> 8:
+
+Soft-update target critics ¯ψ1,2 ← (1 − τ ) ¯ψ1,2 + τ ψ 1,2. 
+
+> 9:
+
+Compute truncated RL loss Ltrunc (θ) via (14).  
+
+> 10:
+
+Compute flow straightening loss Lfm (θ) via (15).  
+
+> 11:
+
+Update policy θ by minimizing Ltotal (16).  
+
+> 12:
+
+Update temperature α by minimizing Lα (4), using surrogate log ˜ π (10).  
+
+> 13:
+
+end for  
+
+> 14:
+
+end for 
+
+Accordingly, we minimize the mean squared error between the current velocity field and this ideal direction over the prefix interval t ∈ [0 , τ cut ]:
+
+Lfm (θ) = Es,u0,t ∼U [0 ,τ cut ]
+
+h
+
+vode  
+
+> θ
+
+(s, xt, t ) − (utg − u0) 2i
+
+. (15) This objective effectively performs online Rectified Flow training, continuously adapting the flow field to approximate the straightened paths induced by the evolving RL policy. Mathematically, minimizing the mean squared error in Eq. (15) drives the learned velocity field vode  
+
+> θ
+
+towards the conditional expectation E[utg − u0|xt]. Since the target trajectory is constructed via linear interpolation, the optimal velocity field tends to be a constant vector independent of time. This geometric property yields two critical advantages. First, as discussed in Sec. 4.2, a constant field implies vanishing divergence, thereby minimizing the approximation error of our surrogate log-likelihood. Second, it significantly enhances sampling efficiency. Since linear trajectories facilitate accurate numerical integration with minimal discretization error, this property allows TRFP to maintain high performance when reducing the sampling horizon, extending the model’s capability to few-step and even one-step sampling. Finally, the total optimization objective of TRFP combines the truncated RL loss Ltrunc and the straightening regulariza-tion Lfm :
+
+Ltotal (θ) = Ltrunc (θ) + λfm Lfm (θ). (16) This combination realizes a decoupled optimization paradigm: Ltrunc drives exploration and value maximization, while 
+
+Lfm regularizes the prefix transport to improve trajectory straightness and sampling efficiency. 
+
+4.5 Implementation Details 
+
+While the training paradigm of TRFP is summarized in Algorithm 1, we adopt specific strategies during evaluation to balance computational efficiency and decision quality. 
+
+Accelerated Few-Step Sampling. While the hybrid stochastic architecture is essential for exploration during training, we omit the stochastic tail during evaluation and generate actions using only deterministic transport. Benefiting from the Flow Straightening Regularization introduced in Sec. 4.4, the learned velocity field exhibits highly linear characteristics. This geometric property allows us to substantially reduce the number of numerical integration steps during inference without significantly compromising generation fidelity. Empirically, we observe that a simple one-step integration is often sufficient to yield high-precision action approximations. This strategy minimizes inference complexity, enabling TRFP to meet the requirements of real-time control. 
+
+Q-Guided Action Selection. To further exploit the generative capabilities of TRFP, we adopt the widely used value-based Monte Carlo selection strategy [38]. Given that TRFP models a complex multimodal action distribution, a single sample may not always capture the global optimum. Consequently, we utilize the trained critic networks to evaluate N
+
+action candidates {ai}Ni=1 in parallel and execute the one with the highest predicted Q-value: 
+
+a∗ = arg max 
+
+> ai
+
+Qψ (s, ai). (17) This mechanism acts as an implicit rejection sampling process, effectively filtering out low-value outliers and signifi-cantly enhancing policy robustness and cumulative returns under computational constraints. 7A PREPRINT - A PRIL 13, 2026   
+
+> (a) TRFP (b) SAC (c) TD3
+
+Figure 1: Trajectory visualization in the toy multigoal environment. The agent starts near the center and moves toward four equally rewarded goals. Each panel overlays 20 evaluation episodes collected after training. 
+
+5 Experiments 
+
+In this section, we present the experimental results of TRFP. We first analyze its multimodal behavior in a toy multigoal environment, and then evaluate it on 10 MuJoCo continuous-control benchmarks against SAC, TD3, SDAC, and MaxEntDP, followed by ablation studies on the contribution of each component. 
+
+5.1 Multimodality Analysis in a Toy Multigoal Environment 
+
+To verify that TRFP provides a stronger capacity for multimodal policy representation, we visualize the behavior trajectories of different methods in a toy multigoal environment. The environment contains four goals with identical reward values, symmetrically located in the four directions of the state space. For each method, we collect 20 evaluation episodes after training and overlay all trajectories. As shown in Fig. 1, TRFP covers all four goal directions with more balanced occupancy, suggesting that it better preserves multimodal behaviors under equal-reward multi-goal settings. In contrast, SAC and TD3 are biased toward only a subset of the goals, covering only part of the available modes. This observation highlights the advantage of TRFP in representing complex policy distributions. 
+
+5.2 Comparative Evaluation 
+
+In this subsection, we evaluate TRFP on 10 MuJoCo benchmark tasks and compare it with SDAC, MaxEntDP, SAC, and TD3. Among these baselines, SAC and TD3 represent classical off-policy actor-critic methods, while SDAC and MaxEntDP represent recent diffusion-based MaxEnt RL approaches. By default, TRFP is trained under the standard sampling configuration with K = 4 and L = 1 . In addition, we report a one-step evaluation protocol, described in Sec. 4.5, to assess its applicability in low-latency deployment. For evaluation, we omit the stochastic tail and use deterministic transport only: the standard evaluation protocol uses 4 deterministic steps, whereas the one-step protocol uses a single deterministic step. Each method is trained independently with five random seeds. The complete hyperparameter settings are provided in Appendix Table 2. All methods are implemented based on their official codebases. For SAC, TD3, and TRFP, we use three-layer MLPs with Mish activations for both the actor and critic, while the remaining baselines follow their original implementations. We keep the shared training hyperparameters aligned whenever applicable. All experiments are conducted on a GPU of single NVIDIA RTX GeForce 4090 and a CPU of Intel Core i9-14900KF. Fig. 2 presents the learning curves on 10 MuJoCo-v5 benchmark tasks for TRFP, TRFP(one-step), SDAC, MaxEntDP, SAC, and TD3. Under standard sampling ( K = 4 ), TRFP achieves strong and consistent performance across the benchmark suite, outperforming the baselines on several environments while remaining competitive on the others. This indicates that the proposed framework combines expressive policy modeling with strong performance on standard continuous-control tasks. 8A PREPRINT - A PRIL 13, 2026 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+0
+
+1000 
+
+2000 
+
+3000 
+
+4000 
+
+5000 
+
+6000 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 
+
+(a) Humanoid-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+0
+
+2000 
+
+4000 
+
+6000 
+
+8000 
+
+10000 
+
+12000 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 (b) HalfCheetah-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+0
+
+500 
+
+1000 
+
+1500 
+
+2000 
+
+2500 
+
+3000 
+
+3500 
+
+4000 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 (c) Hopper-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+0
+
+1000 
+
+2000 
+
+3000 
+
+4000 
+
+5000 
+
+6000 
+
+7000 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 
+
+(d) Walker2d-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+1000 
+
+0
+
+1000 
+
+2000 
+
+3000 
+
+4000 
+
+5000 
+
+6000 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 (e) Ant-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+120 
+
+140 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 (f) Swimmer-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+18 
+
+16 
+
+14 
+
+12 
+
+10 
+
+8
+
+6
+
+4
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 
+
+(g) Reacher-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+0
+
+200 
+
+400 
+
+600 
+
+800 
+
+1000 
+
+1200 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 (h) InvertedPendulum-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+2000 
+
+0
+
+2000 
+
+4000 
+
+6000 
+
+8000 
+
+10000 
+
+12000 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 (i) InvertedDoublePendulum-v5 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Step 1e6 
+
+180 
+
+160 
+
+140 
+
+120 
+
+100 
+
+80 
+
+60 
+
+40 
+
+> Episode Return
+
+TRFP 
+
+TRFP(1step) 
+
+SDAC 
+
+MaxEntDP 
+
+SAC 
+
+TD3 
+
+(j) Pusher-v5 
+
+Figure 2: Learning curves on 10 MuJoCo benchmarks. Each subplot compares TRFP under standard sampling ( K = 4 )and one-step sampling ( K = 1 ) with four baselines. The solid lines denote the mean episode return over five random seeds, and the shaded regions represent one standard deviation. 9A PREPRINT - A PRIL 13, 2026 Table 1: Final return comparison on 10 MuJoCo-v5 benchmarks. Results are reported as mean ± standard deviation. Best results are shown in bold , and second-best distinct results are underlined . NFE denotes the number of function evaluations per action. For iterative generative policies, expressions of the form a × b indicate a rollout steps with b
+
+sampled action candidates. 
+
+Method NFE Ant-v5 HalfCheetah-v5 Hopper-v5 Humanoid-v5 Inverted2Pendulum-v5 TD3 1 4708.5 ± 569.1 8677.1 ± 1585.6 3015.6 ± 370.4 5138.6 ± 96.7 9319.4 ± 0.4 SAC 1 4566.4 ± 1069.0 11349.7 ± 326.5 2220.6 ± 815.9 5350.5 ± 361.5 9352.0 ± 6.4 
+
+MaxEntDP 20 × 10 2888.6 ± 691.9 6794.8 ± 591.4 3000.6 ± 888.7 3084.2 ± 1358.8 8578.2 ± 1478.4 SDAC 20 × 32 977.5 ± 152.2 11931.2 ± 578.4 2591.3 ± 539.3 4087.9 ± 262.0 8794.3 ± 1210.9 TRFP(ours) 4 × 4 4802.1 ± 95.6 10867.5 ± 406.4 3507.5 ± 79.6 5370.8 ± 367.6 9304.1 ± 2.6 TRFP(one-step) 1 × 4 4792.8 ± 142.3 10332.7 ± 348.1 3440.6 ± 75.6 5332.5 ± 406.5 9304.1 ± 2.6 Method NFE InvertedPendulum-v5 Pusher-v5 Reacher-v5 Swimmer-v5 Walker2d-v5 TD3 1 1000.0 ± 0.0 -60.5 ± 6.2 -8.9 ± 2.1 58.9 ± 12.4 4883.4 ± 882.4 SAC 1 808.1 ± 390.0 -49.6 ± 4.7 -4.9 ± 0.2 58.5 ± 13.4 5665.4 ± 437.3 MaxEntDP 20 × 10 1000.0 ± 0.0 -42.3 ± 0.6 -4.4 ± 0.5 75.8 ± 27.5 3628.5 ± 433.0 SDAC 20 × 32 992.1 ± 17.7 -115.4 ± 1.0 -6.5 ± 0.3 85.8 ± 39.3 3906.5 ± 706.2 TRFP(ours) 4 × 4 1000.0 ± 0.0 -30.4 ± 0.9 -4.9 ± 0.1 119.3 ± 26.5 5986.9 ± 706.4 
+
+TRFP(one-step) 1 × 4 1000.0 ± 0.0 -30.9 ± 0.8 -5.0 ± 0.2 118.9 ± 25.9 5933.9 ± 604.1 0.0 0.2 0.4 0.6 0.8 1.0  
+
+> Step 1e6
+> 0
+> 2000
+> 4000
+> 6000
+> 8000
+> 10000
+> 12000
+> Episode Return
+> TRFP
+> TRFP(1step)
+> TRFP(2step)
+> TRFP w/o lfm
+> TRFP w/o lfm(1step)
+> TRFP w/o lfm(2step)
+
+(a) HalfCheetah-v5 0.0 0.2 0.4 0.6 0.8 1.0   
+
+> Step 1e6
+> 0
+> 2000
+> 4000
+> 6000
+> 8000
+> 10000
+> Episode Return
+> TRFP
+> TRFP(1step)
+> TRFP w/o maxq
+> TRFP w/o maxq(1step)
+
+(b) HalfCheetah-v5 0.0 0.2 0.4 0.6 0.8 1.0   
+
+> Step 1e6
+> 0
+> 1000
+> 2000
+> 3000
+> 4000
+> 5000
+> 6000
+> Episode Return
+> TRFP
+> TRFP w/o tail
+
+(c) Humanoid-v5 
+
+Figure 3: Ablation results of TRFP. From left to right: the effect of removing flow straightening regularization, the effect of removing Q-guided action selection, and the effect of removing the stochastic tail. The first two panels are evaluated on HalfCheetah-v5, and the third panel is evaluated on Humanoid-v5. Solid lines denote the mean episode return over five random seeds, and shaded regions represent one standard deviation. More importantly, when inference is further compressed to one-step sampling ( K = 1 ), TRFP(one-step) remains close to standard TRFP on most tasks and still compares favorably with all baselines across the benchmark suite. This suggests that the proposed method combines expressive policy representation with strong performance on standard continuous-control tasks. For a compact comparison, Table 1 summarizes the final returns on all MuJoCo-v5 benchmarks together with the per-action inference cost measured by the number of function evaluations (NFE). 
+
+5.3 Ablation Studies 
+
+In this subsection, we present targeted ablations on flow straightening regularization, Q-guided action selection, and the stochastic tail. 
+
+Flow Straightening Regularization. Figure 3a presents the ablation results on HalfCheetah. Under the standard sampling setting (K = 4) , removing Lfm yields a final return close to that of TRFP, suggesting that this regularizer is not mainly used to raise the performance ceiling under conventional multi-step sampling. By contrast, in the few-step setting, removing this term causes a substantial performance drop, with the return on HalfCheetah decreasing by more than 40% under one-step sampling, indicating that its primary role is to preserve performance fidelity under fewer sampling steps. 
+
+Q-Guided Action Selection. Figure 3b shows the corresponding ablation results on HalfCheetah. The results indicate that removing the Q-guided action selection mechanism leads to an approximately 10% performance drop under both the standard sampling setting and the one-step setting. 10 A PREPRINT - A PRIL 13, 2026 Due to the multimodal expressiveness of the policy, TRFP can generate multiple candidate actions, which enables the Q-guided action selection mechanism to utilize the critic to select higher-value actions. The results show that this refinement mechanism mitigates suboptimal action selection induced by sampling stochasticity, thereby delivering consistent improvements across different sampling steps. 
+
+Stochastic Tail. Finally, we examine the effect of the stochastic tail. Since the benefit of this component is less significant in simpler environments, we use Humanoid as a representative task for analysis. Figure 3c shows that removing the stochastic tail results in slower convergence than TRFP and also leads to an approximately 10% lower final return. This result suggests that the primary contribution of the stochastic tail lies in improving exploration efficiency in challenging environments. 
+
+6 Conclusion 
+
+In this work, we introduced TRFP, a flow-based MaxEnt RL framework that unifies expressive policy modeling, stable training, and effective one-step sampling by combining a deterministic-stochastic hybrid architecture with surrogate entropy optimization and flow straightening regularization. Empirical results show that TRFP delivers superior performance across the MuJoCo benchmarks. More importantly, without an additional distillation procedure, it retains high performance fidelity under one-step sampling. Several limitations nevertheless remain. In particular, the surrogate log-likelihood used in TRFP is still only an approximation to the true action likelihood. Moreover, the present study mainly focuses on MuJoCo benchmarks, and thus does not yet validate the framework on larger-scale robot manipulation or long-horizon planning tasks. Future work will explore extending TRFP to broader scenarios, including offline RL and fine-tuning of VLA policies. 
+
+A Hyperparameter Settings 
+
+Table 2: Detailed Hyperparameter Settings.                     
+
+> Hyperparameter Value Number of denoising steps K4Tail length L1One-step evaluation tail length 0Discount factor γ0.99 Replay buffer size 1e6 Batch size 256 Actor learning rate 3e-4 Critic learning rate 3e-4 Temperature learning rate 3e-4 Hidden layers in actor network [256,256,256] Hidden layers in critic network [256,256,256] Activation in actor network Mish Activation in critic network Mish Straightening regularization weight λfm 0.1 Target entropy -dim( A)
+
+References 
+
+[1] Fangjia Lian, Bangjie Li, Desong Du, Hongwei Zhu, and Qisong Yang. A reinforcement learning framework for energy-optimal uav path planning in wind fields. Pattern Recognition , page 112912, 2025. [2] Enting Gao, Zian Zha, Yonggang Li, Junhui Zhu, Yong Wang, Xinjian Chen, Naihui Zhou, and Dehui Xiang. Amplitude-guided deep reinforcement learning for semi-supervised layer segmentation. Pattern Recognition , page 113204, 2026. [3] Xing Chen, Hechang Chen, and Yi Chang. Compact exploration for continuous action reinforcement learning. 
+
+Pattern Recognition , page 112739, 2025. [4] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020. 11 A PREPRINT - A PRIL 13, 2026 [5] Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. In International Conference on Learning Representations , 2021. [6] Yaron Lipman, Ricky T. Q. Chen, Heli Ben-Hamu, Maximilian Nickel, and Matthew Le. Flow matching for generative modeling. In The Eleventh International Conference on Learning Representations , 2023. [7] Xingchao Liu, Chengyue Gong, and qiang liu. Flow straight and fast: Learning to generate and transfer data with rectified flow. In The Eleventh International Conference on Learning Representations , 2023. [8] Xingtai Gui, Jianbo Zhao, Wencheng Han, Jikai Wang, Jiahao Gong, Feiyang Tan, Cheng-zhong Xu, and Jianbing Shen. Trajdiff: End-to-end autonomous driving without perception annotation. arXiv preprint arXiv:2512.00723 ,2025. [9] Yongkang Li, Kaixin Xiong, Xiangyu Guo, Fang Li, Sixu Yan, Gangwei Xu, Lijun Zhou, Long Chen, Haiyang Sun, Bing Wang, et al. Recogdrive: A reinforced cognitive framework for end-to-end autonomous driving. arXiv preprint arXiv:2506.08052 , 2025. [10] Xingtai Gui, Meijie Zhang, Tianyi Yan, Wencheng Han, Jiahao Gong, Feiyang Tan, Cheng-zhong Xu, and Jianbing Shen. Bridging scene generation and planning: Driving with world model via unifying vision and motion representation. arXiv preprint arXiv:2603.14948 , 2026. [11] Yi Zhou, Jianbin Qiu, Wei Zhang, and Fenglei Ni. Humanoidmamba: Generalized mamba-based policy learning with next-action prediction for humanoid locomotion. IEEE Transactions on Cognitive and Developmental Systems , pages 1–13, 2026. [12] Cheng Chi, Siyuan Feng, Yilun Du, Zhenjia Xu, Eric Cousineau, Benjamin Burchfiel, and Shuran Song. Diffusion policy: Visuomotor policy learning via action diffusion. In Robotics: Science and Systems , 2023. [13] Eugenio Chisari, Nick Heppert, Max Argus, Tim Welschehold, Thomas Brox, and Abhinav Valada. Learning robotic manipulation policies from point clouds with conditional flow matching. Conference on Robot Learning (CoRL) , 2024. [14] Yi Zhou, Jianbin Qiu, Shixiang Jia, Fenglei Ni, and Wei Zhang. Curriculum-enhanced reinforcement learning for robust humanoid locomotion. IEEE Transactions on Automation Science and Engineering , 23:5779–5789, 2026. [15] Kevin Clark, Paul Vicol, Kevin Swersky, and David J. Fleet. Directly fine-tuning diffusion models on differentiable rewards. In The Twelfth International Conference on Learning Representations , 2024. [16] Tuomas Haarnoja, Aurick Zhou, Pieter Abbeel, and Sergey Levine. Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. In Jennifer Dy and Andreas Krause, editors, Proceedings of the 35th International Conference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , pages 1861–1870. PMLR, 10–15 Jul 2018. [17] Aditya Bhatt, Daniel Palenicek, Boris Belousov, Max Argus, Artemij Amiranashvili, Thomas Brox, and Jan Peters. Crossq: Batch normalization in deep reinforcement learning for greater sample efficiency and simplicity. In The Twelfth International Conference on Learning Representations , 2024. [18] Michal Nauman, Mateusz Ostaszewski, Krzysztof Jankowski, Piotr Miło´ s, and Marek Cygan. Bigger, regularized, optimistic: scaling for compute and sample efficient continuous control. Advances in neural information processing systems , 37:113038–113071, 2024. [19] Zhendong Wang, Jonathan J Hunt, and Mingyuan Zhou. Diffusion policies as an expressive policy class for offline reinforcement learning. In The Eleventh International Conference on Learning Representations , 2023. [20] Huayu Chen, Cheng Lu, Chengyang Ying, Hang Su, and Jun Zhu. Offline reinforcement learning via high-fidelity generative behavior modeling. In The Eleventh International Conference on Learning Representations , 2023. [21] Yu Fang, Xuehe Zhang, Haoshu Cheng, Xizhe Zang, Rui Song, and Jie Zhao. Flow policy: Generalizable visuomotor policy learning via flow matching. IEEE/ASME Transactions on Mechatronics , 2025. [22] Seohong Park, Qiyang Li, and Sergey Levine. Flow q-learning. arXiv preprint arXiv:2502.02538 , 2025. [23] Philippe Hansen-Estruch, Ilya Kostrikov, Michael Janner, Jakub Grudzien Kuba, and Sergey Levine. Idql: Implicit q-learning as an actor-critic method with diffusion policies. arXiv preprint arXiv:2304.10573 , 2023. [24] Long Yang, Zhixiong Huang, Fenghao Lei, Yucun Zhong, Yiming Yang, Cong Fang, Shiting Wen, Binbin Zhou, and Zhouchen Lin. Policy representation via diffusion probability model for reinforcement learning. arXiv preprint arXiv:2305.13122 , 2023. [25] Michael Psenka, Alejandro Escontrela, Pieter Abbeel, and Yi Ma. Learning a diffusion model policy from rewards via q-score matching. In Proceedings of the 41st International Conference on Machine Learning , pages 41163–41182, 2024. 12 A PREPRINT - A PRIL 13, 2026 [26] Shutong Ding, Ke Hu, Zhenhao Zhang, Kan Ren, Weinan Zhang, Jingyi Yu, Jingya Wang, and Ye Shi. Diffusion-based reinforcement learning via q-weighted variational policy optimization. Advances in Neural Information Processing Systems , 37:53945–53968, 2024. [27] Haitong Ma, Tianyi Chen, Kai Wang, Na Li, and Bo Dai. Efficient online reinforcement learning for diffusion policy. In Forty-second International Conference on Machine Learning , 2025. [28] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017. [29] Yinuo Wang, Likun Wang, Yuxuan Jiang, Wenjun Zou, Tong Liu, Xujie Song, Wenxuan Wang, Liming Xiao, Jiang Wu, Jingliang Duan, et al. Diffusion actor-critic with entropy regulator. Advances in Neural Information Processing Systems , 37:54183–54204, 2024. [30] Onur Celik, Zechu Li, Denis Blessing, Ge Li, Daniel Palenicek, Jan Peters, Georgia Chalvatzaki, and Gerhard Neumann. DIME: Diffusion-based maximum entropy reinforcement learning. In Forty-second International Conference on Machine Learning , 2025. [31] Xiaoyi Dong, Jian Cheng, and Xi Sheryl Zhang. Maximum entropy reinforcement learning with diffusion policy. In Forty-second International Conference on Machine Learning , 2025. [32] Allen Z. Ren, Justin Lidard, Lars Lien Ankile, Anthony Simeonov, Pulkit Agrawal, Anirudha Majumdar, Ben-jamin Burchfiel, Hongkai Dai, and Max Simchowitz. Diffusion policy policy optimization. In The Thirteenth International Conference on Learning Representations , 2025. [33] Tonghe Zhang, Chao Yu, Sichang Su, and Yu Wang. Reinflow: Fine-tuning flow matching policy with online reinforcement learning. arXiv preprint arXiv:2505.22094 , 2025. [34] Shutong Ding, Ke Hu, Shan Zhong, Haoyang Luo, Weinan Zhang, Jingya Wang, Jun Wang, and Ye Shi. GenPO: Generative diffusion models meet on-policy reinforcement learning. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2025. [35] Yixian Zhang, Shu’ang Yu, Tonghe Zhang, Mo Guang, Haojia Hui, Kaiwen Long, Yu Wang, Chao Yu, and Wenbo Ding. Sac flow: Sample-efficient reinforcement learning of flow-based policies via velocity-reparameterized sequential modeling. arXiv preprint arXiv:2509.25756 , 2025. [36] Tianyi Chen, Haitong Ma, Na Li, Kai Wang, and Bo Dai. One-step flow policy mirror descent. arXiv preprint arXiv:2507.23675 , 2025. [37] Ricky TQ Chen, Yulia Rubanova, Jesse Bettencourt, and David K Duvenaud. Neural ordinary differential equations. Advances in neural information processing systems , 31, 2018. [38] Haofei Lu, Dongqi Han, Yifei Shen, and Dongsheng Li. What makes a good diffusion planner for decision making? In The Thirteenth International Conference on Learning Representations , 2025. 13

@@ -1,0 +1,70 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-001.webp",
+      "caption": "Figure 1: Two critical bottlenecks in agentic VRAG: (Top) Visual Evidence Sparsity, where relevant clues are scattered across pages or confined to small regions within a single image; (Bottom) Search Drift in Long-Horizon Interaction, where accumulated visual tokens overwhelm the context, burying earlier evidence and causing the agent to lose track of its original objective.",
+      "page": 1,
+      "index": 1,
+      "width": 452,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-002.webp",
+      "caption": "Table 1: Main results on SlideVQA, ViDoSeek, and MMLongBench. We report accuracy (%). † denotes multi-agent architectures. ‡ denotes fine-tuned models.★ denotes results taken from published papers under the same or comparable experimental settings. The best result in each column is bolded and the second-best is underlined.",
+      "page": 6,
+      "index": 2,
+      "width": 1002,
+      "height": 529
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-003.webp",
+      "caption": "Figure 5: The prompt template used for LLM-as-Judge evaluation.",
+      "page": 11,
+      "index": 3,
+      "width": 946,
+      "height": 517
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-004.webp",
+      "caption": "Figure 8: A failure case of VISOR on a multi-hop MMLongBench question. Both reference pages are retrieved correctly, but the model misreads the legend of a pie chart, confusing the iOS 8 slice (gray, 41%) for iOS 9 (blue, 51%), leading to an incorrect final answer despite successful retrieval.",
+      "page": 15,
+      "index": 4,
+      "width": 1052,
+      "height": 1163
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-005.webp",
+      "caption": "Figure 7: A success case of VISOR on a multi-hop SlideVQA question. Retrieved page images are shown at the top for layout reasons; the corresponding reasoning steps are presented below. Step 1 retrieves an irrelevant page from a different document. Step 2 identifies the year 2010 from an Amazon fulfillment center growth chart. Step 3 retrieves a category evolution slide providing context. Step 4 locates the Media vs. Others sales breakdown chart, from which the answer is read. The final verification search (Step 5) returns a page with an unrelated chart from a different document, yet VISOR correctly produces the answer from accumulated evidence.",
+      "page": 14,
+      "index": 5,
+      "width": 1002,
+      "height": 1111
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-006.webp",
+      "caption": "Figure 6: A representative case illustrating redundant crop usage in VRAG-RL.",
+      "page": 13,
+      "index": 6,
+      "width": 998,
+      "height": 286
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-007.webp",
+      "caption": "Figure 2: Overview of VISOR. At each step 𝑖, the agent produces a ⟨think⟩. . . ⟨action⟩ response. Evidence extracted from the reasoning trace is accumulated in a structured Evidence Collection space E. The action space comprises three operations: search, crop, and answer. The agent loop context is reconstructed at each turn: the user query and E are always pinned at the top, while only the last𝑊 turns of raw interactions are retained via a Sliding Window; each turn’s observation also includes an Intent Injection prompt to re-anchor the agent’s focus.",
+      "page": 4,
+      "index": 7,
+      "width": 892,
+      "height": 583
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09508v1/fig-008.webp",
+      "caption": "Figure 9: All prompt templates used in VISOR. Each template corresponds to a distinct interaction event in the agent loop.",
+      "page": 16,
+      "index": 8,
+      "width": 1050,
+      "height": 1160
+    }
+  ]
+}

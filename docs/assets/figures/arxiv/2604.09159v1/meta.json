@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.09159v1/fig-001.webp",
+      "caption": "Table 1: Final return comparison on 10 MuJoCo-v5 benchmarks. Results are reported as mean ± standard deviation. Best results are shown in bold, and second-best distinct results are underlined. NFE denotes the number of function evaluations per action. For iterative generative policies, expressions of the form a× b indicate a rollout steps with b sampled action candidates.",
+      "page": 10,
+      "index": 1,
+      "width": 818,
+      "height": 299
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09159v1/fig-002.webp",
+      "caption": "Figure 3: Ablation results of TRFP. From left to right: the effect of removing flow straightening regularization, the effect of removing Q-guided action selection, and the effect of removing the stochastic tail. The first two panels are evaluated on HalfCheetah-v5, and the third panel is evaluated on Humanoid-v5. Solid lines denote the mean episode return over five random seeds, and shaded regions represent one standard deviation.",
+      "page": 10,
+      "index": 2,
+      "width": 964,
+      "height": 255
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09159v1/fig-003.webp",
+      "caption": "Figure 2: Learning curves on 10 MuJoCo benchmarks. Each subplot compares TRFP under standard sampling (K = 4) and one-step sampling (K = 1) with four baselines. The solid lines denote the mean episode return over five random seeds, and the shaded regions represent one standard deviation.",
+      "page": 9,
+      "index": 3,
+      "width": 964,
+      "height": 1151
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09159v1/fig-004.webp",
+      "caption": "Figure 1: Trajectory visualization in the toy multigoal environment. The agent starts near the center and moves toward four equally rewarded goals. Each panel overlays 20 evaluation episodes collected after training.",
+      "page": 8,
+      "index": 4,
+      "width": 976,
+      "height": 341
+    }
+  ]
+}

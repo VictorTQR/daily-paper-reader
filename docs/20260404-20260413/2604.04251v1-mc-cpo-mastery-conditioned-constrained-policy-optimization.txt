@@ -1,0 +1,942 @@
+Title: MC-CPO: Mastery-Conditioned Constrained Policy Optimization
+
+URL Source: https://arxiv.org/pdf/2604.04251v1
+
+Published Time: Tue, 07 Apr 2026 01:46:41 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# MC-CPO: Mastery-Conditioned Constrained Policy Optimization 
+
+Oluseyi Olukola Nick Rahimi 
+
+School of Computing Sciences and Computer Engineering School of Computing Sciences and Computer Engineering University of Southern Mississippi University of Southern Mississippi Hattiesburg, MS, USA Hattiesburg, MS, USA 
+
+oluseyi.olukola@usm.edu nick.rahimi@usm.edu 
+
+Abstract —Engagement-optimized adaptive tutoring systems may prioritize short-term behavioral signals over sustained learning outcomes, creating structural incentives for reward hacking in reinforcement learning policies. We formalize this challenge as a constrained Markov decision process (CMDP) with mastery-conditioned feasibility, in which pedagogical safety constraints dynamically restrict admissible actions according to learner mastery and prerequisite structure. We introduce Mastery-Conditioned Constrained Policy Op-timization (MC-CPO), a two-timescale primal–dual algorithm that integrates structural action masking with constrained policy optimization. In the tabular regime, we establish feasibility preservation and convergence to stationary feasible points un-der standard stochastic approximation conditions, and derive a safety gap result showing that optimization within the mastery-conditioned feasible set can strictly dominate post-hoc filtering under identical safety budgets. Empirical validation is conducted in minimal and extended tabular environments and in a neural tutoring setting. Across 10 random seeds and one million training steps in the neural regime, MC-CPO satisfies constraint budgets within tolerance, reduces discounted safety costs relative to unconstrained and reward-shaped baselines, and substantially lowers the Reward Hacking Severity Index (RHSI). These results indicate that embedding pedagogical structure directly into the feasible action space provides a principled foundation for mitigating reward hacking in instructional re-inforcement learning systems. 
+
+Index Terms —Educational reinforcement learning, safe rein-forcement learning, constrained MDP, reward hacking, intelligent tutoring systems, knowledge tracing. 
+
+I. I NTRODUCTION 
+
+Reinforcement learning (RL) has increasingly been explored [1] as a mechanism for adaptive instructional sequencing, personalization, and policy optimization in intelligent tutoring systems (ITS). In principle, RL provides a natural framework for modeling long-horizon decision-making in educational environments, where instructional actions influence future learner states and outcomes. Recent surveys indicate that RL-based approaches have been applied to curriculum sequencing, adaptive feedback, and knowledge modeling, although formal safety considerations remain comparatively underdeveloped [2]. However, specifying reward functions that faithfully rep-resent pedagogical goals remains a persistent and non-trivial challenge. In educational settings, proxy objectives such as engagement, completion rate, or short-term performance may not reliably correspond to genuine knowledge construction. As has been noted in prior work on instructional RL, reward misspecification can lead to undesirable instructional policies that optimize observable signals while failing to promote meaningful learning [3]. More broadly, the reinforcement learning literature has identified reward hacking as a systematic failure mode arising when agents exploit imperfections in proxy objectives [4], [5]. Such phenomena have been observed across domains, including alignment and human feedback settings [6], where agents may satisfy surface-level objectives while violating un-derlying intent. Related challenges have also been documented in clinical decision-support applications of RL, where short-term proxy rewards may conflict with long-term outcomes [7]. Although a growing body of work addresses reward hacking through reward modeling, inverse reward design, or empirical detection strategies [8], [9], these approaches generally operate within the reward-engineering paradigm. That is, they attempt to improve or correct the reward signal rather than structurally constraining the policy space itself. Concurrently, safe reinforcement learning has developed principled methods for enforcing long-term constraints within the Constrained Markov Decision Process (CMDP) frame-work [10], [11], [12]. Modern constrained policy optimiza-tion techniques integrate dual variables or Lyapunov-based formulations to balance return maximization with constraint satisfaction [13], [14]. Comprehensive surveys emphasize the diversity of constraint formulations and the importance of state-aware safety mechanisms in dynamic environments [15], [16]. More recent work explores monotonic expansion of feasible regions as policies improve constraint adherence [17], [18]. While these contributions provide strong foundations for constraint-aware optimization, constraints in these settings are typically exogenous and static, such as safety thresholds in robotics or resource budgets in control systems. Feasibility expansion in prior work is generally policy-driven, reflecting improved compliance with externally specified constraints. Educational environments present a structurally distinct challenge. In instructional contexts, what constitutes a feasible instructional action may depend directly on the learner’s evolv-ing mastery state. Prerequisite satisfaction and knowledge acquisition dynamically alter which concepts or tasks are 
+
+> arXiv:2604.04251v1 [cs.AI] 5 Apr 2026
+
+pedagogically appropriate at a given time. In such settings, feasibility is not merely a function of external safety thresholds but can be endogenous to the learner’s internal knowledge trajectory. Despite extensive work on knowledge tracing [19], [20] and graph-based instructional modeling [21], to our knowledge there has been limited formal treatment of mastery-conditioned feasibility within a CMDP framework, particularly in relation to reward hacking prevention. In this paper, we introduce MC-CPO: Mastery-Conditioned Constrained Policy Optimization , aconstrained reinforcement learning algorithm in which the feasible action set is explicitly conditioned on the learner’s evolving mastery state. Rather than encoding pedagogical correctness in the reward function, MC-CPO enforces structural feasibility through a mastery-conditioned action space that expands monotonically as prerequisite knowledge is acquired. This design induces a dynamic policy space in which instructional actions become admissible only when pedagogically appropriate, thereby reducing reliance on reward shaping to prevent undesirable behaviors. Importantly, feasibility expansion in MC-CPO is state-driven via mastery progression, rather than policy-driven via constraint satisfaction improvement. We further formalize pedagogical safety constraints within a CMDP framework and show that mastery-conditioned feasibil-ity induces a state-driven expansion of admissible policies. We prove that MC-CPO enforces structural prerequisite safety by construction and provide a safety gap theorem demonstrating that post-hoc filtering of unconstrained policies can be strictly suboptimal relative to optimization within the feasible set. Finally, we empirically evaluate MC-CPO in a simulated tutoring environment and measure reward hacking severity using a previously defined Reward Hacking Severity Index (RHSI), enabling direct comparison to unconstrained and post-hoc baseline methods. The primary contributions of this work are as follows:  
+
+> •
+
+We introduce MC-CPO, a constrained RL formulation for educational settings in which feasibility is conditioned on learner mastery state, yielding a monotonically expanding policy space that differs from static or policy-driven feasibility in prior safe RL methods.  
+
+> •
+
+We provide formal guarantees that MC-CPO enforces prerequisite safety structurally and prove a safety gap theorem showing that post-hoc filtering of unconstrained policies cannot achieve the same reward–safety trade-off as constrained optimization within the mastery-conditioned feasible set.  
+
+> •
+
+We demonstrate empirically, in a simulated intelligent tutoring environment, that MC-CPO substantially reduces reward hacking severity (as measured by RHSI) while maintaining competitive engagement performance rela-tive to standard baselines. The remainder of this paper is organized as follows. Section II reviews related work and positions MC-CPO within safe reinforcement learning and educational RL. Section III for-malizes the mastery-conditioned CMDP setting. Section IV presents the MC-CPO algorithm. Section V develops theo-retical guarantees, including structural safety and the safety gap result. Section VI reports empirical evaluations. Section VII discusses implications and limitations, and Section VIII concludes. II. R ELATED WORK 
+
+Research on safe reinforcement learning (SafeRL) has advanced considerably, with much of the modern literature adopting the Constrained Markov Decision Process (CMDP) framework to formalize tradeoffs between return maximization and constraint satisfaction. Foundational surveys and syntheses tend to emphasize both the breadth of CMDP formulations and the practical prevalence of primal-dual and Lagrangian approaches in contemporary safe RL pipelines [22], [23], [15], [24]. More recent overviews further highlight distinctions be-tween static, state-dependent, and trajectory-level constraints, suggesting that feasibility definitions can vary substantially across domains [16]. Within this broader direction, several works explore constraint handling under limited exploration, including safe exploration methods that project actions onto feasible sets or otherwise modify policy updates to avoid unsafe regions [25], [26], [9]. A parallel line of work investigates how feasible regions are identified and expanded under safety requirements. Feasible Policy Iteration (FPI) proposes a region-wise improvement principle with theoretical guarantees that the feasible region expands monotonically as the policy improves its satisfaction of static safety constraints [17]. Related developments, includ-ing Feasible Policy Optimization (FPO), similarly argue that strict feasibility at every update may be unnecessarily conser-vative and instead advocate iterative region expansion coupled with value improvement [18]. Although these approaches appear closely related in spirit to feasibility expansion, they typically treat constraints as exogenous and fixed; expansion reflects improved policy compliance with predefined safety sets rather than endogenous changes in the environment itself. In educational settings, by contrast, feasibility may evolve as a function of learner mastery, suggesting a structurally distinct form of state-driven expansion that these frameworks do not appear to capture. Work on constraint-conditioned or threshold-adaptive safe RL further illustrates the diversity of CMDP objectives. Condi-tioned Constrained Policy Optimization (CCPO), for example, studies zero-shot adaptation to varying constraint thresholds at deployment [27]. While conceptually related in its use of constraint conditioning, this setting differs from mastery-conditioned feasibility in that constraint thresholds remain externally specified rather than derived from learner state. Additional safe exploration methods aim to reduce violations during learning, including doubly optimistic–pessimistic ex-ploration schemes [28], Lyapunov-based safety shaping [13], and primal-dual penalty methods such as Reward Constrained Policy Optimization (RCPO) [14]. Constrained Policy Opti-mization (CPO) remains a widely-used baseline for modern policy-gradient-based constrained optimization [12], and Prox-imal Policy Optimization (PPO) serves as a practical backbone in both unconstrained and constrained variants [29]. Collec-tively, these works demonstrate the maturity of constraint-based optimization machinery, while also suggesting that con-straint structure itself may meaningfully shape policy learning dynamics. A central motivation for pedagogical safety is the broader problem of reward misspecification and reward hacking. Early AI safety work identifies reward hacking as a concrete failure mode arising when proxy objectives are optimized in place of intended outcomes [4]. More recent theoretical analyses attempt to formalize reward hacking in reinforcement learning and characterize conditions under which proxy optimization may diverge from designer intent [5], [30]. Related work in inverse reward design and reward model overoptimization further highlights how learned or proxy rewards may be exploited in ways that were not anticipated [8], [31]. Empirical mitigation strategies have also been proposed across diverse RL settings, including approaches that detect or penalize proxy gaming behaviors [9], [32]. The potential of reward shaping as a partial remedy has also been explored, though policy invariance results suggest that shaping alone may not eliminate structural incentives for exploitation [33]. At the same time, developments in reinforcement learning from human feedback (RLHF) underscore the broader challenge of aligning reward signals with intended objectives, particularly when optimiza-tion pressures can induce overfitting to imperfect reward models [34], [35], [6]. Taken together, these strands suggest that improving reward design alone may be insufficient to fully eliminate structural incentives for exploitation. In educational reinforcement learning and intelligent tutor-ing systems (ITS), RL has been explored for instructional sequencing and personalization, while also raising concerns about specifying reward signals that faithfully represent learn-ing goals. The effectiveness of well-designed tutoring sys-tems at supporting learning has been documented broadly [36], [37], and early POMDP-based formulations suggest that planning under uncertainty over student knowledge can yield meaningful instructional improvements [38]. Reviews of RL in education, however, note that reward definitions tend to rely on observable performance or engagement proxies and may not directly encode long-term knowledge construction [2], [3]. More recent work introduces goal-oriented ITS tasks and graph-based RL formulations that incorporate prerequisite or concept structures [21], yet typically without CMDP-based pedagogical safety constraints or formal guarantees against reward exploitation. GITS is not included in the empirical comparison as its graph-based reward formulation and partially observable student model are not directly compatible with the CMDP experimental protocol used here; a unified benchmark remains an open challenge for the educational RL commu-nity. Separately, knowledge-graph-based action pruning and masking has been used to manage large action spaces in other RL domains, such as text-based games [39], illustrating that structural action constraints can be practically effective                                                  
+
+> TABLE I COMPARISON OF SAFE RL AND EDUCATIONAL RL A PPROACHES
+> Work CMDP Feasibility Dynamic Edu.
+> CPO [12] Yes Static No No RCPO [14] Yes Static No No Lyapunov RL [13] Yes Static No No FPI [17] Yes Policy-based Yes No FPO [18] Yes Policy-based Yes No CCPO [27] Yes Threshold-cond. No No KG-A2C [39] No Graph mask No No GITS [21] No Prerequisite Implicit Yes Doroudi et al. [3] No N/A N/A Yes
+> MC-CPO (Ours) Yes Mastery-cond. Yes Yes
+
+even when not motivated by pedagogical safety. Finally, student knowledge estimation in tutoring has long relied on probabilistic models such as Bayesian Knowledge Tracing (BKT) [19], and subsequent neural approaches such as Deep Knowledge Tracing [20] suggest that richer representations of mastery may be possible, providing a well-established family of mechanisms for representing evolving learner state that can naturally interact with mastery-conditioned feasibility. Taken together, existing work establishes strong foundations for constrained optimization, safe exploration, and instruc-tional RL. However, mastery-conditioned feasibility where the admissible action set expands endogenously as a function of learner knowledge appears to have received limited formal treatment within the CMDP literature. This observation moti-vates the development of algorithms that enforce pedagogical safety structurally, rather than relying exclusively on reward engineering or post-hoc filtering. For clarity, Table I summarizes representative approaches and highlights how MC-CPO differs in conditioning feasibility on learner mastery and in providing structural pedagogical safety guarantees. III. P ROBLEM SETUP 
+
+We formalize the instructional decision-making problem as a constrained Markov decision process (CMDP) in which feasibility is conditioned on learner mastery. 
+
+A. Environment and Mastery State 
+
+Let V denote a finite set of instructional concepts organized by a directed acyclic prerequisite graph G = ( V, E), where 
+
+(u, v ) ∈ E indicates that concept u is a prerequisite for concept 
+
+v.At time t, the environment state is defined as 
+
+st = ( xt, K t),
+
+where xt ∈ X denotes observable learner interaction features, and Kt ∈ [0 , 1] |V| is a mastery vector, with Kt(v) representing the learner’s estimated mastery of concept v.Mastery evolves according to a stochastic update rule 
+
+Kt+1 = Φ( Kt, a t, ξ t),where ξt represents stochastic learner response noise and Φ
+
+may correspond to Bayesian Knowledge Tracing (BKT) or another probabilistic mastery model [19]. 
+
+Assumption A1 (Bounded Mastery). For all t and v ∈ V ,
+
+0 ≤ Kt(v) ≤ 1.
+
+The state transition kernel is denoted 
+
+P (st+1 | st, a t).
+
+B. Mastery-Conditioned Feasible Action Set 
+
+Let A denote the full instructional action space, where each action corresponds to presenting or reinforcing a concept v ∈V.We define the mastery-conditioned feasible set 
+
+Af (st) = {av ∈ A | Kt(u) ≥ θmin ∀u ∈ Pre (v)} ,
+
+where Pre (v) denotes the prerequisite set of concept v, and 
+
+θmin ∈ (0 , 1) is a fixed prerequisite mastery threshold. Thus, an instructional action is admissible only if all pre-requisite concepts exceed the mastery threshold. For example, a student who has not yet demonstrated sufficient mastery of algebra would not be presented calculus exercises, regardless of their potential engagement value. 
+
+Assumption A2 (Non-emptiness). For all reachable states 
+
+st, |A f (st)| ≥ 1.Define the frontier set 
+
+Ft = Af (st) \ A f (st−1).
+
+Pedagogically, the frontier represents concepts that have just become accessible to a learner as prerequisite mastery is acquired the moment at which new instructional opportunities open. 
+
+Proposition 1 (Monotonic Feasibility Expansion). Under Assumption A1 and non-decreasing mastery updates in expec-tation, 
+
+E[Kt+1 (v) | st, a t] ≥ Kt(v),
+
+the feasible set expands monotonically in expectation: 
+
+E[|A f (st+1 )|] ≥ |A f (st)|.
+
+This expansion is state-driven via mastery progression rather than policy-driven via improved constraint compliance. 
+
+C. Reward and Cost Structure 
+
+We define an engagement reward function 
+
+rE : S × A → R.
+
+Mastery does not appear directly in the reward; instead, it influences feasibility. The objective is to maximize discounted engagement: 
+
+J(π) = Eπ
+
+" ∞X
+
+> t=0
+
+γtrE (st, a t)
+
+#
+
+.
+
+We define discounted cumulative cost functions correspond-ing to pedagogical safety constraints: 
+
+Jci (π) = Eπ
+
+" ∞X
+
+> t=0
+
+γtci(st, a t)
+
+#
+
+, i ∈ { 2, 3, 4}.
+
+Each cost function captures violation of a pedagogical property:  
+
+> •
+
+c2(st, a t): insufficient mastery progress,in instructional terms, this cost penalises episodes in which a learner is repeatedly exposed to content without measurable knowledge gain.  
+
+> •
+
+c3(st, a t): inadequate cognitive demand,this prevents the policy from defaulting to low-effort actions such as encouragement or hints that generate engagement without meaningful cognitive challenge.  
+
+> •
+
+c4(st, a t): engagement–learning decoupling. The CMDP is therefore: 
+
+max  
+
+> π
+
+J(π)
+
+subject to 
+
+Jci (π) ≤ di, i ∈ { 2, 3, 4}.
+
+Budgets di = κi · Jci (πunc ) are set as a fraction κi ∈ (0 , 1) 
+
+of the unconstrained baseline cost dmax  
+
+> i
+
+= Jci (πunc ), ensur-ing scale invariance across environments. The unconstrained baseline cost dmax  
+
+> i
+
+is also used to normalize violation severity in the RHSI (Section III). 
+
+D. Policy Class and Structural Safety 
+
+We restrict the policy class to mastery-feasible actions via masked softmax parameterization: 
+
+πθ (a | st) = exp( fθ (st, a )) 1[a ∈ A f (st)] 
+
+P  
+
+> a′∈A f(st)
+
+exp( fθ (st, a ′)] .
+
+Assumption A3 (Mask Independence). The feasibility indicator 1[a ∈ Af (s)] depends only on state s and is independent of policy parameters θ.
+
+Lemma 1 (Structural Prerequisite Safety). For all θ and all states st,
+
+πθ (a | st) = 0 if a / ∈ A f (st).
+
+Thus, prerequisite violations are impossible by construction. 
+
+E. Technical Assumptions 
+
+We state additional regularity conditions under which the subsequent analysis holds. 
+
+Assumption A4 (Bounded Reward). There exists Rmax <
+
+∞ such that 
+
+|rE (s, a )| ≤ Rmax ∀(s, a ).
+
+Assumption A5 (Bounded Costs). For each i ∈ { 2, 3, 4},there exists Cmax < ∞ such that 
+
+|ci(s, a )| ≤ Cmax ∀(s, a ).
+
+Assumption A6 (Finite State–Action Space). The state space S and action space A are finite. This assumption is adopted for theoretical analysis; function approximation is used in experiments. 
+
+Assumption A7 (Minimum Mixing Probability). There exists δ > 0 such that any executed policy ˜π used in optimization satisfies 
+
+˜π(a | s) ≥ δ ∀a ∈ A f (s), ∀s. 
+
+Practical Enforcement of A7.: In neural implementations using masked softmax parameterization, feasible actions may receive very small but nonzero probability mass due to extreme logits. Thus, strict lower bounds δ are satisfied up to numerical precision rather than enforced analytically. Two mechanisms mitigate probability collapse in practice:  
+
+> •
+
+Entropy regularization in PPO discourages degenerate distributions.  
+
+> •
+
+Frontier-conditioned mixing Appendix A ensures that newly feasible actions receive explicit probability mass when feasibility expands. Consequently, Assumption A7 is satisfied approximately un-der standard neural parameterizations, and importance weight-ing in frontier mixing preserves unbiased gradient estimation despite small-probability regions. 
+
+Assumption A8 (Fixed Threshold). The prerequisite threshold θmin is a fixed constant independent of policy parameters. Under Assumptions A1–A8, the mastery-conditioned CMDP is well-defined and admits stable primal–dual opti-mization. 
+
+Reward Hacking Severity Index (RHSI).: To quantify engagement learning decoupling, we define: 
+
+RHSI( π) = ˆV π
+
+ˆV ∗ × ∥ v(π)∥w,
+
+where ˆV π = Eπ [P 
+
+> t
+
+γtrE (st, a t)] is the expected discounted engagement return under π, ˆV ∗ = ˆV πunc is the uncon-strained baseline return, and ∥v(π)∥w =
+
+q 13
+
+P4 
+
+> i=2
+
+vi(π)2
+
+with vi(π) = Jci (π)/d max  
+
+> i
+
+the normalized discounted vio-lation for constraint Ci (dmax  
+
+> i
+
+is the unconstrained baseline cost). RHSI( π) is bounded in [0 , 1] : it equals zero when constraints are fully satisfied or return collapses, and increases as engagement and pedagogical violation rise simultaneously. When vi(π) = Jci (π)/d max  
+
+> i
+
+with dmax  
+
+> i
+
+= Jci (πunc ), the normalized form is bounded in [0 , 1] . Tables reporting RHSI (raw) use unnormalized discounted costs directly and are not subject to this bound; they serve as a relative severity indicator across conditions within the same experiment. IV. MC-CPO A LGORITHM 
+
+We now present Mastery-Conditioned Constrained Pol-icy Optimization (MC-CPO), a primal-dual policy-gradient method for solving the mastery-conditioned CMDP defined in Section III. 
+
+A. Lagrangian Formulation 
+
+Define the Lagrangian: 
+
+L(θ, λ ) = J(πθ ) −
+
+> 4
+
+X
+
+> i=2
+
+λi (Jci (πθ ) − di) ,
+
+where λi ≥ 0 are dual variables associated with pedagogical safety constraints. The primal objective is: 
+
+max  
+
+> θ
+
+min  
+
+> λ≥0
+
+L(θ, λ ).
+
+Because prerequisite feasibility (C1) is enforced structurally via policy parameterization (Lemma 1), it does not appear in the Lagrangian. 
+
+B. Policy Gradient Estimation 
+
+Using standard policy-gradient theory, the gradient of the Lagrangian with respect to θ can be expressed as: 
+
+∇θ L = Eπ
+
+" ∞X
+
+> t=0
+
+∇θ log πθ (at | st) AEt −
+
+> 4
+
+X
+
+> i=2
+
+λiAci
+
+> t
+
+!# 
+
+,
+
+where: - AEt denotes the advantage estimator for engagement reward, - Aci 
+
+> t
+
+denotes the advantage estimator for constraint cost ci.In practice, generalized advantage estimation (GAE) or Monte Carlo returns may be used. Dual variables are updated via projected gradient ascent: 
+
+λi ← [λi + βk (Jci (πθ ) − di)] + .
+
+C. Frontier-Conditioned Exploration 
+
+When mastery increases, newly admissible actions in the frontier Ft = Af (st) \ A f (st−1) may initially receive low probability mass under πθ . To mitigate potential probability collapse over newly feasible actions, MC-CPO introduces event-triggered frontier mixing: when |F t| > 0, the executed policy ˜πθ,t blends πθ with a uniform distribution over Ft
+
+at rate ϵmin , with importance-sampling correction to preserve unbiased gradient estimation. This mechanism also provides approximate practical enforcement of Assumption A7. Its contribution to asymptotic performance appears modest in the environments studied (Appendix A), though it may provide greater benefit in settings with longer prerequisite chains or sparser mastery transitions. 
+
+D. Two-Timescale Updates 
+
+We adopt a two-timescale stochastic approximation scheme: 
+
+θk+1 = θk + αk∇θ L(θk, λ k),λk+1 = [ λk + βk∇λL(θk, λ k)] + ,
+
+with step sizes satisfying: X
+
+> k
+
+αk = ∞, X
+
+> k
+
+α2 
+
+> k
+
+< ∞, X
+
+> k
+
+βk = ∞, X
+
+> k
+
+β2 
+
+> k
+
+< ∞,βk/α k → 0.
+
+This ensures that primal updates occur on a faster timescale than dual updates. 
+
+E. Algorithm Summary 
+
+Algorithm 1 MC-CPO: Mastery-Conditioned Constrained Policy Optimization  
+
+> 1:
+
+Initialize θ, λ2, λ 3, λ 4 ≥ 0 
+
+> 2:
+
+for each episode do  
+
+> 3:
+
+for each step t do  
+
+> 4:
+
+Observe st = ( xt, K t) 
+
+> 5:
+
+Compute feasible set Af (st) 
+
+> 6:
+
+Compute frontier Ft 
+
+> 7:
+
+Set ϵt = ϵmin 1[|F t| > 0]  
+
+> 8:
+
+Sample at ∼ ˜πθ,t  
+
+> 9:
+
+Observe rE , c2, c3, c4 
+
+> 10:
+
+Update mastery Kt+1  
+
+> 11:
+
+end for  
+
+> 12:
+
+Estimate returns and constraint costs  
+
+> 13:
+
+Update θ via policy gradient  
+
+> 14:
+
+Update λi via projected ascent  
+
+> 15:
+
+end for 
+
+V. T HEORETICAL GUARANTEES 
+
+Under Assumptions A1–A8, we establish structural prereq-uisite safety, convergence of the primal–dual updates, and a safety gap result comparing mastery-conditioned optimization to post-hoc filtering. 
+
+A. Structural Prerequisite Safety 
+
+We first formalize that prerequisite violations (C1) are impossible under the masked policy parameterization, inde-pendent of optimization dynamics. 
+
+Theorem 1 (Structural Prerequisite Safety). Under As-sumptions A1–A3, for any policy parameters θ and any state 
+
+st, the MC-CPO policy satisfies 
+
+πθ (a | st) = 0 whenever a / ∈ A f (st).
+
+Consequently, the probability of prerequisite violation is iden-tically zero for all t:
+
+Pπ (at /∈ A f (st)) = 0 .
+
+Proof. By definition of the masked softmax parameteriza-tion, 
+
+πθ (a | st) = exp( fθ (st, a )) 1[a ∈ A f (st)] 
+
+P  
+
+> a′∈A f(st)
+
+exp( fθ (st, a ′)] .
+
+If a / ∈ A f (st), the indicator function evaluates to zero. As-sumption A3 ensures that feasibility depends only on the state and is independent of θ, so the mask cannot be circumvented by policy updates. Therefore, 
+
+πθ (a | st) = 0 
+
+for all infeasible actions and all parameter values. The result follows. □
+
+B. Convergence of Primal–Dual Updates 
+
+We now analyze convergence of the MC-CPO updates in the tabular setting under two-timescale stochastic approximation. Let the Lagrangian be defined as 
+
+L(θ, λ ) = J(πθ ) −
+
+> 4
+
+X
+
+> i=2
+
+λi
+
+ Jci (πθ ) − di
+
+,
+
+with dual variables λi ≥ 0.The primal update is performed via stochastic gradient ascent: 
+
+θk+1 = θk + αk d∇θ L(θk, λ k),
+
+and the dual variables are updated via projected gradient ascent: 
+
+λi,k +1 =
+
+h
+
+λi,k + βk \(Jci (πθk ) − di)
+
+i
+
+> +
+
+,
+
+for i ∈ { 2, 3, 4}.Step sizes satisfy the two-timescale conditions of Sec-tion IV-D [40]. 
+
+Theorem 2 (Convergence to Stationary Feasible Point). 
+
+Under Assumptions A1–A8, in the tabular setting, the MC-CPO iterates (θk, λ k) converge almost surely to a stationary point (θ⋆, λ ⋆) satisfying: 1) Stationarity: 
+
+∇θ L(θ⋆, λ ⋆) = 0 .
+
+2) Primal feasibility: 
+
+Jci (πθ⋆ ) ≤ di, i ∈ { 2, 3, 4}.
+
+3) Complementary slackness: 
+
+λ⋆i
+
+ Jci (πθ⋆ ) − di
+
+ = 0 .
+
+Proof Sketch. Under Assumptions A4–A8, rewards and costs are bounded and the importance sampling ratios are uniformly bounded, implying bounded variance of gradient estimates. The masked policy parameterization satisfies Assumption A3, ensuring differentiability within the feasible set. The primal–dual recursion constitutes a two-timescale stochastic approximation scheme. Standard results for two-timescale stochastic approximation specifically, the almost-sure convergence theorem established in Chapter 6 of [40] under Lipschitz and boundedness conditions satisfied by As-sumptions A4–A8 imply that the fast-timescale parameter 
+
+θk tracks the stationary points of the Lagrangian for quasi-static λ, while the slow-timescale dual variables ascend toward constraint satisfaction equilibria. Projected updates ensure non-negativity of λ and enforce complementary slackness at equilibrium. Because the feasible set Af (s) depends only on the state and not on θ, the stochastic approximation dynamics operate within a fixed parameterized policy class. Therefore, the iterates converge almost surely to a stationary saddle point of the Lagrangian. □
+
+C. Safety Gap for Post-hoc Filtering 
+
+We formalize post-hoc filtering as a two-stage procedure: 1) Learn an unconstrained policy 
+
+πU ∈ arg max  
+
+> π∈Π
+
+J(π).
+
+2) At execution time, apply a state-dependent filter operator 
+
+F : Π → Πfeas 
+
+that enforces feasibility by modifying the action distribu-tion only at states where infeasible actions are selected. We assume the filter preserves support over actions that the learned policy assigns nonzero probability, i.e., supp (F(πU )( ·| s)) ⊆ supp (πU (·| s)) ∪ A f (s).
+
+Theorem 3 (Safety Gap). There exists a finite-horizon CMDP instance such that for any post-hoc filtering operator 
+
+F satisfying the support-preservation condition above, 
+
+J(F(πU )) < max 
+
+> π∈Πfeas
+
+J(π).
+
+Proof. 
+
+Consider the horizon-2 CMDP defined as follows. States: 
+
+S = {s0, s 1, s ⊥}.
+
+Actions at s0:
+
+A(s0) = {ahack , a prog , a safe }.
+
+Transitions: 
+
+P (s⊥|s0, a hack ) = 1 ,P (s1|s0, a prog ) = 1 ,P (s⊥|s0, a safe ) = 1 ,P (s⊥|s1, a learn ) = 1 .
+
+Rewards: 
+
+r(s0, a hack ) = 1 , r(s0, a prog ) = 0 , r(s0, a safe ) = 0 ,r(s1, a learn ) = R, R ∈ (0 , 1) .
+
+Costs: 
+
+c2(s0, a hack ) = 1 , c2(s, a ) = 0 otherwise ,
+
+with budget d2 = 0 .Thus, ahack is infeasible and all other actions are feasible. Unconstrained optimization yields 
+
+πU (ahack |s0) = 1 ,
+
+since it maximizes immediate reward. The optimal feasible policy selects aprog at s0 and alearn at 
+
+s1, yielding return 
+
+max 
+
+> π∈Πfeas
+
+J(π) = R. 
+
+Because πU assigns zero probability to aprog , any filter satisfying support preservation cannot increase probability mass on aprog beyond what is already present in πU . Therefore, the filtered policy must assign probability zero to aprog at s0.Hence the executed return is 
+
+J(F(πU )) = 0 ,
+
+which is strictly less than R.Therefore, 
+
+J(F(πU )) < max 
+
+> π∈Πfeas
+
+J(π).
+
+□
+
+Scope of the Safety Gap Result.: The construction in Theorem 3 requires the unconstrained policy to assign all probability mass to the infeasible action, leaving the filter without recoverable support over feasible alternatives. This is a sufficient condition for the gap, not a necessary one; in settings where the unconstrained policy retains non-zero probability over feasible actions, a filter may partially recover return. The result is most directly applicable when engagement incentives strongly dominate precisely the reward hacking regime this paper targets, where the unconstrained policy concentrates on high-engagement, low-learning actions and effectively starves feasible alternatives of probability mass. Taken together, Theorems 1–3 establish that MC-CPO en-forces prerequisite safety structurally, converges to station-ary feasible points under standard stochastic approximation conditions, and can strictly outperform post-hoc filtering in terms of reward subject to safety constraints. These results provide formal justification for learning within the mastery-conditioned feasible set rather than correcting violations after unconstrained optimization. We now evaluate MC-CPO em-pirically in a simulated instructional environment. VI. E XPERIMENTS 
+
+This section evaluates whether MC-CPO enforces peda-gogical safety while preserving engagement performance, and whether optimization within the mastery-conditioned feasible set yields improved reward–safety tradeoffs relative to post-hoc filtering. All tabular experiments use 10 independent random seeds and 20,000 training episodes per method. Reported values are mean ± standard deviation across seeds. Final metrics are computed over the last 1,000 training episodes. 
+
+A. Evaluation Questions 
+
+We investigate three empirical questions: 1) Does MC-CPO satisfy structural and discounted safety constraints in practice? 2) Does optimizing within the mastery-conditioned feasible set outperform post-hoc filtering under equal safety budgets? 3) Do primal–dual updates converge when constraint satis-faction is achieved? 
+
+B. Tabular Validation 1) Environment: We construct a finite CMDP consistent with the theoretical formulation in Section III. The environment consists of:  
+
+> •
+
+|V| = 2 instructional concepts arranged in a prerequisite chain of depth 1,  
+
+> •
+
+two available actions at the initial state: 
+
+– hack : yields engagement reward rE = 1 and termi-nates the episode, but incurs constraint cost c = 1 ,
+
+– prog : yields reward rE = R with R = 0.6,satisfies all constraints ( c = 0 ), and produces mastery progression. Mastery progression is modeled as a Bernoulli update: 
+
+∆K =
+
+(
+
+1 if prog is selected and learning succeeds ,
+
+0 otherwise .
+
+Learning succeeds with probability 1 in the tabular set-ting, ensuring monotonic feasibility expansion consistent with Proposition 1. The prerequisite threshold is θmin = 0.5. The discount factor is γ = 0 .99 . Episodes terminate after a single action, making the environment analytically transparent. This configuration matches the minimal construction used in the Safety Gap Theorem and ensures full reproducibility. 
+
+2) Algorithms: We compare:  
+
+> •
+
+Unconstrained REINFORCE  
+
+> •
+
+Reward-Shaped REINFORCE  
+
+> •
+
+Post-hoc Filtering  
+
+> •
+
+MC-CPO (Tabular) 
+
+MC-CPO uses two-timescale primal–dual updates satisfying the step-size conditions of Theorem 2. 
+
+Reward Shaping. Reward shaping augments the engage-ment reward with a linear penalty on learning-related costs: 
+
+rshape  
+
+> t
+
+= rE (t) − α2c2(t) − α4c4(t),
+
+where α2, α 4 > 0 are fixed coefficients. We use α2 = 0 .5 and α4 = 1 .0 across all experiments. These coefficients were selected via a small pilot sweep and held fixed across all experiments to provide a consistent baseline. The 25-concept experiments additionally vary the shaping magnitude over λ ∈ { 0.05 , 0.1, 0.2, 0.5, 5.0}, finding no sensitivity to this choice at scale (Section VI-D). Because shaping optimizes a single scalar objective that trades reward against cost, it does not guarantee satisfaction of the discounted cost constraints. When engagement reward dominates the penalty terms, persistent reward hacking may remain optimal under the shaped objective.          
+
+> Fig. 1. Training return, π(hack ), and violation rate (mean ±std across 10 seeds).
+> Fig. 2. Dual variable λand constraint cost Jcduring MC-CPO training.
+
+3) Training Dynamics: Figure 1 shows training return, 
+
+π(hack ), and violation rate. Unconstrained training converges to π(hack ) ≈ 1, achieving near-maximal return ( 0.999 ±0.001 ) while violating constraints in nearly every episode. Post-hoc filtering exhibits identical training behavior, as filtering is applied only during evaluation. In contrast, MC-CPO drives π(hack ) toward zero and maintains violation rate near zero after initial transients. Final engagement return converges to 0.600 ± 0.001 , corresponding to the optimal safe policy. 
+
+4) Dual Convergence and Constraint Satisfaction: Figure 2 reports the dual variable λ and constraint cost Jc.The dual variable increases during early violations and stabilizes once constraint satisfaction is achieved. The final constraint cost averaged over the last 1,000 episodes is: 
+
+JMC-CPO  
+
+> c
+
+= 0 .0007 ± 0.0008 .
+
+This empirically supports Theorem 1 and demonstrates stable primal–dual convergence. 
+
+5) Safety Gap and RHSI: Tables II and III summarize final performance and safety metrics.                                                              
+
+> TABLE II FINAL PERFORMANCE (MEAN ±STD ;LAST 1,000 EPISODES ). Method Return π(hack )
+> Unconstrained 0.999 ±0.001 0.999 ±0.000
+> Post-hoc 0.0005 ±0.0006 0.999 ±0.000
+> MC-CPO 0.600 ±0.001 0.0004 ±0.0001 TABLE III SAFETY AND REWARD HACKING SEVERITY (MEAN ±STD ;LAST 1,000
+> EPISODES ). Method JcViol. Rate RHSI Unconstrained 0.998 ±0.001 0.998 ±0.001 0.998 ±0.001
+> Post-hoc (train) 0.000 ±0.000 0.000 ±0.000 0.998 ±0.001
+> MC-CPO 0.0007 ±0.0008 0.0007 ±0.0008 0.0004 ±0.0001
+
+RHSI is computed as defined in Section III. Unconstrained and post-hoc methods achieve RHSI ≈ 0.998 , reflecting high engagement return combined with near-total constraint violation. MC-CPO reduces RHSI to 0.0004 ± 0.0001 , indi-cating that constraint satisfaction and the engagement–mastery tradeoff are achieved simultaneously. MC-CPO achieves near-zero violation while preserving substantially higher return than post-hoc filtering. A Welch t-test comparing MC-CPO and post-hoc filtered return yields: 
+
+t = 2438 .68 , p < 0.01 .
+
+The effect size is large (Cohen’s d = 1149 .60 ). This unusually high value reflects the structural separation between the poli-cies: post-hoc filtering collapses return toward zero while MC-CPO converges deterministically to the safe optimum rather than exhibiting distributional overlap. These results empirically validate the Safety Gap Theorem: optimizing within the mastery-conditioned feasible set strictly dominates post-hoc filtering under equal safety constraints.    
+
+> Fig. 3. Final return across methods (mean ±std across 10 seeds).
+
+6) Robustness to Reward Gap: We evaluate robustness across reward magnitudes R ∈ { 0.5, 0.6, 0.7}.Across all settings:  
+
+> •
+
+π(hack ) < 5 × 10 −4, 
+
+> •
+
+Jc ≈ 7 × 10 −4, 
+
+> •
+
+RHSI remains bounded near R, 
+
+> •
+
+Final return scales proportionally with R.These results indicate that reward hacking elimination is structural rather than tuned to a specific reward scale. 
+
+7) Extended Tabular Validation (Multi-Step Stochastic CMDP): To evaluate robustness beyond the single-step min-imal construction, we consider a multi-step tabular CMDP with stochastic mastery transitions and dynamic feasibility expansion. 
+
+a) Environment.: The environment contains |V| = 5
+
+instructional concepts arranged in a prerequisite chain: 
+
+1 → 2 → 3 → 4 → 5.
+
+Episodes have horizon T = 5 and discount factor γ = 0 .99 .The state is st = ( Kt, t ) where Kt ∈ { 0, 1}5 denotes binary mastery. The feasible action set expands with mastery: 
+
+Af (st) = {1} ∪ { i ∈ { 2, . . . , 5} : Kt,i −1 = 1 }.
+
+A special action hack remains available at all timesteps and yields engagement reward rE = 1 .0 but produces no mastery progression. Selecting a feasible concept yields engagement reward rE = 0 .6 and increases mastery stochastically with probability plearn = 0 .8 when the concept is not yet mastered. Mastery change per step is: 
+
+∆Kt =
+
+> 5
+
+X
+
+> i=1
+
+(Kt+1 ,i − Kt,i ).
+
+b) Costs.: We define three discounted costs:  
+
+> •
+
+c2(t) = 1[at ∈ A f (st), a t̸ = hack , ∆Kt = 0] , 
+
+> •
+
+c3(t) = 1[at /∈ A f (st)] , 
+
+> •
+
+c4(t) = 1[rE (t) > 0, ∆Kt = 0] .
+
+c) Methods and protocol.: We evaluate Unconstrained ,
+
+Post-hoc Filtered , and MC-CPO under an identical training budget of 200,000 episodes per run (10 random seeds per method). Reported values are mean ± standard deviation across seeds, computed over the final 1,000 episodes (training episodes for Unconstrained and MC-CPO; evaluation episodes with action filtering for Post-hoc). The 200,000-episode budget corresponds to approximately one million interaction steps (5 steps per episode), matching the experience scale used in the neural experiments. 
+
+d) Main results.: Performance metrics are reported in Table IV, and safety metrics in Table V. Unconstrained training converges to a high hacking proba-bility and extremely large RHSI, indicating engagement gains obtained without corresponding mastery improvement. The extreme variance in unconstrained raw RHSI ( σ > μ ) reflects near-zero mastery gain in some seeds, where the ratio form approaches instability; this motivates the product-form RHSI adopted in the neural experiments. Post-hoc filtering eliminates hacking at evaluation time but incurs a persistent reward gap. MC-CPO reduces π(hack )
+
+while maintaining substantially higher return than post-hoc filtering, and yields lower RHSI, consistent with optimizing inside the mastery-conditioned feasible set. TABLE V EXTENDED CHAIN CMDP SAFETY METRICS (MEAN ± STD ; LAST 1,000                                                                     
+
+> EPISODES ; 10 SEEDS ). Method Jc2Jc4
+> Unconstrained 0.069 ±0.111 4.637 ±0.427
+> Post-hoc 3.626 ±0.326 3.626 ±0.326
+> MC-CPO 1.098 ±0.498 2.592 ±0.993
+> Fig. 4. Extended chain CMDP learning curves (mean ±std across 10 seeds). Left: return vs episodes. Right: RHSI vs episodes. TABLE IV EXTENDED CHAIN CMDP PERFORMANCE (MEAN ±STD ;LAST 1,000
+> EPISODES ; 10 SEEDS ). RHSI REPORTED IN RAW FORM ;THE NORMALIZED FORM (S ECTION III) APPLIES WHERE VIOLATION RATES ARE AVAILABLE .Method Return π(hack )RHSI (raw) Unconstrained 4.768 ±0.215 0.932 ±0.110 (2 .45 ±2.58) ×10 6
+> Post-hoc 2.941 ±0.000 0.000 ±0.000 2.406 ±0.508
+> MC-CPO 3.538 ±0.553 0.304 ±0.281 2.179 ±1.909
+
+e) Interpretation.: The extended chain stress-tests the safety gap mechanism under multi-step interaction and stochastic mastery. Unconstrained policies tend to select hack predominantly, which drives raw RHSI to extreme values reflecting near-zero mastery gain relative to engagement return. Post-hoc filtering prevents hacking at evaluation time but does not optimize for feasible progression, resulting in a persistent reward gap. MC-CPO appears to improve the reward–learning balance by optimizing under mastery-conditioned feasibility and discounted costs, yielding a higher-return safe policy than post-hoc filtering, though variability across seeds suggests sensitivity to initialization in this stochastic setting. 
+
+C. Neural Policy Implementation 
+
+We next evaluate MC-CPO under function approximation using a PPO backbone to assess whether the theoretical guarantees observed in the tabular regime extend to neural policies. 
+
+1) Simulation Environment: We simulate an instructional environment with |V| = 15 concepts. Mastery evolves ac-cording to a Bayesian Knowledge Tracing (BKT) update with learning rate η = 0.08 . A concept becomes eligible once mastery exceeds a prerequisite threshold θmin = 0 .7.Engagement reward rE (s, a ) combines base engagement, novelty bonus, and difficulty penalty. The reward is bounded and satisfies Assumption A4. Episodes have horizon T = 100 steps and are evaluated over 200 episodes per seed across 10 seeds. 
+
+2) Baselines: We compare:  
+
+> •
+
+Unconstrained PPO  
+
+> •
+
+Reward-Shaped PPO  
+
+> •
+
+Post-hoc Filtered PPO  
+
+> •
+
+MC-CPO (Neural) 
+
+All methods use identical two-layer MLP policies with hidden sizes (64 , 64) and identical optimizer settings. Post-hoc filtering shares the same evaluation masking as the unconstrained baseline and therefore yields identical final metrics in the neural setting. 
+
+Reward Shaping. Reward shaping augments the engage-ment reward with a linear penalty on learning-related costs: 
+
+rshape  
+
+> t
+
+= rE (t) − α2c2(t) − α4c4(t),
+
+where α2, α 4 > 0 are fixed coefficients. We use α2 = 0 .5 and α4 = 1 .0 across all neural experi-ments. Because shaping optimizes a single scalar objective rather than enforcing explicit cost constraints, it does not guaran-tee satisfaction of the discounted safety budgets. Diagnostic checks confirm shaping is active; however, in this environment the shaped objective converges to a similar fixed point as unconstrained training, indicating that linear penalties are insufficient to eliminate reward hacking when engagement incentives dominate mastery progression. 
+
+3) Evaluation Metrics: We report:  
+
+> •
+
+Engagement return J(π) 
+
+> •
+
+Discounted costs Jc2 , J c3 , J c4 
+
+> •
+
+RHSI  
+
+> •
+
+Frontier event rate Constraint budgets are defined relative to the unconstrained baseline as 
+
+di = κi ¯J Uci ,
+
+where ¯J Uci denotes the mean discounted cost under uncon-strained training. This normalization ensures that constraint magnitudes are scale-invariant across environments and avoids arbitrarily se-lecting absolute thresholds in synthetic instructional settings. Under this formulation, safety is defined relative to observed unconstrained behavior, providing a consistent and repro-ducible reference point for comparison across regimes. The theoretical guarantees of MC-CPO apply with re-spect to the specified budgets. In practical ITS deployments, budget values would typically be externally specified based on pedagogical standards or institutional policy rather than baseline performance. A constraint is considered satisfied if 
+
+¯Jci ≤ (1 + τ )di with tolerance τ = 0 .1.4) Main Results: Table VI summarizes final performance under neural function approximation. Results are reported as mean ± standard deviation across 10 seeds, with each seed evaluated over 200 episodes. 
+
+TABLE VI NEURAL FINAL EVALUATION RESULTS (MEAN ± STD OVER 10 SEEDS ;RHSI REPORTED IN RAW FORM ). C ONSTRAINT SATISFACTION :
+
+¯Jci ≤ (1 + τ )di , τ = 0 .1.Method Return RHSI (raw) Jc2 Jc3 Jc4                                             
+
+> Unconstrained 34.64 ±0.37 69.92 ±0.85 0.917 19.02 27.14 Reward-Shaped 34.64 ±0.37 69.92 ±0.85 0.917 19.02 27.14 Post-hoc 34.64 ±0.37 69.92 ±0.85 0.917 19.02 27.14
+> MC-CPO 32.73 ±0.48 44.47 ±0.96 0.871 9.69 23.14
+> MC-CPO (no frontier) 32.68 ±0.39 44.51 ±0.81 0.872 9.69 23.12
+
+Unconstrained, reward-shaped, and post-hoc methods achieve identical engagement return ( 34 .64 ± 0.37 ) and high raw RHSI ( 69 .92 ± 0.85 ), suggesting systematic engagement without proportional mastery gains. In the neural setting, reward shaping introduces a small additive penalty relative to engagement reward; diagnostic checks confirm shaping is active but appears to produce negligible long-run deviation in this environment. Post-hoc filtering shares the same evaluation masking as the unconstrained baseline, yielding identical final metrics. MC-CPO reduces engagement modestly (32 .73 ± 0.48 )while substantially lowering raw RHSI ( 44 .47 ± 0.96 ), sug-gesting improved alignment between engagement and mastery improvement. Discounted costs are reduced across all three constraints: 
+
+Jc2 = 0 .871 , Jc3 = 9 .69 , Jc4 = 23 .14 ,
+
+all within the (1 + τ )di thresholds under the stated tolerance (τ = 0 .1), indicating that MC-CPO approximately satisfies all pedagogical safety constraints under neural approximation. Figure 5 shows engagement return over training steps. Figure 6 reports RHSI trajectories. Figure 7 plots discounted cost evolution. Figure 8 presents the frontier mixing ablation. Overall, MC-CPO achieves an improved reward–safety tradeoff relative to baseline PPO variants, reducing reward hacking severity while maintaining competitive engagement performance. 
+
+Fig. 5. Engagement return over training steps. 
+
+Fig. 6. Reward Hacking Severity Index (RHSI) over training steps. 
+
+Fig. 7. Discounted cost trajectories Jc2 , J c3 , J c4 over training. Fig. 8. Frontier mixing ablation: MC-CPO ( ϵmin = 0 .05 ) versus no frontier mixing ( ϵmin = 0 ). 
+
+D. Scaling to Twenty-Five Concepts 
+
+We extend the neural environment to |V| = 25 concepts, representative of realistic tutoring curricula with deep pre-requisite graphs, to investigate whether MC-CPO’s structural guarantees may hold at this scale. Budgets are re-anchored from unconstrained baseline costs at this scale. Table VII reports results over 10 seeds and 1M steps. Among the methods evaluated, MC-CPO is the only one that separates from the unconstrained baseline, reducing raw RHSI from 70 .52 to 39 .16 while achieving a constraint satisfaction rate of 80% (8 of 10 seeds). The two unsatisfied seeds violate the cognitive demand constraint ( C3) by small margins, while satisfying C2 and C4 in all cases. Unconstrained, posthoc, and reward-shaped policies satisfy no constraint budgets across any seed. 
+
+Reward shaping at scale.: Reward shaping with λ ∈{0.05 , 0.1, 0.2, 0.5, 5.0} produces policies indistinguishable from the unconstrained baseline (return 34 .79 , raw RHSI 
+
+70 .52 , constant across all λ). At 25-concept scale, per-step mastery increments ∆Kt ≈ 0 because the prerequisite graph depth creates a sparse learning signal; the shaping term λ·∆Kt
+
+consequently contributes near-zero gradient regardless of λ.These results suggest that additive penalty methods may be structurally ineffective in the sparse-learning regime that characterises realistic tutoring deployments at scale a setting where MC-CPO’s structural constraint approach appears to remain effective.                                              
+
+> TABLE VII 25-CONCEPT NEURAL RESULTS (10 SEEDS , 1M STEPS ). R AW RHSI
+> REPORTED . C ONSTRAINT SATISFACTION RATE REFLECTS SEEDS SATISFYING ALL THREE BUDGETS WITHIN TOLERANCE τ= 0 .1.
+> Method Return RHSI (raw) Sat. Rate
+> Unconstrained 34 .79 ±0.30 70 .52 ±0.68 0% Reward Shaped (all λ)34 .79 ±0.30 70 .52 ±0.68 0% Posthoc 34 .79 ±0.30 70 .52 ±0.68 0%
+> MC-CPO 31 .97 ±0.31 39 .16 ±2.02 80%
+> MC-CPO (no frontier) 32 .11 ±0.52 40 .05 ±2.93 70%
+
+E. Mastery Estimation Robustness 
+
+To test the Mastery Observability limitation (Section III), we inject Gaussian noise σ ∈ { 0.0, 0.05 , 0.1, 0.2} onto the mas-tery vector Kt at inference time only; training is unchanged. Table VIII reports MC-CPO performance across 10 seeds. MC-CPO degrades gracefully: return drops less than 0.4% 
+
+at σ = 0.2 relative to the clean baseline, and constraint satisfaction holds at 100% across all noise levels. This in-dicates that the structural masking mechanism is robust to moderate estimation error without retraining. To contextualise these noise levels, BKT parameter estimation error in practice has been reported in the range of 0.05–0.15 in mastery probability units [19], suggesting that σ = 0 .1 represents a realistic perturbation magnitude. The robustness of constraint satisfaction at this level may provide some practical assurance for deployment under estimated mastery, though validation on real student data remains necessary before deployment conclusions can be drawn.                                   
+
+> TABLE VIII MC-CPO ROBUSTNESS TO MASTERY OBSERVATION NOISE (10 SEEDS ).
+> σReturn RHSI (raw) Satisfied
+> 0.00 32 .68 ±0.43 44 .47 ±0.95 100% 0.05 32 .58 ±0.40 44 .60 ±0.62 100% 0.10 32 .58 ±0.40 44 .61 ±0.61 100% 0.20 32 .58 ±0.39 44 .60 ±0.62 100%
+
+VII. D ISCUSSION AND LIMITATIONS 
+
+A. Discussion 
+
+Across both tabular and neural regimes, the empirical results reinforce a structural distinction between reward modification and constraint-aware optimization. Unconstrained and reward-shaped policies achieve high engagement return but exhibit elevated Reward Hacking Sever-ity Index (RHSI), indicating systematic decoupling between engagement signals and mastery progression. In the neural regime, reward shaping is active in the learning signal, yet converges to a policy closely aligned with the unconstrained solution. This behavior underscores a fundamental limitation of linear penalty methods: scalarized objectives may atten-uate undesirable behavior but do not guarantee satisfaction of discounted safety constraints when engagement incentives dominate. Post-hoc filtering eliminates infeasible actions at evaluation time but does not modify the training objective. In the neural configuration, where feasibility masking is applied uniformly at evaluation, post-hoc and unconstrained policies share identi-cal asymptotic metrics. This illustrates a structural limitation of ex post correction: filtering after optimization cannot reshape the policy landscape explored during learning, and therefore cannot close the reward–safety gap induced during training. In contrast, MC-CPO embeds mastery-conditioned feasibil-ity directly into the constrained optimization problem. Across environments, MC-CPO reduces RHSI while preserving com-petitive engagement return and maintaining discounted costs within specified tolerance thresholds. The extended chain results further demonstrate that this separation persists un-der multi-step interaction and stochastic mastery transitions, suggesting that the safety gap is not an artifact of minimal constructions. The frontier mixing ablation provides additional insight into exploration dynamics. Although feasibility expansion events occur frequently during training (approximately 0.50 events per update), asymptotic performance differences between frontier-enabled and frontier-disabled variants are modest in this environment. This suggests that frontier mixing primarily stabilizes early exploration rather than altering long-run equi-libria, while preserving structural feasibility guarantees. The 25-concept experiments extend this pattern to a more realistic curriculum scale. MC-CPO remains the only method to separate from the unconstrained baseline, while reward shaping collapses to an unconstrained equivalent due to neg-ligible per-step mastery signal. The mastery noise analysis further confirms that structural feasibility masking is robust to moderate estimation error, with constraint satisfaction main-tained at 100% up to σ = 0 .2. Taken together, these findings support the central thesis of the paper: mitigating reward hack-ing in instructional reinforcement learning requires structural constraint modeling rather than additive reward penalties or ex post action masking. 
+
+B. Limitations 
+
+Several limitations qualify the scope of the present results. 
+
+Simulation fidelity. The instructional environments rely on stylized mastery dynamics and synthetic engagement rewards. While these abstractions isolate the reward–learning alignment problem, they do not capture heterogeneous learner behavior, non-stationary preferences, or long-horizon educational effects observed in real deployments. 
+
+Mastery observability. The theoretical analysis assumes mastery is observed. In practice, mastery must be estimated via models such as Bayesian Knowledge Tracing or neural knowledge tracing. Estimation error may induce feasibility misclassification, potentially restricting valid actions or admit-ting premature progression. Although the structural masking mechanism remains well-defined under estimated mastery, performance guarantees may depend on estimator calibration. 
+
+Function approximation gap. Convergence guarantees are established in the finite tabular regime. Neural experiments enforce constraint satisfaction up to a tolerance threshold to account for stochastic gradient noise and approximation error. Extending formal primal–dual guarantees to deep function approximation remains an open theoretical problem. 
+
+Budget calibration. Constraint budgets in neural exper-iments are defined relative to unconstrained baseline costs to ensure scale invariance across synthetic environments. This yields a relative safety criterion: a policy satisfying 
+
+di = κiJci (πunc ) is safer than the unconstrained baseline by construction, but the absolute pedagogical meaning of that safety level depends on how unsafe the unconstrained baseline itself is. In real ITS deployments, budgets would typically be grounded in domain knowledge for instance, requiring measurable mastery progress in at least a specified fraction of instructional windows rather than anchored to observed base-line behaviour. Translating such domain-grounded thresholds into the CMDP budget formulation constitutes an important direction for future deployment work. 
+
+Equity considerations. Prerequisite-based feasibility ex-pansion may differentially affect learners who acquire con-cepts at varying rates. A learner with slower mastery progres-sion will experience a more restricted feasible action space for longer, potentially receiving less diverse instruction than a faster peer. This differential access constitutes an equity concern distinct from traditional algorithmic fairness, as it arises from the structure of the mastery-conditioned constraint rather than from bias in the reward signal. Future work should audit feasibility progression across simulated learner sub-groups defined by different mastery trajectories and consider fairness-aware constraint formulations that bound differential restriction across learner profiles. 
+
+C. Future Work 
+
+Future research should extend MC-CPO to partially ob-servable instructional settings, incorporate richer cognitive diagnostic models, and evaluate performance on real-world tutoring datasets. Formal analysis of constrained policy op-timization under deep function approximation and fairness-aware feasibility constraints represents an important theoretical direction. VIII. C ONCLUSION 
+
+This paper introduced mastery-conditioned constrained pol-icy optimization (MC-CPO), a structural framework for mit-igating reward hacking in instructional reinforcement learn-ing. By embedding prerequisite feasibility and discounted safety constraints directly into the CMDP, MC-CPO sepa-rates engagement maximization from pedagogical safety with-out relying on scalar reward penalties or ex post filtering. Theoretical analysis establishes conditions for stable primal dual optimization, and empirical validation across minimal, extended, and neural environments demonstrates improved reward safety tradeoffs relative to unconstrained and reward-shaped baselines. These results suggest that modeling peda-gogical feasibility as a structural constraint, rather than as a reward modification, provides a principled foundation for safer adaptive instructional policies. REFERENCES [1] R. S. Sutton and A. G. Barto, Reinforcement Learning: An Introduction , 2nd ed. MIT Press, 2018. [Online]. Available: http://incompleteideas.net/book/the-book-2nd.html [2] B. F. Mon, A. Wasfi, M. Hayajneh, A. Slim, and N. A. Ali, “Reinforce-ment learning in education: A literature review,” Informatics , vol. 10, no. 3, p. 74, 2023. [3] S. Doroudi, V. Aleven, and E. Brunskill, “Where’s the reward? A review of reinforcement learning for instructional sequencing,” International Journal of Artificial Intelligence in Education , vol. 29, no. 4, pp. 568– 620, 2019. [4] D. Amodei, C. Olah, J. Steinhardt, P. Christiano, J. Schulman, and D. Man´ e, “Concrete problems in AI safety,” arXiv preprint arXiv:1606.06565 , 2016. [Online]. Available: https://arxiv.org/abs/1606. 06565 [5] J. Skalse, N. Hansen, R. O. Duda et al. , “Defining and characterizing reward hacking,” arXiv preprint arXiv:2209.13085 , 2022. [Online]. Available: https://arxiv.org/abs/2209.13085 [6] J. Ji, M. Liu, J. Dai, X. Pan, C. Zhang, C. Bian, C. Zhang, R. Sun, Y. Wang, and Y. Yang, “Safe RLHF: Safe reinforcement learning from human feedback,” in International Conference on Learning Representations (ICLR) , 2024. [Online]. Available: https: //openreview.net/forum?id=TyFrPOKYXw [7] T. C. Frommeyer et al. , “Reinforcement learning and its clinical applications: Challenges with reward specification,” Healthcare , vol. 13, no. 14, p. 1752, 2025. [Online]. Available: https://www.mdpi.com/ 2227-9032/13/14/1752 [8] D. Hadfield-Menell, S. Milli, P. Abbeel, S. J. Russell, and A. Dragan, “Inverse reward design,” arXiv preprint arXiv:1711.02827 , 2017. [Online]. Available: https://arxiv.org/abs/1711.02827 [9] I. F. Shihab, S. Akter, and A. Sharma, “Detecting proxy gaming in RL and LLM alignment via evaluator stress tests,” arXiv preprint arXiv:2507.05619 , 2025. [Online]. Available: https://arxiv.org/abs/2507. 05619 [10] E. Altman, Constrained Markov Decision Processes . Chapman and Hall/CRC, 1999. [11] M. L. Puterman, Markov Decision Processes: Discrete Stochastic Dy-namic Programming . John Wiley & Sons, 1994. [12] J. Achiam, D. Held, A. Tamar, and P. Abbeel, “Constrained policy optimization,” in Proceedings of the 34th International Conference on Machine Learning (ICML) , 2017. [Online]. Available: https://arxiv.org/abs/1705.10528 [13] Y. Chow, O. Nachum, E. Du´ enez-Guzm´ an, and M. Ghavamzadeh, “A Lyapunov-based approach to safe reinforcement learning,” arXiv preprint arXiv:1805.07708 , 2018. [Online]. Available: https://arxiv.org/ abs/1805.07708 [14] C. Tessler, D. J. Mankowitz, and S. Mannor, “Reward constrained policy optimization,” in International Conference on Learning Representations (ICLR) , 2019. [Online]. Available: https://arxiv.org/abs/1805.11074 [15] A. Wachi, X. Shen, and Y. Sui, “A survey of constraint formulations in safe reinforcement learning,” arXiv preprint arXiv:2402.02025 , 2024. [Online]. Available: https://arxiv.org/abs/2402.02025 [16] W. Zhao, T. He, R. Chen, T. Wei, and C. Liu, “State-wise safe reinforcement learning: A survey,” arXiv preprint arXiv:2302.03122 ,2023. [Online]. Available: https://arxiv.org/abs/2302.03122 [17] Y. Yang, Z. Zheng, S. E. Li, J. Duan, J. Liu, X. Zhan, and Y.-Q. Zhang, “Feasible policy iteration for safe reinforcement learning,” arXiv preprint arXiv:2304.08845 , 2023. [Online]. Available: https://arxiv.org/abs/2304.08845 [18] Y. Yang, Y. Sun, W. Li, B. Jiang, T. Zhang, and S. E. Li, “Feasible policy optimization for safe reinforcement learning,” in Submitted to ICLR 2026 (OpenReview) , 2025, under review. [Online]. Available: https://openreview.net/forum?id=YlU6SELb6C [19] A. T. Corbett and J. R. Anderson, “Knowledge tracing: Modeling the acquisition of procedural knowledge,” User Modeling and User-Adapted Interaction , vol. 4, no. 4, pp. 253–278, 1994. [20] C. Piech, J. Bassen, J. Huang, S. Ganguli, M. Sahami, L. Guibas, and J. Sohl-Dickstein, “Deep knowledge tracing,” in Advances in Neural Information Processing Systems (NeurIPS) , 2015. [Online]. Available: https://arxiv.org/abs/1506.05908 [21] Y. Deng, J. Ren et al. , “Towards goal-oriented intelligent tutoring systems in online education,” arXiv preprint arXiv:2312.10053 , 2023. [Online]. Available: https://arxiv.org/abs/2312.10053 [22] A. Kushwaha, K. Ravish, P. Lamba, and P. Kumar, “A survey of safe reinforcement learning and constrained MDPs: State of the art and open problems,” arXiv preprint arXiv:2505.17342 , 2025. [Online]. Available: https://arxiv.org/abs/2505.17342 [23] J. Garc´ ıa and F. Fern´ andez, “A comprehensive survey on safe reinforcement learning,” Journal of Machine Learning Research ,vol. 16, no. 42, pp. 1437–1480, 2015. [Online]. Available: https: //www.jmlr.org/papers/v16/garcia15a.html [24] S. Gu, L. Yang, Y. Du, G. Chen, F. Walter, J. Wang, and A. Knoll, “A review of safe reinforcement learning: Methods, theories, and applica-tions,” IEEE Transactions on Pattern Analysis and Machine Intelligence ,vol. 46, no. 5, pp. 3489–3508, 2024. [25] G. Dalal, K. Dvijotham, M. Vecerik, T. Hester, C. Paduraru, and Y. Tassa, “Safe exploration in continuous action spaces,” 
+
+arXiv preprint arXiv:1801.08757 , 2018. [Online]. Available: https: //arxiv.org/abs/1801.08757 [26] A. Wachi, W. Hashimoto, X. Shen, and K. Hashimoto, “Safe exploration in reinforcement learning: A generalized formulation,” in Advances in Neural Information Processing Systems (NeurIPS) , 2023. [Online]. Available: https://openreview.net/forum?id=dQLsvKNwZC [27] Y. Yao, H. Liu et al. , “Constraint-conditioned policy optimization for versatile safe reinforcement learning,” in Advances in Neural Information Processing Systems (NeurIPS) , 2023. [Online]. Available: https://arxiv.org/abs/2310.03718 [28] A. Bura, A. HasanzadeZonuzy, D. Kalathil, S. Shakkottai, and J.-F. Chamberland, “DOPE: Doubly optimistic and pessimistic exploration for safe reinforcement learning,” arXiv preprint arXiv:2112.00885 ,2021. [Online]. Available: https://arxiv.org/abs/2112.00885 [29] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, “Prox-imal policy optimization algorithms,” arXiv preprint arXiv:1707.06347 ,2017. [Online]. Available: https://arxiv.org/abs/1707.06347 [30] A. Pan, K. Bhatia, and J. Steinhardt, “The effects of reward misspecification: Mapping and mitigating misaligned models,” in 
+
+International Conference on Learning Representations (ICLR) , 2022. [Online]. Available: https://arxiv.org/abs/2201.03544 [31] L. Gao, J. Schulman, and J. Hilton, “Scaling laws for reward model overoptimization,” in Proceedings of the 40th International Conference on Machine Learning (ICML) , 2023. [Online]. Available: https://arxiv.org/abs/2210.10760 [32] E. Opryshko, U. Jain, and I. Gilitschenski, “Modification-considering value learning for reward hacking mitigation in RL,” in Submitted to ICML 2025 (OpenReview) , 2025, under review. [Online]. Available: https://openreview.net/forum?id=OmYqzp8NO7 [33] A. Y. Ng, D. Harada, and S. Russell, “Policy invariance under reward transformations: Theory and application to reward shaping,” in Proceed-ings of the 16th International Conference on Machine Learning (ICML) ,1999, pp. 278–287. [34] P. Christiano, J. Leike, T. B. Brown, M. Martic, S. Legg, and D. Amodei, “Deep reinforcement learning from human preferences,” in 
+
+Advances in Neural Information Processing Systems (NeurIPS) , 2017. [Online]. Available: https://arxiv.org/abs/1706.03741 [35] B. Ibarz, J. Leike, T. Pohlen et al. , “Reward learning from human preferences and demonstrations in Atari,” in 
+
+Advances in Neural Information Processing Systems (NeurIPS) ,2018. [Online]. Available: https://proceedings.neurips.cc/paper/2018/ hash/8cbe9ce23f42628c98f80fa0fac8b19a-Abstract.html [36] K. VanLehn, “The relative effectiveness of human tutoring, intelligent tutoring systems, and other tutoring systems,” Educational Psychologist ,vol. 46, no. 4, pp. 197–221, 2011. [37] K. R. Koedinger and A. T. Corbett, “Cognitive tutors: Technology bring-ing learning sciences to the classroom,” in The Cambridge Handbook of the Learning Sciences , R. K. Sawyer, Ed. Cambridge University Press, 2006, pp. 61–77. [38] A. N. Rafferty, E. Brunskill, T. L. Griffiths, and P. Shafto, “Faster teaching via POMDP planning,” in Artificial Intelligence in Education .Springer, 2011, pp. 280–287. [39] P. Ammanabrolu and M. Hausknecht, “Graph constrained reinforcement learning for natural language action spaces,” 
+
+arXiv preprint arXiv:2001.08837 , 2020. [Online]. Available: https://arxiv.org/abs/2001.08837 [40] V. S. Borkar, Stochastic Approximation: A Dynamical Systems View-point . Cambridge University Press, 2008. 
+
+APPENDIX 
+
+Define the frontier at time t:
+
+Ft = Af (st) \ A f (st−1).
+
+Define the mastery expansion indicator Et = 1[|F t| > 0] and mixing coefficient ϵt = ϵmin · Et, where ϵmin ∈ (0 , 1) is a small constant. The frontier policy is: 
+
+μt(a | st) = 
+
+( 1 
+
+> |F t|
+
+, a ∈ F t,
+
+0, otherwise .The executed policy is ˜πθ,t = (1 − ϵt)πθ + ϵtμt, with importance-sampling correction wt = πθ (at | st)/˜πθ,t (at | st)
+
+applied to policy gradients. 
+
+Minimum Mixing and Assumption A7.: Strict lower bounds on ˜π are not enforced via hard logit constraints. Instead, frontier mixing with ϵmin = 0 .05 periodically in-jects uniform mass over newly feasible actions, mitigating probability collapse. No degenerate zero-support behavior was observed empirically. 
+
+Ablation.: Across 10 seeds, the mean frontier event rate is 0.5016 ±0.0149 events per update. Final performance differ-ences between MC-CPO and MC-CPO (no frontier, ϵmin = 0 )are small, indicating that frontier mixing stabilizes early explo-ration without significantly altering asymptotic performance.

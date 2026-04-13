@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.06647v1/fig-001.webp",
+      "caption": "Figure 1: Illustration of feedback adaptation in deployed RAG systems. (Upper) Under training-based update paradigms, feedback is incorporated only after offline or periodic retraining, resulting in substantial correction lag. Even after expert feedback identifies an incorrect answer, the system may continue to reproduce the same error until the update is completed. (Lower) Inference-time feedback incorporation enables immediate behavioral correction by conditioning generation on stored feedback, achieving low correction lag and reliable generalization to semantically related queries.",
+      "page": 2,
+      "index": 1,
+      "width": 931,
+      "height": 408
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06647v1/fig-002.webp",
+      "caption": "Table 7: Qualitative comparison under a realistic retrieval failure scenario. We present a representative opendomain QA example where retrieved evidence is semantically related but weakly aligned with the true query intent, a common failure mode in deployed RAG systems. For clarity, we show the top-2 retrieved contexts for both standard RAG and PatchRAG, along with the feedback question-answer patches retrieved from Eq. 1. Note that",
+      "page": 14,
+      "index": 2,
+      "width": 919,
+      "height": 736
+    },
+    {
+      "url": "assets/figures/arxiv/2604.06647v1/fig-003.webp",
+      "caption": "Table 4: Performance across different retrieval backbones under feedback adaptation. We report results before (< t) and after incorporating expert feedback at time t. Green numbers indicate post-feedback performance gains. Across sparse (BM25) and dense (DPR, bge-m3) retrievers, incorporating feedback consistently improves post-feedback performance, with stronger embedding spaces enabling more reliable propagation to semantically related queries.",
+      "page": 8,
+      "index": 3,
+      "width": 771,
+      "height": 196
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-001.webp",
+      "caption": "Table 1: Comprehensive performance comparison across five datasets and knowledge integration quality metrics with BM25 retriever. Results are average five metrics. Reference usage metrics evaluate hallucination mitigation and response coherence. -T denotes thinking mode. Bold indicates the best overall performance within each model family.",
+      "page": 6,
+      "index": 1,
+      "width": 904,
+      "height": 851
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-002.webp",
+      "caption": "Figure 2: Attention distribution heatmaps for different decomposition granularities.",
+      "page": 6,
+      "index": 2,
+      "width": 933,
+      "height": 226
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-003.webp",
+      "caption": "Table 25: Case study on 2023 neuromorphic computing advancements.",
+      "page": 25,
+      "index": 3,
+      "width": 454,
+      "height": 1090
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-004.webp",
+      "caption": "Table 16: Performance comparison across different retrievers using Qwen3-14B-T. “Avg” represents average performance across all datasets and metrics. “Hal.” represents hallucination rate (%).",
+      "page": 21,
+      "index": 4,
+      "width": 643,
+      "height": 290
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-005.webp",
+      "caption": "Table 20: Performance improvement of thinking mode over standard mode across query complexities, with efficiency metrics. Values represent percentage improvements averaged across all five datasets.",
+      "page": 22,
+      "index": 5,
+      "width": 635,
+      "height": 323
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-006.webp",
+      "caption": "Figure 1: Overview of the GUARANTRAG framework. (1) Decoupling: We generate an Inner-Answer (reasoning) and a Refer-Answer (evidence). The Refer-Answer is trained via Contrastive DPO to explicitly prefer retrieved docs over parametric priors. (2) Fusion: A Joint Decoding mechanism dynamically merges the reasoning flow of the Inner-Answer with the factual content of the Refer-Answer during inference.",
+      "page": 3,
+      "index": 6,
+      "width": 900,
+      "height": 600
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-007.webp",
+      "caption": "Table 12: Detailed results on Wizard of Wikipedia dataset with BM25 retriever.",
+      "page": 18,
+      "index": 7,
+      "width": 637,
+      "height": 696
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-008.webp",
+      "caption": "Table 21: Case study on metformin and cardiovascular outcomes in diabetes.",
+      "page": 23,
+      "index": 8,
+      "width": 454,
+      "height": 769
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-009.webp",
+      "caption": "Table 22: Case study on the economic transformation during the Meiji Restoration.",
+      "page": 23,
+      "index": 9,
+      "width": 454,
+      "height": 990
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-010.webp",
+      "caption": "Figure 4: Performance degradation with increasing retrieval noise. x-axis denotes the extra noisy documents added to the model.",
+      "page": 8,
+      "index": 10,
+      "width": 437,
+      "height": 289
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-011.webp",
+      "caption": "Figure 3: Performance analysis of GUARANTRAG compared to SOLAR and SelfRAG across different (a) query lengths, (b) reasoning complexities, and (c) reference document lengths. Y-axis shows the average performance score across all metrics.",
+      "page": 8,
+      "index": 11,
+      "width": 878,
+      "height": 260
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-012.webp",
+      "caption": "Table 13: Detailed results on HotpotQA dataset with BM25 retriever. Note the particularly strong improvements on this multi-hop reasoning task.",
+      "page": 19,
+      "index": 12,
+      "width": 637,
+      "height": 696
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-013.webp",
+      "caption": "Table 11: Detailed results on TruthfulQA dataset with BM25 retriever.",
+      "page": 17,
+      "index": 13,
+      "width": 637,
+      "height": 696
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-014.webp",
+      "caption": "Table 23: Case study on quantum tunneling in stellar fusion processes.",
+      "page": 24,
+      "index": 14,
+      "width": 454,
+      "height": 1130
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-015.webp",
+      "caption": "Table 24: Case study on ESG factors and corporate financial performance.",
+      "page": 24,
+      "index": 15,
+      "width": 454,
+      "height": 1168
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-016.webp",
+      "caption": "Table 7: Case study comparing different RAG approaches on a knowledge-intensive query. Red text shows how baseline methods fail to integrate factual information. Blue text represents coherent reasoning from parametric knowledge, while green text shows successfully integrated external factual information in our GUARANTRAG approach.",
+      "page": 9,
+      "index": 16,
+      "width": 454,
+      "height": 611
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-017.webp",
+      "caption": "Table 15: Performance evaluation on API-based language models. All experiments use BM25 retriever with consistent evaluation protocols. Performance metrics represent averages across five evaluation measures.",
+      "page": 20,
+      "index": 17,
+      "width": 877,
+      "height": 549
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-018.webp",
+      "caption": "Table 14: Detailed results on ELI5 dataset with BM25 retriever. This dataset requires long-form explanatory responses.",
+      "page": 20,
+      "index": 18,
+      "width": 637,
+      "height": 696
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08046v1/fig-019.webp",
+      "caption": "Table 10: Detailed results on Natural Questions dataset with BM25 retriever. All scores are percentages except BERTScore which is on 0-1 scale (×100).",
+      "page": 16,
+      "index": 19,
+      "width": 637,
+      "height": 696
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-001.webp",
+      "caption": "Figure 4: Failure mode decomposition. Models mapped by their cooperation rate versus competence rate. The diagonal separates cooperationlimited models from competence-limited models.",
+      "page": 6,
+      "index": 1,
+      "width": 408,
+      "height": 343
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-002.webp",
+      "caption": "Table 1: Baseline performance. Total tasks are also reported as a % of the Perfect-Play row, which provides the performance ceiling.",
+      "page": 6,
+      "index": 2,
+      "width": 818,
+      "height": 222
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-003.webp",
+      "caption": "Figure 1: The instruction-utility gap. Agent 1 requests information from Agent 3 to complete a task. Agent 3 can cooperate or withhold. While the agents are instructed to maximize overall revenue, sending information has no effect on Agent 3’s individual payoff—only Agent 1 benefits from receiving it. This neutrality for the sender creates the instruction-utility gap and drives cooperative failures.",
+      "page": 2,
+      "index": 3,
+      "width": 740,
+      "height": 235
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-004.webp",
+      "caption": "Table 2: Causal decomposition of cooperation and competence. Performance shown as % of Perfect-Play ceiling. Full results with all metrics in Appendix A.1.",
+      "page": 7,
+      "index": 4,
+      "width": 486,
+      "height": 276
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-005.webp",
+      "caption": "Table 10: Effect of agent count on model performance (10 vs. 20 agents).",
+      "page": 18,
+      "index": 5,
+      "width": 827,
+      "height": 419
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-006.webp",
+      "caption": "Table 7: Defection reasoning rates by model.",
+      "page": 17,
+      "index": 6,
+      "width": 660,
+      "height": 214
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-007.webp",
+      "caption": "Figure 5: Intervention effects. Performance impact of three interventions relative to baseline.",
+      "page": 9,
+      "index": 7,
+      "width": 487,
+      "height": 321
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-008.webp",
+      "caption": "Figure 3: Final performance is uncorrelated with general capability. We use Chatbot Arena Elo scores as a proxy for capability. The dashed line shows linear fit (R² = 0.025, p = 0.71).",
+      "page": 5,
+      "index": 8,
+      "width": 408,
+      "height": 337
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07821v1/fig-009.webp",
+      "caption": "Table 6: Pattern definitions for reasoning classification.",
+      "page": 16,
+      "index": 9,
+      "width": 827,
+      "height": 485
+    }
+  ]
+}

@@ -1,0 +1,1443 @@
+Title: SafeAdapt: Provably Safe Policy Updates in Deep Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.09452v1
+
+Published Time: Mon, 13 Apr 2026 01:09:47 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# SafeAdapt : Provably Safe Policy Updates in Deep Reinforcement Learning 
+
+## Maksim Anisimov 
+
+Imperial College London London, United Kingdom m.anisimov23@imperial.ac.uk 
+
+## Francesco Belardinelli 
+
+Imperial College London London, United Kingdom francesco.belardinelli@imperial.ac.uk 
+
+## Matthew Wicker 
+
+Imperial College London London, United Kingdom m.wicker@imperial.ac.uk 
+
+## ABSTRACT 
+
+Safety guarantees are a prerequisite to the deployment of reinforce-ment learning (RL) agents in safety-critical tasks. Often, deploy-ment environments exhibit non-stationary dynamics or are subject to changing performance goals, requiring updates to the learned policy. This leads to a fundamental challenge: how to update an RL policy while preserving its safety properties on previously en-countered tasks? The majority of current approaches either do not provide formal guarantees or verify policy safety only a posteriori .We propose a novel a priori approach to safe policy updates in continual RL by introducing the Rashomon set : a region in policy parameter space certified to meet safety constraints within the demonstration data distribution. We then show that one can pro-vide formal, provable guarantees for arbitrary RL algorithms used to update a policy by projecting their updates onto the Rashomon set. Empirically, we validate this approach across grid-world navi-gation environments (Frozen Lake and Poisoned Apple) where we guarantee an a priori provably deterministic safety on the source task during downstream adaptation. In contrast, we observe that regularisation-based baselines experience catastrophic forgetting of safety constraints while our approach enables strong adaptation with provable guarantees that safety is preserved. 
+
+## KEYWORDS 
+
+Reinforcement Learning, Continual Learning, AI Safety, Verification 
+
+## 1 INTRODUCTION 
+
+Reinforcement learning (RL) has achieved remarkable success in sequential decision-making, from game playing [ 26 ] to robotic con-trol [ 22 ] and autonomous driving [ 19 ]. As RL agents move closer to real-world deployment in safety-critical domains – including autonomous vehicles, medical treatment planning, and industrial process control – it becomes essential to guarantee that learned policies satisfy safety constraints [ 7, 36 ]. At the same time, deployed agents must often operate in non-stationary settings: objectives evolve, dynamics drift, and new tasks appear. This continual adapta-tion introduces a central tension: policy updates aimed at improving performance often substantially degrade safety properties on previ-ously encountered tasks. Existing approaches to this problem fall short in important ways. Regularisation-based continual learning methods such as Elastic Weight Consolidation (EWC) [ 21 ] discourage parameter drift but do not provide formal guarantees that safety is preserved after adaptation. Shielding and action-space filtering methods [ 3 , 12 ] can guarantee safety by overriding unsafe actions online, even after unrestricted policy adaptation. However, they do not certify that the adapted policy itself remains safe, they rely on a runtime in-tervention mechanism, and they may mask catastrophic forgetting of safe behaviour rather than prevent it. Safety-aware transfer and safe policy-update methods [ 11 , 18 ] typically provide probabilistic guarantees via policy-ratio constraints or constrained optimisation, but they are unable to provide a priori guarantees of safety and in-stead require users to perform expensive evaluations to verify that updated policy satisfies safety. More broadly, safe RL methods that ensure safety during training on a single task [ 1 , 10 ] do not directly address what happens when the resulting policy is later adapted to a new task. We provide the first, to our knowledge, parameter-space certificate for source-task safety during downstream policy adaptation in RL. In finite or discretised settings with an evaluable unsafety labelling function and greedy deployment, this certifi-cate becomes deterministic and does not require full knowledge of transition dynamics. 
+
+Contributions. We propose SafeAdapt —an a priori approach to provably safe policy updates in continual RL. Our method leverages the Local Invariant Domain (LID) framework [ 13 ] to construct a 
+
+certified region in policy parameter space – a Rashomon set – within which all policies satisfy a specified safety property on the source task. Concretely, given an unsafety labelling function that marks unsafe state–action pairs, we: 
+
+• Formulate the notion of a Rashomon Set in policy pa-rameter space and show that computing a set of safe pa-rameters can be posed as an optimisation problem using a sound, differentiable safety surrogate .
+
+• Compute certified Rashomon sets in parameter space 
+
+using Interval Bound Propagation (IBP) and our novel differ-entiable safety surrogate, ensuring that every policy inside the set satisfies the source-task safety specification under greedy deployment. 
+
+• Perform downstream adaptation with constraints by combining PPO updates with projected gradient descent, guaranteeing that parameter updates remain inside the cer-tified safe region throughout training. Empirically, we evaluate the method across grid-world naviga-tion environments (Poisoned Apple and Frozen Lake). Our Rashomon-constrained updates preserve source-task safety after adaptation while achieving competitive downstream performance (see Sec-tion 5). Notably, we show that continual learning methods without formal guarantees (e.g. EWC) can lead to catastrophic forgetting of safe behaviour in the source task while our methods are able to at once formally rule out this catastrophic forgetting while enabling strong adaptation to new tasks. 
+
+> arXiv:2604.09452v1 [cs.LG] 10 Apr 2026
+
+Paper organisation. This paper is organised as follows. Section 2 reviews related work on safe reinforcement learning, continual learning, and neural network verification. Section 3 provides back-ground on MDPs with unsafe states, policy optimisation, and inter-val bound propagation. Section 4 presents the proposed method— 
+
+SafeAdapt . Section 5 describes the experimental setup and results 1.Section 6 discusses implications, limitations, and future work. 
+
+## 2 RELATED WORK 
+
+Our method lies at the intersection of safe reinforcement learn-ing, continual learning, and neural network verification. We focus on formally certifying preservation of source-task safety during downstream adaptation in parameter space in the presence of an 
+
+unsafety labelling function . We also note that when safe actions deterministically preserve safety under greedy deployment, this certification becomes deterministic. Table 1 summarises the key distinctions between our algorithm and related methods. 
+
+Table 1: Comparison of safety-aware adaptation methods. Safety structure: the type of prior safety/environment struc-ture assumed by the method. Formal?: whether the method can provide a formal safety guarantee. Space: where the safety constraint is enforced. CL: whether the method ad-dresses continual learning.                                            
+
+> Method Safety structure Formal? Space CL
+> EWC [21] None beyond source-task data No Parameters Yes Shielding [3] Abstract environment model Yes Action No SPoRt [11] Base policy + scenario-based safety data Yes Policy ratio No Zhang et al. [50] Explicit transition dynamics model Yes Action/state No SaGui [46] Safety guidance / exploration constraints No Action No Held et al. [18] Learned damage model Yes Action No Berkenkamp et al. [6] Learned dynamics model Yes State No P&C [31] Transfer mechanism No Distillation Yes
+> SafeAdapt (Ours) Unsafety labelling function 𝑈 (𝑠, 𝑎 )Yes Parameters Yes
+
+Safe Reinforcement Learning. Safe RL is commonly formalised via Constrained MDPs [ 4]—see García and Fernández [15] , Gu et al .[17] for surveys. Constrained policy optimisation methods such as CPO [ 1], CRPO [ 45 ], and PCPO [ 47 ] guarantee near-constraint satisfaction during training but only for individual tasks; they do not address safety preservation when the policy is adapted to a new task. Lyapunov-based approaches provide safe updates at every iteration: Berkenkamp et al . [6] require a learned dynamics model (Gaussian processes), while Chow et al . [10] formulate Lyapunov constraints within a model-free primal-dual framework and operate in value space rather than parameter space. Shielding methods [ 3 ,12 , 14 ] correct unsafe actions at runtime via safety filters, typically requiring an abstract environment model for shield synthesis. In contrast, our method certifies safety in parameter space, thereby enforcing implicit safety of a neural policy which does not require any runtime intervention. 
+
+Continual Learning. Continual learning addresses catastrophic forgetting [ 27 , 37 ] via the stability–plasticity trade-off. Regulari-sation methods such as EWC [ 21 ], SI [ 48 ], and MAS [ 2] penalise 
+
+> 1Code is available at https://github.com/maxanisimov/provably-safe-policy-updates.
+
+changes to important parameters but provide no formal guaran-tees on what knowledge the neural network retains. EWC is the most natural baseline for our approach: both methods operate in parameter space and aim to limit how far parameters move from a reference policy. However, EWC’s soft quadratic penalty only 
+
+encourages proximity to prior parameters – a sufficiently strong reward signal can override the penalty and cause arbitrary safety degradation. In contrast, our method enforces a hard constraint: parameters are projected onto the certified safe orthotope after ev-ery gradient step, providing a formal guarantee that no update can violate safety in a source task. Architecture and replay-based meth-ods [ 23 , 24 , 29 ] address forgetting through structural or data-level mechanisms and are orthogonal to our parameter-space certifica-tion; in principle, they could be combined with our approach. In RL setting, continual methods such as Progress & Compress [ 31 ]and policy distillation [ 28 ] mitigate forgetting via knowledge trans-fer but provide no formal safety guarantees. Existing continual RL methods [ 20 ] do not provide formal guarantees on source-task safety preservation, and our paper addresses this gap. 
+
+Safety-Aware Policy Updates. A growing literature considers safety preservation during policy updates. SPoRt [ 11 ] bounds the violation probability of a task-specific policy using the scenario approach [ 9 ]and constrains the policy ratio 𝜋 task (𝑎 |𝑠 )/ 𝜋 base (𝑎 |𝑠 ) ≤ 𝛼 via a per-timestep convex projection. Its guarantees are probabilistic and the bound grows with episode length 𝑇 , becoming vacuous for long horizons. Importantly, SPoRt addresses safe adaptation of a base policy to a single task – it does not consider catastrophic forgetting of safety requirements on prior tasks. Held et al . [18] formalise safe transfer via an expected damage bound, providing probabilistic guarantees that require a learned damage model. SaGui [ 46 ] pro-vides empirical safety improvements without formal certificates. Zhang et al . [50] introduce a transfer-learning framework for safe RL that trains in a non-dangerous environment and then transfers the policy to the dangerous target system with theoretical stabil-ity and safety guarantees. Finally, Bou Ammar et al . [8] propose a lifelong policy-gradient method that learns multiple tasks online while enforcing safety constraints and achieving sublinear regret, but without any formal certificates. 
+
+Neural Network Verification. We leverage neural network veri-fication to certify safety over parameter regions. Interval Bound Propagation (IBP) [ 16 , 25 ] computes output bounds via a single forward pass but produces increasingly loose bounds with network depth, limiting the size of the certified region. Tighter methods such as CROWN [ 49 ] and 𝛼 /𝛽 -CROWN [ 44 ] can be substituted at higher computational cost. While these methods focus on certifying input regions, work in Bayesian Neural Networks (BNN) introduced the notion of certifying parameter regions [ 40 ] which has also been completed for BNN policies in RL [ 41 , 42 ]. Certified parameter re-gions were further optimised and studied by computing bounds over their derivatives [ 39 ] to proving dataset robustness [ 33 ] and privacy [ 34 , 43 ]. Most closely related is the Local Invariant Domain (LID) framework of Elmecker-Plakolm et al . [13] , which computes maximal certified regions in parameter space via primal–dual opti-misation over abstract domains. We adopt the LID framework and extend it to safe continual RL, where the specification is defined by an unsafety labelling function over state–action pairs and multiple safe actions per state are handled via a multi-label certificate. Prior verification in RL [ 5] has been used as a post-hoc check; our work uses it to define a safe region within which continual learning is allowed to proceed. 
+
+SafeAdapt positioning. Our proposed method SafeAdapt as-sumes access to an unsafety labelling function 𝑈 : S × A → { 0, 1}.This is motivated by the observation that engineers can often spec-ify forbidden state-action pairs even when the transition dynamics is unknown. Using the LID framework [ 13 ], we construct a certified safe parameter region and constrain all downstream updates to remain within it via projected gradient descent. This yields, to our knowledge, the first method that can provide formal source-task safety guarantees during downstream adaptation. 
+
+## 3 PRELIMINARIES 
+
+We introduce the background required for our method: Markov Decision Processes with unsafe states and policy optimisation via re-inforcement learning. We refer to Sutton and Barto [35] for broader background on RL. 
+
+MDPs with Unsafe States. We model sequential decision-making as a Markov Decision Process (MDP) 𝑀 = (S , A, 𝑃, 𝑟, 𝛾, 𝜇 0) with state space S, action space A, transition dynamics 𝑃 (𝑠 ′ |𝑠, 𝑎 ), reward function 𝑟 : S × A → R, discount factor 𝛾 ∈ [ 0, 1), and initial state distribution 𝜇 0. Since not all actions may be executable in every state, we also define the set of state-specific actions as A ( 𝑠 ). To capture safety, the state space is partitioned into safe and unsafe regions , which is common in safe RL literature [ 17 ]. Intuitively, the set of unsafe states S𝑢 ⊆ S is the set of states in which the agent is experiencing a safety violation. For example, those can be hazards such as the ice holes in the Frozen Lake environment, which is used in our experiments. 
+
+Definition 3.1 (Unsafety labelling function) . The unsafety labelling function 𝑈 : S×A → { 0, 1} assigns 𝑈 (𝑠, 𝑎 ) = 1 iff 𝑃 (𝑠 ′ ∈ S 𝑢 |𝑠, 𝑎 ) >
+
+0, that is, if taking action 𝑎 in state 𝑠 can lead to an unsafe state in the next step, and 𝑈 (𝑠, 𝑎 ) = 0 otherwise. Note that we use a definition of 𝑈 which is conservative since it does not allow any chance that the next state will be unsafe. Using 
+
+𝑈 , we define the set of safety-critical states and safe action set :
+
+Definition 3.2 (Safety-critical states) . The set of safety-critical states is Ssc = {𝑠 ∈ S : ∃ 𝑎 ∈ A ( 𝑠 ) s.t. 𝑈 (𝑠, 𝑎 ) = 1}, i.e., states at which at least one action is unsafe. 
+
+Definition 3.3 (Safe action set) . The safe action set for a state 𝑠 is a set of actions which guarantee that the next state will be safe, i.e.: 
+
+Asafe (𝑠 ) = {𝑎 ∈ A ( 𝑠 ) : 𝑈 (𝑠, 𝑎 ) = 0}. (1) Finally, we introduce safe policies as those that return safe ac-tions in every safety-critical state. A policy 𝜋 𝜃 , parametrised by 𝜃 ,is a function that maps states into action distributions 𝜋 𝜃 (𝑎 |𝑠 ).
+
+Definition 3.4 (Safe policy) . A policy 𝜋 is safe if its deterministic (i.e. greedy) deployment leads to selecting safe actions in every state where unsafe actions exist, i.e.: 
+
+arg max 
+
+> 𝑎
+
+𝜋 (𝑎 | 𝑠 ) ∈ A safe (𝑠 ) ∀ 𝑠 ∈ S sc . (2) 
+
+Reinforcement Learning. Provided an RL problem modelled as an MDP, the standard RL objective is to find a policy maximising the expected discounted return defined as: 
+
+𝐽 (𝜃 ) = E𝜏 ∼𝜋 𝜃 
+
+" ∞∑︁  
+
+> 𝑡 =0
+
+𝛾 𝑡 𝑟 (𝑠 𝑡 , 𝑎 𝑡 )
+
+#
+
+, (3) where the expectation is over trajectories 𝜏 = (𝑠 0, 𝑎 0, 𝑠 1, 𝑎 1, . . . ) with 
+
+𝑠 0 ∼ 𝜇 0, 𝑎 𝑡 ∼ 𝜋 𝜃 (· | 𝑠 𝑡 ), and 𝑠 𝑡 +1 ∼ 𝑃 (· | 𝑠 𝑡 , 𝑎 𝑡 ).
+
+Problem statement. Given a source-task policy 𝜋 𝜃 source trained on an MDP Msource , an unsafety labelling function 𝑈 source : S × A → {0, 1} for Msource , and a downstream MDP Mdown defined over the same state–action space but different transition dynamics, we seek an adapted policy 𝜋 𝜃 down that maximises the downstream return 
+
+𝐽 down (𝜃 down ) while provably remaining safe on the source task, i.e., 
+
+∀ 𝑠 ∈ S sc : arg max  
+
+> 𝑎 ∈ A ( 𝑠 )
+
+𝜋 𝜃 down (𝑎 | 𝑠 ) ∈ A safe (𝑠 ). (4) We require this guarantee to hold a priori — as a certified property of the policy parameters – without full access to the source-task transition dynamics and without runtime action filtering. 
+
+Definition 3.5 (Rashomon set) . We define a Rashomon set [32 ]
+
+Θsafe  
+
+> 𝑖
+
+for a task 𝑖 as a parameter space in which any policy 𝜋 𝜃 ′
+
+parameterised with 𝜃 ′ ∈ Θsafe  
+
+> 𝑖
+
+is safe. 
+
+## 4 METHODOLOGY 
+
+We present our method SafeAdapt for safe continual reinforce-ment learning. The key idea is to construct a certified region in parameter space – a Rashomon set [ 13 ] – around a safe source-task policy, and to constrain all downstream policy updates to remain within this region via projected gradient descent. We first present the algorithm (§4.1), describe each phase (§4.2–§4.4), and then state the assumptions and theoretical guarantees (§4.5). 
+
+## 4.1 Algorithm Overview 
+
+Given a source-task policy 𝜋 source and an unsafety labelling function 
+
+𝑈 source , we first construct a certified safe region Θsafe source (a Rashomon set) in parameter space within which all policies provably satisfy the safety specification in the source task. Downstream adaptation then proceeds as a constrained optimisation: any gradient-based method may be used, provided that after each update the parameters are projected back onto Θsafe source via element-wise clipping. Algorithm 1 gives the complete procedure and Figure 1 illustrates its structure. The method proceeds in three phases: (1) construct a safe demonstration dataset, (2) compute the maximal locally in-variant domain (LID), and (3) adapt to the downstream task with projected gradient descent. 
+
+## 4.2 Phase 1: Safe Behaviour Demonstration 
+
+In supervised learning, the LID specification is evaluated on a fixed dataset independent of model parameters. In RL, the state distri-bution shifts with the policy, creating a circular dependency. We resolve this by constructing a distribution-independent safety con-straint: using 𝑈 source , we list all safe state–action pairs and form the safe demonstration dataset: 
+
+𝐷 safe source = (𝑠, Asafe (𝑠 )) : 𝑠 ∈ S sc . (6) Algorithm 1: SafeAdapt : Safe Continual RL via Rashomon Set Computation 
+
+Input: 
+
+(1) Source-task policy 𝜋 source with parameters 𝜃 source 
+
+(2) Unsafety labeller 𝑈 source : S × A → { 0, 1}
+
+(3) Global safety specification Φsafe and its surrogate eΦsafe 
+
+(4) Global safety surrogate threshold 𝛿 
+
+Output: Policy 𝜋 𝜃 down adapted to a downstream task that is at least as safe as 𝜋 source in the source task    
+
+> /* Phase 1: Safe behaviour demonstration (§4.2) */
+> 1:
+
+𝑆 sc ← { 𝑠 ∈ 𝑆 : ∃𝑎 ∈ A ( 𝑠 ) s.t. 𝑈 source (𝑠, 𝑎 ) = 1 } 
+
+> 2:
+
+Asafe (𝑠 ) ← { 𝑎 ∈ A ( 𝑠 ) : 𝑈 source (𝑠, 𝑎 ) = 0 } 
+
+> 3:
+
+𝐷 safe source ← { ( 𝑠, Asafe (𝑠 ) ) : 𝑠 ∈ S sc }   
+
+> /* Phase 2: Certified safe region (§4.3) */
+> 4:
+
+if eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 source ; 𝐷 safe source ) < 𝛿 then  
+
+> 5:
+
+Θsafe source ← ∅  
+
+> 6:
+
+return ⊥ ⊲ method cannot compute a provably safe parameter region  
+
+> 7:
+
+𝛼 ★ ← MaxLID (𝜃 source , eΦsafe 
+
+> 𝜏, sc
+
+, 𝛿 ) ⊲ primal–dual + IBP  
+
+> 8:
+
+Θsafe source ← { 𝜃 ′ : 𝜃 source − 𝛼 ★ ≤ 𝜃 ′ ≤ 𝜃 source + 𝛼 ★ } ⊲ Rashomon set /* Phase 3: Safe downstream adaptation (§4.4) */  
+
+> 9:
+
+(a) Initialise the downstream policy as a source-task policy: 
+
+𝜋 𝜃 down ← 𝜋 source  
+
+> 10:
+
+(b) Solve via a projected gradient descent: 
+
+𝜃 down = arg max   
+
+> 𝜃 ∈Θsafe source
+
+𝐽 down (𝜃 ), (5) 
+
+return 𝜋 𝜃 down 
+
+𝜋 source 𝑈 source  
+
+> Source-task policy Unsafety labelling function
+
+𝐷 safe source Phase 1 – Safe behaviour demonstration 
+
+Θsafe source Phase 2 – Safe parameter region (Rashomon set / maximal LID) 
+
+𝜋 down Phase 3 – Downstream policy:   
+
+> •adapted to new task
+> •safe on source task
+
+Figure 1: Overview of the proposed method. The unsafety labelling function 𝑈 source yields safe demonstrations 𝐷 safe source 
+
+(Phase 1). A certified safe parameter region Θsafe source is com-puted around 𝜋 source (Phase 2), and the downstream policy 
+
+𝜋 down is adapted within this region (Phase 3). 
+
+States where all actions are safe are excluded from the safety demon-stration dataset due to redundancy. By enforcing safety at every 
+
+Figure 2: Safe demonstration dataset construction in Frozen Lake environment. We label state-action pairs that lead to ice holes as unsafe. Then, we derive a demonstration of safe state-action pairs, which exclude states without unsafe actions. 
+
+state in 𝐷 safe source , we guarantee safety along any trajectory that an updated policy can have in the source task. 
+
+## 4.3 Phase 2: Certified Safe Region 
+
+We compute the maximal Θsafe source centred at 𝜃 source : the largest ortho-tope in parameter space within which policies are safe on 𝐷 safe source .Note that if 𝜋 source does not satisfy the safety specification, the Rashomon set is empty and the algorithm terminates. 
+
+Rashomon set computation. We define the safe region as a centre-symmetric orthotope {𝜃 ′ : 𝜃 source − 𝛼 ≤ 𝜃 ′ ≤ 𝜃 source + 𝛼 } with half-widths 𝛼 ∈ R𝑝 
+
+> ≥0
+
+. We maximise its volume subject to the lower bound of the safety surrogate inside the orthotope: 
+
+max  
+
+> 𝛼 ≥0
+> 𝑝
+
+∑︁ 
+
+> 𝑖 =1
+
+log 𝛼 𝑖 s.t. min  
+
+> 𝛼 ≥0
+
+eΦ(𝜃 source , 𝛼 ) ≥ 𝛿, (7) solved via the primal–dual algorithm [13]. 
+
+Safety Specification: Hard vs Surrogate. We distinguish between a 
+
+hard (exact) safety specification, which is exact but non-differentiable, and a soft (surrogate) specification, which is differentiable but only provides a one-sided guarantee. 
+
+Definition 4.1 (Hard safety specification) . A policy satisfies the hard safety specification at state 𝑠 if 𝜙 safe (𝑠 ) = 1, where: 
+
+𝜙 safe (𝑠 ) := I
+
+(
+
+arg max  
+
+> 𝑎 ∈ A ( 𝑠 )
+
+𝑧 A (𝑠 ) ∈ A safe (𝑠 )
+
+)
+
+, (8) assuming no ties at the maximum. The hard specification is: 
+
+• sound and complete : it exactly captures safety, 
+
+• non-differentiable : due to the arg max and indicator. We want to verify that a policy is safe in any safety-critical state: 
+
+𝜙 safe (𝑠 ) = 1 ∀𝑠 ∈ S sc .
+
+To enable optimisation, we introduce a smooth safety surrogate :
+
+Definition 4.2 (Safety surrogate) . A safety surrogate is eΦsafe  
+
+> 𝜏
+
+(𝑠 ):
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ) :=∑︁   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ; 𝜏 ), (9) where 
+
+𝜋 (𝑎 |𝑠 ; 𝜏 ) = 𝑒 𝑧 A (𝑠 )/ 𝜏 
+
+Í𝑎 ′ ∈ A ( 𝑠 ) 𝑒 𝑧 𝑎 ′ (𝑠 )/ 𝜏 , 𝜏 > 0.Proposition 1 (Properties of the surrogate) . Assume no ties at the maximum. Then: (1) Differentiability: e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ) is smooth in 𝑧 A (𝑠 ) for all 𝜏 > 0.(2) Consistency: 
+
+lim 
+
+> 𝜏 →0+
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ) = 𝜙 safe (𝑠 ).
+
+(3) Soundness (one-sided guarantee): for all 𝜏 > 0,
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ) > |A safe (𝑠 )| 
+
+1 + |A safe (𝑠 )| ⇒ 𝜙 safe (𝑠 ) = 1.
+
+(4) Non-completeness (for finite 𝜏 ): 
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ) ≤ |A safe (𝑠 )| 
+
+1 + |A safe (𝑠 )| ⇏ 𝜙 safe (𝑠 ) = 0.
+
+The surrogate provides a sufficient but not necessary condition for safety: high surrogate values certify safety, but low values are inconclusive. Therefore, we impose the following sound constraint: 
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ) > |A safe (𝑠 )| 
+
+1 + |A safe (𝑠 )| . (10) 
+
+Global Safety Specification. We now lift the specification from states to policies. 
+
+Definition 4.3 (Critical State Safety Rate) . Define a critical state safety rate as a proportion of safety-critical states in which the policy is safe: 
+
+Φsafe sc (𝜋 ) = 1
+
+|S sc |∑︁ 𝑠 ∈ S sc 
+
+𝜙 safe (𝑠 ).
+
+Definition 4.4 (Trajectory Safety Rate) . Define a trajectory safety rate as an expected proportion of episodes in which the policy trajectory does not experience any unsafe state-action pairs: 
+
+Φsafe traj . (𝜋 ) = E𝑠 ∼𝑑 𝜋 
+
+𝜙 safe (𝑠 ) ,
+
+where 𝑑 𝜋 (𝑠 ) is the state visitation distribution induced by 𝜋 .
+
+Global Safety Surrogate. During optimisation, we replace the hard global specification with a smooth lower bound. 
+
+Definition 4.5 (Critical State Safety Surrogate) . The critical state safety surrogate is defined as the minimum per-state safety surro-gate in safety-critical states: 
+
+eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 ) = min  
+
+> 𝑠 ∈ S sc
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ).
+
+Definition 4.6 (Sound global bound) . Let 
+
+𝑀 := max  
+
+> 𝑠 ∈ S sc
+
+|A safe (𝑠 )| .
+
+Then 
+
+eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 ) > 𝑀 
+
+1 + 𝑀 ⇒ Φsafe sc (𝜋 ) = 1.
+
+Key implication. The surrogate enables gradient-based optimisa-tion while preserving a global safety certificate : if the global surro-gate constraint is satisfied with 𝛿 ★ = 𝑀  
+
+> 1+𝑀
+
+, the global hard safety specification constraint Φ𝑠𝑐 (𝜋 ) = 1 is satisfied as well. 
+
+## 4.4 Phase 3: Safe Downstream Adaptation 
+
+We adapt to the downstream task by solving max 𝜃 ∈Θsafe source 𝐽 down (𝜃 )
+
+via a gradient-based policy optimisation method (e.g. PPO) with an additional projection step. After each gradient step ˆ𝜃 = 𝜃 + 𝜂 𝑔 , we project back via element-wise clipping: 
+
+𝜃 down ← clip   ˆ𝜃, 𝜃 source − 𝛼 ∗, 𝜃 source + 𝛼 ∗ . (11) 
+
+## 4.5 Assumptions and Theoretical Guarantees 
+
+We now state the assumptions under which our safety guarantees hold. 
+
+Assumption 1 (Finite discrete state–action space) . The state space 
+
+S and action space A are discrete and finite. This enables using unsafety labelling function 𝑈 source to generate the sufficient safety demonstration dataset 𝐷 safe source for the source task. 
+
+Assumption 2 (Existence of safe actions) . For every safety-critical state, there exists at least one safe action: Asafe (𝑠 ) ≠ ∅ ∀ 𝑠 ∈ S sc .Otherwise, the method cannot guarantee safe behaviour in any state. 
+
+Assumption 3 (Safe source policy) . The source-task policy 𝜋 𝜃 source 
+
+satisfies the sound safety surrogate constraint at the required thresh-old: 
+
+eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 ) > 𝑀 
+
+1 + 𝑀 .
+
+This enables building a Rashomon set, which is convex by design. 
+
+Assumption 4 (Greedy action selection) . At deployment, the agent selects actions greedily, i.e. 𝑎 ★ = arg max 𝑎 ′ ∈ A ( 𝑠 ) 𝜋 𝜃 (𝑎 ′ |𝑠 ). This is a standard assumption about test-time policy deployment which also avoids formal analysis of stochastic sampling from 𝜋 𝜃 (· | 𝑠 ).Assumption 1 restricts the formulation to discretised state-action spaces, ensuring that the safe demonstration dataset 𝐷 safe source can be constructed exhaustively. We note that this does not require manual enumeration: in practice, the unsafety labelling function is specified as a computable predicate grounded in domain knowledge (e.g., “if adjacent to a hole, moving toward it is unsafe”), and the dataset is constructed programmatically. Assumption 2 excludes states from which failure is unavoidable under any policy. Assumption 3 is a necessary precondition: no certified convex region can exist around a policy that is itself unsafe. Algorithm 1 checks this explicitly and returns ⊥ if the condition is violated. Assumption 4 avoids dealing with stochastic action sampling when an unsafe action can be drawn even if the greedy action is safe. 
+
+Theorem 1 (Provably safe policy updates) . Let Assumptions 1–4 hold, and let 
+
+Θsafe source = {𝜃 ′ : 𝜃 source − 𝛼 ★ ≤ 𝜃 ′ ≤ 𝜃 source + 𝛼 ★}
+
+be the certified orthotope returned by Phase 2 of Algorithm 1. Let 
+
+𝑀 := max  
+
+> 𝑠 ∈ S sc
+
+|A safe (𝑠 )| , 𝛿 ★ := 𝑀 
+
+1 + 𝑀 .
+
+Assume that the verification procedure used in Phase 2 provides a sound lower bound for the safety surrogate eΦsafe  
+
+> 𝜏, sc
+
+such that 
+
+min   
+
+> 𝜃 ′∈Θsafe source
+
+eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 𝜃 ′ ) > 𝛿 ★.Then, ∀ 𝜃 ′ ∈ Θsafe source ,
+
+Φsafe sc (𝜋 𝜃 ′ ) = 1.
+
+In particular, if Phase 3 updates the policy by projected gradient descent onto Θsafe source , then in every iteration 𝜃 𝑡 satisfies 
+
+Φsafe sc (𝜋 𝜃 𝑡 ) = 1.
+
+Proof. Take any 𝜃 ′ ∈ Θsafe source and any 𝑠 ∈ S sc . By Definition 4.5, 
+
+eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 𝜃 ′ ) = min  
+
+> 𝑠 ′∈ S sc
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ′; 𝜋 𝜃 ′ ),
+
+hence 
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ; 𝜋 𝜃 ′ ) ≥ eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 𝜃 ′ ).
+
+Because the verification lower bound is sound over Θsafe source ,
+
+eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 𝜃 ′ ) ≥ min  
+
+> 𝜃 ∈Θsafe source
+
+eΦsafe  
+
+> 𝜏, sc
+
+(𝜋 𝜃 ) > 𝛿 ★ = 𝑀 
+
+1 + 𝑀 .
+
+Since |A safe (𝑠 )| < 𝑀 and the map 𝑥 ↦ → 𝑥 /( 1 + 𝑥 ) is increasing on 
+
+[0, ∞) ,
+
+𝑀 
+
+1 + 𝑀 > |A safe (𝑠 )| 
+
+1 + |A safe (𝑠 )| .
+
+Therefore 
+
+e𝜙 safe  
+
+> 𝜏
+
+(𝑠 ; 𝜋 𝜃 ′ ) > |A safe (𝑠 )| 
+
+1 + |A safe (𝑠 )| .
+
+By Proposition 1(3), this implies 
+
+𝜙 safe (𝑠 ; 𝜋 𝜃 ′ ) = 1.
+
+Since this holds for every 𝑠 ∈ S sc , Definition 4.3 yields 
+
+Φsafe sc (𝜋 𝜃 ′ ) = 1.
+
+Finally, Phase 3 projects each update back into Θsafe source , so every iterate 𝜃 𝑡 remains in Θsafe source ; applying the same argument to each 
+
+𝜃 𝑡 proves the second claim. □
+
+Corollary 1 (Per-state certified safety) . Under the assumptions of Theorem 1, for every 𝜃 ′ ∈ Θsafe source and every 𝑠 ∈ S sc ,
+
+arg max   
+
+> 𝑎 ∈ A ( 𝑠 )
+
+𝜋 𝜃 ′ (𝑎 | 𝑠 ) ∈ A safe (𝑠 ).
+
+Corollary 2 (Safety preservation throughout adaptation) . Let 
+
+(𝜃 𝑡 )𝑡 ≥0 be the sequence of policy parameters produced by Phase 3. Then 𝜃 𝑡 ∈ Θsafe source for all 𝑡 , and therefore 
+
+Φsafe sc (𝜋 𝜃 𝑡 ) = 1 ∀𝑡 ≥ 0.
+
+Corollary 3 (Distribution-independent source-task safety) . Un-der the assumptions of Theorem 1, greedy execution of 𝜋 𝜃 𝑡 on the source task never selects an unsafe action at any iteration 𝑡 .Consequently, for any initial state distribution 𝜇 0, the source-task occupancy measure of 𝜋 𝜃 𝑡 satisfies 
+
+E(𝑠,𝑎 )∼ 𝑑 𝜋 𝜃𝑡 [𝑈 source (𝑠, 𝑎 )] = 0.
+
+Note that Theorem 1 guarantees preservation of source-task safety, but it does not guarantee that either source or downstream goal-reaching policy exists inside the certified region. Whether such a policy exists depends on the overlap between the certified safe set and high-performing source-task and downstream-task policies. 
+
+## 5 EXPERIMENTS 
+
+We consider continual adaptation from a source task (Task 1) to a downstream task (Task 2) in discrete-state, discrete-action envi-ronments with known unsafe state-action pairs. In all experiments, 
+
+𝜋 source is safe on the source-task safety dataset before adaptation. In our finite-state settings, this corresponds to full safety coverage of the source safety-critical states. We compare four policies: 
+
+• Source : train the policy on the source task and without updating parameters to the downstream task. 
+
+• UnsafeAdapt : unconstrained PPO fine-tuning on Task 2. 
+
+• EWC : PPO fine-tuning on Task 2 with EWC regularisation. 
+
+• SafeAdapt (ours) : PPO fine-tuning on Task 2 with per-update projection onto the Rashomon set, which is a param-eter set certified to be safe in the source task. 
+
+Policy training. In each experiment run, policies are trained with PPO [ 30 ] using the same MLP actor and critic with softmax over action logits. This ensures that the expressiveness of the neural policy is the same across methods. We run 10 seeds and report mean 
+
+± standard deviation. Detailed settings are specified in Tables 6-9. 
+
+Metrics. For each environment and policy 𝜋 , we calculate the following metrics for comparison: 
+
+• Critical-state safety rate Φsafe sc (𝜋 ): fraction of safety-critical states in which the policy is safe. 
+
+• Trajectory safety rate Φsafe traj . (𝜋 ): fraction of episodes in which the policy trajectory is safe. 
+
+• Total reward : Episodic return of the policy. 
+
+• Success rate : environment-defined task completion rate. In each experiment run, our method SafeAdapt is the only method that provides a formal guarantee that Φsafe sc (𝜋 ) = 1 in a source task. 
+
+## 5.1 Environments 
+
+Frozen Lake. Frozen Lake is a grid-world Gymnasium environment [38 ] where the agent must reach the goal while avoiding holes in a frozen lake. State is represented with a one-hot encoded location and task indicator, and there are 4 actions available (go up, down, left, or right). Reward is +1 at goal and 0 otherwise. Task 1 and Task 2 differ by hole placement. Falling into a hole is unsafe, and an episode is terminated upon this event. 
+
+Poisoned Apple. Poisoned Apple is a custom grid world in which an agent’s goal is to collect safe apples while avoiding poisoned ones. Collecting a safe apple yields +1, collecting a poisoned apple yields −1 and is unsafe. A state is represented as flattened grid with locations of safe and poisoned apples indicated therein. There are 4 available actions: up, down, left and right. Task 1 and Task 2 differ in safe/poisoned apple placement. A trajectory is safe if no poisoned apple is collected. Once all safe apples are collected, the environment terminates. Figure 3 demonstrates the environments and their corresponding source and downstream tasks. Table 2 showcases that we have a setup which tests SafeAdapt across heterogeneous environments. Frozen Lake is a Task-Incremental Learning (TIL) setting, since the task ID is included in the state and the policy can condition explicitly on task context. In contrast, Poisoned Apple is a Domain-Incremental Learning (DIL) setting, where adaptation must occur without explicit task identity, making it a harder regime than TIL. We use small discrete environments because they permit a straight-forward construction of the safety-critical-state dataset and end-to-end validation of the deterministic certificate under the assumptions of Theorem 1. 
+
+Figure 3: Examples of experiment environments: Frozen Lake 
+
+standard_4x4 (first row) and Poisoned Apple simple_5x5 (sec-ond row). Table 2: Frozen Lake vs Poisoned Apple experiment structure.         
+
+> Setting Frozen Lake Poisoned Apple Task ID in state representation Yes No Termination when unsafe Yes No Single destination Yes No
+
+## 5.2 Results 
+
+Safety retention in the source task. Table 3 demonstrates how our method ( SafeAdapt ) retains agent’s safety in the source task af-ter the update to a new task. Out of all adaptation methods, only 
+
+SafeAdapt has the average critical state safety rate Φsafe sc (𝜋 ) of 1. That is, UnsafeAdapt and EWC methods forget how to be safe in some safety-critical states. The average trajectory safety rate 
+
+Φsafe traj . (𝜋 ) of SafeAdapt agent is 1, which follows from SafeAdapt ’s safety in all safety-critical states. UnsafeAdapt and EWC agents have unsafe policy trajectories in the source task in Frozen Lake environment, while their trajectories are safe in Poisoned Apple. Fi-nally, the Total Reward column demonstrates degradation of agent’s performance in the source task across all adaptation methods. How-ever, due to the nature of Frozen Lake and Poisoned Apple, safety retention allows the SafeAdapt to maintain competitive perfor-mance in the source task compared to other adaptation methods. 
+
+Adaptation to downstream task. Table 4 shows that SafeAdapt 
+
+retains substantial downstream plasticity despite the hard source-task safety constraint. In Frozen Lake, all three adaptation methods achieve optimal downstream performance, so the relevant distinc-tion is not Task-2 total reward but whether that reward is obtained without sacrificing source-task safety. In this respect, SafeAdapt is strictly preferable, as it matches the best downstream performance while being the only method with a source-task safety certificate. In Poisoned Apple, SafeAdapt again matches the best-performing baseline, achieving the same average total reward as UnsafeAdapt (0.96) and outperforming EWC (0.86). Overall, these results show that constraining updates to the certified Rashomon set can allow for effective downstream adaptation and can preserve source-task safety without sacrificing downstream performance. 
+
+Scalability analysis. To study scalability, we evaluate how SafeAdapt 
+
+behaves as the Frozen Lake layout size increases. Figure 4 shows a stability–plasticity trade-off across scales. The source policy has per-fect Task-1 safety and total reward, but fails completely on Task 2. UnsafeAdapt and EWC exhibit strong downstream performance, yet incur substantial degradation on the source task. Namely, Un-safeAdapt exhibits a large drop in critical-state safety and zero trajectory safety rate, while EWC retains partial source-task safety and near-zero Task-1 total reward on the larger layouts. In con-trast, SafeAdapt maintains perfect source-task safety across all sizes and remains competitive on the downstream task, with only a modest drop at 8 ×8. To keep the comparison controlled, we use the same policy architecture and training configuration across all Frozen Lake layouts. Larger layouts may benefit from increased model capacity and optimised training settings. Exploring scaling of the environment, network architecture, and training procedure is a potential direction for future work. 
+
+Figure 4: Scalability analysis across diagonal Frozen Lake layouts. 
+
+Appendix D.2 visualises the Rashomon set for Frozen Lake. We leave analysis of certified-region size and its dependence on neural network architecture to future work. Table 3: Source Task safety and performance metrics in Frozen Lake and Poisoned Apple (mean ± standard deviation over 10 seeds). We report (i) critical state safety rate Φsafe sc (𝜋 ), measuring the fraction of safety-critical states in which the policy selects only safe actions, (ii) trajectory-level safety Φsafe traj . (𝜋 ), measuring the probability of executing a fully safe trajectory, and (iii) total reward. Standard continual learning baselines (UnsafeAdapt and EWC) may violate safety constraints, as reflected by degraded 
+
+Φsafe sc in both Frozen Lake and Poisoned Apple and degraded Φsafe traj . in Frozen Lake. In contrast, SafeAdapt (ours) consistently retains perfect safety ( Φsafe sc = Φsafe traj . = 1) across all environments while maintaining competitive total reward in the source task. 
+
+Environment Policy Provably Safe? Φsafe sc (𝜋 ) Φsafe traj . (𝜋 ) Total Reward Frozen Lake ( standard_4x4 )Source ✓ 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 
+
+UnsafeAdapt × 0.88 ± 0.00 0.10 ± 0.30 0.00 ± 0.00 
+
+EWC × 0.94 ± 0.06 0.60 ± 0.49 0.30 ± 0.46 
+
+SafeAdapt (ours) ✓ 1.00 ± 0.00 1.00 ± 0.00 0.90 ± 0.30 
+
+Poisoned Apple ( simple_5x5 )Source ✓ 1.00 ± 0.00 1.00 ± 0.00 1.96 ± 0.00 
+
+UnsafeAdapt × 0.93 ± 0.11 1.00 ± 0.00 0.91 ± 0.00 
+
+EWC × 0.93 ± 0.11 1.00 ± 0.00 1.02 ± 0.32 
+
+SafeAdapt (ours) ✓ 1.00 ± 0.00 1.00 ± 0.00 0.91 ± 0.00 
+
+Table 4: Downstream Task performance metrics in Frozen Lake and Poisoned Apple (mean ± standard deviation over 10 seeds). 
+
+Environment Policy Total Reward Success Rate Frozen Lake ( standard_4x4 )Source 0.00 ± 0.00 0.00 ± 0.00 
+
+UnsafeAdapt 1.00 ± 0.00 1.00 ± 0.00 
+
+EWC 1.00 ± 0.00 1.00 ± 0.00 
+
+SafeAdapt (ours) 1.00 ± 0.00 1.00 ± 0.00 
+
+Poisoned Apple ( simple_5x5 )Source −0.04 ± 0.00 1.00 ± 0.00 
+
+UnsafeAdapt 0.96 ± 0.00 1.00 ± 0.00 
+
+EWC 0.86 ± 0.30 1.00 ± 0.00 
+
+SafeAdapt (ours) 0.96 ± 0.00 1.00 ± 0.00 
+
+## 6 CONCLUSION 
+
+We introduced SafeAdapt , an approach to provably safe policy updates in continual deep reinforcement learning. The key idea is to compute a certified Rashomon set in policy parameter space around a safe source-task policy and to constrain downstream adaptation to remain within this set via projected gradient descent. Our method yields an a priori guarantee that source-task safety is preserved throughout downstream adaptation, rather than only being checked 
+
+a posteriori or enforced by a runtime intervention mechanism. Empirically, we showed across grid-world environments Frozen Lake and Poisoned Apple that SafeAdapt is the only adaptation method in our study that preserves perfect source-task safety af-ter updates to a downstream task, while exhibiting competitive downstream performance. In contrast, unconstrained adaptation (UnsafeAdapt) and EWC can both exhibit catastrophic forgetting of safe behaviour in a source task while adapting to a new task. The scalability study further suggests that constrained adaptation within the safe region may exhibit trade-off between safety reten-tion and downstream plasticity as environment size increases. The current formulation is limited to finite discrete state–action spaces as it relies on exhaustive coverage of safety-critical states to obtain safety guarantees. In addition, the certified parameter region may become conservative when using IBP, especially for larger net-works or more complex environments. Extending the framework to infinite and continuous state-action spaces and understanding how certified regions behave in larger environments and across longer task sequences are important directions for future work. Another interesting idea is to derive the unsafety labelling function from a synthesised shield, which could extend our framework to more expressive multi-step safety specifications. Finally, probabilistic verification is a complementary direction for more complex set-tings where deterministic parameter-space certification becomes too conservative or intractable. Overall, our results show that parameter-space certification is a viable route to preventing safety forgetting in continual RL and provide, to our knowledge, the first parameter-space certificate for preserving source-task safety during downstream adaptation. 
+
+## ACKNOWLEDGMENTS 
+
+This work was supported by the UKRI Centre for Doctoral Train-ing in Safe and Trusted AI [EP/S0233356/1] and the EPSRC grant number EP/X015823/1, "An abstraction-based Technique for Safe Reinforcement Learning”. REFERENCES 
+
+[1] Joshua Achiam, David Held, Aviv Tamar, and Pieter Abbeel. 2017. Constrained Policy Optimization. In Proceedings of the 34th International Conference on Machine Learning (ICML) . https://proceedings.mlr.press/v70/achiam17a.html [2] Rahaf Aljundi, Francesca Babiloni, Mohamed Elhoseiny, Marcus Rohrbach, and Tinne Tuytelaars. 2018. Memory Aware Synapses: Learning What (Not) to Forget. In European Conference on Computer Vision . 139–154. [3] Mohammed Alshiekh, Roderick Bloem, Rüdiger Ehlers, Mykel J. Kochenderfer, Scott Niekum, and Ufuk Topcu. 2018. Safe Reinforcement Learning via Shielding. In Proceedings of the AAAI Conference on Artificial Intelligence (AAAI) . https: //ojs.aaai.org/index.php/AAAI/article/view/11573 [4] Eitan Altman. 1999. Constrained Markov Decision Processes . CRC Press. [5] Osbert Bastani, Yewen Pu, and Armando Solar-Lezama. 2018. Verifiable Rein-forcement Learning via Policy Extraction. In Advances in Neural Information Processing Systems , Vol. 31. [6] Felix Berkenkamp, Matteo P. Turchetta, Angela P. Schoellig, and Andreas Krause. 2017. Safe Model-based Reinforcement Learning with Stability Guarantees. In 
+
+Advances in Neural Information Processing Systems (NeurIPS) . https://proceedings. neurips.cc/paper/2017/hash/3a1dd3879d8c38fefcd1b582f44f0f42-Abstract.html [7] Rishi Bommasani, Drew A Hudson, Ehsan Adeli, Russ Altman, Simran Arora, Sydney von Arx, Michael S Bernstein, Jeannette Bohg, Antoine Bosselut, Emma Brunskill, et al . 2021. On the opportunities and risks of foundation models. arXiv preprint arXiv:2108.07258 (2021). [8] Haitham Bou Ammar, Rasul Tutunov, and Eric Eaton. 2015. Safe Policy Search for Lifelong Reinforcement Learning with Sublinear Regret. In International Conference on Machine Learning . PMLR, 2361–2369. [9] Marco C. Campi and Simone Garatti. 2008. The Exact Feasibility of Randomized Solutions of Uncertain Convex Programs. SIAM Journal on Optimization 19, 3 (2008), 1211–1230. [10] Yinlam Chow, Ofir Nachum, Edgar Duenez-Guzman, and Mohammad Ghavamzadeh. 2018. Lyapunov-based Safe Policy Optimization for Continuous Control. In Proceedings of the AAAI Conference on Artificial Intelligence (AAAI) .https://ojs.aaai.org/index.php/AAAI/article/view/11682 [11] Jacques Cloete, Niklas Vertovec, and Kostas Margellos. 2025. SPoRt – Safe Policy Ratio: Certified Training and Deployment of Task Policies in Model-Free RL. In 
+
+Proceedings of the International Joint Conference on Artificial Intelligence (IJCAI) .[12] Gal Dalal, Krishnamurthy Dvijotham, Matej Vecerik, Todd Hester, Cosmin Padu-raru, and Yuval Tassa. 2018. Safe Exploration in Continuous Action Spaces. In 
+
+Proceedings of the 35th International Conference on Machine Learning (ICML) .https://proceedings.mlr.press/v80/dalal18a.html [13] Leo Elmecker-Plakolm, Pierre Fasterling, Philip Sosnin, Calvin Tsay, and Matthew Wicker. 2025. Provably Safe Model Updates. arXiv preprint arXiv:2512.01899 
+
+(2025). Submitted to IEEE SaTML 2026. [14] Ingy ElSayed-Aly, Suda Bharadwaj, Christopher Amato, Rüdiger Ehlers, Ufuk Topcu, and Lu Feng. 2021. Safe Multi-Agent Reinforcement Learning via Shielding. In Proceedings of the 20th International Conference on Autonomous Agents and Multi-Agent Systems .[15] Javier García and Fernando Fernández. 2015. A Comprehensive Survey on Safe Reinforcement Learning. Journal of Machine Learning Research 16 (2015), 1437– 1480. [16] Sven Gowal, Krishnamurthy Dvijotham, Robert Stanforth, Rudy Bunel, Chongli Qin, Jonathan Uesato, Relja Arandjelovic, Timothy Mann, and Pushmeet Kohli. 2018. On the Effectiveness of Interval Bound Propagation for Training Verifiably Robust Models. arXiv preprint arXiv:1810.12715 (2018). [17] Shangding Gu, Long Yang, Yali Du, Guang Chen, Florian Walter, Jun Wang, and Alois Knoll. 2024. A Review of Safe Reinforcement Learning: Methods, Theories and Applications. IEEE Transactions on Pattern Analysis and Machine Intelligence 
+
+(2024). [18] David Held, Zoe McCarthy, Michael Zhang, Fred Shentu, and Pieter Abbeel. 2017. Probabilistically Safe Policy Transfer. In IEEE International Conference on Robotics and Automation (ICRA) . 5798–5805. [19] Alex Kendall, Jeffrey Hawke, David Janz, Przemyslaw Mazur, Daniele Reda, John-Mark Allen, Vinh-Dieu Lam, Alex Bewley, and Amar Shah. 2019. Learning to Drive in a Day. In International Conference on Robotics and Automation, ICRA 2019, Montreal, QC, Canada, May 20-24, 2019 . IEEE, 8248–8254. https://doi.org/ 10.1109/ICRA.2019.8793742 [20] Khimya Khetarpal, Matthew Riemer, Irina Rish, and Doina Precup. 2022. To-wards Continual Reinforcement Learning: A Review and Perspectives. Journal of Artificial Intelligence Research 75 (2022), 1401–1476. [21] James Kirkpatrick, Razvan Pascanu, Neil Rabinowitz, Joel Veness, Guillaume Desjardins, Andrei A. Rusu, Kieran Milan, John Quan, Tiago Ramalho, Agnieszka Grabska-Barwińska, et al . 2017. Overcoming catastrophic forgetting in neural networks. Proceedings of the National Academy of Sciences 114, 13 (2017), 3521– 3526. [22] Jens Kober, J. Bagnell, and Jan Peters. 2013. Reinforcement Learning in Robotics: A Survey. The International Journal of Robotics Research 32 (09 2013), 1238–1274. https://doi.org/10.1177/0278364913495721 [23] David Lopez-Paz and Marc’Aurelio Ranzato. 2017. Gradient Episodic Memory for Continual Learning. In Advances in Neural Information Processing Systems ,Vol. 30. [24] Arun Mallya and Svetlana Lazebnik. 2018. PackNet: Adding Multiple Tasks to a Single Network by Iterative Pruning. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR) . 7765–7773. [25] Matthew Mirman, Timon Gehr, and Martin Vechev. 2018. Differentiable Abstract Interpretation for Provably Robust Neural Networks. In International Conference on Machine Learning . PMLR, 3578–3586. [26] Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Alex Graves, Ioannis Antonoglou, Daan Wierstra, and Martin A. Riedmiller. 2013. Playing Atari with Deep Reinforcement Learning. CoRR abs/1312.5602 (2013). arXiv:1312.5602 http://arxiv.org/abs/1312.5602 [27] Mark B. Ring. 1994. Continual Learning in Reinforcement Environments. PhD thesis, University of Texas at Austin (1994). [28] Andrei A. Rusu, Sergio Gomez Colmenarejo, Caglar Gulcehre, Guillaume Desjardins, James Kirkpatrick, Razvan Pascanu, Volodymyr Mnih, Koray Kavukcuoglu, and Raia Hadsell. 2015. Policy Distillation. arXiv preprint arXiv:1511.06295 (2015). https://arxiv.org/abs/1511.06295 [29] Andrei A. Rusu, Neil C. Rabinowitz, Guillaume Desjardins, Hubert Soyer, James Kirkpatrick, Koray Kavukcuoglu, Razvan Pascanu, and Raia Hadsell. 2016. Pro-gressive Neural Networks. arXiv preprint arXiv:1606.04671 (2016). [30] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. 2017. Proximal Policy Optimization Algorithms. In arXiv preprint arXiv:1707.06347 .https://arxiv.org/abs/1707.06347 [31] Jonathan Schwarz, Wojciech Marian Czarnecki, Jelena Luketina, Agnieszka Grabska-Barwińska, Yee Whye Teh, Razvan Pascanu, and Raia Hadsell. 2018. Progress & Compress: A scalable framework for continual learning. arXiv preprint arXiv:1805.06370 (2018). [32] Lesia Semenova and Cynthia Rudin. 2019. A Study in Rashomon Curves and Volumes: A New Perspective on Generalization and Model Simplicity in Machine Learning. arXiv preprint arXiv:1908.01755 (2019). arXiv:1908.01755 [cs.LG] https: //arxiv.org/abs/1908.01755 [33] Philip Sosnin, Mark Niklas Müller, Maximilian Baader, Calvin Tsay, and Matthew Robert Wicker. 2025. Certified Robustness to Data Poisoning in Gradient-Based Training. Transactions on Machine Learning Research (2025). https://openreview.net/forum?id=9WHifn9ZVX [34] Philip Sosnin, Matthew Wicker, Josh Collyer, and Calvin Tsay. 2025. Abstract Gradient Training: A Unified Certification Framework for Data Poisoning, Un-learning, and Differential Privacy. arXiv preprint arXiv:2511.09400 (2025). [35] Richard S. Sutton and Andrew G. Barto. 2018. Reinforcement Learning: An Intro-duction (second ed.). The MIT Press. http://incompleteideas.net/book/the-book-2nd.html [36] Lukasz Szpruch, Agni Orfanoudaki, Carsten Maple, Matthew Wicker, Yoshua Bengio, Kwok-Yan Lam, and Marcin Detyniecki. 2025. Insuring AI: Incentivising Safe and Secure Deployment of AI Workflows. Available at SSRN 5505759 (2025). [37] Sebastian Thrun. 1998. Lifelong Learning Algorithms . Springer. 181–209 pages. [38] Mark Towers, Ariel Kwiatkowski, Jordan Terry, John U. Balis, Gianluca De Cola, Tristan Deleu, Manuel Goulão, Andreas Kallinteris, Markus Krimmel, Arjun KG, Rodrigo Perez-Vicente, Andrea Pierré, Sander Schulhoff, Jun Jet Tai, Hannah Tan, and Omar G. Younis. 2025. Gymnasium: A Standard Interface for Reinforcement Learning Environments. arXiv:2407.17032 [cs.LG] https://arxiv.org/abs/2407. 17032 [39] Matthew Wicker, Juyeon Heo, Luca Costabello, and Adrian Weller. 2023. Robust Explanation Constraints for Neural Networks. In The Eleventh International Conference on Learning Representations (ICLR) . https://openreview.net/forum? id=_hHYaKu0jcj [40] Matthew Wicker, Luca Laurenti, Andrea Patane, and Marta Kwiatkowska. 2020. Probabilistic safety for bayesian neural networks. In UAI . PMLR, 1198–1207. [41] Matthew Wicker, Luca Laurenti, Andrea Patane, Nicola Paoletti, Alessandro Abate, and Marta Kwiatkowska. 2021. Certification of iterative predictions in bayesian neural networks. In UAI . PMLR, 1713–1723. [42] Matthew Wicker, Luca Laurenti, Andrea Patane, Nicola Paoletti, Alessandro Abate, and Marta Kwiatkowska. 2024. Probabilistic reach-avoid for Bayesian neural networks. Artificial Intelligence 334 (2024), 104132. [43] Matthew Robert Wicker, Philip Sosnin, Igor Shilov, Adrianna Janik, Mark Niklas Mueller, Yves-Alexandre De Montjoye, Adrian Weller, and Calvin Tsay. 2025. Certification for Differentially Private Prediction in Gradient-Based Training. In 
+
+International Conference on Machine Learning . PMLR, 66726–66745. [44] Kaidi Xu, Zhouxing Shi, Huan Zhang, Yihan Wang, Kai-Wei Chang, Minlie Huang, Bhavya Kailkhura, Xue Lin, and Cho-Jui Hsieh. 2021. Fast and Complete: En-abling Complete Neural Network Verification with Rapid and Massively Parallel Incomplete Verifiers. International Conference on Learning Representations (2021). [45] Tengyu Xu, Yingbin Liang, and Guanghui Lan. 2021. CRPO: A New Approach for Safe Reinforcement Learning with Convergence Guarantee. In International Conference on Machine Learning . PMLR. [46] Qisong Yang, Thiago D. Simão, Nils Jansen, Simon H. Tindemans, and Matthijs T. J. Spaan. 2023. Reinforcement Learning by Guided Safe Exploration. In ECAI 2023 – 26th European Conference on Artificial Intelligence (Frontiers in Artificial Intelligence and Applications, Vol. 372) . IOS Press, 2858–2865. https://doi.org/10. 3233/FAIA230598 [47] Tsung-Yen Yang, Justinian Rosca, Karthik Narasimhan, and Peter J. Ramadge. 2020. Projection-Based Constrained Policy Optimization. In International Conference on Learning Representations .[48] Friedemann Zenke, Ben Poole, and Surya Ganguli. 2017. Continual Learning Through Synaptic Intelligence. arXiv preprint arXiv:1703.04200 (2017). [49] Huan Zhang, Tsui-Wei Weng, Pin-Yu Chen, Cho-Jui Hsieh, and Luca Daniel. 2018. Efficient Neural Network Robustness Certification with General Activation Functions. Advances in Neural Information Processing Systems 31 (2018). [50] Quanqi Zhang, Chengwei Wu, Haoyu Tian, Yabin Gao, Weiran Yao, and Lig-ang Wu. 2024. Safety Reinforcement Learning Control via Transfer Learning. 
+
+Automatica 166 (2024), 111714. https://doi.org/10.1016/j.automatica.2024.111714 
+
+## A METHODOLOGY DETAILS 
+
+Here we provide some additional details on our method SafeAdapt .
+
+## A.1 Safety surrogate sound constraint 
+
+Consider a multi-label classification setting with 𝐾 actions, and without loss of generality, assume the number of actions is the same for each state, i.e. 𝐾 = |A| = |A ( 𝑠 )| ∀ 𝑠 ∈ S . Also, without loss of generality, assume in each state 𝑀 actions are safe, i.e. |A safe (𝑠 )| =
+
+𝑀 ∀𝑠 ∈ S . Let 𝜋 (𝑎 | 𝑠 ) denote the policy’s probability of selecting action 𝑎 in state 𝑠 .The hard safety specification is defined as: 
+
+𝜙 safe (𝑠 ) = I
+
+
+
+arg max 
+
+> 𝑎
+
+𝜋 (𝑎 | 𝑠 ) ∈ A safe (𝑠 )
+
+
+
+,
+
+which equals 1 if and only if the greedy action under the policy is safe. arg max and indicator function make 𝜙 safe non-differentiable. To enable gradient-based optimisation, we introduce a safety surro-gate, which is defined as: 
+
+˜𝜙 safe (𝑠 ) =∑︁   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 | 𝑠 ),
+
+which represents the total softmax probability mass assigned to safe actions. 
+
+## A.2 Proof for Proposition 1(3) 
+
+Proof of Proposition 1(3). From the inequality ∑︁   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) > |A safe (𝑠 )| 
+
+1 + |A safe (𝑠 )| ,
+
+we get: Í𝑎 ∈ A safe (𝑠 ) 𝜋 (𝑎 |𝑠 )|A safe (𝑠 )| > 11 + |A safe (𝑠 )| .
+
+Since the average safe action probability, exceeds 11+| A safe (𝑠 ) | , the maximum safe action probability must exceed 11+| A safe (𝑠 ) | as well: 
+
+max   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) > 11 + |A safe (𝑠 )| (12) Since the sum of safe action probabilities exceeds | A safe (𝑠 ) |    
+
+> 1+| A safe (𝑠 ) |
+
+, the sum of unsafe action probabilities cannot exceed 11+| A safe (𝑠 ) | :∑︁   
+
+> 𝑎 ∉Asafe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) < 11 + |A safe (𝑠 )| 
+
+The upper bound for the sum of non-negative values is also the upper bound for the maximum term in the sum: 
+
+max   
+
+> 𝑎 ∉Asafe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) < 11 + |A safe (𝑠 )| (13) From Eqs. 12 and 13, we get: 
+
+max   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) > max   
+
+> 𝑎 ∉Asafe (𝑠 )
+
+𝜋 (𝑎 |𝑠 )
+
+□
+
+As the number of safe actions per state goes to infinity ( |A safe (𝑠 )| → ∞), the surrogate sound constraint becomes very conservative since the threshold approaches 1. A.3 Relationship Between ˜𝜙 safe and 𝜙 safe 
+
+We proved that if the safety surrogate exceeds the threshold 𝛿 ★ =     
+
+> | A safe (𝑠 ) |
+> 1+| A safe (𝑠 ) |
+
+, the policy is guaranteed to be safe. Note that this con-dition is sufficient but not necessary. 
+
+Proof that 𝛿 ★ implies a non-necessary constraint. Let us provide an example. Consider a state in which one action is safe and 4 actions are unsafe: |A ( 𝑠 )| = 5, |A safe (𝑠 )| = 1. Then 𝛿 ★ = 12 .However, a policy with the following action probability distribution is safe: 
+
+𝜋 (𝑎 |𝑠 ) =
+
+(
+
+0.25 , 𝑎 ∈ A safe (𝑠 ),
+
+0.1875 otherwise. (14) Even though max 𝑎 ∈ A safe (𝑠 ) 𝜋 (𝑎 |𝑠 ) < 𝛿 ★ (0.25 < 0.5), it holds that 
+
+max 𝑎 ∈ A safe (𝑠 ) 𝜋 (𝑎 |𝑠 ) > max 𝑎 ∉Asafe (𝑠 ) 𝜋 (𝑎 |𝑠 ) (0.25 > 0.1875 ). This completes the proof that the constraint max 𝑎 ∈ A safe (𝑠 ) 𝜋 (𝑎 |𝑠 ) < 𝛿 ★
+
+is not necessary for safety guarantee. □
+
+Sufficient condition for unsafety. In order to prove that a policy is 
+
+unsafe , it is sufficient to show that the following safety surrogate inequality holds: 
+
+˜𝜙 safe (𝑠 ) < 11 + 𝐾 − 𝑀 ,
+
+where 𝐾 = |A ( 𝑠 )| and 𝑀 = |A safe (𝑠 )| .
+
+Proof. Using the definition of the safety surrogate, we write: ∑︁   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) < 11 + 𝐾 − 𝑀 ∑︁   
+
+> 𝑎 ∉Asafe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) = 1 −∑︁   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) > 1 − 11 + 𝐾 − 𝑀 ∑︁   
+
+> 𝑎 ∉Asafe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) > 𝐾 − 𝑀 
+
+1 + 𝐾 − 𝑀 
+
+From this it follows that: 
+
+• max 𝑎 ∉Asafe (𝑠 ) 𝜋 (𝑎 |𝑠 ) > 11 + 𝐾 − 𝑀 
+
+• max 𝑎 ∈ A safe (𝑠 ) 𝜋 (𝑎 |𝑠 ) < 11 + 𝐾 − 𝑀 
+
+Therefore: 
+
+max   
+
+> 𝑎 ∉Asafe (𝑠 )
+
+𝜋 (𝑎 |𝑠 ) > max   
+
+> 𝑎 ∈ A safe (𝑠 )
+
+𝜋 (𝑎 |𝑠 )
+
+□
+
+However, this sufficient unsafety condition is not necessary: 
+
+Proof. To prove that, we will provide a counterexample for 
+
+𝐾 = 3 and 𝑀 = 1. The threshold is then 12 .
+
+𝜋 (𝑎 |𝑠 ) =
+
+(
+
+0.4, 𝑎 ∈ A safe (𝑠 ),
+
+0.3 otherwise. (15) Even though ˜𝜙 safe (𝑠 ) < 11+𝐾 −𝑀 (0.4 < 0.5), the maximum proba-bility of a safe action is higher than the maximum probability of an unsafe action ( 0.4 > 0.3). □
+
+˜𝜙 safe 
+
+𝜙 safe 
+
+1
+
+111+𝐾 −𝑀 𝑀 
+
+> 1+𝑀
+
+guaranteed 
+
+unsafe 
+
+guaranteed safe 
+
+ambiguous 
+
+(0 or 1) 
+
+Figure 5: Relationship between the safety surrogate and the hard safety specification. 
+
+The discussion above showcases that the relationship between the hard safety and safety surrogate is helpful, but there is a re-gion of "uncertainty". Namely, when ˜𝜙 safe (𝑠 ) ∈  11+𝐾 −𝑀 ; 𝑀 
+
+> 1+𝑀
+
+, we cannot infer the value of 𝜙 safe (𝑠 ) from ˜𝜙 safe (𝑠 ) alone. Figure 5 illus-trates the relationship between the hard safety specification and its surrogate. 
+
+The Surrogate is Not Monotonically Related to the Hard Specifica-tion. An appealing property would be that increasing ˜𝜙 safe never decreases 𝜙 safe , i.e., informally, 𝜕𝜙 safe /𝜕 ˜𝜙 safe ≥ 0. If this held, ˜𝜙 safe 
+
+would be a suitable optimisation target without enforcing a lower bound on it . However, the following counterexample demonstrates that this monotonicity property does not hold for ˜𝜙 safe ∈  11+𝐾 −𝑀 ; 𝑀 
+
+> 1+𝑀
+
+.
+
+Proposition 2 (𝜙 safe is not globally monotonic in ˜𝜙 safe ). Consider 
+
+𝐾 = 3 actions with Asafe (𝑠 ) = {𝑎 1, 𝑎 2 } (two safe actions, one unsafe action 𝑎 3). For this case, the sound bound for the safety surrogate is 𝛿 ★ = 23 . To provide a non-monotonicity example, we should consider action distributions such that ˜𝜙 safe ∈  11+𝐾 −𝑀 ; 𝑀 
+
+> 1+𝑀
+
+.
+
+Proof. We will show that increasing the surrogate value can both decrease and increase the value of hard safety specification. 
+
+Increasing surrogate can decrease the hard safety. 
+
+Policy A: 𝜋 𝐴 = (0.45 , 0.15 , 0.40 ).
+
+• ˜𝜙 safe = 0.45 + 0.15 = 0.60 . Note: ˜𝜙 safe < 23 .
+
+• arg max 𝑎 𝜋 𝐴 (𝑎 | 𝑠 ) = 𝑎 1 (safe), so 𝜙 safe = 1.
+
+Policy B: 𝜋 𝐵 = (0.38 , 0.23 , 0.39 ).
+
+• ˜𝜙 safe = 0.38 + 0.23 = 0.61 > 0.60 . Note: ˜𝜙 safe < 23 .
+
+• arg max 𝑎 𝜋 𝐵 (𝑎 | 𝑠 ) = 𝑎 3 (unsafe), so 𝜙 safe = 0.Therefore, the surrogate increased ( 0.60 → 0.61 ) while the hard specification decreased ( 1 → 0). 
+
+Increasing surrogate can increase the hard safety. 
+
+Policy B: 𝜋 𝐵 = (0.38 , 0.23 , 0.39 ).• ˜𝜙 safe = 0.38 + 0.23 = 0.61 . Note: ˜𝜙 safe < 23 .
+
+• arg max 𝑎 𝜋 𝐵 (𝑎 | 𝑠 ) = 𝑎 3 (unsafe), so 𝜙 safe = 0.
+
+Policy C: 𝜋 𝐵 = (0.39 , 0.23 , 0.38 ).
+
+• ˜𝜙 safe = 0.39 + 0.23 = 0.62 > 0.61 . Note: ˜𝜙 safe < 23 .
+
+• arg max 𝑎 𝜋 𝐶 (𝑎 | 𝑠 ) = 𝑎 1 (safe), so 𝜙 safe = 1.Therefore, the surrogate increased ( 0.61 → 0.62 ) and the hard specification increased ( 0 → 1). □
+
+Remark 1 (Mechanism of non-monotonicity) . The non-monotonic relationship arises because the surrogate aggregates probability mass over all safe actions, but the hard specification depends on which single action has the highest probability. Redistributing mass among safe actions (e.g. from 𝑎 1 to 𝑎 2) can increase the surrogate while simultaneously eroding the lead of the top safe action, allow-ing an unsafe action to become the argmax. 
+
+Remark 2 (Implications for optimisation) . This shows that gradient-based optimisation of ˜𝜙 safe can, in principle, move the policy away 
+
+from safety when there is no lower bound imposed on ˜𝜙 safe . This is exactly what we do in the optimisation – by requiring ˜𝜙 safe (𝑠 ) > 
+
+> 𝑀
+> 1+𝑀
+
+∀𝑠 ∈ S sc , we ensure that 𝜙 safe (𝑠 ) = 1 ∀𝑠 ∈ S sc .
+
+## A.4 Proofs of corollaries 
+
+Corollary 1 restated (per-state certified safety): Under the assump-tions of Theorem 1, for every 𝜃 ′ ∈ Θsafe source and every 𝑠 ∈ S sc ,
+
+arg max   
+
+> 𝑎 ∈ A ( 𝑠 )
+
+𝜋 𝜃 ′ (𝑎 | 𝑠 ) ∈ A safe (𝑠 ).
+
+Proof. By Theorem 1, for every 𝜃 ′ ∈ Θsafe source ,
+
+Φsafe sc (𝜋 𝜃 ′ ) = 1.
+
+By Definition 4.3, 
+
+Φsafe sc (𝜋 𝜃 ′ ) = 1
+
+|S sc |∑︁ 𝑠 ∈ S sc 
+
+𝜙 safe (𝑠 ; 𝜋 𝜃 ′ ).
+
+Since each term 𝜙 safe (𝑠 ; 𝜋 𝜃 ′ ) is binary, the average can equal 1 only if 
+
+𝜙 safe (𝑠 ; 𝜋 𝜃 ′ ) = 1 ∀𝑠 ∈ S sc .
+
+By Definition 4.1 of the hard safety specification, 𝜙 safe (𝑠 ; 𝜋 𝜃 ′ ) = 1
+
+is equivalent to 
+
+arg max   
+
+> 𝑎 ∈ A ( 𝑠 )
+
+𝜋 𝜃 ′ (𝑎 | 𝑠 ) ∈ A safe (𝑠 ).
+
+This proves the claim. □
+
+Corollary 2 (safety preservation throughout adaptation) restated: 
+
+Let {𝜃 𝑡 }𝑡 ≥0 be the sequence of policy parameters produced by Phase 3. Then 𝜃 𝑡 ∈ Θsafe source for all 𝑡 , and therefore 
+
+Φsafe sc (𝜋 𝜃 𝑡 ) = 1 ∀𝑡 ≥ 0.
+
+Proof. Phase 3 performs projected gradient descent with pro-jection onto the certified orthotope Θsafe source . Therefore, after each gradient step, the updated parameter vector is projected back into 
+
+Θsafe source , so 
+
+𝜃 𝑡 ∈ Θsafe source ∀𝑡 ≥ 0.
+
+Applying Theorem 1 to each iterate 𝜃 𝑡 yields 
+
+Φsafe sc (𝜋 𝜃 𝑡 ) = 1 ∀𝑡 ≥ 0.
+
+□
+
+Corollary 3 (distribution-independent source-task safety) restated: 
+
+Under the assumptions of Theorem 1, greedy execution of 𝜋 𝜃 𝑡 on the source task never selects an unsafe action at any iteration 𝑡 .Consequently, for any initial state distribution 𝜇 0, the source-task occupancy measure of 𝜋 𝜃 𝑡 satisfies 
+
+E(𝑠,𝑎 )∼ 𝑑 𝜋 𝜃𝑡 [𝑈 source (𝑠, 𝑎 )] = 0.
+
+Proof. Fix any iteration 𝑡 ≥ 0. By Corollary 1, for every safety-critical state 𝑠 ∈ S sc ,
+
+arg max   
+
+> 𝑎 ∈ A ( 𝑠 )
+
+𝜋 𝜃 𝑡 (𝑎 | 𝑠 ) ∈ A safe (𝑠 ).
+
+By Definition 3.3, every action 𝑎 ∈ A safe (𝑠 ) satisfies 
+
+𝑈 source (𝑠, 𝑎 ) = 0.
+
+Now consider any state 𝑠 ∉ Ssc . By Definition 3.2, such a state has no unsafe actions, so 
+
+𝑈 source (𝑠, 𝑎 ) = 0 ∀𝑎 ∈ A ( 𝑠 ).
+
+Therefore, under greedy execution, every action selected by 𝜋 𝜃 𝑡 
+
+satisfies 𝑈 source (𝑠, 𝑎 ) = 0, regardless of which source-task states are actually visited. Hence 𝑈 source (𝑠, 𝑎 ) = 0 for all state-action pairs (𝑠, 𝑎 ) in the sup-port of the source-task occupancy measure 𝑑 𝜋 𝜃𝑡 . Since 𝑈 source (𝑠, 𝑎 ) ∈ {0, 1}, it follows that 
+
+E(𝑠,𝑎 )∼ 𝑑 𝜋 𝜃𝑡 [𝑈 source (𝑠, 𝑎 )] = 0.
+
+□
+
+## B ENVIRONMENT CONFIGURATIONS 
+
+Table 5 shows how environments are configured and Figure 6 demonstrates initial-state frames for every environment config-uration. 
+
+Table 5: Frozen Lake vs. Poisoned Apple experiment setup. 
+
+Setting Frozen Lake Poisoned Apple Environment FrozenLake-v1 with custom wrappers 
+
+PoisonedAppleEnv 
+
+(custom Gymnasium environment) State represen-tation One-hot-encoded posi-tion over grid cells and appended task ID Flat grid vector with the following entries: 0=empty, 1=agent, 2=safe apple, 3=poisoned apple 
+
+Action space Discrete(4) : Left, Down, Right, Up 
+
+Discrete(4) : Left, Down, Right, Up Unsafe event Entering a hole tile ( H) Stepping onto apoisoned apple (info["safe"]=False ,
+
+cost=1 )Termination on unsafe event? Yes No What changes from Task 1 to Task 2? Positions of ice holes Safe/poisoned apple po-sitions Figure 6: Environment frames at initial states. 
+
+## C TRAINING, ADAPTATION, AND CERTIFICATION SETTINGS 
+
+We report the full experimental configuration used in both envi-ronments (Frozen Lake and Poisoned Apple), organized by training stage. Table 6 summarises source-task policy training (PPO and safety finetuning), Table 7 reports Rashomon-set computation set-tings, Table 8 details downstream PPO adaptation settings for Un-safeAdapt and SafeAdapt , and Table 9 lists EWC-PPO-specific hy-perparameters. Together, these tables make explicit which choices are shared across environments and which are environment-specific. 
+
+Setting Frozen Lake Poisoned Apple Source PPO max timesteps 500,000 20,000 PPO eval episodes 1 1Actor/Critic architecture MLP 64-64 MLP 256-256 Rollout steps 256 256 Update epochs 8 6Mini-batch size 64 64 
+
+𝛾 / GAE 𝜆 0.99 / 0.95 0.99 / 0.95 Clip / value coef 0.2 / 0.5 0.2 / 0.5 Entropy coef 0.01 0.01 Learning rate / max grad norm 3 × 10 −4 / 0.5 3 × 10 −4 / 0.5 Source PPO early stopping Enabled; deterministic reward 
+
+≥ 1.0 (1 eval ep) Disabled ( early_stop=False )Safety finetuning Enabled (default) Enabled (default) Safety finetuning objective Allowed-action log-prob on combined safety+trajectory states (overlap_mode=policy )Multi-label BC (BCEWithLogitsLoss ) on safety-critical states Target safety rate 1.0 1.0 Safety finetuning optimiser Adam, lr = 10 −2, max epochs 
+
+= 3000 
+
+Adam, lr = 2 × 10 −3, epochs 
+
+= 2000 , batch = 64 
+
+Extra source acceptance check Deterministic Task-1 reward must be 1.0 Task-1 overall success ≥ 0.95 
+
++ global safety check 
+
+Table 6: Source-task policy training and safety finetuning settings. 
+
+Setting Frozen Lake Poisoned Apple Rashomon dataset Task-1 safety-critical states Task-1 safety dataset Label type / aggregation Multi-label safe-action masks; aggregation= min 
+
+Multi-label safe-action masks; aggregation= min 
+
+Rashomon iterations (n_iters )5,000 20,000 Surrogate threshold max 𝑠 | A safe (𝑠 ) |/( 1 +
+
+max 𝑠 | A safe (𝑠 ) | ) 
+
+Same formula Inverse-temperature search Smallest 𝑇 ∈ [ 10 , 1000 ]
+
+satisfying surrogate mass constraint Smallest 𝑇 ∈ [ 10 , 1000 ]
+
+satisfying surrogate mass constraint smin_acc_limit Surrogate threshold Surrogate threshold 
+
+min_acc_increment 0.0 0.0 
+
+checkpoint 100 100 Hard certificate threshold 1.0 min_safety_accuracy 
+
+(default 1.0 here) Selected bound Last certificate index meeting hard threshold Last certificate index meeting hard threshold Used downstream as Actor parameter bounds (param_l , param_u ) for SafeAdapt PPO Actor parameter bounds (param_l , param_u ) for SafeAdapt PPO 
+
+Table 7: Rashomon set computation settings. Setting Frozen Lake Poisoned Apple Downstream max timesteps 50,000 20,000 Entropy coef 0.1 0.01 Learning rate 3 × 10 −4 (PPO default) 3 × 10 −4 (PPO default) Rollout / epochs / minibatch 2048 / 10 / 64 2048 / 10 / 64 
+
+𝛾 / GAE 𝜆 / clip / vf / grad norm 0.99 / 0.95 / 0.2 / 0.5 / 0.5 0.99 / 0.95 / 0.2 / 0.5 / 0.5 Eval episodes 1 1Early stopping enabled Yes Yes Early-stop reward threshold 1.0 0.96 Early-stop min steps 0 0Early-stop check cadence Every 20 ,480 steps Every 20 ,480 steps 
+
+Table 8: Downstream adaptation PPO settings for Un-safeAdapt and SafeAdapt .
+
+Setting Frozen Lake Poisoned Apple EWC 𝜆 5000 5000 Fisher data source Source training states Source training states Fisher sample-size cap min (1000 , 𝑁 source states ) min (1000 , 𝑁 source states )
+
+Compute critic Fisher? No No Apply EWC to critic during training? No (default) No (explicit) EWC adaptation timesteps 50,000 20,000 Entropy coef in EWC-PPO 0.1 0.01 PPO backbone in EWC lr = 3 × 10 −4, rollout 2048, epochs 10, minibatch 64 lr = 3 × 10 −4, rollout 2048, epochs 10, minibatch 64 Early-stop reward threshold 1.0 0.96 Early-stop eval episodes (internal) 10 10 
+
+Table 9: EWC-PPO settings. 
+
+## D DETAILED EXPERIMENT RESULTS D.1 Scalability analysis 
+
+Tables 10 and 11 report results of experiments with the diagonal Frozen Lake configurations to highlight how retention and adapta-tion scale with layout size. 
+
+## D.2 Rashomon set visualisations 
+
+Figures 7 and 8 visualise the safe logit intervals and worst-case action probabilities for Frozen Lake ( standard_4x4 ). L D R U
+
+> −5
+> 0
+> 5
+
+(x, y) = (0, 0)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (1, 0)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (2, 0)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (3, 0)    
+
+> LDRU
+> −10
+> 0
+> 10
+
+(x, y) = (0, 1)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (1, 1)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (2, 1)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (3, 1)    
+
+> LDRU
+> −5
+> 0
+> 5
+
+(x, y) = (0, 2)    
+
+> LDRU
+> 0
+> 10
+
+(x, y) = (1, 2)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (2, 2)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (3, 2)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (0, 3)    
+
+> LDRU
+> −5
+> 0
+> 5
+
+(x, y) = (1, 3)    
+
+> LDRU
+> −5
+> 0
+> 5
+
+(x, y) = (2, 3)    
+
+> LDRU
+> −500
+> −250
+> 0
+> 250
+
+(x, y) = (3, 3) 
+
+Logit bounds per state 
+
+Frozen Lake — standard_4x4 - Task 1 - seed 0   
+
+> Safe Unsafe Terminal
+
+Figure 7: Logit bounds illustrate the following guarantee of the Rashomon set: in any state, there is a safe action whose lower bound logit is greater than upper bound of any unsafe action’s logit. States are represented using their x and y coor-dinates in the grid world. Left Down Right Up  
+
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Probability
+> 0.00
+> 1.00
+> 0.00 0.00
+
+State 1     
+
+> Left Down Right Up
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 0.00
+> 1.00
+> 0.00 0.00
+
+State 3     
+
+> Left Down Right Up
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 0.00
+> 0.51 0.49
+> 0.00
+
+State 4      
+
+> Left Down Right Up
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Probability
+> 1.00
+> 0.00 0.00 0.00
+
+State 6     
+
+> Left Down Right Up
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 0.00
+> 0.49 0.51
+> 0.00
+
+State 8    
+
+> Left Down Right Up
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 0.00
+> 0.58
+> 0.00
+> 0.42
+
+State 9     
+
+> Left Down Right Up
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Probability
+> 0.00 0.00
+> 1.00
+> 0.00
+
+State 10    
+
+> Left Down Right Up
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 0.31
+> 0.02
+> 0.67
+> 0.00
+
+State 13 
+
+Worst-case action probabilities in safety-critical states (softmax temp.=1.0) 
+
+Frozen Lake — standard_4x4 - Task 1 - seed 0  
+
+> Safe Unsafe
+
+Figure 8: Neural policy probabilities for the worst-case logit vector in the source task of Frozen Lake ( standard 4x4 ). Table 10: Scalability analysis: Frozen Lake Task 1 results across configurations (mean ± std over 10 seeds). 
+
+Environment Policy Provably Safe? Φsc (𝜋 ) Φtraj . (𝜋 ) Total Reward 
+
+diagonal_4x4 
+
+Source ✓ 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 
+
+UnsafeAdapt × 0.53 ± 0.07 0.00 ± 0.00 0.00 ± 0.00 
+
+EWC × 0.67 ± 0.20 0.30 ± 0.46 0.30 ± 0.46 
+
+SafeAdapt (ours) ✓ 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 
+
+diagonal_6x6 
+
+Source ✓ 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 
+
+UnsafeAdapt × 0.52 ± 0.11 0.00 ± 0.00 0.00 ± 0.00 
+
+EWC × 0.74 ± 0.15 0.10 ± 0.30 0.00 ± 0.00 
+
+SafeAdapt (ours) ✓ 1.00 ± 0.00 1.00 ± 0.00 0.80 ± 0.40 
+
+diagonal_8x8 
+
+Source ✓ 1.00 ± 0.00 1.00 ± 0.00 1.00 ± 0.00 
+
+UnsafeAdapt × 0.49 ± 0.13 0.00 ± 0.00 0.00 ± 0.00 
+
+EWC × 0.79 ± 0.10 0.12 ± 0.33 0.00 ± 0.00 
+
+SafeAdapt (ours) ✓ 1.00 ± 0.00 1.00 ± 0.00 0.88 ± 0.33 
+
+Table 11: Scalability analysis: Frozen Lake Task 2 results across configurations (mean ± std over 10 seeds). 
+
+Environment Policy Total Reward Success Rate 
+
+diagonal_4x4 
+
+Source 0.00 ± 0.00 0.00 ± 0.00 
+
+UnsafeAdapt 1.00 ± 0.00 1.00 ± 0.00 
+
+EWC 1.00 ± 0.00 1.00 ± 0.00 
+
+SafeAdapt (ours) 1.00 ± 0.00 1.00 ± 0.00 
+
+diagonal_6x6 
+
+Source 0.00 ± 0.00 0.00 ± 0.00 
+
+UnsafeAdapt 1.00 ± 0.00 1.00 ± 0.00 
+
+EWC 1.00 ± 0.00 1.00 ± 0.00 
+
+SafeAdapt (ours) 1.00 ± 0.00 1.00 ± 0.00 
+
+diagonal_8x8 
+
+Source 0.00 ± 0.00 0.00 ± 0.00 
+
+UnsafeAdapt 1.00 ± 0.00 1.00 ± 0.00 
+
+EWC 1.00 ± 0.00 1.00 ± 0.00 
+
+SafeAdapt (ours) 0.88 ± 0.33 0.88 ± 0.33

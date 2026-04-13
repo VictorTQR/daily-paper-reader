@@ -1,0 +1,1698 @@
+Title: Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays in Cooperative Multi-Agent Reinforcement Learning
+
+URL Source: https://arxiv.org/pdf/2604.03785v1
+
+Published Time: Tue, 07 Apr 2026 00:46:41 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays in Cooperative Multi-Agent Reinforcement Learning 
+
+Zihong Gao 1 Hongjian Liang 1 Lei Hao 1 Liangjun Ke 1
+
+Abstract 
+
+Communication is essential for coordination in co-operative multi-agent reinforcement learning un-der partial observability, yet cross-timestep delays cause messages to arrive multiple timesteps after generation, inducing temporal misalignment and making information stale when consumed. We formalize this setting as a delayed-communication partially observable Markov game (DeComm-POMG) and decompose a message’s effect into 
+
+communication gain and delay cost , yielding the Communication Gain and Delay Cost (CGDC) metric. We further establish a value-loss bound showing that the degradation induced by delayed messages is upper-bounded by a discounted ac-cumulation of an information gap between the action distributions induced by timely versus de-layed messages. Guided by CGDC, we propose 
+
+CDCMA , an actor–critic framework that requests messages only when predicted CGDC is positive, predicts future observations to reduce misalign-ment at consumption, and fuses delayed messages via CGDC-guided attention. Experiments on no-teammate-vision variants of Cooperative Naviga-tion and Predator Prey, and on SMAC maps across multiple delay levels show consistent improve-ments in performance, robustness, and generaliza-tion, with ablations validating each component. 
+
+1. Introduction 
+
+Communication is essential for coordination under partial observability in cooperative multi-agent reinforcement learn-ing (MARL). In practical deployments, sensing, computa-
+
+> 1
+
+The State Key Laboratory for Manufacturing Systems Engineering, School of Automation Science and Engi-neering, Xi’an Jiaotong University. Correspondence to: Zihong Gao <g1246830895@stu.xjtu.edu.cn >,Hongjian Liang <lianghj@stu.xjtu.edu.cn >, Lei Hao <lei\_hao@stu.xjtu.edu.cn >, Liangjun Ke 
+
+<keljxjtu@xjtu.edu.cn >.Agent  𝒊                
+
+> Agent 𝒋
+> 𝑜 𝑡
+> 𝑗
+> 𝑡 𝑡 +1𝑡 +2𝑡 +3
+> Recv
+> State A
+> (based on 𝑚 𝑗𝑖 ,𝑡 +2
+> 𝑠 )
+> State B
+> (based on 𝑚 𝑗𝑖 ,𝑡
+> 𝑠 )
+> 𝑜 𝑡 +2
+> 𝑗
+> Timely
+> 𝑚 𝑗𝑖 ,𝑡 +2
+> 𝑠
+> Delayed 𝑚 𝑗𝑖 ,𝑡
+> 𝑠
+> Temporal Misalignment
+
+Figure 1. Temporal misalignment under cross-timestep communi-cation delays. At receiver timestep t+2 , agent i may act on a stale message msji,t rather than the timely message msji,t +2 , leading to different next states. 
+
+tion, and transmission latencies induce non-negligible cross-timestep communication delays , so a message generated at timestep t becomes available to the receiver only at t+d.As illustrated in Fig. 1, conditioning actions on stale mes-sages can lead to different transitions than using timely information, complicating both decision making and credit assignment. Most prior work on MARL communication can be grouped into centralized and selective protocols. Centralized pro-tocols, such as CommNet (Sukhbaatar et al., 2016), BiC-Net (Peng et al., 2017), and IC3Net (Singh et al., 2019), let agents broadcast or share messages system-wide. They aggregate rich information but implicitly assume near-instantaneous exchanges, which limits scalability and can introduce redundancy (Jiang & Lu, 2018; Ding et al., 2020). Selective communication methods learn when and with whom to communicate, improving scalability and efficiency; representative examples include ATOC (Jiang & Lu, 2018), I2C (Ding et al., 2020), and Gated-ACML (Mao et al., 2020). However, most existing approaches assume delay-free com-munication or restrict delays to a single timestep, which mis-matches real-world latency patterns. Under cross-timestep delays, the value of a received message depends jointly on its informational benefit and its staleness, raising two cou-pled questions: when is a delayed message worth using and 
+
+which teammates should be queried. Addressing these ques-tions requires an objective that explicitly evaluates delayed communication and a learning framework that optimizes it. We formalize delayed communication as a delayed-1
+
+> arXiv:2604.03785v1 [cs.AI] 4 Apr 2026 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays
+
+communication partially observable Markov game (DeComm-POMG) and decompose a message’s impact into two complementary terms: communication gain ,capturing the value improvement brought by the message, and delay cost , capturing the harm induced by delayed and stale information. This gain–cost view yields the Communication Gain and Delay Cost (CGDC) metric, which scores each candidate communication by trading off benefit against delay-induced harm. Guided by CGDC, we develop CDCMA , a communication framework for MARL under cross-timestep delays. CDCMA integrates three com-ponents into actor–critic learning: a Delay Communication Objective Selector that predicts per-teammate CGDC from local observations (and received messages) to decide whom to query, an Observation Trajectory Generator that predicts future observations to mitigate temporal misalignment, and a CGDC-guided Attentional Message Aggregator that prioritizes informative received messages. We evaluate CDCMA on partially observable variants of Cooperative Navigation and Predator Prey without teammate vision and on benchmark maps from the StarCraft Multi-Agent Challenge (SMAC) (Samvelyan et al., 2019). Experiments cover four delay regimes as well as a delay-free setting, and include ablations that isolate each module. Results show that CDCMA improves performance and robustness across tasks and delay conditions. Our main contributions are: 
+
+• We introduce DeComm-POMG, a formulation of co-operative MARL with cross-timestep communication delays, enabling analysis of temporal misalignment. 
+
+• We propose CGDC, a gain–cost metric that scores com-munications by balancing communication gain against delay cost, with information-theoretic penalty. 
+
+• We develop CDCMA, a CGDC-driven actor–critic framework with partner selection, predictive messag-ing, and CGDC-guided aggregation. 
+
+• We demonstrate CDCMA on MPE and SMAC across multiple delay regimes, with component-wise abla-tions, analyses, and zero-shot generalization. 
+
+2. Related Work 
+
+Communication learning is a longstanding theme in MARL. Most approaches fall into (i) centralized protocols that broadcast or aggregate messages system-wide and (ii) se-lective schemes that adapt communication partners, entities, or timesteps. A smaller body of work studies communica-tion under delays, which is essential in deployments with non-negligible latency. 
+
+2.1. Centralized Communication 
+
+Centralized protocols enable broad information sharing, commonly implemented via differentiable message passing. Canonical examples include CommNet (Sukhbaatar et al., 2016), DIAL (Foerster et al., 2016), and BiCNet (Peng et al., 2017). Follow-up work improves message expressiveness with recurrent aggregation (e.g., FCMNet (Wang & Sar-toretti, 2022)) and enhances discreteness or interpretability (e.g., Diff Discrete (Freed et al., 2020), TarMAC (Das et al., 2019), IS (Kim et al., 2020)). To reduce redundancy and improve robustness, other methods filter or drop messages (e.g., DCC-MD (Kim et al., 2019b), ℜ-MACRL (Xue et al., 2022b)) or introduce auxiliary structures such as centralized proxies and self-supervised objectives (e.g., IMAC (Wang et al., 2020), MASIA (Guan et al., 2022)). Symbolic com-munication has also been explored (e.g., GCL (Mordatch & Abbeel, 2018), AE-Comm (Lin et al., 2021)). 
+
+2.2. Selective Communication 
+
+Selective communication improves scalability by restrict-ing exchange to a subset of agents, entities, or timesteps. Early work explores learned protocols and structured inter-action graphs (e.g., NeurComm (Chu et al., 2020), Agent-Entity Graph (Agarwal et al., 2020)), bandwidth- or event-constrained communication (e.g., SchedNet (Kim et al., 2019a), ETCNet (Hu et al., 2023)), and utility-driven selec-tion objectives (e.g., I2C (Ding et al., 2020), VBC (Zhang et al., 2019), NDQ (Wang et al., 2019), TMC (Zhang et al., 2020)). More recent methods estimate message importance using game-theoretic or counterfactual sig-nals (e.g., SMS (Xue et al., 2022a), CMVC (Gao et al., 2025)) and personalize communication to specific team-mates (e.g., MAIC (Yuan et al., 2022)). A broad family of attention/graph-based selectors has also been developed (e.g., ATOC (Jiang & Lu, 2018), Gated-ACML (Mao et al., 2020), G2ANet (Liu et al., 2020), MAGIC (Niu et al., 2021), AERL (Pu et al., 2022), InforMARL (Nayak et al., 2023), FlowComm (Du et al., 2021), TGCNet (Zhang et al., 2025)). Recent extensions consider additional realism, such as ad-versarial settings or structured dependency modeling (e.g., AME (Sun et al., 2023), DHCG (Liu et al., 2023)), and im-prove integration strategies (e.g., T2MAC (Sun et al., 2024), SeqComm (Ding et al., 2024)). 
+
+2.3. Communication with Delays 
+
+A complementary line of work studies MARL communica-tion under delayed message arrivals. DACOM (Yuan et al., 2023) mitigates latency by adjusting waiting times (pri-marily for short-horizon delays), while CoDe (Song et al., 2025) infers long-term intents via future-action prediction and fuses asynchronous messages through dual alignment. In contrast, CDCMA introduces an explicit gain–staleness 2Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+trade-off for cross-timestep delays, adopting a CGDC-driven 
+
+request-and-fuse scheme with future-observation prediction and CGDC-guided attention, grounded in DeComm-POMG and the gain–cost decomposition. 
+
+3. DeComm-POMG: Delayed-Communication Partially Observable Markov Games 
+
+3.1. Partially Observable Markov Game 
+
+We formalize MARL under partial observability as a par-tially observable Markov game (POMG) (Littman, 1994). 
+
+Definition 3.1 (POMG) . A Partially Observable Markov Game is a tuple (N , S, A, O, R, P, ρ, γ ) with agents 
+
+N = {1, . . . , N }, state space S, action spaces A =
+
+{A 1, . . . , AN }, observation spaces O = {O 1, . . . , ON },rewards R = {r1, . . . , r N }, transition kernel P, initial state distribution ρ, and discount factor γ.To explicitly capture information exchange, acommunication-augmented POMG (Comm-POMG) further introduces a message space M, allowing agent i to condition its policy on its local observation together with the received messages. 
+
+3.2. Delayed-Communication POMG 
+
+In practical systems, messages can arrive with non-negligible cross-timestep communication delays , which are outside the scope of Comm-POMG. We address this by ex-tending Comm-POMG with (i) per-pair delay domains and (ii) an exogenous and unobserved delay process that only determines message arrival times. 
+
+Definition 3.2 (DeComm-POMG) . A Delayed-Communication Partially Observable Markov Game 
+
+is the tuple (N , S, A, O, R, P, M, D, ρ, γ, φ ), where 
+
+D = {D ji ⊂ Z≥0 | j̸ = i} specifies per-pair delay domains and φ = {φji | j̸ = i} governs the delay process. At each timestep t, the environment samples per-link delays 
+
+dji,t ∈ D ji according to φji . We assume these sampled delays are exogenous (independent of agents’ actions) and 
+
+not observable to agents. Let msji,t be the message generated by agent j for agent i
+
+at timestep t, and let dji,t ∈ { 1, . . . , d max } be the sampled delay; then msji,t becomes available to agent i at the arrival timestep t+dji,t . Equivalently, the received message at timestep t satisfies mrij,t = msji,k iff t = k + dji,k . If multiple messages arrive simultaneously, we keep the most recent one: 
+
+κji (t) ∈ arg max  
+
+> k≤t
+
+{ k | t = k+dji,k }, mrij,t = msji,κ ji (t).
+
+3.3. Communication Gain and Delay-Induced Value Loss Markov representation. Let Bt denote the message buffer at timestep t, collecting all in-flight or delivered mes-sages together with their associated delays, and define the augmented state est = ( st, Bt), where B denotes the space of all feasible buffers Bt.
+
+Proposition 3.3 (Markov representation of DeCom-m-POMG) . With est = ( st, Bt), DeComm-POMG is equiva-lent to a POMG on the augmented state space eS = S × B :for any joint policy π, the induced trajectory distribution over (est, at) matches that of a POMG with state est under the transition kernel induced by P and φ.
+
+From return to Q-based communication gain. We seek to maximize each agent’s discounted return in DeComm-POMG: Ji(π) := Eπ
+
+hP 
+
+> t≥0
+
+γtri(est, at)
+
+i
+
+, where the ex-pectation is over trajectories induced by π in DeComm-POMG. Given the Markov representation in Proposition 3.3, we define the action-value function on the augmented state as Qπ 
+
+> i
+
+(est, at) := Eπ
+
+hP 
+
+> k≥0
+
+γkri(est+k, at+k) est, at
+
+i
+
+.
+
+To isolate the contribution of sender j, consider two joint policies that differ only in whether agent i uses messages from agent j: π(+ j) allows i to use messages from j (mask-ing other teammates’ messages), whereas π(0) masks all incoming messages. We define the communication gain as the corresponding improvement in the augmented-state action-value: 
+
+V gij,t (est, at) := Q(+ j) 
+
+> i
+
+(est, at) − Q(0)  
+
+> i
+
+(est, at). (1) With bounded rewards and γ ∈ (0 , 1) , the gain is uniformly bounded (Proposition A.1 in Appendix A.2). 
+
+Information gap and delay-induced value loss. Fix a receiver timestep t and hold fixed the message-free local input available before consuming messages. Let xi,t de-note agent i’s message-free local input at timestep t. Let 
+
+mtar  
+
+> ji,t
+
+denote the no-delay (timely) reference message from agent j to agent i at timestep t. In our implementation, we set mtar  
+
+> ji,t
+
+= ej,t , the trajectory embedding produced by the observation encoder using information up to t (i.e., without lookahead). This message serves as the counterfac-tual timely reference for CTDE training. In contrast, the actually consumed message may include predictive compo-nents (Sec. 4.3), which are excluded from mtar 
+
+> ji,t
+
+. We define the (delay-induced) information gap as the KL divergence between the induced action distributions: 
+
+∆info (i, j, t ) = DKL 
+
+ πi(· | xi,t , m tar 
+
+> ji,t
+
+) πi(· | xi,t , m rij,t ) .
+
+(2) Intuitively, ∆info (i, j, t ) quantifies how delayed messages shift the policy distribution under the same local input: a 3Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+larger gap indicates stronger temporal misalignment and can translate into larger return loss. 
+
+Assumption 3.4 (Lipschitz dependence on action distribu-tion) . Fix the reference joint policy πdelayed . There exists 
+
+L > 0 such that for any augmented state est and any two joint action distributions μ, ν ,
+
+Eat∼μ
+
+ri(est, at) + γV delayed  
+
+> i
+
+(est+1 )
+
+−Eat∼ν
+
+ri(est, at) + γV delayed  
+
+> i
+
+(est+1 ) ≤ L∥μ − ν∥TV ,
+
+where est+1 ∼ P (· | est, at) and V delayed  
+
+> i
+
+is the value func-tion under πdelayed on the augmented Markov game. 
+
+Theorem 3.5 (Value-loss bound) . Let πdelayed denote the executed joint policy conditioning on the received message 
+
+mrij,t , and let πtimely be identical except that agent i condi-tions on mtar  
+
+> ji,t
+
+instead. Under Assumption 3.4, 
+
+Jtimely  
+
+> i
+
+−Jdelayed  
+
+> i
+
+≤ L Eτ ∼πtimely 
+
+X
+
+> t≥0
+
+γtp∆info (i, j, t )
+
+ ,
+
+(3) 
+
+where the expectation is taken over trajectories τ induced by πtimely on the augmented DeComm-POMG. 
+
+Proof is in Appendix A.3. (The constant from Pinsker’s inequality is absorbed into L.) 
+
+3.4. A tractable gain–cost surrogate under CTDE 
+
+The information gap ∆info (i, j, t ) is defined in terms of the (unknown) message-conditioned policy πi and is therefore not directly accessible at decentralized execution. To ob-tain a practical training signal under CTDE, we introduce critic-induced surrogates that yield a computable CGDC score. For clarity, we distinguish two critics: a centralized 
+
+full critic Qfull  
+
+> i
+
+(o, a, emi) used for actor–critic optimization (Appendix B), and an auxiliary gain critic Qgain  
+
+> i
+
+used ex-clusively to construct the surrogates in this subsection. 
+
+Critic-induced tempered policy. For clarity, we write the critic input explicitly. Let o−j,t and a−j,t denote the observations and actions of all agents except agent j, and let a−ij,t denote the actions of all agents except agents i
+
+and j at timestep t. Given a message m used by agent i at timestep t, we define the tempered policy induced by the critic as 
+
+eπi(m) = softmax ai,t ∈A i
+
+h
+
+η Q gain 
+
+> i
+
+ ai,t , o−j,t , a−ij,t , m i
+
+,
+
+(4) where η > 0 controls the sharpness of the softmax (inverse temperature). 
+
+Delay cost. To measure delay-induced discrepancy rela-tive to the no-delay reference at the same timestep, we treat 
+
+mtar  
+
+> ji,t
+
+as the timely target. We define the local delay cost as 
+
+V cij,t = DKL 
+
+eπi(mtar 
+
+> ji,t
+
+) eπi(mrij,t )
+
+
+
+≥ 0. (5) Appendix A.4 provides further justification for using the critic-induced tempered-policy discrepancy as a surrogate for message-induced policy discrepancy. 
+
+Critic-based gain. To obtain a computable gain signal, we evaluate the critic with and without using the message from j. Let m∅ denote a null/masked message input. We define bV gij,t = Qgain 
+
+> i
+
+ o−j,t , a−j,t , m rij,t 
+
+
+
+−Qgain 
+
+> i
+
+ o−j,t , a−j,t , m ∅, (6) which serves as a practical surrogate for the marginal im-provement in Eq. (1). 
+
+3.5. CGDC 
+
+We quantify the trade-off between communication benefit and delay-induced discrepancy by combining them into CGDC. 
+
+Definition 3.6 (CGDC) . Let V gij,t and V cij,t be defined in Eqs. (1) and (5) . The Communication Gain and Delay Cost is 
+
+cij,t = V gij,t − λ V cij,t , (7) where λ ≥ 0 balances gain and cost, and controls the con-servativeness of the gate. In practice, we approximate V gij,t with the critic-based sur-rogate bV gij,t in Eq. (6) ; the KL-based discrepancy V cij,t in Eq. (5) is non-negative by construction. 
+
+Remark (Policy-improvement intuition). CGDC can be viewed as a practical score that heuristically favors mes-sages with higher estimated marginal utility while penaliz-ing delay-induced mismatch; although it does not constitute a formal guarantee of monotone improvement in the true re-turn, it provides a principled knob to control communication sparsity and utility. 
+
+4. CDCMA: A Realization of the Design Principles 
+
+4.1. Design Objectives Guided by CGDC 
+
+Guided by DeComm-POMG and CGDC, CDCMA is de-signed around three objectives: (O1) Partner selection. Request messages only from team-mates with positive predicted CGDC ( ˆcij,t ≥ 0). (O2) Predictive messaging. Encode predicted future obser-vations to reduce misalignment at consumption time. 4Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+(O3) Weighted aggregation. When multiple delayed mes-sages are available, fuse them via CGDC-guided atten-tion to suppress low-utility information. These objectives correspond to DCOS, OTG, and CAMA, respectively. Pseudocode and per-timestep complexity are deferred to Algorithm 1 and Appendix C. 
+
+4.2. Delayed Communication Objective Selector 
+
+DCOS realizes (O1) by predicting per-pair CGDC and is-suing a request only when the predicted score is positive. Let Hi,t ≜ {j̸ = i | mrij,t ̸ = m∅} be the set of senders whose messages are available to agent i at timestep t, where 
+
+m∅ denotes a null message. At each timestep t, agent i
+
+computes predicted scores {ˆcij,t }j̸ =i by 
+
+{ˆcij,t }j̸ =i = ϕi
+
+ oi,t , {mrij,t }j∈Hi,t ; θϕi
+
+ , ˆcii,t = 0 ,
+
+(8) where ˆcij,t denotes a learned estimator of the critic-based CGDC target cij,t in Eq. (7) . Conditioning on the set of messages available at timestep t enriches the observable local context under unobserved delays, thereby improving the execution-time approximation of this target. 
+
+Objective selection. We threshold ˆcij,t to obtain a binary request mask Fij,t = I[ˆ cij,t > 0] ∈ { 0, 1} for j̸ = i, where 
+
+Fij,t = 1 means that agent i requests a message from agent 
+
+j at timestep t. The queried partner set is Gi,t = {j̸ = i |
+
+Fij,t = 1 }.
+
+4.3. Observation Trajectory Generator 
+
+Delays create temporal misalignment between message gen-eration and consumption, which underlies the cost term in Eq. (5) . OTG mitigates this misalignment by predicting future observations and encoding them into outgoing mes-sages, reducing the information gap at consumption. Let H
+
+be the prediction horizon. At timestep t, OTG outputs a pre-dicted observation trajectory ˆτi,t = (ˆ oi,t +1 , . . . , ˆoi,t +H ),
+
+where ˆoi,t +k predicts agent i’s observation at timestep t + k
+
+conditioned on the trajectory embedding and received mes-sages. Because future observations depend on both teammates’ actions and local dynamics, OTG factorizes prediction into (i) a teammate-action predictor 
+
+ˆagi,t := f ai
+
+ oi,t , {mrij,t }j∈Hi,t 
+
+ = {ˆaj,t }j∈Hi,t , (9) and (ii) an observation-dynamics predictor f oi . For stabil-ity, f oi predicts an observation residual (rather than ˆoi,t +1 
+
+directly), yielding 
+
+ˆoi,t +1 = oi,t + f oi
+
+ ei,t , {mrij,t }j∈Hi,t , ˆagi,t 
+
+ . (10) By recursively applying Eq. (10) , OTG generates an H-step predicted observation trajectory ˆτi,t . The outgoing message Centralized Critic         
+
+> Policy Network
+> Observation
+> Encoder
+> Trajectory
+> Generator
+> Message
+> Aggregator
+> Objective
+> Selector
+> MLP
+> GRU
+> MLP
+> ℎ𝑖 ,𝑡 −1ℎ𝑖 ,𝑡
+> 𝑒 𝑖 ,𝑡
+> Scaled Dot
+> Product
+> Softmax
+> Dot Product
+> 𝑊 𝑖
+> 𝑄 𝑊 𝑖 𝐾 𝑊 𝑖 𝑉
+> ෥𝑚 𝑖 ,𝑡
+> MLP
+> ⋯
+> Ƹ
+> 𝑐 𝑖1 ,𝑡
+> Ƹ
+> 𝑐 𝑖 𝑛 ,𝑡
+> ℱ𝑖1 ,𝑡
+> ℱ𝑖 𝑛 ,𝑡
+> 𝒇 𝒊
+> 𝒂
+> ො𝑎 𝑖 ,𝑡
+> 𝑔
+> 𝒇 𝒊
+> 𝒐
+> OE
+> ො𝑜 𝑖 ,𝑡 +1
+> 𝟏𝒔𝒕 −Observation
+> Predictor
+> ⋯
+> 𝑯𝒕𝒉 −Observation
+> Predictor
+> Ƹ
+> 𝜏 𝑖 ,𝑡
+> ෠ℎ𝑖 ,𝑡
+> 𝒇 𝒊
+> 𝒎𝒔𝒈
+> 𝑚 𝑖 ,𝑡
+> 𝑠
+> Observation
+> Encoder
+> Message
+> Aggregator
+> Communication
+> Module
+> 𝑜 𝑖 ,𝑡
+> ෥𝑚 𝑖 ,𝑡
+> 𝑎 𝑖 ,𝑡
+> 𝑎 𝑖 ,1𝑎 𝑖 ,𝑛
+
+⋯𝒔 𝒕  ෥𝑚 𝑖 ,𝑡               
+
+> {𝑚 𝑖𝑗 ,𝑡
+> 𝑟 }𝑗 ∈𝐻 𝑖 ,𝑡
+> Communication
+> Module
+> ⋯
+> Request & Reply
+> Request & Reply
+> agent -to -agent
+> ⋯
+> Reply to all 𝑗
+> s.t. ,𝑖 ∈𝐺 𝑗 ,𝑡
+> 𝑜 𝑖 ,𝑡 𝑜 𝑖 ,𝑡
+> 𝑜 𝑖 ,𝑡
+> ℎ𝑖 ,𝑡 −1
+> 𝑒 𝑖 ,𝑡
+> 𝑒 𝑖 ,𝑡
+> 𝑜 𝑖 ,𝑡
+> 𝑒 𝑖 ,𝑡
+> {𝑚 𝑖𝑗 ,𝑡
+> 𝑟 }𝑗 ∈𝐻 𝑖 ,𝑡
+> {𝑚 𝑖𝑗 ,𝑡
+> 𝑟 }𝑗 ∈𝐻 𝑖 ,𝑡
+> ҧ
+> 𝑐 𝑖 𝑗 ,𝑡
+> Send requests
+> to all 𝑗 ∈𝐺 𝑖 ,𝑡
+> 𝑒 𝑖 ,𝑡
+> 𝑜 𝑖 ,𝑡
+> 𝑒 𝑖 ,𝑡 {𝑚 𝑖𝑗 ,𝑡
+> 𝑟 }𝑗 ∈𝐻 𝑖 ,𝑡
+> {𝑚 𝑖𝑗 ,𝑡
+> 𝑟 }𝑗 ∈𝐻 𝑖 ,𝑡
+
+Figure 2. Overall architecture of CDCMA. CDCMA consists of six modules: observation encoder, DCOS, OTG, CAMA, policy network, and critic. 
+
+sent by agent i at timestep t is formed by encoding the combined trajectory (τi,t , ˆτi,t ).
+
+4.4. CGDC-guided Attentional Message Aggregator 
+
+At timestep t, agent i may have multiple delayed messages available. Pure content-based attention ignores whether a delayed message yields net benefit under the current delay; CAMA therefore incorporates DCOS-predicted CGDC as a prior. Agent i requests messages from Gi,t ; due to delays, the mes-sages available at timestep t may instead come from Hi,t .For each j ∈ Hi,t , let mrij,t denote the received message and let ¯cij,t > 0 be the CGDC prediction associated with 
+
+mrij,t , computed at request time and stored with the mes-sage. Given the trajectory embedding ei,t , CAMA computes queries, keys, and values by linear projections: 
+
+qi,t = W Qi ei,t , kij,t = W Ki mrij,t , vij,t = W Vi mrij,t ,
+
+(11) where ∀j ∈ Hi,t . CAMA computes attention weights by combining content scores with the CGDC prior: 
+
+αcgdc 
+
+ij,t = ¯cij,t exp  β q ⊤
+
+i,t kij,t 
+
+P
+
+l∈Hi,t ¯cil,t exp  β q ⊤
+
+i,t kil,t 
+
+ , j ∈ Hi,t , (12) where β > 0 controls the sharpness of the attention distribu-tion. The aggregated message is 
+
+˜mi,t = X
+
+j∈Hi,t 
+
+αcgdc 
+
+ij,t vij,t . (13) 
+
+Prior-regularized attention interpretation. Eq. (13) can be viewed as a prior-regularized attention problem where 
+
+{¯cij,t } induces a simplex prior over senders; we formalize this view in Appendix A.5 (Proposition A.2). 
+
+4.5. Training Scheme 
+
+We defer the full training objective and update rules of CDCMA to Appendix B. 5Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 )      
+
+> A
+> T
+> O
+> C
+> D
+> A
+> C
+> O
+> M
+> G
+> 2
+> A
+> N
+> e
+> t
+> S
+> M
+> S
+> T
+> 2
+> M
+> A
+> C
+> T
+> G
+> C
+> N
+> e
+> t
+> CDCMA0.0 0.5 1.0 1.5 2.0 -4.0 -3.5 -3.0 -2.5 -2.0 -1.5 Mean Reward Episode( ×105)
+
+(a) cn easy 0.0 0.5 1.0 1.5 2.0 -4.0 -3.5 -3.0 -2.5 -2.0 -1.5 Mean Reward Episode( ×1 0 5 ) (b) cn medium 0.0 0.5 1.0 1.5 2.0 -4.0 -3.5 -3.0 -2.5 -2.0 -1.5 Mean Reward Episode( ×1 0 5 ) (c) cn hard 0.0 0.5 1.0 1.5 2.0 -4.0 -3.5 -3.0 -2.5 -2.0 -1.5 Mean Reward Episode( ×1 0 5 ) (d) cn super hard 0.0 0.5 1.0 1.5 2.0 -2.8 -2.4 -2.0 -1.6 -1.2 -0.8 Mean Reward Episode( ×1 0 5 )
+
+(e) pp easy 0.0 0.5 1.0 1.5 2.0 -2.8 -2.4 -2.0 -1.6 -1.2 -0.8 Mean Reward Episode( ×1 0 5 ) (f) pp medium 0.0 0.5 1.0 1.5 2.0 -2.8 -2.4 -2.0 -1.6 -1.2 -0.8 Mean Reward Episode( ×1 0 5 ) (g) pp hard 0.0 0.5 1.0 1.5 2.0 -2.8 -2.4 -2.0 -1.6 -1.2 -0.8 Mean Reward Episode( ×1 0 5 ) (h) pp super hard 
+
+Figure 3. Mean episode reward vs. training steps across two MPE tasks and difficulty levels easy , medium , hard , super hard . The central dark curve indicates the mean, while the lighter shaded regions depict the standard deviation. 
+
+5. Experiments 
+
+We evaluate CDCMA under four stochastic cross-timestep delay regimes and a delay-free setting. Specif-ically, we assess (i) performance and training stability against strong communication baselines, (ii) ablations of DCOS/OTG/CAMA and sensitivity to key hyperparame-ters, (iii) a KL-based critic-tempered policy-gap analysis that quantifies delay-induced temporal misalignment, and (iv) zero-shot generalization to unseen delay difficulties. Additional details are provided in Appendix D.1. 
+
+5.1. Experimental Setup Benchmarks. We evaluate CDCMA on four cooperative tasks: Cooperative Navigation (CN) and Predator Prey (PP) in MPE, and two SMAC maps 1o 2r vs 4r and 
+
+1o 10b vs 1r . For CN/PP, we remove teammate vision to emphasize communication; episodes last 60 steps with actions in {up, down, left, right, stop }. For SMAC, we use SC2.4.10 (difficulty 7) with 50-step episodes. We report mean episode reward on MPE and win rate on SMAC. 
+
+Baselines. We evaluate CDCMA and all baselines un-der the same DeComm-POMG unobserved-delay interface: agents can only use messages that arrive before action selec-tion, retaining only the most recent message when multiple from the same sender arrive simultaneously. We compare with ATOC (Jiang & Lu, 2018), G2ANet (Liu et al., 2020), SMS (Xue et al., 2022a), T2MAC (Sun et al., 2024), TGC-Net (Zhang et al., 2025), and DACOM (Yuan et al., 2023). 
+
+Hyperparameters. We use a parameter-shared actor– critic backbone and match training budgets across methods. The actor is a ReLU MLP with hidden size 64 and the critic has hidden size 128. We train with a single-environment sampler, replay buffer size 5000, batch size 32, and Adam for 200k episodes. We evaluate every 500 episodes using 32 test episodes for learning curves, and report final results over 100 evaluation episodes. Results are averaged over 4 random seeds; details is provided in Appendix D (Table 3). 
+
+Delay model. For each ordered pair (j, i ) and send step 
+
+k, the delay is an integer dji,k ∈ { 1, . . . , d max } drawn from a difficulty-indexed PMF (Parzen, 1960) pℓ(d) for 
+
+ℓ ∈ { easy , medium , hard , super hard }. Full PMF specification and details are provided in Appendix D.2. 
+
+5.2. Main Results and Analysis 
+
+Table 1 summarizes test performance over 100 evaluation episodes (mean and standard deviation), and learning curves are reported in Fig. 3 and Fig. 8 (in Appendix D). Across tasks and delay settings, CDCMA achieves the strongest overall performance with stable learning dynamics. The ad-vantage increases with delay difficulty, indicating improved robustness to cross-timestep delays. On SMAC, CDCMA attains higher win rates under harder delays; for example, on 1o 10b vs 1r under 
+
+super hard , CDCMA achieves 73.44% win rate versus 46.88% for TGCNet. On MPE, CDCMA degrades mini-mally as delays increase: on PP, its mean episode reward changes from −0.93 (easy ) to −0.97 (super hard ), 6Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+Table 1. Mean test episode reward (win rate) across tasks under varying delay settings. Results are mean (std) over 100 episodes; best values are in bold. 
+
+Task Difficulty CDCMA ATOC G2ANet SMS T2MAC DACOM TGCNet 
+
+Cooperative Navigation 
+
+easy -1.70 (0.07) -2.51(0.62) -2.24(0.09) -2.57(0.11) -2.23(0.04) -3.16(0.43) -2.08(0.32) 
+
+medium -1.80 (0.36) -2.43(0.14) -2.48(0.07) -2.67(1.01) -2.27(0.08) -3.14(0.13) -2.21(0.35) 
+
+hard -1.78 (0.22) -2.75(0.22) -2.71(0.07) -2.81(0.47) -2.51(0.44) -3.52(1.02) -2.35(0.34) 
+
+super hard -1.89 (0.13) -2.79(0.45) -2.94(0.06) -3.04(0.64) -2.53(0.17) -3.00(0.21) -2.56(0.36) Predator Prey 
+
+easy -0.93 (0.03) -2.38(0.38) -1.17(0.01) -1.46(0.27) -1.10(0.15) -1.97(0.23) -1.53(0.14) 
+
+medium -0.91 (0.04) -2.75(0.54) -1.40(0.05) -1.36(0.17) -1.27(0.22) -2.19(0.42) -1.60(0.14) 
+
+hard -1.02 (0.06) -2.98(0.19) -1.71(0.08) -1.51(0.06) -1.47(0.39) -1.93(0.01) -1.72(0.15) 
+
+super hard -0.97 (0.10) -3.08(0.86) -1.85(0.04) -1.78(0.71) -1.66(0.33) -2.01(0.04) -1.75(0.11) 
+
+1o 2r vs 4r (%) 
+
+easy 81.25 (6.75) 22.40(16.48) 44.27(10.54) 48.44(17.02) 40.44(26.18) 40.35(1.10) 63.28(14.29) 
+
+medium 79.72 (5.97) 29.17(16.01) 29.57(6.71) 45.87(8.08) 38.28(28.91) 35.94(6.51) 56.25(7.66) 
+
+hard 68.81 (10.15) 23.46(20.84) 28.13(16.73) 44.43(3.46) 35.04(29.19) 40.98(8.92) 50.78(9.33) 
+
+super hard 63.28 (11.23) 17.19(12.10) 33.59(10.94) 40.63(14.88) 25.32(26.56) 38.28(6.93) 49.22(6.93) 
+
+1o 10b vs 1r (%) 
+
+easy 81.88 (6.75) 0(0) 38.18(24.80) 23.28(17.75) 33.59(38.98) 13.14(3.04) 66.41(6.44) 
+
+medium 79.79 (3.98) 0.5(1.28) 23.13(9.53) 13.54(23.45) 28.91(34.55) 10.16(8.22) 51.92(6.85) 
+
+hard 75.77 (3.32) 0(0) 16.12(5.75) 0(0) 29.06(24.81) 12.25(3.29) 51.53(13.69) 
+
+super hard 73.44 (5.41) 0(0) 21.47(7.36) 0(0) 23.42(29.55) 15.74(0.95) 46.88(11.27) 0.0 0.5 1.0 1.5 2.0 -4.0 -3.5 -3.0 -2.5 -2.0 -1.5  CDCMA  CDCMA-DCOS  CDCMA-CAMA  CDCMA-OTG  CDCMA-PlainAttn Mean Win Rate Episode( ×1 0 5 )
+
+(a) Ablation studies on the modules 0.0 0.5 1.0 1.5 2.0 -1.8 -1.6 -1.4 -1.2 -1.0 -0.8  H=2d max  H=d max  H=1/2d max  H=0 Mean Win Rate Episode( ×1 0 5 )
+
+(b) Ablation studies on the tra-jectory horizon H0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8  λ = 0                 
+
+> λ=0.1λ0
+> λ=0.3λ0
+> λ=λ0
+> λ=3λ0
+> λ=10λ0
+> MeanWinRate
+> Episode(
+> ×105)
+
+(c) Ablation studies on the CGDC weight λ
+
+Figure 4. Ablation studies on modules of CDCMA, trajectory horizon H, and CGDC weight λ.0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0  ATOC DACOM G2ANet SMS  T2MAC TGCNet CDCMA Mean Win Rate Episode( ×1 0 5 )
+
+Figure 5. Mean win rate vs. train-ing steps on 1o 10b vs 1r un-der the delay-free condition. 
+
+while several baselines deteriorate substantially (e.g., G2ANet from −1.17 to −1.85 ). TGCNet is competitive on SMAC and CN and T2MAC performs relatively well on PP, yet both remain below CDCMA across delay levels. Overall, cross-timestep delays substantially impair coor-dination, and CDCMA mitigates delay-induced temporal misalignment, improving both performance and stability across tasks and delay regimes. 
+
+5.3. Ablation Studies Module ablations. We ablate key components on CN un-der super hard delays: CDCMA-OTG (without OTG), 
+
+CDCMA-CAMA (without CAMA), CDCMA-DCOS (with-out DCOS), and CDCMA-PlainAttn (replacing CAMA with dot-product attention). Fig. 4a shows that removing any module degrades performance, with the largest drop ob-served without OTG, highlighting the importance of pre-dictive messages for mitigating cross-timestep temporal misalignment. Moreover, CDCMA-PlainAttn consistently underperforms CDCMA, indicating that CGDC-guided weighting is crucial beyond content-only relevance. 
+
+Sensitivity to the prediction horizon H. We vary the OTG prediction horizon on PP under super hard delays, with H ∈ { 0, ⌈ 12 dmax ⌉, d max , 2dmax }, where ⌈·⌉ denotes the ceiling operator. As shown in Fig. 4b, performance im-proves as H increases up to H = dmax , but deteriorates for larger horizons. This trend is consistent with a bias– variance trade-off: a longer horizon better covers typical delays, yet incurs larger prediction errors due to multi-step rollout. Additional qualitative diagnostics of OTG predic-tions are provided in Appendix D.3. 
+
+Sensitivity to the CGDC weight λ. On 1o 2r vs 4r 
+
+under the super hard delay setting, we sweep λ ∈{0, 0.1λ0, 0.3λ0, λ 0, 3λ0, 10 λ0}, where λ0 := E[ bV gij,t ]
+
+E[V cij,t ]
+
+is estimated on CTDE training batches to scale gain and cost comparably. Unless otherwise stated, we use λ = λ0.Fig. 4c shows that λ = 0 and overly large λ are both sub-optimal, whereas a moderate range around λ0 performs best, highlighting the gain–cost trade-off in CGDC: small λ
+
+under-penalizes staleness, while large λ overly suppresses partner selection and impairs coordination under delays. 
+
+5.4. Critic-Tempered Policy-Gap Analysis 
+
+We quantify delay-induced discrepancy using the critic-tempered policy gap (Eq. (5) ). At evaluation time, for each (i, j, t ) we compute the KL divergence between critic-7Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+Table 2. CN zero-shot cross-difficulty: train on easy , test on medium /hard /super hard . Cells show mean ±std; brackets report ∆% 
+
+vs easy .                                                                                                                                   
+
+> Method Train Test
+> easy medium hard super hard
+> CDCMA -1.70 ±0.07 -1.82 ±0.15 [∆% = −7.06% ]-1.84 ±0.19 [∆% = −8.24% ]-1.93 ±0.09 [∆% = −13 .53% ]TGCNet −2.08 ±0.32 −2.28 ±0.33 [∆% = −9.62% ]−2.41 ±0.41 [∆% = −15 .87% ]−2.65 ±0.47 [∆% = −27 .40% ]T2MAC −2.23 ±0.04 −2.31 ±0.12 [∆% = −3.59% ]−2.62 ±0.55 [∆% = −17 .49% ]−2.74 ±0.59 [∆% = −22 .87% ]G2ANet −2.24 ±0.09 −2.57 ±0.11 [∆% = −14 .73% ]−2.85 ±0.09 [∆% = −27 .23% ]−3.01 ±0.13 [∆% = −34 .37% ]DACOM −3.16 ±0.43 −3.21 ±0.27 [∆% = −1.58% ]−3.37 ±0.39 [∆% = −6.65% ]−3.29 ±0.45 [∆% = −4.11% ]SMS −2.57 ±0.11 −2.71 ±0.94 [∆% = −5.45% ]−2.89 ±0.97 [∆% = −12 .45% ]−3.11 ±0.77 [∆% = −21 .01% ]ATOC −2.51 ±0.62 −2.55 ±0.26 [∆% = −1.59% ]−2.87 ±0.19 [∆% = −14 .34% ]−2.93 ±0.37 [∆% = −16 .73% ]
+
+Note: On CN (MPE), higher (less negative) mean episode reward indicates better performance. The signed percentage change is computed as ∆% = metric (ℓ)−metric (easy ) 
+
+> |metric (easy )|
+
+× 100% , where ℓ ∈ { medium , hard , super hard }.
+
+induced tempered policies conditioned on (i) the no-delay target message mtar  
+
+> ji,t
+
+and (ii) the actually consumed message 
+
+mrij,t , while keeping the message-free local input xi,t fixed. Rollouts sample actions only from the delayed branch; the no-delay branch is used solely to compute the gap. We report results on PP and 1o 10b vs 1r under easy –
+
+super hard . Fig. 6a and Fig. 6b visualize episode-averaged gaps over ten runs. CDCMA yields consistently smaller gaps than baselines (e.g., maximum gap 0.09 for CDCMA vs. 2.25 for DACOM) and does not exhibit a sys-tematic increase with delay difficulty, suggesting that pre-dictive messages mitigate temporal misalignment. 
+
+5.5. Generalization and Robustness Delay-free evaluation. We also evaluate the delay-free setting on 1o 10b vs 1r . For CDCMA, we set H = 0 
+
+and report learning curves in Fig. 5. CDCMA achieves the highest win rate (above 80% ) and is stable across seeds. While several baselines improve without delays, they remain below CDCMA; some methods are still unstable (notably T2MAC and SMS), and ATOC stays near-zero on this task. 
+
+Zero-shot cross-difficulty. We test robustness to unseen delay distributions on CN by training under easy and eval-uating zero-shot under medium /hard /super hard . Ta-ble 2 shows that CDCMA achieves the best mean episode reward with modest degradation, whereas strong baselines exhibit larger drops and/or higher variance, indicating better robustness to difficulty shifts within the same delay family. 
+
+5.6. Model Interpretation 
+
+We analyze the learned behaviors on 1o 2r vs 4r and 
+
+1o 10b vs 1r using replay visualizations (snapshot se-quences are provided in Appendix D.4). Across both maps, CDCMA learns to initiate early communication with the Overseer and to translate received information into coordi-nated movements under cross-timestep delays. On 1o 2r vs 4r , successful episodes feature early Overseer–Roach communication that synchronizes naviga-0.29 0.48 0.73 1.22 0.02 0.05 0.06 0.09 0.15 0.35 0.52 0.74 0.52 0.86 1.20 1.48 0.48 0.89 1.35 1.87 easy medium hard super_hard G2ANet CDCMA CDCMA-CAMA T2MAC DACOM 0.01 0.27 0.74 2.00 
+
+(a) Predator Prey 0.25 0.55 0.88 0.96 0.03 0.05 0.06 0.08 0.24 0.43 0.79 1.23 0.35 0.64 1.05 1.35 0.85 1.27 1.92 2.25 easy medium hard super_hard G2ANet CDCMA CDCMA-CAMA T2MAC DACOM 0.01 0.29 0.81 2.30 (b) 1o 10b vs 1r 
+
+Figure 6. Critic-tempered policy-gap analysis: episode-averaged policy-gap matrices for Predator Prey and 1o 10b vs 1r .
+
+tion and engagement, whereas missing or delayed messages often lead to fragmented behaviors and failure within the episode horizon. On 1o 10b vs 1r , CDCMA promotes coherent group-level maneuvering; in contrast, several base-lines may establish communication links but do not elicit coordinated state transitions under delayed delivery. 
+
+6. Conclusion 
+
+We study cooperative MARL with cross-timestep communi-cation delays, where messages can be consumed long after they are generated, degrading coordination. We formalize this setting as DeComm-POMG and derive CGDC, which trades off communication gain against delay-induced dis-crepancy to score candidate communications under delays. Building on CGDC, we propose CDCMA, which (i) selects partners via predicted CGDC, (ii) encodes predictive tra-jectory information with OTG to reduce consumption-time misalignment, and (iii) aggregates delayed messages using CGDC-guided attention. Experiments on MPE and SMAC show that CDCMA reduces the KL-based information gap, stabilizes training, and outperforms strong baselines across 
+
+easy –super hard delays, while remaining competitive in the delay-free setting and improving zero-shot robustness to harder unseen delays. 
+
+Limitations and future work We assume discrete, re-liably delivered, exogenous delays; extending CDCMA to nonstationary latency, packet loss, and bandwidth con-8Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+straints is an important direction. We also adopt a fixed prediction horizon; future work includes adaptive horizons, bandwidth-aware messaging, and transfer to more realistic partially observable systems with sensing noise. 
+
+References 
+
+Agarwal, A., Kumar, S., Sycara, K., and Lewis, M. Learning transferable cooperative behavior in multi-agent teams. In Proceedings of the 19th International Conference on Autonomous Agents and Multiagent Systems , pp. 1741– 1743, 2020. Chu, T., Chinchali, S., and Katti, S. Multi-agent reinforce-ment learning for networked system control. In Interna-tional Conference on Learning Representations , 2020. Das, A., Gervet, T., Romoff, J., Batra, D., Parikh, D., Rab-bat, M., and Pineau, J. Tarmac: Targeted multi-agent communication. In International Conference on Machine Learning , pp. 1538–1546, 2019. Ding, Z., Huang, T., and Lu, Z. Learning individually in-ferred communication for multi-agent cooperation. In 
+
+Advances in Neural Information Processing Systems , vol-ume 33, pp. 22069–22079, 2020. Ding, Z., Liu, Z., Fang, Z., Su, K., Zhu, L., and Lu, Z. Multi-agent coordination via multi-level communication. In Advances in Neural Information Processing Systems ,volume 37, pp. 118513–118539, 2024. Du, Y., Liu, B., Moens, V., Liu, Z., Ren, Z., Wang, J., Chen, X., and Zhang, H. Learning correlated communication topology in multi-agent reinforcement learning. In Proc. 20th Int. Conf. Auton. Agents MultiAgent Syst. , pp. 456– 464, 2021. Foerster, J., Assael, I. A., de Freitas, N., and Whiteson, S. Learning to communicate with deep multi-agent rein-forcement learning. In Advances in Neural Information Processing Systems , volume 29, pp. 2145–2153, 2016. Freed, B., Sartoretti, G., Hu, J., and Choset, H. Communi-cation learning via backpropagation in discrete channels with unknown noise. In Proceedings of the AAAI Confer-ence on Artificial Intelligence , volume 34, pp. 7160–7168, 2020. Gao, Z., Qu, C., Hao, Y., and Ke, L. Communication in multiagent reinforcement learning via counterfactual message value. IEEE Transactions on Systems, Man, and Cybernetics: Systems , 55(11):8152–8165, 2025. doi: 10.1109/TSMC.2025.3604230. Guan, C., Chen, F., Yuan, L., Wang, C., Yin, H., Zhang, Z., and Yu, Y. Efficient multi-agent communication via self-supervised information aggregation. In Advances in Neural Information Processing Systems , volume 35, pp. 1020–1033, 2022. Hu, G., Zhu, Y., Zhao, D., Zhao, M., and Hao, J. Event-triggered communication network with limited-bandwidth constraint for multi-agent reinforcement learn-ing. IEEE Transactions on Neural Networks and Learn-ing Systems , 34(8):3966–3978, 2023. doi: 10.1109/ TNNLS.2021.3135320. Jiang, J. and Lu, Z. Learning attentional communication for multi-agent cooperation. In Advances in Neural Infor-mation Processing Systems , volume 31, pp. 7265–7275, 2018. Kim, D., Moon, S., Hostallero, D., Kang, W. J., Lee, T., Son, K., and Yi, Y. Learning to schedule communication in multi-agent reinforcement learning. In International Conference on Learning Representations , 2019a. Kim, W., Cho, M., and Sung, Y. Message-dropout: An efficient training method for multi-agent deep reinforce-ment learning. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 33, pp. 6079–6086, 2019b. Kim, W., Park, J., and Sung, Y. Communication in multi-agent reinforcement learning: Intention sharing. In Inter-national Conference on Learning Representations , 2020. Lin, T., Huh, J., Stauffer, C., Lim, S. N., and Isola, P. Learn-ing to ground multi-agent communication with autoen-coders. In Advances in Neural Information Processing Systems , volume 34, pp. 15230–15242, 2021. Littman, M. L. Markov games as a framework for multi-agent reinforcement learning. In Proceedings of the 11th International Conference on Machine Learning , pp. 157– 163, 1994. Liu, Y., Wang, W., Hu, Y., Hao, J., Chen, X., and Gao, Y. Multi-agent game abstraction via graph attention neural network. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 34, pp. 7211–7218, 2020. Liu, Z., Wan, L., Sui, X., Chen, Z., Sun, K., and Lan, X. Deep hierarchical communication graph in multi-agent reinforcement learning. In IJCAI , pp. 208–216, 2023. Lowe, R., Wu, Y., Tamar, A., Harb, J., Abbeel, P., and Mor-datch, I. Multi-agent actor-critic for mixed cooperative-competitive environments. In Advances in Neural Infor-mation Processing Systems , volume 30, pp. 6382–6393, 2017. Mao, H., Zhang, Z., Xiao, Z., Gong, Z., and Ni, Y. Learning agent communication under limited bandwidth by mes-sage pruning. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 34, pp. 5142–5149, 2020. 9Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+Mordatch, I. and Abbeel, P. Emergence of grounded compo-sitional language in multi-agent populations. In Proceed-ings of the AAAI Conference on Artificial Intelligence ,volume 32, pp. 1495–1502, 2018. Nayak, S., Choi, K., Ding, W., Dolan, S., Gopalakrishnan, K., and Balakrishnan, H. Scalable multi-agent reinforce-ment learning through intelligent information aggregation. In International Conference on Machine Learning , pp. 25817–25833, 2023. Niu, Y., Paleja, R., and Gombolay, M. Multi-agent graph-attention communication and teaming. In Proceedings of the 20th International Conference on Autonomous Agents and Multiagent Systems , pp. 964–973, 2021. Parzen, E. Modern probability theory and its applications ,volume 10. Wiley, 1960. Peng, P., Wen, Y., Yang, Y., Yuan, Q., Tang, Z., Long, H., and Wang, J. Multiagent bidirectionally-coordinated nets: Emergence of human-level coordination in learning to play StarCraft combat games, 2017. URL https:// arxiv.org/abs/1703.10069 . arXiv:1703.10069. Pu, Z., Wang, H., Liu, Z., Yi, J., and Wu, S. Atten-tion enhanced reinforcement learning for multi agent cooperation. IEEE Transactions on Neural Networks and Learning Systems , 34(11):8235–8249, 2022. doi: 10.1109/TNNLS.2021.3116128. Samvelyan, M., Rashid, T., Schroeder de Witt, C., Farquhar, G., Nardelli, N., Rudner, T. G. J., Hung, C.-M., Torr, P. H. S., Foerster, J., and Whiteson, S. The StarCraft multi-agent challenge. In Proceedings of the 18th International Conference on Autonomous Agents and MultiAgent Sys-tems , pp. 2186–2188, 2019. Singh, A., Jain, T., and Sukhbaatar, S. Learning when to communicate at scale in multiagent cooperative and com-petitive tasks. In International Conference on Learning Representations , 2019. Song, S., Lin, Y., Han, S., Yao, C., Wu, H., Wang, S., and Lv, K. Code: Communication delay-tolerant multi-agent collaboration via dual alignment of intent and timeliness. In Proceedings of the AAAI Conference on Artificial In-telligence , volume 39, pp. 23304–23312, 2025. Sukhbaatar, S., Szlam, A., and Fergus, R. Learning multia-gent communication with backpropagation. In Advances in Neural Information Processing Systems , volume 29, pp. 2244–2252, 2016. Sun, C., Zang, Z., Li, J., Li, J., Xu, X., Wang, R., and Zheng, C. T2mac: Targeted and trusted multi-agent communica-tion through selective engagement and evidence-driven integration. In Proceedings of the AAAI Conference on Ar-tificial Intelligence , volume 38, pp. 15154–15163, 2024. Sun, Y., Zheng, R., Hassanzadeh, P., Liang, Y., Feizi, S., Ganesh, S., and Huang, F. Certifiably robust policy learn-ing against adversarial multi-agent communication. In 
+
+International Conference on Learning Representations ,2023. Wang, R., He, X., Yu, R., Qiu, W., An, B., and Rabinovich, Z. Learning efficient multi-agent communication: An information bottleneck approach. In International Con-ference on Machine Learning , pp. 9908–9918, 2020. Wang, T., Wang, J., Zheng, C., and Zhang, C. Learning nearly decomposable value functions via communication minimization. In International Conference on Learning Representations , 2019. Wang, Y. and Sartoretti, G. Fcmnet: Full communication memory net for team-level cooperation in multi-agent systems. In Proceedings of the 21st International Confer-ence on Autonomous Agents and Multiagent Systems , pp. 1355–1363, 2022. Xue, D., Yuan, L., Zhang, Z., and Yu, Y. Efficient multi-agent communication via shapley message value. In 
+
+IJCAI , pp. 578–584, 2022a. Xue, W., Qiu, W., An, B., Rabinovich, Z., Obraztsova, S., and Yeo, C. K. Mis-spoke or mis-lead: Achieving robustness in multi-agent communicative reinforcement learning. In Proceedings of the 21st International Con-ference on Autonomous Agents and Multiagent Systems ,pp. 1418–1426, 2022b. Yuan, L., Wang, J., Zhang, F., Wang, C., Zhang, Z., Yu, Y., and Zhang, C. Multi-agent incentive communication via decentralized teammate modeling. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 36, pp. 9466–9474, 2022. Yuan, T., Chung, H.-M., Yuan, J., and Fu, X. Dacom: Learn-ing delay-aware communication for multi-agent reinforce-ment learning. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 37, pp. 11763–11771, 2023. Zhang, S. Q., Zhang, Q., and Lin, J. Efficient communica-tion in multi-agent reinforcement learning via variance based control. In Advances in Neural Information Pro-cessing Systems , volume 32, pp. 3235–3244, 2019. Zhang, S. Q., Zhang, Q., and Lin, J. Succinct and robust multi-agent communication with temporal message con-trol. In Advances in Neural Information Processing Sys-tems , volume 33, pp. 17271–17282, 2020. 10 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+Zhang, Z., He, B., Cheng, B., and Li, G. Bridging training and execution via dynamic directed graph-based com-munication in cooperative multi-agent systems. In Pro-ceedings of the AAAI Conference on Artificial Intelli-gence , volume 39, pp. 23395–23403, 2025. doi: 10.1609/ aaai.v39i22.34507. URL https://ojs.aaai.org/ index.php/AAAI/article/view/34507 .11 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+A. Proofs for Section 3 
+
+A.1. Proof of Proposition 3.3 
+
+Proof. Define the augmented state as est = ( st, Bt), where the buffer Bt stores (i) all in-flight messages together with their send times and sampled delays, and (ii) for each receiver, the most recently delivered message available at time t (as determined by the arrival rule through κji (t)). Under DeComm-POMG, the next environment state is sampled from the original transition kernel P(· | st, at), while the buffer update Bt+1 is a deterministic function of (Bt, {msji,t }j̸ =i, {dji,t }j̸ =i) together with the exogenous delay dynamics 
+
+φ. Hence, conditioned on (est, at), the distribution of est+1 depends only on the current augmented state and joint action, and is independent of the past history {(esτ , aτ )}τ <t ; therefore {est} is Markov. Finally, the DeComm-POMG policy class is equivalent to the policy class on the augmented POMG. Given any joint policy π in DeComm-POMG, one can define a corresponding policy π′ on the augmented POMG that, at each timestep, chooses the same action distribution as π would under the observation/message history induced by est. Conversely, any joint policy on the augmented POMG induces a valid DeComm-POMG policy because est is a sufficient statistic for the communication state (the evolution of st is governed by P and the evolution of Bt is governed by φ and the arrival rule). Thus, DeComm-POMG is equivalent to a POMG on the augmented state space with Markov state est.
+
+A.2. Proof of Uniform bound on V gij,t 
+
+Proposition A.1 (Uniform bound on V gij,t ). Assume the per-timestep reward is bounded as |ri(est, at)| ≤ Rmax for all t
+
+and γ ∈ (0 , 1) . Then for any (i, j, t, est, at),
+
+V gij,t (est, at) ≤ 2Rmax 
+
+1 − γ . (14) 
+
+Proof. Fix any augmented state–action pair (est, at). By definition, V gij,t (est, at) = Q(+ j) 
+
+> i
+
+(est, at) − Q(0)  
+
+> i
+
+(est, at). By the triangle inequality, 
+
+V gij,t (est, at) ≤ Q(+ j) 
+
+> i
+
+(est, at) + Q(0)  
+
+> i
+
+(est, at) . (15) For any joint policy π, the augmented-state action-value satisfies 
+
+Qπ 
+
+> i
+
+(est, at) = Eπ
+
+X
+
+> k≥0
+
+γk ri(est+k, at+k) est, at
+
+ .
+
+Using |ri| ≤ Rmax and |E[X]| ≤ E[|X|] gives Qπ 
+
+> i
+
+(est, at) ≤ P 
+
+> k≥0
+
+γkRmax = Rmax  
+
+> 1−γ
+
+. Applying this bound to both π(+ j)
+
+and π(0) and substituting into Eq. (15) yields Eq. (14). 
+
+A.3. Proof of Theorem 3.5 
+
+Proof. Let πtimely and πdelayed be defined as in Theorem 3.5. We work on the augmented Markov game whose Markov state is est.Define the action-value function under πdelayed as 
+
+Qdelayed  
+
+> i
+
+(est, at) := E
+
+X
+
+> k≥0
+
+γkri(est+k, at+k) est, at, πdelayed 
+
+ ,
+
+and the corresponding value function 
+
+V delayed  
+
+> i
+
+(est) := Eat∼πdelayed (·| est)
+
+h
+
+Qdelayed  
+
+> i
+
+(est, at)
+
+i
+
+.
+
+By a standard telescoping argument (the performance difference lemma) on the augmented process, we have 
+
+Jtimely  
+
+> i
+
+−Jdelayed  
+
+> i
+
+= Eτ ∼πtimely 
+
+X
+
+> t≥0
+
+γt
+
+Eat∼μt
+
+ri(est, at) + γV delayed  
+
+> i
+
+(est+1 ) − Eat∼νt
+
+ri(est, at) + γV delayed  
+
+> i
+
+(est+1 ) ,
+
+12 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+where μt := πtimely (· | est) and νt := πdelayed (· | est), and est+1 ∼ P (· | est, at).Assumption 3.4 implies that, for every realized est,
+
+Eat∼μt
+
+ri(est, at) + γV delayed  
+
+> i
+
+(est+1 ) − Eat∼νt
+
+ri(est, at) + γV delayed  
+
+> i
+
+(est+1 ) ≤ L∥μt − νt∥TV .
+
+Substituting this bound into the previous identity yields 
+
+Jtimely  
+
+> i
+
+− Jdelayed  
+
+> i
+
+≤ L Eτ ∼πtimely 
+
+X
+
+> t≥0
+
+γt∥μt − νt∥TV 
+
+ .
+
+Moreover, πtimely and πdelayed are identical except that agent i conditions on mtar  
+
+> ji,t
+
+versus mrij,t , hence 
+
+∥μt − νt∥TV ≤ πi(· | xi,t , m tar 
+
+> ji,t
+
+) − πi(· | xi,t , m rij,t ) TV .
+
+Finally, Pinsker’s inequality gives 
+
+πi(· | xi,t , m tar 
+
+> ji,t
+
+) − πi(· | xi,t , m rij,t ) TV ≤
+
+q 12 ∆info (i, j, t ).
+
+Absorbing the constant 
+
+q 12 into L proves Eq. (3). 
+
+A.4. Justification for the Critic-Induced Surrogate 
+
+The information gap ∆info (i, j, t ) in Eq. (2) is defined on the actor policy πi(·) under two different message inputs, and evaluating it faithfully throughout training can be costly and noisy. Under CTDE, we therefore measure message-induced discrepancy using the gain-critic-induced tempered policy eπi(·) defined in Eq. (4) and use the resulting KL divergence as a tractable surrogate delay cost. The full critic in Appendix B is used only for actor–critic updates. 
+
+Link to entropy-regularized actor–critic. In entropy-regularized RL, the optimal policy for a fixed critic has the form 
+
+π⋆(·) ∝ exp( ηQ ). Thus, when the actor tracks its critic reasonably well under the same conditioning inputs, the actor policy is expected to be close to the corresponding softmax distribution induced by the critic. In this regime, the KL discrepancy between actor policies under two message inputs is well approximated by the KL discrepancy between the corresponding tempered policies. 
+
+Interpretation as message-induced action shift. The surrogate divergence DKL (eπi(· | mtar 
+
+> ji,t
+
+) ∥ eπi(· | mrij,t )) captures the change in the action distribution attributable to consuming a delayed message rather than the no-delay reference under the same local context. Accordingly, V cij,t provides a practical proxy for delay-driven temporal misalignment. 
+
+A.5. Prior-regularized attention view for CAMA 
+
+Fix agent i and timestep t. Let Hi,t denote the set of senders whose messages are available to agent i at timestep t, and define the content score sij,t ≜ q⊤
+
+> i,t
+
+kij,t . Because messages are generated only when the predicted CGDC is positive, we have ¯cij,t > 0 for all j ∈ Hi,t , which induces the following prior on the simplex ∆Hi,t :
+
+¯αij,t ≜ ¯cij,t 
+
+P 
+
+> l∈Hi,t
+
+¯cil,t 
+
+, j ∈ Hi,t . (16) Note that ¯αij,t > 0 for all j ∈ Hi,t , hence KL  αt∥ ¯αt
+
+ is well-defined on ∆Hi,t .Consider the following KL-regularized objective over the simplex ∆Hi,t = {αt : αij,t ≥ 0, P 
+
+> j∈Hi,t
+
+αij,t = 1 }:
+
+Lattn (αt) = X
+
+> j∈Hi,t
+
+αij,t sij,t − 1
+
+β KL  αt ∥ ¯αt
+
+, (17) where β > 0 and KL( α∥ ¯α) = P 
+
+> j∈Hi,t
+
+αij,t log αij,t  
+
+> ¯αij,t
+
+.13 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+Proposition A.2 (Optimality of CAMA weights) . The unique maximizer of Lattn (αt) over ∆Hi,t is exactly the CAMA weight αcgdc  
+
+> t
+
+= ( αcgdc  
+
+> ij,t
+
+)j∈Hi,t defined in Eq. (12) , i.e., 
+
+αcgdc  
+
+> ij,t
+
+= ¯cij,t exp  β q ⊤
+
+> i,t
+
+kij,t 
+
+P
+
+> l∈Hi,t
+
+¯cil,t exp  β q ⊤
+
+> i,t
+
+kil,t 
+
+ , j ∈ Hi,t .
+
+Proof. For brevity, drop the indices (i, t ) and write H for Hi,t , sj for sij,t , αj for αij,t , and ¯αj for ¯αij,t . Consider the Lagrangian with multiplier λ for the constraint P 
+
+> j∈H
+
+αj = 1 :
+
+J (α, λ ) = X
+
+> j∈H
+
+αj sj − 1
+
+β
+
+X
+
+> j∈H
+
+αj log αj
+
+¯αj
+
++ λ
+
+ X 
+
+> j∈H
+
+αj − 1
+
+
+
+.
+
+Taking derivatives and setting them to zero gives, for each j ∈ H,
+
+0 = ∂J
+
+∂α j
+
+= sj − 1
+
+β
+
+
+
+log αj
+
+¯αj
+
++ 1 
+
+
+
++ λ. 
+
+Rearranging yields 
+
+log αj
+
+¯αj
+
+= β(sj + λ) − 1, ⇒ αj = ¯ αj exp  β(sj + λ) − 1 = C ¯αj exp( βs j ),
+
+where C = exp( βλ − 1) > 0 is independent of j. Enforcing P 
+
+> j∈H
+
+αj = 1 yields 
+
+αj = ¯αj exp( βs j )
+
+P 
+
+> l∈H
+
+¯αl exp( βs l) .
+
+Substituting Eq. (16) recovers Eq. (12) . Uniqueness follows since −KL( ·∥ ¯α) is strictly concave on the simplex and the first term is linear; hence Lattn is strictly concave and admits a unique maximizer. 
+
+B. Training Scheme 
+
+CDCMA comprises six components: observation encoder ei, DCOS predictor ϕi, OTG predictors (f ai , f oi ), CAMA projections (W Qi , W Ki , W Vi ), decentralized actor πi, a centralized full critic Qfull  
+
+> i
+
+, and an auxiliary gain critic Qgain  
+
+> i
+
+. We share network parameters across agents and condition networks on an agent-identity embedding when needed. Under CTDE, we train an off-policy actor–critic with target networks (·)−. For each agent i, the full critic is trained by minimizing the TD loss 
+
+L(θQfull  
+
+> i
+
+) = E(Qfull  
+
+> i
+
+(o, a, emi) − yi)2. (18) where yi = ri + γ Q full − 
+
+> i
+
+(o′, a′, em ′ 
+
+> i
+
+) and a′ is formed by sampling each a′ 
+
+> i
+
+∼ π− 
+
+> i
+
+(e′
+
+> i
+
+, em ′ 
+
+> i
+
+).
+
+Gain critic for critic-induced surrogates. To instantiate the critic-induced tempered policy in Eq. (4) and the gain surrogate in Eq. (6) , we introduce an auxiliary gain critic Qgain  
+
+> i
+
+. For each ordered pair (i, j ) with j̸ = i, we evalu-ate a present/absent message pair under the same base inputs (o−j , a−j ), namely Qgain  
+
+> i
+
+(o−j , a−j , m rij ) (present) and 
+
+Qgain  
+
+> i
+
+(o−j , a−j , m ∅) (absent). Since these two inputs correspond to different information conditions, we train them with separate TD targets that bootstrap to the corresponding next-step inputs. Concretely, the gain critic is trained by minimizing 
+
+L(θQgain  
+
+> i
+
+) = E
+
+" X
+
+> j∈N \{ i}
+
+ Qgain  
+
+> i
+
+(o−j , a−j , m rij ) − ypres 
+
+> ij
+
+2 +  Qgain  
+
+> i
+
+(o−j , a−j , m ∅) − yabs 
+
+> ij
+
+2#
+
+, (19) where the TD targets are defined as 
+
+ypres  
+
+> ij
+
+= ri + γ Q gain − 
+
+> i
+
+(o′−j , a′−j , m r ′ 
+
+> ij
+
+), yabs  
+
+> ij
+
+= ri + γ Q gain − 
+
+> i
+
+(o′−j , a′−j , m ∅).
+
+Here mr ′ 
+
+> ij
+
+denotes the received message from j to i in the next-timestep transition. We construct a′ by sampling each 
+
+a′ 
+
+> i
+
+∼ π− 
+
+> i
+
+(e′
+
+> i
+
+, em ′ 
+
+> i
+
+) (as in Eq. (18)) and then extract the subvector a′−j .14 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+Actor–critic updates (full critic). We update each actor using the policy gradient (Lowe et al., 2017) with the centralized full critic: 
+
+∇θπi J (θπi ) = E∇θπi log πi(ai | ei, emi) Qfull  
+
+> i
+
+(o, a, emi). (20) We backpropagate through the observation encoder jointly with the actor: 
+
+∇θei J (θei ) = E
+
+h
+
+∇θei ei(oi) ∇ei log πi(ai | ei, emi) Qfull  
+
+> i
+
+(o, a, emi)
+
+i
+
+. (21) 
+
+OTG objectives. OTG is trained with supervised objectives. The observation-dynamics predictor f oi regresses the one-step observation difference (o′ 
+
+> i
+
+− oi) conditioned on the local embedding ei, the available incoming messages {mrij }j∈Hi , and the OTG action prediction ˆa gi :
+
+L(θζi ) = E
+
+h (o′ 
+
+> i
+
+− oi) − f oi
+
+ ei, {mrij }j∈Hi , ˆa gi
+
+ 2i
+
+, (22) where Hi denotes the set of available senders in the sampled transition. In addition, the action predictor f ai predicts teammates’ discrete actions from the same inputs and is trained by the cross-entropy loss: 
+
+L(θψi ) = E
+
+h X
+
+> j∈Hi,t
+
+  − a⊤ 
+
+> j,t
+
+log ˆ aj,t 
+
+i
+
+, (23) 
+
+DCOS objective. Finally, DCOS is trained to predict the critic-based CGDC targets by mean-squared error: 
+
+L(θϕi ) = E
+
+h X
+
+> j∈N \{ i}
+
+(cij − ˆcij )2i
+
+. (24) 
+
+C. Time Complexity Analysis 
+
+We report the per-timestep time complexity as a function of the number of agents N and the OTG prediction horizon H.Unless stated otherwise, we treat the action-space size, representation dimensions, and network widths as constants and focus on the scaling in (N, H ).Let cij,t = V gij,t − λV cij,t denote the CGDC score for ordered pair (j → i), and let Gi,t = {j̸ = i | cij,t > 0} be the selected partner set at timestep t. Denote by bc := max i |Gi,t | the maximum number of selected partners per agent. 
+
+CDCMA per-timestep complexity. CDCMA consists of three main computational components: 
+
+(i) Pairwise partner scoring and CGDC construction. Partner selection requires scoring candidate senders for each receiver, which is all-to-all over ordered pairs (j → i) and thus scales as Θ( N 2) per timestep. Under CTDE, constructing the CGDC target for each ordered pair (i, j ) involves: 
+
+Gain term. Using the gain critic Qgain  
+
+> i
+
+, we evaluate a present/absent message pair Qgain  
+
+> i
+
+(o−j,t , a−j,t , m rij,t ) and 
+
+Qgain  
+
+> i
+
+(o−j,t , a−j,t , m ∅) to compute bV gij,t (Eq. (6) ). With our accounting, each gain-critic evaluation costs Θ(1) w.r.t. 
+
+N , yielding Θ( N 2) total cost per timestep, up to a constant factor of two from the present/absent pair. 
+
+Delay-cost term. For each ordered pair (i, j ), the delay cost V cij,t is computed as a KL divergence between two critic-induced tempered policies (Eq. (4) ) conditioned on mrij,t and the no-delay reference mtar 
+
+> ji,t
+
+, respectively. Treating the action-space size as constant, forming each tempered policy and its KL divergence incurs Θ(1) work, so the delay-cost construction also scales as Θ( N 2) per timestep in N .In addition, DCOS outputs an (N − 1) -dimensional score vector per agent, which costs Θ( N ) per agent and Θ( N 2) overall. Therefore, the total cost of pairwise partner scoring / CGDC construction is Θ( N 2) per timestep. 
+
+(ii) OTG rollout. OTG generates an H-step predicted observation trajectory ˆτi,t = (ˆ oi,t +1 , . . . , ˆoi,t +H ) by recursively applying the observation-dynamics predictor. Under our accounting, each rollout step incurs Θ(1) work per agent, so OTG contributes Θ( N H ) per timestep. 15 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays  
+
+> Table 3. Hyperparameters Setting in All Experiments
+
+Hyperparameters CDCMA / ablations 1 G2ANet ATOC SMS T2MAC TGCNet DACOM discount( γ) 0.96/0.99 2
+
+learning rate 1 × 10 −3, 1 × 10 −2/1 × 10 −4, 1 × 10 −3
+
+process number 1batch size 32 activation function Relu buffer size 5 × 10 3
+
+hidden dim 64/128 3
+
+optimizer Adam    
+
+> 1CDCMA / ablations refer to CDCMA, CDCMA-DCOS, CDCMA-CAMA, CDCMA-OTG, and CDCMA-PlainAttn, respectively.
+> 2The left side represents parameters in Cooperative Navigation and Predator Prey, while the right side represents parameters in SMAC.
+> 3The left side denotes the hidden dimension of the actor, while the right side denotes the hidden dimension of the critic.
+
+(iii) Sparse message aggregation. Messages are produced only for selected partners. Each agent aggregates at most bc
+
+received messages per timestep, yielding a total cost O(bcN ).Putting these components together, the per-timestep time complexity of CDCMA is 
+
+O N 2 + N H + bcN .
+
+In the worst case where bc = Θ( N ), sparse aggregation becomes Θ( N 2) and the total complexity is O(N 2 + N H ). If H is treated as a small constant (as in our experiments), the leading-order scaling is O(N 2).
+
+Complexity comparison with mainstream methods. Under the same accounting, many representative communica-tion/selection methods scale quadratically in N because they perform dense pairwise scoring and/or aggregation over agent pairs: • G2ANet models inter-agent relations on a complete graph and computes attention weights for agent-to-agent interac-tions, inducing Θ( N 2) pairwise scoring/aggregation. • SMS predicts, for each agent, a value (or importance) score for every other agent, yielding Θ( N ) scoring per agent and thus Θ( N 2) overall. • T2MAC uses a selector that outputs a communication probability/weight for each candidate peer, producing an 
+
+(N −1) -dimensional score vector per agent and hence Θ( N 2) scoring in total. • TGCNet operates on a (potentially dense) dynamic communication graph with an N × N adjacency; in the worst case it processes Θ( N 2) candidate edges/interactions per timestep. Therefore, CDCMA matches the common leading-order scaling O(N 2) of these mainstream methods, with additional terms O(N H ) from the H-step OTG rollout and O(bcN ) from sparse message aggregation when the selected partner set is bounded. 
+
+D. Experiments 
+
+D.1. Testable Hypotheses and Evidence Mapping 
+
+We evaluate the following hypotheses: 
+
+H1 Under cross-timestep delays, CDCMA outperforms state-of-the-art baselines on MPE and SMAC. 
+
+H2 OTG reduces delay-induced discrepancy as measured by the KL-based (critic-tempered) policy gap. 
+
+H3 CGDC-guided attention yields more stable learning than content-only (plain) attention. 16 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays Difficulty ℓ μℓ σℓ
+
+easy 1.00 0.65 
+
+medium 2.00 0.80 
+
+hard 3.00 0.70 
+
+super hard 4.00 0.70 
+
+(a) Delay parameters (μℓ, σ ℓ).0123450.0 0.2 0.4 0.6 0.8 1.0 Probabilityeasy  medium  hard  super hard Cross - t i m e s t e p D e l a y s (b) Illustration of the four de-lay distributions. 
+
+Figure 7. Delay model: parameter table and corresponding distribution shapes. 
+
+H4 In the delay-free setting, CDCMA remains competitive. 
+
+H5 There exists a practical range of λ that balances gain and cost, within which performance is stable. 
+
+H6 CDCMA generalizes better than baselines to unseen delay difficulties. 
+
+Evidence mapping. We map each hypothesis to empirical evidence as follows: 
+
+H1 Sec. 5.2 (Fig. 3, Fig. 8, Table 1). 
+
+H2 Sec. 5.4 (Fig. 6a, Fig. 6b). 
+
+H3 Sec. 5.3 (Fig. 4a). 
+
+H4 Sec. 5.5 (Fig. 5). 
+
+H5 Sec. 5.3 (Fig. 4c). 
+
+H6 Sec. 5.5 (Table 2). 
+
+D.2. Delay Model 
+
+For each ordered pair (j, i ) and each send timestep k, the environment samples an integer delay dji,k ∈ { 1, 2, . . . , d max }
+
+in the delayed settings. The delay-free setting corresponds to dji,k = 0 for all ordered pairs. We use a difficulty-indexed probability mass function (PMF) pℓ(d) on {1, . . . , d max } with ℓ ∈ { easy , medium , hard , super hard }. Our default specification is a truncated discrete normal: 
+
+pℓ(d) = Φ  d+0 .5−μℓ
+
+> σℓ
+
+ − Φ  d−0.5−μℓ
+
+> σℓ
+
+Pdmax 
+
+> u=1
+
+h
+
+Φ  u+0 .5−μℓ
+
+> σℓ
+
+ − Φ  u−0.5−μℓ
+
+> σℓ
+
+i , (25) where Φ( ·) is the standard normal cumulative distribution function (CDF). The parameters (μℓ, σ ℓ) are listed in Fig. 7 (a), and the resulting PMF shapes are shown in Fig. 7 (b). As the difficulty increases, μℓ shifts probability mass toward longer delays, while σℓ controls the spread. For exact reproduction of the histogram style in Fig. 7 (b), we additionally provide an empirical categorical PMF p(ℓ) = ( p(ℓ)1 , . . . , p (ℓ) 
+
+> dmax
+
+) that matches the bar heights and renormalizes them to one. 
+
+Sampling logic. At the beginning of each timestep k, for each ordered pair (j, i ), the environment samples an exogenous per-link delay dji,k ∼ pℓ(·) independently across ordered pairs and timesteps; the sampled delays are not observed to agents. Any message generated at timestep k from j to i is delivered after dji,k timesteps. Message arrival and the rule for concurrent arrivals follow the DeComm -POMG specification stated earlier (arrival timestep t = k + dji,k and keeping only the most recent message if several arrive together). 17 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 )      
+
+> A
+> T
+> O
+> C
+> D
+> A
+> C
+> O
+> M
+> G
+> 2
+> A
+> N
+> e
+> t
+> S
+> M
+> S
+> T
+> 2
+> M
+> A
+> C
+> T
+> G
+> C
+> N
+> e
+> t
+> CDCMA0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×105)
+
+(a) 1o2r easy 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 ) (b) 1o2r medium 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 ) (c) 1o2r hard 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 ) (d) 1o2r super hard 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 )
+
+(e) 1o10b easy 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 ) (f) 1o10b medium 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 ) (g) 1o10b hard 0.0 0.5 1.0 1.5 2.0 0.0 0.2 0.4 0.6 0.8 1.0 Mean Win Rate Episode( ×1 0 5 ) (h) 1o10b super hard 
+
+Figure 8. Mean win rate vs. training steps across two SMAC tasks and difficulty levels easy , medium , hard , super hard . The central dark curve indicates the mean, while the lighter shaded regions depict the standard deviation. 1o2r represents 1o 2r vs 4r , and 1o10b represents 1o 10b vs 1r .
+
+D.3. OTG Prediction Diagnostics 
+
+We provide qualitative diagnostics for the Observation Trajectory Generator (OTG) on Predator Prey (PP) under the 
+
+super hard cross-timestep delay setting. In PP, each predator observes its ego position and velocity, together with the rela-tive positions and velocities of its three nearest prey. OTG predicts a future observation trajectory ˆτi,t = (ˆ oi,t +1 , . . . , ˆoi,t +H ),which is encoded into outgoing messages to reduce the delay-induced information gap at consumption time. Fig. 9 visualizes a representative rollout segment. Fig. 9a and Fig. 9b show the ground-truth and OTG-predicted trajectories, respectively; Fig. 9c shows the per-timestep prediction loss. The color intensity encodes steps t, t +1 , t +2 , t +3 from dark to light. OTG accurately extrapolates the ego-trajectory and the motions of nearby prey over short horizons, consistent with the gains observed when increasing H up to dmax in Fig. 4b. We also observe occasional loss spikes in Fig. 9c. These spikes are typically associated with nearest-neighbor identity switching induced by the observation encoding: the three prey slots are defined by the nearest-neighbor ordering at each timestep, so the slot-to-entity correspondence can permute between successive steps. As a result, the supervised target for a fixed coordinate slot may correspond to a different physical prey in the next step, producing an apparent large error even when the predicted physical motion is reasonable. Such permutation-induced mismatch becomes more likely as the horizon 
+
+H grows, which aligns with the degradation observed for H > d max .Overall, OTG remains beneficial for mitigating temporal misalignment under delays: moderate horizons provide predictive signals that bridge the information gap at consumption time, whereas overly long horizons amplify both model errors and permutation-induced supervision mismatch. 
+
+D.4. Replay Visualizations for Qualitative Analysis 
+
+We provide replay snapshots in Fig. 10 to qualitatively examine how CDCMA facilitates coordination under cross-timestep 
+
+delays on two SMAC scenarios. The top row (a–d) corresponds to 1o 2r vs 4r , whereas the bottom row (e–h) corresponds to 1o 10b vs 1r . For each scenario, we juxtapose a representative successful rollout with a representative failure case to highlight distinct coordination patterns. 
+
+1o 2r vs 4r . Roaches (Agents 1–2) depend on the Overseer (Agent 0) for target-related information and use it to synchronize navigation and engagement. Success. At an early stage (Fig. 10a), the two Roaches exhibit consistent 18 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays Predator 1                       
+
+> Prey 1
+> Prey 2
+> Prey 4
+> Prey 3
+> Observed prey for predator 1:
+> •𝒕 :𝟏 ,𝟐 ,𝟑
+> •𝒕 +𝟏 :𝟏 ,𝟐 ,𝟑
+> •𝒕 +𝟐 :𝟏 ,𝟐 ,𝟒
+> •𝒕 +𝟑 :𝟏 ,𝟐 ,𝟒
+
+(a) True trajectory Predator 1      
+
+> Prey 1
+> Prey 2
+> Prey 4
+> Prey 3
+> OTG predicts fixed -index prey:
+> 𝟏 ,𝟐 ,𝟑
+
+(b) Predicted trajectory 0.073 0.7256 0.7332 t+1 t+2 t+3 0.0 0.2 0.4 0.6 0.8 Loss Predicted Steps (c) Prediction loss 
+
+Figure 9. Qualitative OTG diagnostics on Predator Prey. Left: ground-truth observation trajectories. Middle: OTG-predicted trajectories. 
+
+Right: per-timestep prediction loss. Lighter circles indicate farther future steps (from t to t + 3 ). 
+
+movement toward the target region implied by the shared cue (red trajectory/target annotation), thereby avoiding route divergence around the corner. At a later stage (Fig. 10b), both agents reach effective firing range and initiate engagement in a temporally aligned manner, yielding concentrated fire on the target. Failure. In contrast, in the failure rollout, an early deviation from the intended route is observed for at least one Roach (Fig. 10c), which induces split navigation and delays mutual convergence. By a later stage (Fig. 10d), the team remains spatially dispersed near the corner, and the lack of timely alignment translates into delayed engagement that fails to complete within the episode horizon. 
+
+1o 10b vs 1r . Banelings communicate with the Overseer to acquire target-location cues and to coordinate regrouping under terrain constraints. To interpret the behaviors, we distinguish an external group and an internal group induced by the cliff structure. Success. At t=8 (Fig. 10e), agents are naturally partitioned into the external group and an internal group initially blocked by the cliffs. At t=18 (Fig. 10f), part of the team advances toward the target while several agents remain inside the cliffs, indicating the need for a coordinated transition. At t=32 (Fig. 10g), the internal group exits the cliffs (“move outside”) and rejoins the main movement toward the target region, thereby restoring team cohesion and enabling a coordinated engagement. Failure. In the failure snapshot (Fig. 10h), the internal group stays stationary inside the cliffs (“don’t move”) while the target remains separated; after the external group is eliminated, the remaining agents do not successfully regroup and thus fail to re-establish coordinated movement prior to termination. Overall, these replays suggest that successful outcomes are associated with early directional agreement toward the target and timely regrouping across terrain-induced splits, whereas failures are characterized by persistent route divergence or delayed group transitions under cross-timestep delays. 19 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 2
+
+> 1
+> 0
+> ideal trajectory
+> target pos
+
+(a) 1o2r (success), t=2 attack  (b) 1o2r (success), t=26 2 
+
+> 1
+
+(c) 1o2r (failure), t=10 1 
+
+> 2
+> trajectory
+
+(d) 1o2r (failure), t=40 internal 
+
+> group
+> externa l
+> group
+
+(e) 1o10b (success), t=8 target  
+
+> don ’t move
+
+(f) 1o10b (success), t=18 target  
+
+> move
+> outside
+
+(g) 1o10b (success), t=32 1  
+
+> target
+> don ’t move
+> 20
+
+(h) 1o10b (failure) 
+
+Figure 10. Replay snapshots of CDCMA policies on 1o 2r vs 4r and 1o 10b vs 1r under cross-timestep delays. 
+
+20 Decomposing Communication Gain and Delay Cost Under Cross-Timestep Delays 
+
+Algorithm 1 CDCMA (CTDE Training; Decentralized Execution) 
+
+1: Initialize parameter-shared networks: actor π, full critic Qfull , gain critic Qgain , DCOS predictor ϕ, OTG predictors 
+
+(f a, f o), and CAMA projections (W Q, W K , W V ).
+
+2: Initialize parameter-shared networks: actor π, critic Q, DCOS predictor ϕ, OTG predictors (f a, f o), and CAMA projections (W Q, W K , W V ).
+
+3: Initialize target networks, replay buffer R, and per-pair delay queues {B ji }j̸ =i.
+
+4: for episode = 1 , . . . , M do 
+
+5: Reset environment and queues; observe {oi, 0}Ni=1 .
+
+6: for t = 0 , . . . , T − 1 do 
+
+7: // Deliver arrivals at timestep t (keep the most recent message per sender) 
+
+8: for agent i = 1 , . . . , N do 
+
+9: Deliver all entries whose arrival timestep equals t from {B ji }j̸ =i.
+
+10: For each sender j̸ = i, set (mrij,t , ¯cij,t ) to the delivered entry with the largest send timestep (if any); otherwise set mrij,t ← m∅.
+
+11: Let Hi,t ← { j̸ = i | mrij,t ̸ = m∅ }.
+
+12: end for 
+
+13: // Partner selection (DCOS) at timestep t
+
+14: for agent i = 1 , . . . , N do 
+
+15: Observe oi,t and received messages {mrij,t }j∈Hi,t ; compute ei,t ← ei(oi,t ).
+
+16: Compute {ˆcij,t }j̸ =i ← ϕi
+
+ oi,t , {mrij,t }j∈Hi,t ; θϕi
+
+ and set Gi,t ← { j̸ = i | ˆcij,t > 0 }.
+
+17: end for 
+
+18: // Generate and enqueue requested messages (sample delays) 
+
+19: for agent j = 1 , . . . , N do 
+
+20: for receiver i̸ = j do 
+
+21: Encode (τj,t , ˆτj,t ) (OTG horizon H) into the outgoing message msji,t .
+
+22: end for 
+
+23: end for 
+
+24: for receiver i = 1 , . . . , N do 
+
+25: for each sender j ∈ Gi,t do 
+
+26: Sample delay dji,t ∼ φ(·) and enqueue (msji,t , ˆcij,t ) into Bji to arrive at timestep t + dji,t .
+
+27: end for 
+
+28: end for 
+
+29: // Aggregate received messages and act (decentralized) 
+
+30: for agent i = 1 , . . . , N do 
+
+31: Aggregate received messages {mrij,t }j∈Hi,t with CGDC-modulated attention to obtain emi,t .
+
+32: Select action ai,t ∼ πi(· | ei,t , emi,t ).
+
+33: end for 
+
+34: Execute joint action at; each agent observes oi,t +1 and receives ri,t .
+
+35: // Store transition and no-delay reference messages (CTDE) 
+
+36: For each receiver–sender pair (i, j ) with j̸ = i, set mtar  
+
+> ji,t
+
+← ej,t (without OTG prediction). 
+
+37: Store transition (including current/next observations and actions, rewards, received messages {mrij,t } and 
+
+{mrij,t +1 }, {¯cij,t }, and {mtar 
+
+> ji,t
+
+}) into R.
+
+38: end for 
+
+39: // CTDE updates 
+
+40: for each gradient step do 
+
+41: Sample a minibatch from R.
+
+42: For each receiver–sender pair (i, j ) with j̸ = i, compute delay cost V cij,t by contrasting tempered policies induced by Qgain  
+
+> i
+
+under mrij,t and mtar 
+
+> ji,t
+
+.
+
+43: For each pair (i, j ) with j̸ = i, compute gain surrogate bV gij,t via gain-critic evaluation with mrij,t versus a masked message m∅ (Eq. (6)). 
+
+44: For each pair (i, j ) with j̸ = i, compute CGDC target cij,t ← bV gij,t − λV cij,t .
+
+45: Update full critic {Qfull } (Eq. (18) ); update gain critic {Qgain } (Eq. (19) ); update actor/encoder/CAMA (Eqs. (20), (21)); update OTG (Eqs. (22), (23)); update DCOS (Eq. (24)). 
+
+46: If a target-update interval then update the target networks. 
+
+47: end for 
+
+48: end for 
+
+21

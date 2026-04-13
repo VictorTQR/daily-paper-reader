@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.04979v1/fig-001.webp",
+      "caption": "Table 5: Representative held-out examples. The fine-tuned model is strongest on precise hits, compact failure blocks, and true negatives; its residual errors are usually adjacent over-selection.",
+      "page": 5,
+      "index": 1,
+      "width": 950,
+      "height": 255
+    },
+    {
+      "url": "assets/figures/arxiv/2604.04979v1/fig-002.webp",
+      "caption": "Figure 1: System overview. The benchmark stores grounded spans over raw tool output, then derives a generative training target. At evaluation, predicted lines are compared to gold spans using recall, F1, and compression.",
+      "page": 2,
+      "index": 2,
+      "width": 410,
+      "height": 633
+    }
+  ]
+}

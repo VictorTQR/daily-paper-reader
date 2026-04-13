@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.08905v1/fig-001.webp",
+      "caption": "Table 1: Performance comparison across GSM8K, MATH, GPQA, and AIME tasks. The best and second-best performance is set in dark",
+      "page": 6,
+      "index": 1,
+      "width": 1067,
+      "height": 465
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08905v1/fig-002.webp",
+      "caption": "Figure 3: Example of logical reasoning errors on Game of 24.",
+      "page": 6,
+      "index": 2,
+      "width": 510,
+      "height": 350
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08905v1/fig-003.webp",
+      "caption": "Figure 2: Logical-stable space in token generation space for a reasoning trajectory. From a query x, the LLM generates a sequence of token-level transitions targeting the correct answer region A stepby-step. Incorrect logic may result in three types of errors.",
+      "page": 4,
+      "index": 3,
+      "width": 458,
+      "height": 393
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08905v1/fig-004.webp",
+      "caption": "Figure 4: Ablation studies with result and process accuracy across different model variants on two datasets.",
+      "page": 7,
+      "index": 4,
+      "width": 974,
+      "height": 292
+    },
+    {
+      "url": "assets/figures/arxiv/2604.08905v1/fig-005.webp",
+      "caption": "Figure 1: Example of three types of logical errors.",
+      "page": 1,
+      "index": 5,
+      "width": 508,
+      "height": 256
+    }
+  ]
+}

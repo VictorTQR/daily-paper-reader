@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.07745v1/fig-001.webp",
+      "caption": "Figure 1: Agentic inversion, the Cartesian cut, and pathways for relocating control. (A) Biological intelligence (left) can be viewed as an evolutionary stack of nested feedback controllers: fast reflex loops support adaptive control systems, which in turn support higherorder predictive systems; sensory inputs and motor outputs close the loop with the environment. Thus, control is not top-down. Cartesian Agents (right) begin with predictive pre-training on passive traces (a learned core) and achieve control at deployment by coupling this core to an engineered runtime (executor/orchestration layer) that manages tools, policies, and execution. The interface between learned core and engineered runtime is the Cartesian cut, creating a low-bandwidth symbol bottleneck through which control-relevant information must pass. The inverted geometry is schematic and intended to emphasize this order of construction (control-first in biology versus prediction-first in many engineered systems). (B) Three pathways forward organized by where control resides: boxed cognition keeps control predominantly exogenous (human/institutional loops; limited actuation), Cartesian agents implement mixed control via a learned core plus exogenous orchestration, and integrated agents shift more control endogenously by learning arbitration, memory, and adaptation within the agent. The horizontal axis schematizes a shift from exogenous to endogenous control.",
+      "page": 4,
+      "index": 1,
+      "width": 958,
+      "height": 181
+    },
+    {
+      "url": "assets/figures/arxiv/2604.07745v1/fig-002.webp",
+      "caption": "Table 1: Three pathways organized around the Cartesian baseline (Pathway 2), distinguished by where control resides relative to the Cartesian cut.",
+      "page": 11,
+      "index": 2,
+      "width": 977,
+      "height": 453
+    }
+  ]
+}
