@@ -35,6 +35,11 @@
 
 ## 📰 News
 
+- **2026-04-13** 🔌 新增硅基流动 (SiliconFlow) 完整支持：
+  - LLM 提供商：前端配置向导新增 SiliconFlow 预设
+  - Embedding 模型：支持硅基流动 Embedding API（通过 `EMBED_PROVIDER=siliconflow` 启用）
+  - Rerank 模型：支持硅基流动 Rerank API（通过 `RERANK_PROVIDER=siliconflow` 启用）
+  - 后端已完整支持 OpenAI 兼容接口格式
 - **2026-04-13** 🔌 新增硅基流动 (SiliconFlow) LLM 提供商支持：前端配置向导新增 SiliconFlow 预设，后端已完整支持 OpenAI 兼容接口。
 - **2026-04-08** 🏷️ 推荐状态改为按 tag 独立维护：`carryover` 时间与历史 `seen_ids` 不再跨词条互相污染，单词条 `10 天` / `30 天` 抓取、回补与复跑更稳定。
 - **2026-04-08** 🧩 对齐密钥配置向导并暂时禁用 OpenAI-compatible 入口：保留更稳定的 BLT 默认链路，避免设置面板与 workflow 之间出现不兼容配置。
@@ -158,6 +163,36 @@ https://<你的用户名>.github.io/daily-paper-reader
 ### 👨‍🔬 适合实验室或团队一起用吗？
 
 可以。它很适合做实验室公共论文面板，或者作为团队内部的论文发现与阅读入口。
+
+### 🔌 如何使用硅基流动 (SiliconFlow) API？
+
+项目现已完整支持硅基流动 API：
+
+**使用硅基流动 Embedding：**
+```bash
+export EMBED_PROVIDER=siliconflow
+export SILICONFLOW_API_KEY=your_api_key
+export SILICONFLOW_EMBED_MODEL=BAAI/bge-large-zh-v1.5
+```
+
+**使用硅基流动 Rerank：**
+```bash
+export RERANK_PROVIDER=siliconflow
+export SILICONFLOW_API_KEY=your_api_key
+export SILICONFLOW_RERANK_MODEL=BAAI/bge-reranker-v2-m3
+```
+
+**或使用 provider/model 格式：**
+```bash
+python src/3.rank_papers.py --rerank-model siliconflow/BAAI/bge-reranker-v2-m3
+```
+
+**支持的环境变量：**
+- `EMBED_PROVIDER` - Embedding 提供商（custom/siliconflow），默认 `custom`
+- `RERANK_PROVIDER` - Rerank 提供商（blt/siliconflow），默认 `blt`
+- `SILICONFLOW_API_KEY` - 硅基流动 API 密钥
+- `SILICONFLOW_EMBED_MODEL` - 硅基流动 Embedding 模型，默认 `BAAI/bge-large-zh-v1.5`
+- `SILICONFLOW_RERANK_MODEL` - 硅基流动 Rerank 模型，默认 `BAAI/bge-reranker-v2-m3`
 
 ## 💬 欢迎交流
 
